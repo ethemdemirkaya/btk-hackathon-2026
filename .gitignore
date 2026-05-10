@@ -1,1 +1,7 @@
-docs/
+docs/api-keys.md
+docs/secrets/
+**/node_modules
+**/vendor
+**/.env
+docs/html/
+docs/PARANETTE_WEB.md
