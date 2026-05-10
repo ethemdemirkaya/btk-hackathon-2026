@@ -130,6 +130,9 @@ class SyncBankConnectionJob implements ShouldQueue
                 'status'       => 'active',
             ]);
 
+            CalculateHealthScoreJob::dispatch($connection->user)
+                ->delay(now()->addSeconds(5));
+
         } catch (Throwable $e) {
             $connection->update(['status' => 'error']);
             throw $e;
