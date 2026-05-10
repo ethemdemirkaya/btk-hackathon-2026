@@ -8,6 +8,7 @@ use App\Models\BankConnection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class BankConnectionController extends Controller
 {
@@ -48,11 +49,14 @@ class BankConnectionController extends Controller
         $connection->setCredentials($credentials);
         $connection->save();
 
-        // Senkronizasyonu kuyruğa ekle
-        SyncBankConnectionJob::dispatch($connection);
+        try {
+            (new SyncBankConnectionJob($connection))->handle();
+            $msg = "{$bank->name} bağlandı ve veriler senkronize edildi.";
+        } catch (Throwable $e) {
+            $msg = "{$bank->name} bağlandı. Senkronizasyon sırasında hata: " . $e->getMessage();
+        }
 
-        return redirect()->route('bank-connections.index')
-            ->with('success', "{$bank->name} başarıyla bağlandı. Veriler arka planda senkronize ediliyor.");
+        return redirect()->route('bank-connections.index')->with('success', $msg);
     }
 
     public function destroy(Request $request, BankConnection $bankConnection): RedirectResponse
@@ -70,10 +74,14 @@ class BankConnectionController extends Controller
     {
         abort_unless($bankConnection->user_id === $request->user()->id, 403);
 
-        SyncBankConnectionJob::dispatch($bankConnection);
-
-        return redirect()->route('bank-connections.index')
-            ->with('success', 'Senkronizasyon kuyruğa eklendi.');
+        try {
+            (new SyncBankConnectionJob($bankConnection))->handle();
+            return redirect()->route('bank-connections.index')
+                ->with('success', "{$bankConnection->bank->name} başarıyla senkronize edildi.");
+        } catch (Throwable $e) {
+            return redirect()->route('bank-connections.index')
+                ->with('error', "Senkronizasyon hatası: " . $e->getMessage());
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────────

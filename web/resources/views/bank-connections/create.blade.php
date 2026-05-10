@@ -43,10 +43,14 @@
                            class="d-none bank-radio"
                            {{ old('bank_id', request('bank_id')) == $bank->id ? 'checked' : '' }}>
                     <div class="card border-2 bank-card h-100 p-3 text-center @if(old('bank_id', request('bank_id')) == $bank->id) border-primary @else border-light @endif">
-                      <div class="avatar mx-auto mb-3">
-                        <span class="avatar-initial rounded bg-label-primary fw-bold" style="width:48px;height:48px;font-size:18px;">
-                          {{ strtoupper(substr($bank->slug, 0, 2)) }}
-                        </span>
+                      <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-white border rounded"
+                           style="width:72px;height:48px;padding:6px;">
+                        @if($bank->logo)
+                          <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"
+                               style="max-width:100%;max-height:100%;object-fit:contain;">
+                        @else
+                          <span class="fw-bold text-primary">{{ strtoupper(substr($bank->slug, 0, 2)) }}</span>
+                        @endif
                       </div>
                       <div class="fw-semibold mb-1">{{ $bank->name }}</div>
                       <small class="badge bg-label-info">{{ strtoupper($bank->auth_type) }}</small>

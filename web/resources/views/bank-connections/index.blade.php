@@ -19,6 +19,12 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   @endif
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible mb-6" role="alert">
+      <i class="icon-base ti tabler-alert-circle me-2"></i>{{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
 
   @if($connections->isEmpty())
     {{-- Empty state --}}
@@ -41,10 +47,16 @@
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="avatar">
-                    <span class="avatar-initial rounded bg-label-primary fw-bold">
-                      {{ strtoupper(substr($conn->bank->slug, 0, 2)) }}
-                    </span>
+                  {{-- Bank logo --}}
+                  <div class="bank-logo-wrap rounded overflow-hidden d-flex align-items-center justify-content-center bg-white border"
+                       style="width:52px;height:36px;padding:4px;">
+                    @if($conn->bank->logo)
+                      <img src="{{ asset($conn->bank->logo) }}"
+                           alt="{{ $conn->bank->name }}"
+                           style="max-width:100%;max-height:100%;object-fit:contain;">
+                    @else
+                      <span class="fw-bold small text-primary">{{ strtoupper(substr($conn->bank->slug, 0, 2)) }}</span>
+                    @endif
                   </div>
                   <div>
                     <h6 class="mb-0">{{ $conn->bank->name }}</h6>
@@ -88,13 +100,17 @@
                     <i class="icon-base ti tabler-refresh me-1"></i> Senkronize Et
                   </button>
                 </form>
-                <form action="{{ route('bank-connections.destroy', $conn) }}" method="POST"
-                      onsubmit="return confirm('{{ $conn->bank->name }} bağlantısını kaldırmak istediğinizden emin misiniz?')">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="icon-base ti tabler-trash"></i>
-                  </button>
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger btn-delete-conn"
+                        data-name="{{ $conn->bank->name }}"
+                        data-action="{{ route('bank-connections.destroy', $conn) }}">
+                  <i class="icon-base ti tabler-trash"></i>
+                </button>
+                {{-- Hidden delete form --}}
+                <form id="delete-form-{{ $conn->id }}"
+                      action="{{ route('bank-connections.destroy', $conn) }}"
+                      method="POST" class="d-none">
+                  @csrf @method('DELETE')
                 </form>
               </div>
             </div>
@@ -131,10 +147,14 @@
             @foreach($banks->whereNotIn('id', $connectedBankIds) as $bank)
               <div class="col-sm-6 col-xl-3">
                 <div class="d-flex align-items-center gap-3 p-3 border rounded">
-                  <div class="avatar">
-                    <span class="avatar-initial rounded bg-label-secondary fw-bold">
-                      {{ strtoupper(substr($bank->slug, 0, 2)) }}
-                    </span>
+                  <div class="bank-logo-wrap rounded d-flex align-items-center justify-content-center bg-white border"
+                       style="width:52px;height:36px;padding:4px;flex-shrink:0;">
+                    @if($bank->logo)
+                      <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"
+                           style="max-width:100%;max-height:100%;object-fit:contain;">
+                    @else
+                      <span class="fw-bold small text-primary">{{ strtoupper(substr($bank->slug, 0, 2)) }}</span>
+                    @endif
                   </div>
                   <div class="flex-grow-1">
                     <div class="fw-medium">{{ $bank->name }}</div>
@@ -152,4 +172,37 @@
       </div>
     @endif
   @endif
+
+  <x-slot name="pageJs">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script>
+  document.querySelectorAll('.btn-delete-conn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const bankName = this.dataset.name;
+      const action   = this.dataset.action;
+
+      Swal.fire({
+        title: bankName + ' bağlantısını kaldır',
+        text: 'Bu bankaya ait tüm hesap, kart ve işlem verileri silinecek. Devam etmek istiyor musunuz?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, kaldır',
+        cancelButtonText: 'İptal',
+        reverseButtons: true,
+      }).then(function (result) {
+        if (result.isConfirmed) {
+          // Find the hidden form by action URL and submit it
+          document.querySelectorAll('form.d-none').forEach(function (form) {
+            if (form.action === action) {
+              form.submit();
+            }
+          });
+        }
+      });
+    });
+  });
+  </script>
+  </x-slot>
 </x-app-layout>

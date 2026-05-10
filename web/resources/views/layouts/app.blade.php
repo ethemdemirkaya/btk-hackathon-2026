@@ -178,10 +178,18 @@
                 </li>
 
                 <!-- User dropdown -->
+                @php
+                  $authUser   = auth()->user();
+                  $initials   = collect(explode(' ', $authUser?->name ?? 'U'))
+                                  ->filter()->map(fn($w) => strtoupper($w[0]))->take(2)->implode('');
+                @endphp
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                      <img src="{{ asset('assets/img/avatars/1.png') }}" class="h-auto rounded-circle" alt="" />
+                      <span class="avatar-initial rounded-circle bg-primary text-white fw-bold"
+                            style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                        {{ $initials }}
+                      </span>
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end">
@@ -189,11 +197,14 @@
                       <a class="dropdown-item mt-1" href="{{ route('profile.edit') }}">
                         <div class="d-flex align-items-center">
                           <div class="flex-shrink-0 me-2">
-                            <div class="avatar"><img src="{{ asset('assets/img/avatars/1.png') }}" class="h-auto rounded-circle" alt="" /></div>
+                            <span class="avatar-initial rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center"
+                                  style="width:34px;height:34px;font-size:13px;">
+                              {{ $initials }}
+                            </span>
                           </div>
                           <div class="flex-grow-1">
-                            <span class="fw-medium d-block small">{{ auth()->user()->name ?? '' }}</span>
-                            <small class="text-muted">{{ auth()->user()->email ?? '' }}</small>
+                            <span class="fw-medium d-block small">{{ $authUser?->name ?? '' }}</span>
+                            <small class="text-muted">{{ $authUser?->email ?? '' }}</small>
                           </div>
                         </div>
                       </a>
