@@ -5,6 +5,7 @@ use App\Http\Controllers\DecisionSimulatorController;
 use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,6 +31,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat/send', [AgentChatController::class, 'send'])->name('agent-chat.send');
     Route::get('/chat/history', [AgentChatController::class, 'history'])->name('agent-chat.history');
     Route::get('/chat/runs', [AgentChatController::class, 'runs'])->name('agent-chat.runs');
+
+    // Receipts (OCR)
+    Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
+    Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
+    Route::delete('/receipts/{receipt}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
 
     // Bank Connections
     Route::get('/banks', [BankConnectionController::class, 'index'])->name('bank-connections.index');

@@ -116,7 +116,7 @@
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('receipts.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('receipts.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-receipt"></i>
                 <div>Fişler & OCR</div>
               </a>
@@ -129,7 +129,7 @@
                 <div>Ajan Asistan</div>
               </a>
             </li>
-            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
+grate            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
               <a href="{{ route('simulator.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-adjustments-horizontal"></i>
                 <div>Karar Simülatörü</div>
