@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             BankSeeder::class,
             FakeBankSeeder::class,
+            TuikInflationSeeder::class,
         ]);
 
         // Demo kullanıcısı
