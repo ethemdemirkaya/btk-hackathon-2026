@@ -166,6 +166,17 @@
             </div>
             <div class="navbar-nav-right d-flex align-items-center justify-content-end w-100" id="navbar-collapse">
               <ul class="navbar-nav flex-row align-items-center ms-auto">
+
+                <!-- Theme switcher -->
+                <li class="nav-item me-2 me-xl-1">
+                  <button id="theme-toggle-btn"
+                          class="btn btn-icon btn-text-secondary rounded-pill"
+                          title="Temayı değiştir"
+                          onclick="window.toggleAppTheme()">
+                    <i id="theme-icon" class="icon-base ti tabler-moon icon-22px text-heading"></i>
+                  </button>
+                </li>
+
                 <!-- User dropdown -->
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -238,6 +249,39 @@
     <script src="{{ asset('assets/vendor/libs/i18n/i18n.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
+
+    <!-- Theme toggle logic -->
+    <script>
+    (function () {
+      var STORAGE_KEY = 'paranette-theme';
+      var html = document.documentElement;
+
+      function getTheme() {
+        return localStorage.getItem(STORAGE_KEY) || 'light';
+      }
+
+      function applyTheme(theme) {
+        html.setAttribute('data-bs-theme', theme);
+        localStorage.setItem(STORAGE_KEY, theme);
+        var icon = document.getElementById('theme-icon');
+        if (icon) {
+          icon.className = theme === 'dark'
+            ? 'icon-base ti tabler-sun icon-22px text-heading'
+            : 'icon-base ti tabler-moon icon-22px text-heading';
+        }
+        if (typeof window.templateCustomizer !== 'undefined') {
+          window.templateCustomizer.changeTheme(theme);
+        }
+      }
+
+      window.toggleAppTheme = function () {
+        applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+      };
+
+      // Apply persisted theme immediately to avoid flash
+      applyTheme(getTheme());
+    })();
+    </script>
 
     @isset($pageJs){{ $pageJs }}@endisset
   </body>
