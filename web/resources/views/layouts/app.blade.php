@@ -71,8 +71,8 @@
             </li>
 
             <li class="menu-header small"><span class="menu-header-text">Finansal Varlıklar</span></li>
-            <li class="menu-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('bank-connections.*') ? 'active' : '' }}">
+              <a href="{{ route('bank-connections.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-building-bank"></i>
                 <div>Banka Hesapları</div>
               </a>
@@ -123,8 +123,8 @@
             </li>
 
             <li class="menu-header small"><span class="menu-header-text">Yapay Zeka</span></li>
-            <li class="menu-item {{ request()->routeIs('agent.chat') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('agent-chat.*') ? 'active' : '' }}">
+              <a href="{{ route('agent-chat.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-robot"></i>
                 <div>Ajan Asistan</div>
               </a>

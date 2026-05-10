@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentChatController;
 use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -18,6 +19,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Agent Chat
+    Route::get('/chat', [AgentChatController::class, 'index'])->name('agent-chat.index');
+    Route::post('/chat/send', [AgentChatController::class, 'send'])->name('agent-chat.send');
+    Route::get('/chat/history', [AgentChatController::class, 'history'])->name('agent-chat.history');
+    Route::get('/chat/runs', [AgentChatController::class, 'runs'])->name('agent-chat.runs');
 
     // Bank Connections
     Route::get('/banks', [BankConnectionController::class, 'index'])->name('bank-connections.index');

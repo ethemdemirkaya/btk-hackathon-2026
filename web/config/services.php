@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', ''),
+    ],
+
+    'tuik_evds' => [
+        'api_key' => env('TUIK_EVDS_API_KEY', ''),
+    ],
+
 ];
