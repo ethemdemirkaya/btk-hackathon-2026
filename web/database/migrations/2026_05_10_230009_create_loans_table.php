@@ -21,8 +21,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('paid_installments')->default(0);
             $table->date('next_payment_date')->nullable();
             $table->decimal('next_payment_amount', 15, 2)->nullable();
-            $table->date('started_at');
-            $table->date('ends_at');
+            $table->date('started_at')->nullable();
+            $table->date('ends_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
