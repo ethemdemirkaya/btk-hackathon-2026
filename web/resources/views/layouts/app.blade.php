@@ -129,10 +129,16 @@
                 <div>Ajan Asistan</div>
               </a>
             </li>
-grate            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
+            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
               <a href="{{ route('simulator.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-adjustments-horizontal"></i>
                 <div>Karar Simülatörü</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('negotiation.*') ? 'active' : '' }}">
+              <a href="{{ route('negotiation.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-message-2-dollar"></i>
+                <div>Pazarlık Ajanı</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('inflation.*') ? 'active' : '' }}">

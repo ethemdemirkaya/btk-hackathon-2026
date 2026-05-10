@@ -5,6 +5,7 @@ use App\Http\Controllers\DecisionSimulatorController;
 use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
     Route::delete('/receipts/{receipt}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
+
+    // Negotiation Agent
+    Route::get('/negotiation', [NegotiationController::class, 'index'])->name('negotiation.index');
+    Route::post('/negotiation/generate', [NegotiationController::class, 'generate'])->name('negotiation.generate');
+    Route::patch('/negotiation/{draft}/status', [NegotiationController::class, 'updateStatus'])->name('negotiation.status');
+    Route::delete('/negotiation/{draft}', [NegotiationController::class, 'destroy'])->name('negotiation.destroy');
 
     // Bank Connections
     Route::get('/banks', [BankConnectionController::class, 'index'])->name('bank-connections.index');
