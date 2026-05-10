@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('fetched_at');
             $table->timestamps();
 
-            $table->unique(['period_year', 'period_month', 'tuik_category_slug']);
+            $table->unique(['period_year', 'period_month', 'tuik_category_slug'], 'icr_period_category_unique');
             $table->index('tuik_category_slug');
         });
     }
