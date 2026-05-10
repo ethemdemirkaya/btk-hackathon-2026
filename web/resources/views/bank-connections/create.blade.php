@@ -44,7 +44,7 @@
                            {{ old('bank_id', request('bank_id')) == $bank->id ? 'checked' : '' }}>
                     <div class="card border-2 bank-card h-100 p-3 text-center @if(old('bank_id', request('bank_id')) == $bank->id) border-primary @else border-light @endif">
                       <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-white border rounded"
-                           style="width:72px;height:48px;padding:6px;">
+                           style="width:110px;height:68px;padding:10px;">
                         @if($bank->logo)
                           <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"
                                style="max-width:100%;max-height:100%;object-fit:contain;">

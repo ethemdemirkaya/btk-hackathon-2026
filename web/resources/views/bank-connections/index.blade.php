@@ -49,7 +49,7 @@
                 <div class="d-flex align-items-center gap-3">
                   {{-- Bank logo --}}
                   <div class="bank-logo-wrap rounded overflow-hidden d-flex align-items-center justify-content-center bg-white border"
-                       style="width:52px;height:36px;padding:4px;">
+                       style="width:88px;height:56px;padding:8px;">
                     @if($conn->bank->logo)
                       <img src="{{ asset($conn->bank->logo) }}"
                            alt="{{ $conn->bank->name }}"
@@ -148,7 +148,7 @@
               <div class="col-sm-6 col-xl-3">
                 <div class="d-flex align-items-center gap-3 p-3 border rounded">
                   <div class="bank-logo-wrap rounded d-flex align-items-center justify-content-center bg-white border"
-                       style="width:52px;height:36px;padding:4px;flex-shrink:0;">
+                       style="width:88px;height:56px;padding:8px;flex-shrink:0;">
                     @if($bank->logo)
                       <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"
                            style="max-width:100%;max-height:100%;object-fit:contain;">

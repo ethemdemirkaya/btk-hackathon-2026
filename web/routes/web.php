@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AgentChatController;
+use App\Http\Controllers\CardController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DecisionSimulatorController;
 use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
@@ -43,6 +45,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
     Route::delete('/receipts/{receipt}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
+
+    // Cards
+    Route::get('/cards', [CardController::class, 'index'])->name('cards.index');
+
+    // Loans
+    Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
 
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
