@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\InflationCategoryRate;
+use App\Models\InflationRate;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Kullanıcının kişisel enflasyon oranını hesaplar.
+ *
+ * Algoritma:
+ *  1. Son 90 günde kullanıcının TÜİK kategorisine göre harcama ağırlıklarını hesapla
+ *  2. Her kategorinin ağırlığını, o kategorinin resmi TÜİK oranıyla çarp
+ *  3. Topla → kişisel yıllık enflasyon
+ *
+ * Ör: Konut %32 harcama × %59.08 enflasyon + Gıda %18 × %30.97 + ...
+ */
+class PersonalInflationService
+{
+    // TÜİK category slug → app category slug mapping
+    // (categories tablosundaki tuik_category_slug alanı zaten bu slug'ları içeriyor)
+    public function __construct(
+        private readonly TuikApiService $tuikService
+    ) {}
+
+    /**
+     * Kullanıcının kişisel enflasyon oranını hesaplar ve kaydeder.
+     * Döner: ['personal_rate' => 38.24, 'tufe_rate' => 32.37, 'diff' => +5.87, 'breakdown' => [...]]
+     */
+    public function calculate(User $user, ?Carbon $asOf = null): array
+    {
+        $asOf   ??= Carbon::now();
+        $since    = $asOf->copy()->subDays(90);
+        $year     = $asOf->subMonth()->year;
+        $month    = $asOf->subMonth()->month;
+
+        // TÜİK kategori oranlarını al
+        $tuikRates = $this->getTuikRates($year, $month);
+        $tufeRate  = $tuikRates['genel'] ?? 37.86;
+
+        // Kullanıcının kategori bazında toplam harcamasını al
+        $spending  = $this->getUserCategorySpending($user->id, $since, $asOf);
+
+        if ($spending->isEmpty()) {
+            return $this->emptyResult($tufeRate);
+        }
+
+        $total = $spending->sum('total');
+
+        if ($total <= 0) {
+            return $this->emptyResult($tufeRate);
+        }
+
+        $personalRate = 0.0;
+        $breakdown    = [];
+
+        foreach ($spending as $row) {
+            $slug   = $row->tuik_slug;
+            $weight = round($row->total / $total * 100, 2);
+            $rate   = (float) ($tuikRates[$slug] ?? $tufeRate);
+
+            $contribution  = $weight * $rate / 100;
+            $personalRate += $contribution;
+
+            $breakdown[] = [
+                'category'     => $row->category_name,
+                'tuik_slug'    => $slug,
+                'weight_pct'   => $weight,
+                'tuik_rate'    => $rate,
+                'contribution' => round($contribution, 4),
+            ];
+        }
+
+        $personalRate = round($personalRate, 2);
+
+        // Kaydet
+        InflationRate::updateOrCreate(
+            ['user_id' => $user->id, 'period_year' => $year, 'period_month' => $month, 'source' => 'personal'],
+            [
+                'annual_rate'  => $personalRate,
+                'monthly_rate' => round($personalRate / 12, 4),
+                'fetched_at'   => now(),
+            ]
+        );
+
+        return [
+            'personal_rate' => $personalRate,
+            'tufe_rate'     => $tufeRate,
+            'diff'          => round($personalRate - $tufeRate, 2),
+            'period'        => "{$year}-{$month}",
+            'days_analyzed' => 90,
+            'total_spending'=> round($total, 2),
+            'breakdown'     => collect($breakdown)->sortByDesc('weight_pct')->values()->all(),
+        ];
+    }
+
+    /**
+     * Kullanıcının son N aylık kişisel enflasyon geçmişi (dashboard grafiği için).
+     */
+    public function getHistory(User $user, int $months = 6): array
+    {
+        $rows = InflationRate::where('user_id', $user->id)
+            ->where('source', 'personal')
+            ->orderByDesc('period_year')
+            ->orderByDesc('period_month')
+            ->limit($months)
+            ->get();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $periodKey = "{$row->period_year}-" . str_pad($row->period_month, 2, '0', STR_PAD_LEFT);
+            $tufeRow   = InflationCategoryRate::where('tuik_category_slug', 'genel')
+                ->where('period_year', $row->period_year)
+                ->where('period_month', $row->period_month)
+                ->first();
+
+            $result[] = [
+                'month'    => $periodKey,
+                'personal' => (float) $row->annual_rate,
+                'tufe'     => $tufeRow ? (float) $tufeRow->annual_change_rate : null,
+            ];
+        }
+
+        return array_reverse($result);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+
+    private function getUserCategorySpending(int $userId, Carbon $from, Carbon $to)
+    {
+        return DB::table('transactions as t')
+            ->join('accounts as a', 'a.id', '=', 't.account_id')
+            ->join('categories as c', 'c.id', '=', 't.category_id')
+            ->select(
+                'c.name as category_name',
+                DB::raw('COALESCE(c.tuik_category_slug, "diger") as tuik_slug'),
+                DB::raw('SUM(ABS(t.amount)) as total')
+            )
+            ->where('a.user_id', $userId)
+            ->where('t.amount', '<', 0)
+            ->whereBetween('t.posted_at', [$from->format('Y-m-d'), $to->format('Y-m-d')])
+            ->whereNotNull('t.category_id')
+            ->groupBy('c.id', 'c.name', 'c.tuik_category_slug')
+            ->orderByDesc('total')
+            ->get();
+    }
+
+    private function getTuikRates(int $year, int $month): array
+    {
+        $rows = InflationCategoryRate::where('period_year', $year)
+            ->where('period_month', $month)
+            ->get()
+            ->keyBy('tuik_category_slug');
+
+        if ($rows->isEmpty()) {
+            // Trigger a fetch for this period
+            $this->tuikService->fetchAndStore(Carbon::createFromDate($year, $month, 1));
+
+            $rows = InflationCategoryRate::where('period_year', $year)
+                ->where('period_month', $month)
+                ->get()
+                ->keyBy('tuik_category_slug');
+        }
+
+        return $rows->map(fn ($r) => (float) $r->annual_change_rate)->all();
+    }
+
+    private function emptyResult(float $tufeRate): array
+    {
+        return [
+            'personal_rate' => null,
+            'tufe_rate'     => $tufeRate,
+            'diff'          => null,
+            'period'        => null,
+            'days_analyzed' => 90,
+            'total_spending'=> 0,
+            'breakdown'     => [],
+        ];
+    }
+}
