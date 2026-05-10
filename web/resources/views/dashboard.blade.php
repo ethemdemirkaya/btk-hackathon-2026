@@ -6,6 +6,17 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
   </x-slot>
 
+  {{-- ══ Page header with report download ══════════════════════════════ --}}
+  <div class="d-flex align-items-center justify-content-between mb-5">
+    <div>
+      <h4 class="fw-bold mb-0">Ana Sayfa</h4>
+      <p class="text-muted mb-0 small">Finansal özet ve analiz</p>
+    </div>
+    <a href="{{ route('report.monthly') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+      <i class="icon-base ti tabler-file-type-pdf me-1"></i>Aylık Rapor PDF
+    </a>
+  </div>
+
   {{-- ══ ROW 1 — 4 Metrik Kart ══════════════════════════════════════════ --}}
   <div class="row g-6 mb-6">
     {{-- Toplam Bakiye --}}

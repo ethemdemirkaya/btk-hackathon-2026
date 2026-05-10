@@ -6,6 +6,7 @@ use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NegotiationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReceiptController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
     Route::post('/receipts', [ReceiptController::class, 'store'])->name('receipts.store');
     Route::delete('/receipts/{receipt}', [ReceiptController::class, 'destroy'])->name('receipts.destroy');
+
+    // Monthly PDF Report
+    Route::get('/report/monthly', [ReportController::class, 'generate'])->name('report.monthly');
 
     // Negotiation Agent
     Route::get('/negotiation', [NegotiationController::class, 'index'])->name('negotiation.index');
