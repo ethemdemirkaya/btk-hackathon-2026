@@ -13,7 +13,7 @@ class BankSeeder extends Seeder
             [
                 'name'         => 'Ziraat Bankası',
                 'slug'         => 'ziraat',
-                'logo'         => 'assets/img/banks/ziraat.png',
+                'logo'         => 'assets/img/banks/ziraat.svg',
                 'api_base_url' => config('app.url') . '/api/banks/ziraat',
                 'auth_type'    => 'bearer',
                 'is_active'    => true,
@@ -21,7 +21,7 @@ class BankSeeder extends Seeder
             [
                 'name'         => 'Garanti BBVA',
                 'slug'         => 'garanti',
-                'logo'         => 'assets/img/banks/garanti.png',
+                'logo'         => 'assets/img/banks/garanti.svg',
                 'api_base_url' => config('app.url') . '/api/banks/garanti',
                 'auth_type'    => 'oauth2',
                 'is_active'    => true,
@@ -29,7 +29,7 @@ class BankSeeder extends Seeder
             [
                 'name'         => 'İş Bankası',
                 'slug'         => 'isbank',
-                'logo'         => 'assets/img/banks/isbank.png',
+                'logo'         => 'assets/img/banks/isbank.svg',
                 'api_base_url' => config('app.url') . '/api/banks/isbank',
                 'auth_type'    => 'hmac',
                 'is_active'    => true,
@@ -37,7 +37,7 @@ class BankSeeder extends Seeder
             [
                 'name'         => 'Akbank',
                 'slug'         => 'akbank',
-                'logo'         => 'assets/img/banks/akbank.png',
+                'logo'         => 'assets/img/banks/akbank.svg',
                 'api_base_url' => config('app.url') . '/api/banks/akbank',
                 'auth_type'    => 'jsonrpc',
                 'is_active'    => true,

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <rect width="200" height="60" fill="white"/>
+  <!-- Green bar accent -->
+  <rect x="0" y="0" width="6" height="60" fill="#009A44"/>
+  <!-- Garanti text -->
+  <text x="18" y="28" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#009A44" letter-spacing="-0.5">Garanti</text>
+  <!-- BBVA text -->
+  <text x="18" y="50" font-family="Arial, sans-serif" font-size="14" font-weight="400" fill="#004B99" letter-spacing="3">BBVA</text>
+</svg>
