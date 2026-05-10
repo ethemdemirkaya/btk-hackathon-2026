@@ -1,6 +1,12 @@
 *.log
 .DS_Store
 .env
+/storage/agent-logs
+/storage/gemini-cache
+/storage/tuik-cache
+/public/uploads/receipts
+.idea/
+.vscode/
 .env.backup
 .env.production
 .phpactor.json
