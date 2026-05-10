@@ -20,13 +20,15 @@ class DatabaseSeeder extends Seeder
             TuikInflationSeeder::class,
         ]);
 
-        // Demo kullanıcısı
+        // Demo kullanıcısı (UserBankConnectionSeeder email ile bu user'ı bulur)
         User::factory()->create([
-            'name'            => 'Ethem Demirkaya',
-            'email'           => 'demo@paranette.local',
-            'password'        => Hash::make('password'),
-            'monthly_income'  => 35000.00,
-            'inflation_aware' => true,
+            'name'           => 'Ethem Demirkaya',
+            'email'          => 'demo@paranette.local',
+            'password'       => Hash::make('password'),
+            'monthly_income' => 35000.00,
+            'inflation_aware'=> true,
         ]);
+
+        $this->call([UserBankConnectionSeeder::class]);
     }
 }
