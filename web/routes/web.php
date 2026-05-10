@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgentChatController;
+use App\Http\Controllers\DecisionSimulatorController;
 use App\Http\Controllers\BankConnectionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -19,6 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Decision Simulator
+    Route::get('/simulator', [DecisionSimulatorController::class, 'index'])->name('simulator.index');
+    Route::post('/simulator/calculate', [DecisionSimulatorController::class, 'calculate'])->name('simulator.calculate');
 
     // Agent Chat
     Route::get('/chat', [AgentChatController::class, 'index'])->name('agent-chat.index');

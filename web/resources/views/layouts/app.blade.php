@@ -129,6 +129,12 @@
                 <div>Ajan Asistan</div>
               </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
+              <a href="{{ route('simulator.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-adjustments-horizontal"></i>
+                <div>Karar Simülatörü</div>
+              </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('inflation.*') ? 'active' : '' }}">
               <a href="#" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-trending-up"></i>
