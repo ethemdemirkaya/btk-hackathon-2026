@@ -204,16 +204,19 @@
     // Bank selection toggle
     document.querySelectorAll('.bank-radio').forEach(radio => {
       radio.addEventListener('change', function () {
-        const bankId   = this.value;
-        const slug     = bankSlugs[bankId];
+        const bankId  = this.value;
+        const slug    = bankSlugs[bankId];
+        // radio is a sibling of .bank-card inside the <label>, so go up to label first
+        const label   = this.closest('label');
+        const myCard  = label.querySelector('.bank-card');
 
         // Update card styles
         document.querySelectorAll('.bank-card').forEach(c => {
           c.classList.remove('border-primary');
           c.classList.add('border-light');
         });
-        this.closest('.bank-card').classList.add('border-primary');
-        this.closest('.bank-card').classList.remove('border-light');
+        myCard.classList.add('border-primary');
+        myCard.classList.remove('border-light');
 
         // Show credentials section
         document.getElementById('credentialsCard').style.display = '';
