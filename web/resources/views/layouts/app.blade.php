@@ -90,7 +90,7 @@
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('transactions.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('transactions.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-arrows-exchange"></i>
                 <div>İşlemler</div>
               </a>
@@ -98,19 +98,19 @@
 
             <li class="menu-header small"><span class="menu-header-text">Takip & Analiz</span></li>
             <li class="menu-item {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('subscriptions.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-repeat"></i>
                 <div>Abonelikler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('budgets.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('budgets.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-chart-pie"></i>
                 <div>Bütçeler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('goals.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('goals.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-target"></i>
                 <div>Hedefler</div>
               </a>
@@ -142,7 +142,7 @@
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('inflation.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('inflation.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-trending-up"></i>
                 <div>Kişisel Enflasyon</div>
               </a>
