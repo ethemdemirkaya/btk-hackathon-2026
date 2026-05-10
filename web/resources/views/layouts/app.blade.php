@@ -78,13 +78,13 @@
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('cards.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-credit-card"></i>
                 <div>Kredi Kartları</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('loans.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('loans.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-file-invoice"></i>
                 <div>Krediler</div>
               </a>
