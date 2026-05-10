@@ -69,6 +69,15 @@ class FakeBankSeeder extends Seeder
     // Bank configurations
     // ──────────────────────────────────────────────────────────────
 
+    // Fixed credentials — must stay stable across re-seeds so UserBankConnectionSeeder
+    // can reference them without querying the DB.
+    public const CREDENTIALS = [
+        'ziraat'  => ['tckn' => self::TCKN, 'password' => 'password'],
+        'garanti' => ['client_id' => self::TCKN, 'client_secret' => 'garanti-demo-secret-2026'],
+        'isbank'  => ['tckn' => self::TCKN, 'hmac_secret' => 'isbank-demo-hmac-key-2026-paranette'],
+        'akbank'  => ['api_key' => 'akb_paranette-demo-2026-hackathon-fixed-key'],
+    ];
+
     private function banks(): array
     {
         return [
@@ -76,25 +85,25 @@ class FakeBankSeeder extends Seeder
                 'slug'        => 'ziraat',
                 'customer_id' => 'ZBK-001-' . self::TCKN,
                 'password'    => 'password',
-                'credentials' => [],  // Ziraat uses password_hash directly
+                'credentials' => [],
             ],
             [
                 'slug'        => 'garanti',
                 'customer_id' => 'GBK-001-' . self::TCKN,
                 'password'    => 'password',
-                'credentials' => ['client_secret' => 'garanti_secret_' . Str::random(16)],
+                'credentials' => ['client_secret' => 'garanti-demo-secret-2026'],
             ],
             [
                 'slug'        => 'isbank',
                 'customer_id' => 'ISB-001-' . self::TCKN,
                 'password'    => 'password',
-                'credentials' => ['hmac_secret' => 'isbank_hmac_' . Str::random(32)],
+                'credentials' => ['hmac_secret' => 'isbank-demo-hmac-key-2026-paranette'],
             ],
             [
                 'slug'        => 'akbank',
                 'customer_id' => 'AKB-001-' . self::TCKN,
                 'password'    => 'password',
-                'credentials' => ['api_key' => 'akb_' . Str::random(40)],
+                'credentials' => ['api_key' => 'akb_paranette-demo-2026-hackathon-fixed-key'],
             ],
         ];
     }

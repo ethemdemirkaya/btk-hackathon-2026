@@ -22,30 +22,30 @@ class SyncBankConnectionJob implements ShouldQueue
     public int $tries   = 3;
     public int $timeout = 120;
 
-    public function __construct(public readonly BankConnection $connection)
+    public function __construct(public readonly BankConnection $bankConnection)
     {
     }
 
     public function handle(): void
     {
-        $connection = $this->connection;
-        $connection->load('bank');
+        $conn = $this->bankConnection;
+        $conn->load('bank');
 
-        $connector = BankConnectorFactory::make($connection);
-        $from      = $connection->last_sync_at
-            ? $connection->last_sync_at->subHours(1) // overlap to avoid missing txns
+        $connector = BankConnectorFactory::make($conn);
+        $from      = $conn->last_sync_at
+            ? $conn->last_sync_at->subHours(1)
             : Carbon::now()->subMonths(6);
 
         try {
             // ── Accounts ──────────────────────────────────────────
             $rawAccounts = $connector->fetchAccounts();
-            $accountMap  = []; // external_id => App\Models\Account
+            $accountMap  = [];
 
             foreach ($rawAccounts as $data) {
                 $account = Account::updateOrCreate(
-                    ['bank_connection_id' => $connection->id, 'external_id' => $data['external_id']],
+                    ['bank_connection_id' => $conn->id, 'external_id' => $data['external_id']],
                     [
-                        'user_id'           => $connection->user_id,
+                        'user_id'           => $conn->user_id,
                         'account_type'      => $data['account_type'],
                         'iban'              => $data['iban'],
                         'currency'          => $data['currency'],
@@ -68,7 +68,7 @@ class SyncBankConnectionJob implements ShouldQueue
                             'posted_at'         => $t['posted_at'],
                             'amount'            => $t['amount'],
                             'currency'          => $t['currency'],
-                            'try_amount'        => $t['amount'], // FX conversion handled separately
+                            'try_amount'        => $t['amount'],
                             'description'       => $t['description'],
                             'raw_description'   => $t['description'],
                             'merchant_name'     => $t['merchant_name'],
@@ -87,20 +87,20 @@ class SyncBankConnectionJob implements ShouldQueue
             foreach ($rawCards as $c) {
                 Card::updateOrCreate(
                     [
-                        'user_id'       => $connection->user_id,
+                        'user_id'       => $conn->user_id,
                         'masked_number' => $c['masked_number'],
                         'expiry_month'  => $c['expiry_month'],
                         'expiry_year'   => $c['expiry_year'],
                     ],
                     [
-                        'account_id'     => $firstAcct?->id,
-                        'type'           => $c['type'],
-                        'holder_name'    => $c['holder_name'],
-                        'credit_limit'   => $c['credit_limit'],
-                        'current_debt'   => $c['current_debt'],
-                        'available_limit'=> $c['available_limit'],
-                        'statement_day'  => $c['statement_day'],
-                        'due_day'        => $c['due_day'],
+                        'account_id'      => $firstAcct?->id,
+                        'type'            => $c['type'],
+                        'holder_name'     => $c['holder_name'],
+                        'credit_limit'    => $c['credit_limit'],
+                        'current_debt'    => $c['current_debt'],
+                        'available_limit' => $c['available_limit'],
+                        'statement_day'   => $c['statement_day'],
+                        'due_day'         => $c['due_day'],
                     ]
                 );
             }
@@ -110,37 +110,33 @@ class SyncBankConnectionJob implements ShouldQueue
 
             foreach ($rawLoans as $l) {
                 Loan::updateOrCreate(
-                    ['bank_connection_id' => $connection->id, 'external_id' => $l['external_id']],
+                    ['bank_connection_id' => $conn->id, 'external_id' => $l['external_id']],
                     [
-                        'user_id'              => $connection->user_id,
-                        'type'                 => $l['type'],
-                        'principal'            => $l['principal'],
-                        'current_balance'      => $l['current_balance'],
-                        'interest_rate'        => $l['interest_rate'],
-                        'total_installments'   => $l['total_installments'],
-                        'paid_installments'    => $l['paid_installments'],
-                        'next_payment_date'    => $l['next_payment_date'],
-                        'next_payment_amount'  => $l['next_payment_amount'],
+                        'user_id'             => $conn->user_id,
+                        'type'                => $l['type'],
+                        'principal'           => $l['principal'],
+                        'current_balance'     => $l['current_balance'],
+                        'interest_rate'       => $l['interest_rate'],
+                        'total_installments'  => $l['total_installments'],
+                        'paid_installments'   => $l['paid_installments'],
+                        'next_payment_date'   => $l['next_payment_date'],
+                        'next_payment_amount' => $l['next_payment_amount'],
                     ]
                 );
             }
 
-            $connection->update([
-                'last_sync_at' => now(),
-                'status'       => 'active',
-            ]);
+            $conn->update(['last_sync_at' => now(), 'status' => 'active']);
 
-            CalculateHealthScoreJob::dispatch($connection->user)
-                ->delay(now()->addSeconds(5));
+            CalculateHealthScoreJob::dispatch($conn->user)->delay(now()->addSeconds(5));
 
         } catch (Throwable $e) {
-            $connection->update(['status' => 'error']);
+            $conn->update(['status' => 'error']);
             throw $e;
         }
     }
 
     public function failed(Throwable $e): void
     {
-        $this->connection->update(['status' => 'error']);
+        $this->bankConnection->update(['status' => 'error']);
     }
 }
