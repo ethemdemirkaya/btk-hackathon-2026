@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Services\Agents\Orchestrator;
+
+use App\Models\AgentRun;
+use App\Models\User;
+use App\Services\Agents\Specialists\AnomalyDetectorAgent;
+use App\Services\Agents\Specialists\BudgetAdvisorAgent;
+use App\Services\Agents\Specialists\InflationAwareAgent;
+use App\Services\Agents\Specialists\PurchasePlannerAgent;
+use App\Services\Agents\Specialists\TransactionClassifierAgent;
+use App\Services\Gemini\GeminiClient;
+use App\Services\Gemini\GeminiModelEnum;
+use Illuminate\Support\Str;
+
+class OrchestratorAgent
+{
+    private GeminiClient $gemini;
+    private IntentRouter $router;
+
+    public function __construct()
+    {
+        $this->gemini = app(GeminiClient::class);
+        $this->router = new IntentRouter();
+    }
+
+    /**
+     * Main entry point — routes intent, runs specialists in sequence,
+     * then synthesizes a final answer with Gemini Pro.
+     *
+     * @return array{session_id: string, final: string, specialist_results: array, run_ids: array}
+     */
+    public function handle(User $user, string $message, string $sessionId = ''): array
+    {
+        $sessionId = $sessionId ?: Str::uuid()->toString();
+
+        // ── 1. Route intent ────────────────────────────────────────────
+        $routing = $this->router->route($message);
+        $agents  = $routing['agents'];
+        $context = $routing['context'];
+        $extracted = $routing['extracted'] ?? [];
+
+        // ── 2. Run specialists ─────────────────────────────────────────
+        $specialistResults = [];
+        $runIds            = [];
+
+        foreach ($agents as $agentName) {
+            try {
+                $agent = $this->resolveSpecialist($user, $agentName);
+                if (! $agent) {
+                    continue;
+                }
+
+                $agentInput = array_merge(
+                    ['context' => $context, 'session_id' => $sessionId],
+                    $extracted,
+                );
+
+                $result = $agent->run($agentInput);
+                $specialistResults[$agentName] = $result;
+                $runIds[] = $agent->run instanceof AgentRun ? $agent->run->id : null;
+            } catch (\Throwable $e) {
+                $specialistResults[$agentName] = ['error' => $e->getMessage()];
+            }
+        }
+
+        // ── 3. Synthesize with Pro ─────────────────────────────────────
+        $final = $this->synthesize($user, $message, $specialistResults);
+
+        return [
+            'session_id'         => $sessionId,
+            'final'              => $final,
+            'specialist_results' => $specialistResults,
+            'run_ids'            => array_filter($runIds),
+            'agents_used'        => $agents,
+        ];
+    }
+
+    private function resolveSpecialist(User $user, string $name): ?object
+    {
+        return match ($name) {
+            'purchase_planner'         => new PurchasePlannerAgent($user),
+            'budget_advisor'           => new BudgetAdvisorAgent($user),
+            'inflation_aware'          => new InflationAwareAgent($user),
+            'anomaly_detector'         => new AnomalyDetectorAgent($user),
+            'transaction_classifier'   => new TransactionClassifierAgent($user),
+            default                    => null,
+        };
+    }
+
+    private function synthesize(User $user, string $userMessage, array $specialistResults): string
+    {
+        $systemPrompt = <<<'SYS'
+        Sen Paranette'nin baş finansal asistanısın. Uzman ajanlardan gelen analizleri
+        birleştirip kullanıcıya açık, sıcak, somut ve güven veren bir Türkçe yanıt ver.
+        Rakamları vurgula, eylem adımları öner. Mümkünse 3 alternatif sun.
+        SYS;
+
+        $specialistJson = json_encode($specialistResults, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $monthlyIncome  = number_format((float) ($user->monthly_income ?? 0), 0, ',', '.');
+
+        $prompt = <<<PROMPT
+        Kullanıcı sorusu: "{$userMessage}"
+        Kullanıcı aylık geliri: ₺{$monthlyIncome}
+
+        Uzman ajan sonuçları:
+        {$specialistJson}
+
+        Yukarıdaki tüm analizleri kullanarak kullanıcıya kapsamlı bir yanıt ver.
+        PROMPT;
+
+        $contents = [['role' => 'user', 'parts' => [['text' => $prompt]]]];
+
+        try {
+            $result = $this->gemini->generate(
+                GeminiModelEnum::PRO,
+                $contents,
+                $systemPrompt,
+                [],
+                0.7,
+            );
+            return $result['text'];
+        } catch (\Throwable $e) {
+            return "Analiz tamamlandı ancak sentez sırasında hata oluştu: " . $e->getMessage();
+        }
+    }
+}
