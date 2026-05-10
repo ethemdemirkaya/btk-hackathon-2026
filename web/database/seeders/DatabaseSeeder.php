@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CategorySeeder::class,
             BankSeeder::class,
+            FakeBankSeeder::class,
         ]);
 
         // Demo kullanıcısı
