@@ -407,7 +407,7 @@ class FakeBankSeeder extends Seeder
             'bank_slug'         => $slug,
             'fake_account_id'   => $account->id,
             'fake_card_id'      => $card?->id,
-            'external_id'       => strtoupper($slug) . '-TX-' . Str::uuid(),
+            'external_id'       => strtoupper(substr($slug, 0, 3)) . '-TX-' . Str::random(24),
             'posted_at'         => $postedAt->format('Y-m-d H:i:s'),
             'amount'            => $amount,
             'currency'          => 'TRY',
