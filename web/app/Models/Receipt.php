@@ -28,10 +28,22 @@ class Receipt extends Model
         'ocr_extracted' => 'array',
         'items'         => 'array',
         'purchased_at'  => 'datetime',
-        'warranty_until'=> 'date',
         'total_amount'  => 'decimal:2',
         'vat_amount'    => 'decimal:2',
     ];
+
+    // Manual accessor so DB strings 'null'/''/null all return PHP null gracefully.
+    public function getWarrantyUntilAttribute(mixed $value): ?\Carbon\Carbon
+    {
+        if ($value === null || $value === '' || strtolower((string) $value) === 'null') {
+            return null;
+        }
+        try {
+            return \Carbon\Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 
     public function user(): BelongsTo
     {

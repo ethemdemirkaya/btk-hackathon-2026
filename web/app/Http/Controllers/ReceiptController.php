@@ -55,8 +55,8 @@ class ReceiptController extends Controller
                 'total_amount'  => $result['total_amount'] ?? null,
                 'vat_amount'    => $result['vat_amount'] ?? null,
                 'items'         => $result['items'] ?? null,
-                'purchased_at'  => isset($result['purchased_at']) ? $this->parseDate($result['purchased_at']) : null,
-                'warranty_until'=> $result['warranty_until'] ?? null,
+                'purchased_at'  => $this->parseDate($result['purchased_at'] ?? null),
+                'warranty_until'=> $this->parseDate($result['warranty_until'] ?? null),
             ]);
 
             if ($request->wantsJson()) {
@@ -91,10 +91,13 @@ class ReceiptController extends Controller
         return redirect()->route('receipts.index')->with('success', 'Fiş silindi.');
     }
 
-    private function parseDate(string $raw): ?string
+    private function parseDate(?string $raw): ?string
     {
+        if ($raw === null || $raw === '' || strtolower($raw) === 'null') {
+            return null;
+        }
         try {
-            return \Carbon\Carbon::parse($raw)->toDateTimeString();
+            return \Carbon\Carbon::parse($raw)->toDateString();
         } catch (\Throwable) {
             return null;
         }
