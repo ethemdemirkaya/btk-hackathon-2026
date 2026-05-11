@@ -6,6 +6,7 @@ use App\Models\AgentRun;
 use App\Models\User;
 use App\Services\Gemini\GeminiClient;
 use App\Services\Gemini\GeminiModelEnum;
+use Illuminate\Support\Facades\DB;
 
 abstract class AbstractAgent
 {
@@ -74,5 +75,64 @@ abstract class AbstractAgent
     protected function buildUserMessage(string $text): array
     {
         return [['role' => 'user', 'parts' => [['text' => $text]]]];
+    }
+
+    /**
+     * Load the most recent memory entries for this user and return them as
+     * a formatted string to be prepended to a system prompt.
+     */
+    protected function loadMemories(int $limit = 10): string
+    {
+        $memories = DB::table('agent_memories')
+            ->where('user_id', $this->user->id)
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->pluck('content')
+            ->implode("\n");
+
+        return $memories ? "Kullanıcı hakkında önceki bilgiler:\n" . $memories : '';
+    }
+
+    /**
+     * Persist a memory entry for this user, skipping empty or duplicate content.
+     */
+    protected function saveMemory(string $content): void
+    {
+        if (empty(trim($content))) return;
+
+        $exists = DB::table('agent_memories')
+            ->where('user_id', $this->user->id)
+            ->where('content', $content)
+            ->exists();
+
+        if (!$exists) {
+            DB::table('agent_memories')->insert([
+                'user_id'    => $this->user->id,
+                'type'       => 'fact',
+                'content'    => $content,
+                'importance' => 5,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Build a system prompt that includes the agent's base system prompt
+     * followed by any stored memories for the user.
+     *
+     * Agents that want memory support should call this method instead of
+     * calling getSystemPrompt() directly.
+     */
+    protected function buildSystemPromptWithMemory(): string
+    {
+        $base    = $this->getSystemPrompt();
+        $memories = $this->loadMemories();
+
+        if (empty($memories)) {
+            return $base;
+        }
+
+        return $base . "\n\n" . $memories;
     }
 }
