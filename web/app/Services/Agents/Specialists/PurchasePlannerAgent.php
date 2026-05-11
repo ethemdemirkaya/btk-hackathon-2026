@@ -35,26 +35,30 @@ class PurchasePlannerAgent extends AbstractAgent
             ->where('user_id', $this->user->id)
             ->sum('current_debt');
 
-        $avgMonthlyExpense = (float) DB::table('transactions as t')
+        $expenseRows = DB::table('transactions as t')
             ->join('accounts as a', 'a.id', '=', 't.account_id')
             ->where('a.user_id', $this->user->id)
             ->where('t.amount', '<', 0)
             ->where('t.posted_at', '>=', Carbon::now()->subMonths(3))
-            ->avg(DB::raw('ABS(t.amount)'));
+            ->selectRaw("DATE_FORMAT(t.posted_at,'%Y-%m') as month, SUM(ABS(t.amount)) as total")
+            ->groupBy('month')
+            ->get();
+
+        $avgMonthlyExpense = $expenseRows->isNotEmpty() ? (float) $expenseRows->avg('total') : 0;
 
         $healthScore = DB::table('financial_health_scores')
             ->where('user_id', $this->user->id)
             ->orderByDesc('calculated_at')
             ->value('score');
 
-        $personalInflation = DB::table('inflation_rates')
-            ->where('user_id', $this->user->id)
-            ->orderByDesc('reference_month')
-            ->value('annual_rate');
+        $personalInflation = DB::table('inflation_category_rates')
+            ->where('tuik_category_slug', 'genel')
+            ->orderByDesc('period_year')->orderByDesc('period_month')
+            ->value('annual_change_rate');
 
         $monthlySavings = max(0, $monthlyIncome - $avgMonthlyExpense);
         $monthsToSave   = $monthlySavings > 0 ? ceil($targetAmount / $monthlySavings) : 999;
-        $personalRate   = $personalInflation ? round((float) $personalInflation, 2) : 38.0;
+        $personalRate   = $personalInflation ? round((float) $personalInflation, 2) : 37.86;
         $monthlyInflationRate = $personalRate / 100 / 12;
         $futurePrice6m  = round($targetAmount * ((1 + $monthlyInflationRate) ** 6), 0);
         $futurePrice12m = round($targetAmount * ((1 + $monthlyInflationRate) ** 12), 0);

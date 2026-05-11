@@ -22,21 +22,25 @@ class InflationAwareAgent extends AbstractAgent
 
     public function run(array $input): array
     {
-        $personalRate = DB::table('inflation_rates')
-            ->where('user_id', $this->user->id)
-            ->orderByDesc('reference_month')
-            ->value('annual_rate');
+        $latestPeriod = DB::table('inflation_category_rates')
+            ->selectRaw('MAX(period_year) as year, MAX(period_month) as month')
+            ->first();
 
         $tufeRate = DB::table('inflation_category_rates')
-            ->orderByDesc('reference_month')
-            ->avg('annual_rate');
+            ->where('tuik_category_slug', 'genel')
+            ->where('period_year', $latestPeriod->year ?? 2026)
+            ->where('period_month', $latestPeriod->month ?? 4)
+            ->value('annual_change_rate') ?? 37.86;
 
         $categoryBreakdown = DB::table('inflation_category_rates as icr')
-            ->select('icr.tuik_category_slug', 'icr.annual_rate')
-            ->orderByDesc('icr.reference_month')
-            ->orderByDesc('icr.annual_rate')
-            ->limit(14)
+            ->select('icr.tuik_category_slug', 'icr.annual_change_rate as annual_rate')
+            ->where('period_year', $latestPeriod->year ?? 2026)
+            ->where('period_month', $latestPeriod->month ?? 4)
+            ->orderByDesc('icr.annual_change_rate')
             ->get();
+
+        $personalInflationResult = app(\App\Services\PersonalInflationService::class)->calculate($this->user);
+        $personalRate = $personalInflationResult['personal_rate'];
 
         $monthlyIncome = (float) ($this->user->monthly_income ?? 0);
         $targetAmount  = (float) ($input['target_amount'] ?? 0);
@@ -44,8 +48,8 @@ class InflationAwareAgent extends AbstractAgent
         $context       = $input['context'] ?? '';
 
         $categoryJson = $categoryBreakdown->toJson(JSON_UNESCAPED_UNICODE);
-        $personalRateDisplay = $personalRate ? round((float) $personalRate, 2) : 'bilinmiyor';
-        $tufeDisplay = $tufeRate ? round((float) $tufeRate, 2) : 0;
+        $personalRateDisplay = $personalRate !== null ? round((float) $personalRate, 2) : round((float) $tufeRate, 2);
+        $tufeDisplay = round((float) $tufeRate, 2);
 
         $prompt = <<<PROMPT
         Kullanıcı enflasyon profili:

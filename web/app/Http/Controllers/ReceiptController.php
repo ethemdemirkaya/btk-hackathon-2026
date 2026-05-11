@@ -79,7 +79,7 @@ class ReceiptController extends Controller
 
     public function destroy(Request $request, Receipt $receipt)
     {
-        $this->authorize('delete', $receipt);
+        abort_unless($receipt->user_id === $request->user()->id, 403);
 
         Storage::disk('public')->delete($receipt->image_path);
         $receipt->delete();
