@@ -89,6 +89,43 @@ class AgentChatController extends Controller
         }
     }
 
+    public function dismissInsight(Request $request, AgentInsight $insight): JsonResponse
+    {
+        abort_unless($insight->user_id === $request->user()->id, 403);
+        $insight->update(['is_dismissed' => true]);
+        return response()->json(['status' => 'ok']);
+    }
+
+    /** Quick-analyze: run budget + anomaly agents and store insights */
+    public function quickAnalyze(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            $orchestrator = new OrchestratorAgent();
+            $result = $orchestrator->handle(
+                $user,
+                'Son harcamalarımı analiz et ve bütçe önerileri sun. Anormal harcama var mı?',
+                Str::uuid()->toString()
+            );
+
+            AgentMessage::create([
+                'user_id'    => $user->id,
+                'session_id' => 'quick-analysis',
+                'role'       => 'assistant',
+                'content'    => $result['final'],
+                'metadata'   => ['agents_used' => $result['agents_used']],
+            ]);
+
+            return response()->json([
+                'status'  => 'ok',
+                'summary' => \Illuminate\Support\Str::limit($result['final'], 200),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function history(Request $request): JsonResponse
     {
         $sessionId = $request->query('session_id');

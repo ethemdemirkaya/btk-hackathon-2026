@@ -188,6 +188,47 @@ class DashboardService
         ])->values()->all();
     }
 
+    /** Returns current month budget utilization — top 4 by % used */
+    public function getBudgetSummary(User $user, int $limit = 4): array
+    {
+        $period  = now()->format('Y-m');
+        $budgets = DB::table('budgets as b')
+            ->leftJoin('categories as c', 'c.id', '=', 'b.category_id')
+            ->where('b.user_id', $user->id)
+            ->where('b.period', $period)
+            ->select('b.id', 'b.amount', 'b.category_id', 'c.name as category_name')
+            ->get();
+
+        if ($budgets->isEmpty()) return [];
+
+        $actualByCategory = DB::table('transactions as t')
+            ->join('accounts as a', 'a.id', '=', 't.account_id')
+            ->where('a.user_id', $user->id)
+            ->where('t.amount', '<', 0)
+            ->where('t.posted_at', '>=', now()->startOfMonth())
+            ->whereNotNull('t.category_id')
+            ->select('t.category_id', DB::raw('SUM(ABS(t.amount)) as spent'))
+            ->groupBy('t.category_id')
+            ->pluck('spent', 'category_id');
+
+        return $budgets->map(function ($b) use ($actualByCategory) {
+            $spent = (float) ($actualByCategory[$b->category_id] ?? 0);
+            $pct   = $b->amount > 0 ? min(100, round($spent / (float) $b->amount * 100)) : 0;
+            return [
+                'name'       => $b->category_name ?? 'Diğer',
+                'amount'     => (float) $b->amount,
+                'spent'      => $spent,
+                'remaining'  => max(0, (float) $b->amount - $spent),
+                'pct'        => $pct,
+                'over_budget'=> $spent > (float) $b->amount,
+            ];
+        })
+        ->sortByDesc('pct')
+        ->take($limit)
+        ->values()
+        ->all();
+    }
+
     /** Returns up to 3 recent undismissed AI insights */
     public function getRecentInsights(User $user, int $limit = 3): Collection
     {

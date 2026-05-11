@@ -2,6 +2,7 @@
 
 namespace App\Services\Agents\Orchestrator;
 
+use App\Models\AgentInsight;
 use App\Models\AgentRun;
 use App\Models\User;
 use App\Services\Agents\Specialists\AnomalyDetectorAgent;
@@ -67,6 +68,9 @@ class OrchestratorAgent
         // ── 3. Synthesize with Pro ─────────────────────────────────────
         $final = $this->synthesize($user, $message, $specialistResults);
 
+        // ── 4. Persist insight if there are budget/anomaly recommendations ────
+        $this->maybeStoreInsight($user, $routing['context'], $final, $specialistResults);
+
         return [
             'session_id'         => $sessionId,
             'final'              => $final,
@@ -74,6 +78,31 @@ class OrchestratorAgent
             'run_ids'            => array_filter($runIds),
             'agents_used'        => $agents,
         ];
+    }
+
+    private function maybeStoreInsight(User $user, string $context, string $final, array $results): void
+    {
+        // Only store if budget or anomaly results are present
+        $hasContent = isset($results['budget_advisor']) || isset($results['anomaly_detector']);
+        if (! $hasContent || empty(trim($final))) return;
+
+        $title = match (true) {
+            isset($results['anomaly_detector']) => 'Anormallik Tespiti',
+            isset($results['budget_advisor'])   => 'Bütçe Önerisi',
+            default                             => 'AI Analiz',
+        };
+
+        $importance = isset($results['anomaly_detector']) ? 9 : 7;
+
+        AgentInsight::create([
+            'user_id'    => $user->id,
+            'agent_name' => 'orchestrator',
+            'type'       => 'recommendation',
+            'title'      => $title,
+            'body'       => \Illuminate\Support\Str::limit($final, 300),
+            'importance' => $importance,
+            'expires_at' => now()->addDays(7),
+        ]);
     }
 
     private function resolveSpecialist(User $user, string $name): ?object

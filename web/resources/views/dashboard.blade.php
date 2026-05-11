@@ -293,6 +293,44 @@
     </div>
   </div>
 
+  {{-- ══ ROW 3b — Bu Ay Bütçe Durumu ══════════════════════════════════ --}}
+  @if(count($budgetSummary) > 0)
+  <div class="card mb-6">
+    <div class="card-header d-flex align-items-center justify-content-between pb-2">
+      <h5 class="card-title mb-0">
+        <i class="icon-base ti tabler-chart-pie me-2 text-primary"></i>Bu Ay Bütçe Durumu
+      </h5>
+      <a href="{{ route('budgets.index') }}" class="btn btn-sm btn-outline-secondary">Bütçeleri Yönet</a>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+        @foreach($budgetSummary as $b)
+        <div class="col-sm-6 col-xl-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-medium small">{{ $b['name'] }}</span>
+            @if($b['over_budget'])
+              <span class="badge bg-label-danger" style="font-size:.7rem;">Aşıldı</span>
+            @else
+              <span class="text-muted small">%{{ $b['pct'] }}</span>
+            @endif
+          </div>
+          <div class="progress mb-1" style="height:6px;">
+            <div class="progress-bar {{ $b['over_budget'] ? 'bg-danger' : ($b['pct'] >= 80 ? 'bg-warning' : 'bg-success') }}"
+                 style="width:{{ $b['pct'] }}%"></div>
+          </div>
+          <div class="d-flex justify-content-between" style="font-size:.73rem;">
+            <span class="text-muted">₺{{ number_format($b['spent'], 0, ',', '.') }} harcandı</span>
+            <span class="{{ $b['over_budget'] ? 'text-danger fw-semibold' : 'text-muted' }}">
+              / ₺{{ number_format($b['amount'], 0, ',', '.') }}
+            </span>
+          </div>
+        </div>
+        @endforeach
+      </div>
+    </div>
+  </div>
+  @endif
+
   {{-- ══ ROW 4 — Son İşlemler + Ajan Asistan ════════════════════════════ --}}
   <div class="row g-6">
     {{-- Son İşlemler --}}
@@ -368,11 +406,20 @@
         </div>
         <div class="card-body d-flex flex-column p-0">
           @if($aiInsights->isNotEmpty())
-            <ul class="list-group list-group-flush flex-grow-1">
+            <ul class="list-group list-group-flush flex-grow-1" id="insights-list">
               @foreach($aiInsights as $insight)
-                <li class="list-group-item px-4 py-3">
-                  <div class="fw-semibold small mb-1">{{ $insight->title }}</div>
-                  <p class="text-muted small mb-0">{{ \Illuminate\Support\Str::limit($insight->body, 100) }}</p>
+                <li class="list-group-item px-4 py-3" id="insight-{{ $insight->id }}">
+                  <div class="d-flex align-items-start justify-content-between gap-2">
+                    <div class="fw-semibold small mb-1">{{ $insight->title }}</div>
+                    <button type="button"
+                            class="btn btn-icon btn-text-secondary btn-sm flex-shrink-0 btn-dismiss-insight"
+                            data-id="{{ $insight->id }}"
+                            data-url="{{ route('agent-chat.insight-dismiss', $insight->id) }}"
+                            title="Kapat" style="margin-top:-4px;">
+                      <i class="icon-base ti tabler-x icon-14px"></i>
+                    </button>
+                  </div>
+                  <p class="text-muted small mb-0">{{ \Illuminate\Support\Str::limit($insight->body, 110) }}</p>
                   @if($insight->action_link)
                     <a href="{{ $insight->action_link }}" class="text-primary" style="font-size:.78rem;">
                       Detay <i class="icon-base ti tabler-chevron-right"></i>
@@ -389,7 +436,7 @@
           @else
             <div class="flex-grow-1 d-flex flex-column justify-content-center p-4">
               <p class="text-muted small mb-4">
-                Finansal durumunuz hakkında sorularınızı yapay zeka ajanına sorun.
+                Yapay zeka ajanları finansal durumunuzu analiz ederek öneriler üretebilir.
               </p>
               <div class="bg-label-primary rounded p-3 mb-4 small">
                 <strong>Hızlı sorular:</strong>
@@ -399,7 +446,11 @@
                   <li>Harcamalarımda anormallik var mı?</li>
                 </ul>
               </div>
-              <a href="{{ route('agent-chat.index') }}" class="btn btn-primary mt-auto">
+              <button id="btn-quick-analyze" class="btn btn-outline-warning mb-3">
+                <i class="icon-base ti tabler-sparkles me-2"></i>Hızlı AI Analiz Yap
+              </button>
+              <div id="quick-analyze-status" class="d-none alert alert-info py-2 small mb-3"></div>
+              <a href="{{ route('agent-chat.index') }}" class="btn btn-primary">
                 <i class="icon-base ti tabler-message-2 me-2"></i>Ajana Sor
               </a>
             </div>
@@ -514,6 +565,62 @@
         }).render();
       }
     })();
+
+    // ── Dismiss insight ─────────────────────────────────────────────────
+    document.querySelectorAll('.btn-dismiss-insight').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const id  = this.dataset.id;
+        const url = this.dataset.url;
+        fetch(url, {
+          method: 'PATCH',
+          headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+        }).then(() => {
+          const li = document.getElementById('insight-' + id);
+          if (li) li.remove();
+          const list = document.getElementById('insights-list');
+          if (list && list.children.length === 0) location.reload();
+        });
+      });
+    });
+
+    // ── Quick AI Analysis ───────────────────────────────────────────────
+    const btnAnalyze = document.getElementById('btn-quick-analyze');
+    if (btnAnalyze) {
+      btnAnalyze.addEventListener('click', function () {
+        const statusBox = document.getElementById('quick-analyze-status');
+        btnAnalyze.disabled = true;
+        btnAnalyze.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analiz yapılıyor…';
+        statusBox.className = 'alert alert-info py-2 small mb-3';
+        statusBox.textContent = 'Yapay zeka ajanları analiz ediyor, lütfen bekleyin…';
+
+        fetch('{{ route("agent-chat.quick-analyze") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          },
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'ok') {
+            statusBox.className = 'alert alert-success py-2 small mb-3';
+            statusBox.textContent = 'Analiz tamamlandı! Sayfayı yenileyerek önerileri görün.';
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            statusBox.className = 'alert alert-warning py-2 small mb-3';
+            statusBox.textContent = 'Analiz sırasında hata: ' + (data.message || 'Bilinmiyor');
+            btnAnalyze.disabled = false;
+            btnAnalyze.innerHTML = '<i class="icon-base ti tabler-sparkles me-2"></i>Tekrar Dene';
+          }
+        })
+        .catch(() => {
+          statusBox.className = 'alert alert-danger py-2 small mb-3';
+          statusBox.textContent = 'Bağlantı hatası. Lütfen tekrar deneyin.';
+          btnAnalyze.disabled = false;
+          btnAnalyze.innerHTML = '<i class="icon-base ti tabler-sparkles me-2"></i>Tekrar Dene';
+        });
+      });
+    }
     </script>
   </x-slot>
 </x-app-layout>

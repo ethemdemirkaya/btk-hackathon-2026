@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
     // Agent Chat
     Route::get('/chat', [AgentChatController::class, 'index'])->name('agent-chat.index');
     Route::post('/chat/send', [AgentChatController::class, 'send'])->name('agent-chat.send');
+    Route::post('/chat/quick-analyze', [AgentChatController::class, 'quickAnalyze'])->name('agent-chat.quick-analyze');
+    Route::patch('/chat/insights/{insight}/dismiss', [AgentChatController::class, 'dismissInsight'])->name('agent-chat.insight-dismiss');
     Route::get('/chat/history', [AgentChatController::class, 'history'])->name('agent-chat.history');
     Route::get('/chat/runs', [AgentChatController::class, 'runs'])->name('agent-chat.runs');
 

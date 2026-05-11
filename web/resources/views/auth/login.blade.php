@@ -71,6 +71,15 @@
         <span>Hesabınız yok mu?</span>
         <a href="{{ route('register') }}"><span> Kayıt Ol</span></a>
       </p>
+
+      <div class="divider my-4">
+        <div class="divider-text">veya</div>
+      </div>
+
+      <button type="button" class="btn btn-outline-secondary d-grid w-100"
+              onclick="document.getElementById('email').value='demo@paranette.local';document.getElementById('password').value='password';">
+        <i class="icon-base ti tabler-player-play me-2"></i>Demo Hesabıyla Dene
+      </button>
     </div>
   </div>
 </x-guest-layout>

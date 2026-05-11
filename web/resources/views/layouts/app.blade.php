@@ -189,6 +189,50 @@
                   </button>
                 </li>
 
+                <!-- Notification bell -->
+                @php $alertCount = isset($navAlerts) ? count($navAlerts) : 0; @endphp
+                <li class="nav-item dropdown me-2 me-xl-1">
+                  <a class="nav-link btn btn-icon btn-text-secondary rounded-pill position-relative"
+                     href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="icon-base ti tabler-bell icon-22px text-heading"></i>
+                    @if($alertCount > 0)
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                            style="font-size:.6rem;padding:.2em .45em;">{{ $alertCount }}</span>
+                    @endif
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end p-0" style="min-width:22rem;max-height:400px;overflow-y:auto;">
+                    <li class="border-bottom px-4 py-3 d-flex align-items-center">
+                      <h6 class="mb-0 me-auto fw-semibold">Bildirimler</h6>
+                      @if($alertCount > 0)
+                        <span class="badge bg-label-danger">{{ $alertCount }} yeni</span>
+                      @endif
+                    </li>
+                    @if($alertCount > 0)
+                      @foreach($navAlerts as $alert)
+                      <li>
+                        <a class="dropdown-item px-4 py-3 d-flex align-items-start gap-3 border-bottom"
+                           href="{{ $alert['link'] }}">
+                          <span class="avatar avatar-sm flex-shrink-0">
+                            <span class="avatar-initial rounded bg-label-{{ $alert['type'] }}">
+                              <i class="icon-base ti {{ $alert['icon'] }} icon-18px"></i>
+                            </span>
+                          </span>
+                          <div class="overflow-hidden">
+                            <div class="fw-medium small text-{{ $alert['type'] }}">{{ $alert['title'] }}</div>
+                            <small class="text-muted text-truncate d-block">{{ $alert['body'] }}</small>
+                          </div>
+                        </a>
+                      </li>
+                      @endforeach
+                    @else
+                      <li class="text-center py-4 text-muted small">
+                        <i class="icon-base ti tabler-bell-off d-block mb-2 icon-24px"></i>
+                        Yeni bildirim yok
+                      </li>
+                    @endif
+                  </ul>
+                </li>
+
                 <!-- User dropdown -->
                 @php
                   $authUser   = auth()->user();
