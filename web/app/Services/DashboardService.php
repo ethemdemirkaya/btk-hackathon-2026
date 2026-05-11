@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Account;
+use App\Models\AgentInsight;
 use App\Models\BankConnection;
 use App\Models\Card;
 use App\Models\Loan;
@@ -185,5 +186,19 @@ class DashboardService
             'personal' => round((float) $r->annual_rate, 2),
             'tufe'     => round((float) ($tufe->get($r->reference_month)?->rate ?? 0), 2),
         ])->values()->all();
+    }
+
+    /** Returns up to 3 recent undismissed AI insights */
+    public function getRecentInsights(User $user, int $limit = 3): Collection
+    {
+        return AgentInsight::where('user_id', $user->id)
+            ->where('is_dismissed', false)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->orderByDesc('importance')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
     }
 }

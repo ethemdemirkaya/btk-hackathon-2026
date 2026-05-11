@@ -93,8 +93,8 @@
             @endif
             <form action="{{ route('goals.destroy', $goal->id) }}" method="POST">
               @csrf @method('DELETE')
-              <button type="submit" class="btn btn-icon btn-sm btn-text-danger"
-                      onclick="return confirm('Hedefi sil?')">
+              <button type="button" class="btn btn-icon btn-sm btn-text-danger btn-swal-delete"
+                      data-name="{{ $goal->name }}">
                 <i class="icon-base ti tabler-trash icon-18px"></i>
               </button>
             </form>
@@ -176,4 +176,28 @@
       </form>
     </div>
   </div>
+
+  <x-slot name="pageJs">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script>
+  document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const name = this.dataset.name;
+      Swal.fire({
+        title: '"' + name + '" hedefini sil?',
+        text: 'Bu hedef ve tüm ödeme geçmişi kalıcı olarak silinecek.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, sil',
+        cancelButtonText: 'Vazgeç',
+        reverseButtons: true,
+      }).then(function (result) {
+        if (result.isConfirmed) btn.closest('form').submit();
+      });
+    });
+  });
+  </script>
+  </x-slot>
 </x-app-layout>

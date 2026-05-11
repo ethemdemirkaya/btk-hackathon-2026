@@ -45,12 +45,20 @@
                  style="width:40px;height:40px;">
               <i class="icon-base ti tabler-repeat text-primary"></i>
             </div>
-            <div class="flex-grow-1">
-              <div class="fw-medium small">{{ $c->merchant_name ?: $c->description }}</div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-medium small text-truncate">{{ $c->merchant_name ?: $c->description }}</div>
               <div class="text-muted" style="font-size:.75rem;">
                 ~₺{{ number_format($c->avg_amount, 2, ',', '.') }} · {{ $c->occurrences }}x
               </div>
             </div>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary flex-shrink-0 btn-convert-candidate"
+                    data-name="{{ $c->merchant_name ?: ucwords(mb_strtolower($c->description)) }}"
+                    data-merchant="{{ $c->merchant_name }}"
+                    data-amount="{{ number_format($c->avg_amount, 2, '.', '') }}"
+                    title="Abonelik olarak ekle">
+              <i class="icon-base ti tabler-plus icon-14px"></i>
+            </button>
           </div>
         </div>
         @endforeach
@@ -102,8 +110,8 @@
             </div>
             <form action="{{ route('subscriptions.destroy', $sub->id) }}" method="POST" class="d-inline">
               @csrf @method('DELETE')
-              <button type="submit" class="btn btn-icon btn-sm btn-text-danger"
-                      onclick="return confirm('Aboneliği iptal et?')" title="İptal">
+              <button type="button" class="btn btn-icon btn-sm btn-text-danger btn-swal-delete"
+                      data-name="{{ $sub->name }}" title="İptal">
                 <i class="icon-base ti tabler-x icon-18px"></i>
               </button>
             </form>
@@ -162,4 +170,44 @@
       </form>
     </div>
   </div>
+
+  <x-slot name="pageJs">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script>
+  // Delete subscription
+  document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const name = this.dataset.name;
+      Swal.fire({
+        title: '"' + name + '" aboneliğini iptal et?',
+        text: 'Bu abonelik iptal edilecek.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, iptal et',
+        cancelButtonText: 'Vazgeç',
+        reverseButtons: true,
+      }).then(function (result) {
+        if (result.isConfirmed) btn.closest('form').submit();
+      });
+    });
+  });
+
+  // Convert candidate to subscription — pre-fill the add modal
+  const addModal   = document.getElementById('addModal');
+  const nameInput  = addModal.querySelector('[name="name"]');
+  const merchantIn = addModal.querySelector('[name="merchant_name"]');
+  const amountIn   = addModal.querySelector('[name="amount"]');
+
+  document.querySelectorAll('.btn-convert-candidate').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      nameInput.value  = this.dataset.name;
+      merchantIn.value = this.dataset.merchant;
+      amountIn.value   = this.dataset.amount;
+      bootstrap.Modal.getOrCreateInstance(addModal).show();
+    });
+  });
+  </script>
+  </x-slot>
 </x-app-layout>

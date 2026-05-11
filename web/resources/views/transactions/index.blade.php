@@ -7,9 +7,15 @@
       <h4 class="fw-bold mb-0">İşlemler</h4>
       <p class="text-muted small mb-0">Tüm banka hesaplarınızdaki hareketler</p>
     </div>
-    <a href="{{ route('report.monthly') }}" class="btn btn-outline-primary btn-sm" target="_blank">
-      <i class="icon-base ti tabler-file-type-pdf me-1"></i>PDF Rapor
-    </a>
+    <div class="d-flex gap-2">
+      <a href="{{ route('report.monthly') }}" class="btn btn-outline-primary btn-sm" target="_blank">
+        <i class="icon-base ti tabler-file-type-pdf me-1"></i>PDF Rapor
+      </a>
+      <a href="{{ route('transactions.export', request()->only(['q','type','from','to'])) }}"
+         class="btn btn-outline-success btn-sm">
+        <i class="icon-base ti tabler-file-type-csv me-1"></i>CSV İndir
+      </a>
+    </div>
   </div>
 
   {{-- This month mini stats --}}

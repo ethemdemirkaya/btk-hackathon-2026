@@ -81,26 +81,26 @@
             <li class="menu-header small">
               <span class="menu-header-text">Finansal Varlıklar</span>
             </li>
-            <li class="menu-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('bank-connections.*') ? 'active' : '' }}">
+              <a href="{{ route('bank-connections.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-building-bank"></i>
                 <div>Banka Hesapları</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('cards.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-credit-card"></i>
                 <div>Kredi Kartları</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('loans.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('loans.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-file-invoice"></i>
                 <div>Krediler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('transactions.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('transactions.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-arrows-exchange"></i>
                 <div>İşlemler</div>
               </a>
@@ -111,25 +111,25 @@
               <span class="menu-header-text">Takip & Analiz</span>
             </li>
             <li class="menu-item {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('subscriptions.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-repeat"></i>
                 <div>Abonelikler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('budgets.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('budgets.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-chart-pie"></i>
                 <div>Bütçeler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('goals.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('goals.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-target"></i>
                 <div>Hedefler</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('receipts.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('receipts.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-receipt"></i>
                 <div>Fişler & OCR</div>
               </a>
@@ -139,20 +139,26 @@
             <li class="menu-header small">
               <span class="menu-header-text">Yapay Zeka</span>
             </li>
-            <li class="menu-item {{ request()->routeIs('agent.chat') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+            <li class="menu-item {{ request()->routeIs('agent-chat.*') ? 'active' : '' }}">
+              <a href="{{ route('agent-chat.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-robot"></i>
                 <div>Ajan Asistan</div>
               </a>
             </li>
-            <li class="menu-item {{ request()->routeIs('agent.insights') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
-                <i class="menu-icon icon-base ti tabler-bulb"></i>
-                <div>Öngörüler</div>
+            <li class="menu-item {{ request()->routeIs('negotiation.*') ? 'active' : '' }}">
+              <a href="{{ route('negotiation.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-message-2-dollar"></i>
+                <div>Müzakere Ajanı</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('simulator.*') ? 'active' : '' }}">
+              <a href="{{ route('simulator.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-calculator"></i>
+                <div>Karar Simülatörü</div>
               </a>
             </li>
             <li class="menu-item {{ request()->routeIs('inflation.*') ? 'active' : '' }}">
-              <a href="#" class="menu-link">
+              <a href="{{ route('inflation.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-trending-up"></i>
                 <div>Kişisel Enflasyon</div>
               </a>
@@ -220,19 +226,23 @@
                 </li>
 
                 <!-- User -->
+                @php
+                  $words    = collect(explode(' ', auth()->user()->name ?? 'U'));
+                  $initials = $words->map(fn($w) => strtoupper(substr($w, 0, 1)))->take(2)->implode('');
+                @endphp
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                      <img src="{{ asset('assets/img/avatars/1.png') }}" class="h-auto rounded-circle" alt="Profil" />
+                      <span class="avatar-initial rounded-circle bg-primary" style="font-size:.85rem;">{{ $initials }}</span>
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                      <a class="dropdown-item mt-1" href="#">
+                      <a class="dropdown-item mt-1" href="{{ route('profile.edit') }}">
                         <div class="d-flex align-items-center">
                           <div class="flex-shrink-0 me-2">
-                            <div class="avatar avatar-online">
-                              <img src="{{ asset('assets/img/avatars/1.png') }}" class="h-auto rounded-circle" alt="" />
+                            <div class="avatar">
+                              <span class="avatar-initial rounded-circle bg-label-primary" style="font-size:.85rem;">{{ $initials }}</span>
                             </div>
                           </div>
                           <div class="flex-grow-1">

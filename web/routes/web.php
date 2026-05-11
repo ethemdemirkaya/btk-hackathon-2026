@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
 
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
 
     // Subscriptions
     Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');

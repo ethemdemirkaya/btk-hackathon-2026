@@ -14,7 +14,7 @@ class BankConnectionController extends Controller
 {
     public function index(Request $request): View
     {
-        $connections = BankConnection::with('bank')
+        $connections = BankConnection::with(['bank', 'accounts'])
             ->where('user_id', $request->user()->id)
             ->orderByDesc('created_at')
             ->get();

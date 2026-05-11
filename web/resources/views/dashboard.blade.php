@@ -358,26 +358,52 @@
     {{-- Ajan Asistan --}}
     <div class="col-xl-4">
       <div class="card h-100">
-        <div class="card-header">
+        <div class="card-header d-flex align-items-center justify-content-between">
           <h5 class="card-title mb-0">
-            <i class="icon-base ti tabler-robot me-2 text-primary"></i>Ajan Asistan
+            <i class="icon-base ti tabler-bulb me-2 text-warning"></i>AI Öngörüler
           </h5>
-        </div>
-        <div class="card-body d-flex flex-column">
-          <p class="text-muted mb-4">
-            Finansal durumunuz hakkında sorularınızı yapay zeka destekli ajan asistanınıza sorun.
-          </p>
-          <div class="bg-label-primary rounded p-3 mb-4 small">
-            <strong>Önerilen sorular:</strong>
-            <ul class="mb-0 mt-1 ps-3">
-              <li>Bu ay ne kadar harcadım?</li>
-              <li>Birikim için önerilerin neler?</li>
-              <li>En yüksek harcama kategorim hangisi?</li>
-            </ul>
-          </div>
-          <a href="{{ route('agent-chat.index') }}" class="btn btn-primary mt-auto">
-            <i class="icon-base ti tabler-message-2 me-2"></i>Ajana Sor
+          <a href="{{ route('agent-chat.index') }}" class="btn btn-sm btn-outline-primary">
+            <i class="icon-base ti tabler-message-2 me-1"></i>Sohbet
           </a>
+        </div>
+        <div class="card-body d-flex flex-column p-0">
+          @if($aiInsights->isNotEmpty())
+            <ul class="list-group list-group-flush flex-grow-1">
+              @foreach($aiInsights as $insight)
+                <li class="list-group-item px-4 py-3">
+                  <div class="fw-semibold small mb-1">{{ $insight->title }}</div>
+                  <p class="text-muted small mb-0">{{ \Illuminate\Support\Str::limit($insight->body, 100) }}</p>
+                  @if($insight->action_link)
+                    <a href="{{ $insight->action_link }}" class="text-primary" style="font-size:.78rem;">
+                      Detay <i class="icon-base ti tabler-chevron-right"></i>
+                    </a>
+                  @endif
+                </li>
+              @endforeach
+            </ul>
+            <div class="p-3 border-top">
+              <a href="{{ route('agent-chat.index') }}" class="btn btn-primary w-100 btn-sm">
+                <i class="icon-base ti tabler-robot me-2"></i>Ajana Daha Fazla Sor
+              </a>
+            </div>
+          @else
+            <div class="flex-grow-1 d-flex flex-column justify-content-center p-4">
+              <p class="text-muted small mb-4">
+                Finansal durumunuz hakkında sorularınızı yapay zeka ajanına sorun.
+              </p>
+              <div class="bg-label-primary rounded p-3 mb-4 small">
+                <strong>Hızlı sorular:</strong>
+                <ul class="mb-0 mt-1 ps-3">
+                  <li>Bu ay ne kadar harcadım?</li>
+                  <li>Birikim önerilerin neler?</li>
+                  <li>Harcamalarımda anormallik var mı?</li>
+                </ul>
+              </div>
+              <a href="{{ route('agent-chat.index') }}" class="btn btn-primary mt-auto">
+                <i class="icon-base ti tabler-message-2 me-2"></i>Ajana Sor
+              </a>
+            </div>
+          @endif
         </div>
       </div>
     </div>
