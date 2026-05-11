@@ -29,6 +29,9 @@ class DatabaseSeeder extends Seeder
             'inflation_aware'=> true,
         ]);
 
-        $this->call([UserBankConnectionSeeder::class]);
+        $this->call([
+            UserBankConnectionSeeder::class,
+            BillSeeder::class,
+        ]);
     }
 }

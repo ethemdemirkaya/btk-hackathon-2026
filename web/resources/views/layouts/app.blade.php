@@ -97,6 +97,12 @@
             </li>
 
             <li class="menu-header small"><span class="menu-header-text">Takip & Analiz</span></li>
+            <li class="menu-item {{ request()->routeIs('bills.*') ? 'active' : '' }}">
+              <a href="{{ route('bills.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-file-dollar"></i>
+                <div>Faturalar</div>
+              </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}">
               <a href="{{ route('subscriptions.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-repeat"></i>

@@ -72,10 +72,15 @@ class ReportController extends Controller
             ->first();
 
         // ── Personal inflation ───────────────────────────────────────────
-        $personalInflation = (float) (DB::table('inflation_rates')
-            ->where('user_id', $user->id)
-            ->orderByDesc('reference_month')
-            ->value('annual_rate') ?? 38.0);
+        try {
+            $piResult = app(\App\Services\PersonalInflationService::class)->calculate($user);
+            $personalInflation = (float) ($piResult['personal_rate'] ?? $piResult['tufe_rate'] ?? 37.86);
+        } catch (\Throwable) {
+            $personalInflation = (float) (DB::table('inflation_category_rates')
+                ->where('tuik_category_slug', 'genel')
+                ->orderByDesc('period_year')->orderByDesc('period_month')
+                ->value('annual_change_rate') ?? 37.86);
+        }
 
         // ── Loans ────────────────────────────────────────────────────────
         $loans = DB::table('loans')->where('user_id', $user->id)->get();
