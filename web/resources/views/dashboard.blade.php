@@ -1061,6 +1061,37 @@
       });
     });
 
+    // ── Browser Notifications ─────────────────────────────────────────────
+    (function () {
+      const alerts = @json($smartAlerts);
+      if (!('Notification' in window) || !alerts.length) return;
+
+      const STORAGE_KEY = 'paranette-notif-shown';
+      const today       = new Date().toISOString().slice(0, 10);
+      const shownToday  = localStorage.getItem(STORAGE_KEY) === today;
+      if (shownToday) return;
+
+      function fireNotifications() {
+        localStorage.setItem(STORAGE_KEY, today);
+        alerts.slice(0, 3).forEach((al, i) => {
+          setTimeout(() => {
+            const n = new Notification('Paranette — ' + al.title, {
+              body: al.body,
+              icon: '/assets/img/favicon/favicon.ico',
+              tag:  'paranette-alert-' + i,
+            });
+            if (al.link) n.onclick = () => { window.focus(); window.location.href = al.link; };
+          }, i * 600);
+        });
+      }
+
+      if (Notification.permission === 'granted') {
+        fireNotifications();
+      } else if (Notification.permission === 'default') {
+        Notification.requestPermission().then(p => { if (p === 'granted') fireNotifications(); });
+      }
+    })();
+
     // ── Quick AI Analyze ──────────────────────────────────────────────────
     const btnAnalyze = document.getElementById('btn-quick-analyze');
     if (btnAnalyze) {

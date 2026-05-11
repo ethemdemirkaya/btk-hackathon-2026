@@ -84,6 +84,108 @@
   </div>
   @endif
 
+  {{-- Market Price Comparison Widget --}}
+  @if($subscriptions->isNotEmpty())
+  @php
+    $marketPrices = [
+      ['name' => 'Netflix Basic',       'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 79.99],
+      ['name' => 'Netflix Standard',    'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 139.99],
+      ['name' => 'Netflix Premium',     'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 199.99],
+      ['name' => 'Spotify Premium',     'icon' => 'tabler-brand-spotify',  'color' => 'success',  'price' => 49.99],
+      ['name' => 'YouTube Premium',     'icon' => 'tabler-brand-youtube',  'color' => 'danger',   'price' => 79.99],
+      ['name' => 'Disney+',             'icon' => 'tabler-movie',          'color' => 'info',     'price' => 79.99],
+      ['name' => 'Amazon Prime',        'icon' => 'tabler-brand-amazon',   'color' => 'warning',  'price' => 139.00],
+      ['name' => 'BeIN Sports',         'icon' => 'tabler-device-tv',      'color' => 'primary',  'price' => 259.90],
+      ['name' => 'Exxen',               'icon' => 'tabler-device-tv',      'color' => 'info',     'price' => 109.90],
+      ['name' => 'BluTV',               'icon' => 'tabler-device-tv',      'color' => 'primary',  'price' => 129.90],
+      ['name' => 'Apple TV+',           'icon' => 'tabler-brand-apple',    'color' => 'secondary','price' => 49.99],
+      ['name' => 'Apple Music',         'icon' => 'tabler-brand-apple',    'color' => 'secondary','price' => 49.99],
+    ];
+
+    // Find user subscriptions by fuzzy name match
+    $userSubNames = $subscriptions->pluck('name')->map(fn ($n) => mb_strtolower($n));
+    $matched = collect($marketPrices)->map(function ($market) use ($subscriptions) {
+      $userSub = $subscriptions->first(fn ($s) =>
+        str_contains(mb_strtolower($s->name), mb_strtolower(explode(' ', $market['name'])[0]))
+        || str_contains(mb_strtolower($market['name']), mb_strtolower(explode(' ', $s->name)[0]))
+      );
+      $market['user_price'] = $userSub
+        ? match($userSub->billing_cycle) {
+            'yearly' => (float)$userSub->amount / 12,
+            'weekly' => (float)$userSub->amount * 4.33,
+            default  => (float)$userSub->amount,
+          }
+        : null;
+      $market['subscribed'] = $userSub !== null;
+      return $market;
+    })->filter(fn ($m) => $m['subscribed']); // Only show services user actually subscribes to
+  @endphp
+  @if($matched->isNotEmpty())
+  <div class="card mb-6 shadow-sm">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <div>
+        <h5 class="card-title mb-0">
+          <i class="icon-base ti tabler-chart-bar me-2 text-primary"></i>Piyasa Fiyat Karşılaştırması
+        </h5>
+        <small class="text-muted">Aboneliklerini Türkiye piyasa fiyatlarıyla karşılaştır</small>
+      </div>
+      <span class="badge bg-label-primary">{{ now()->format('M Y') }}</span>
+    </div>
+    <div class="card-body pb-2">
+      <div class="row g-3">
+        @foreach($matched as $m)
+        @php
+          $userPr = $m['user_price'];
+          $mktPr  = $m['price'];
+          $diff   = $userPr !== null ? $userPr - $mktPr : null;
+          $pct    = $mktPr > 0 && $diff !== null ? round(abs($diff) / $mktPr * 100) : 0;
+          $status = $diff === null ? 'none' : ($diff < -0.5 ? 'cheaper' : ($diff > 0.5 ? 'expensive' : 'equal'));
+        @endphp
+        <div class="col-sm-6 col-xl-4">
+          <div class="p-3 rounded border d-flex align-items-center gap-3"
+               style="background:var(--bs-secondary-bg);">
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-{{ $m['color'] }}">
+                <i class="icon-base ti {{ $m['icon'] }} icon-20px"></i>
+              </span>
+            </div>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-medium small text-truncate">{{ $m['name'] }}</div>
+              <div class="text-muted" style="font-size:.72rem;">
+                Piyasa: ₺{{ number_format($mktPr, 2, ',', '.') }}/ay
+              </div>
+            </div>
+            <div class="text-end flex-shrink-0">
+              @if($userPr !== null)
+                <div class="fw-bold small">₺{{ number_format($userPr, 2, ',', '.') }}</div>
+                @if($status === 'cheaper')
+                  <span class="badge bg-label-success" style="font-size:.65rem;">
+                    <i class="icon-base ti tabler-arrow-down icon-10px"></i> %{{ $pct }} ucuz
+                  </span>
+                @elseif($status === 'expensive')
+                  <span class="badge bg-label-danger" style="font-size:.65rem;">
+                    <i class="icon-base ti tabler-arrow-up icon-10px"></i> %{{ $pct }} pahalı
+                  </span>
+                @else
+                  <span class="badge bg-label-secondary" style="font-size:.65rem;">Piyasa fiyatı</span>
+                @endif
+              @else
+                <span class="badge bg-label-secondary" style="font-size:.65rem;">Abonelik yok</span>
+              @endif
+            </div>
+          </div>
+        </div>
+        @endforeach
+      </div>
+      <p class="text-muted small mt-3 mb-1">
+        <i class="icon-base ti tabler-info-circle me-1"></i>
+        Referans fiyatlar {{ now()->format('M Y') }} Türkiye piyasa fiyatlarıdır. Kampanya ve paket indirimleri farklılık gösterebilir.
+      </p>
+    </div>
+  </div>
+  @endif
+  @endif
+
   {{-- Auto-detected candidates --}}
   @if($candidates->isNotEmpty())
   <div class="card mb-6 shadow-sm">

@@ -65,6 +65,16 @@
         letter-spacing: .05em;
         color: var(--bs-secondary-color);
       }
+      /* ── Avatar icon centering fix ───────────────────────────────────── */
+      .avatar-initial {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .avatar-initial .icon-base {
+        display: flex !important;
+        line-height: 1 !important;
+      }
     </style>
 
     @isset($pageCss){{ $pageCss }}@endisset
