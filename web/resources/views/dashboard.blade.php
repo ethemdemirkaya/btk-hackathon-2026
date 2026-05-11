@@ -367,10 +367,12 @@
       <div class="card h-100 shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div>
-            <h5 class="card-title mb-0">Nakit Akışı</h5>
-            <small class="text-muted">Son 6 ay · Gelir vs Gider</small>
+            <h5 class="card-title mb-0">Gelir & Gider Trendi</h5>
+            <small class="text-muted">Son 6 ay · çubuk karşılaştırma + net çizgi</small>
           </div>
-          <span class="badge bg-label-secondary">₺ TRY</span>
+          <a href="{{ route('report.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="icon-base ti tabler-report-analytics me-1"></i>Tüm Rapor
+          </a>
         </div>
         <div class="card-body pt-2">
           <div id="cashFlowChart"></div>
@@ -924,27 +926,32 @@
 
       if (document.getElementById('cashFlowChart')) {
         if (cfData.length > 0) {
+          const cfLabels  = cfData.map(r => {
+            const [y, m] = r.month.split('-');
+            return new Date(y, m - 1).toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
+          });
+          const cfIncomes  = cfData.map(r => r.income);
+          const cfExpenses = cfData.map(r => r.expense);
+          const cfNets     = cfData.map(r => r.income - r.expense);
+
           new ApexCharts(document.getElementById('cashFlowChart'), {
-            chart: { type: 'area', height: 250, toolbar: { show: false }, fontFamily: fontFam, sparkline: { enabled: false } },
-            series: [
-              { name: 'Gelir', data: cfData.map(r => r.income) },
-              { name: 'Gider', data: cfData.map(r => r.expense) },
-            ],
-            colors: [success, danger],
-            fill: {
-              type: 'gradient',
-              gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.0, stops: [0, 100] },
+            chart: {
+              type: 'bar', height: 255,
+              toolbar: { show: false }, fontFamily: fontFam, background: 'transparent',
             },
-            stroke: { curve: 'smooth', width: 2.5 },
+            plotOptions: { bar: { borderRadius: 5, columnWidth: '50%' } },
+            series: [
+              { name: 'Gelir',   type: 'bar',  data: cfIncomes  },
+              { name: 'Gider',   type: 'bar',  data: cfExpenses  },
+              { name: 'Net',     type: 'line', data: cfNets      },
+            ],
+            colors: [success, danger, primary],
+            stroke: { width: [0, 0, 3], curve: 'smooth' },
+            markers: { size: [0, 0, 4] },
             xaxis: {
-              categories: cfData.map(r => {
-                const [y, m] = r.month.split('-');
-                const d = new Date(y, m - 1);
-                return d.toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
-              }),
+              categories: cfLabels,
               labels: { style: { colors: textColor, fontFamily: fontFam, fontSize: '12px' } },
-              axisBorder: { show: false },
-              axisTicks: { show: false },
+              axisBorder: { show: false }, axisTicks: { show: false },
             },
             yaxis: {
               labels: {
@@ -952,23 +959,20 @@
                 style: { colors: textColor, fontFamily: fontFam },
               },
             },
-            grid: { borderColor: gridColor, padding: { top: -10, left: 0, right: 0 } },
-            dataLabels: { enabled: false },
             legend: {
-              position: 'top',
-              horizontalAlign: 'right',
-              fontFamily: fontFam,
+              position: 'top', horizontalAlign: 'right', fontFamily: fontFam,
               markers: { radius: 50, width: 10, height: 10 },
             },
+            grid: { borderColor: gridColor, strokeDashArray: 4, padding: { top: -10 } },
+            dataLabels: { enabled: false },
             tooltip: {
-              y: { formatter: v => '₺ ' + v.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) },
+              y: { formatter: v => '₺ ' + parseFloat(v).toLocaleString('tr-TR', { minimumFractionDigits: 0 }) },
               theme: isDark ? 'dark' : 'light',
             },
-            markers: { size: 0, hover: { size: 5 } },
           }).render();
         } else {
           document.getElementById('cashFlowChart').innerHTML =
-            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-area icon-48px d-block mb-2"></i><p class="small mb-0">Nakit akışı verisi bulunamadı.</p></div>';
+            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-bar icon-48px d-block mb-2"></i><p class="small mb-0">Nakit akışı verisi bulunamadı.</p></div>';
         }
       }
 
