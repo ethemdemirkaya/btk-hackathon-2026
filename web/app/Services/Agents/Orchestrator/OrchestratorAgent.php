@@ -7,6 +7,9 @@ use App\Models\AgentRun;
 use App\Models\User;
 use App\Services\Agents\Specialists\AnomalyDetectorAgent;
 use App\Services\Agents\Specialists\BudgetAdvisorAgent;
+use App\Services\Agents\Specialists\CriticAgent;
+use App\Services\Agents\Specialists\DebtOptimizerAgent;
+use App\Services\Agents\Specialists\ForecasterAgent;
 use App\Services\Agents\Specialists\InflationAwareAgent;
 use App\Services\Agents\Specialists\PurchasePlannerAgent;
 use App\Services\Agents\Specialists\TransactionClassifierAgent;
@@ -46,6 +49,9 @@ class OrchestratorAgent
         $runIds            = [];
 
         foreach ($agents as $agentName) {
+            if ($agentName === 'critic') {
+                continue; // critic runs after all others
+            }
             try {
                 $agent = $this->resolveSpecialist($user, $agentName);
                 if (! $agent) {
@@ -65,7 +71,21 @@ class OrchestratorAgent
             }
         }
 
-        // ── 3. Synthesize with Pro ─────────────────────────────────────
+        // ── 2b. Run CriticAgent if specialists produced results ────────
+        if (! empty($specialistResults)) {
+            try {
+                $critic = new CriticAgent($user);
+                $criticResult = $critic->run(array_merge(
+                    ['context' => $context, 'session_id' => $sessionId, 'specialist_results' => $specialistResults],
+                    $extracted,
+                ));
+                $specialistResults['critic'] = $criticResult;
+            } catch (\Throwable $e) {
+                $specialistResults['critic'] = ['error' => $e->getMessage()];
+            }
+        }
+
+        // ── 3. Synthesize with Flash ───────────────────────────────────
         $final = $this->synthesize($user, $message, $specialistResults);
 
         // ── 4. Persist insight if there are budget/anomaly recommendations ────
@@ -108,12 +128,14 @@ class OrchestratorAgent
     private function resolveSpecialist(User $user, string $name): ?object
     {
         return match ($name) {
-            'purchase_planner'         => new PurchasePlannerAgent($user),
-            'budget_advisor'           => new BudgetAdvisorAgent($user),
-            'inflation_aware'          => new InflationAwareAgent($user),
-            'anomaly_detector'         => new AnomalyDetectorAgent($user),
-            'transaction_classifier'   => new TransactionClassifierAgent($user),
-            default                    => null,
+            'purchase_planner'       => new PurchasePlannerAgent($user),
+            'budget_advisor'         => new BudgetAdvisorAgent($user),
+            'inflation_aware'        => new InflationAwareAgent($user),
+            'anomaly_detector'       => new AnomalyDetectorAgent($user),
+            'transaction_classifier' => new TransactionClassifierAgent($user),
+            'forecaster'             => new ForecasterAgent($user),
+            'debt_optimizer'         => new DebtOptimizerAgent($user),
+            default                  => null,
         };
     }
 

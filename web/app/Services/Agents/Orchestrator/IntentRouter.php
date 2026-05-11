@@ -34,6 +34,8 @@ class IntentRouter
             'inflation_aware',
             'anomaly_detector',
             'transaction_classifier',
+            'forecaster',
+            'debt_optimizer',
         ]);
 
         $prompt = <<<PROMPT
@@ -46,6 +48,8 @@ class IntentRouter
         - inflation_aware: enflasyon etkisi, reel değer, satın alma gücü analizi
         - anomaly_detector: şüpheli işlem, olağandışı harcama tespiti
         - transaction_classifier: işlem kategorize etme talebi
+        - forecaster: gelecek projeksiyon, birikim tahmini, 3-12 ay finansal görünüm
+        - debt_optimizer: borç azaltma stratejisi, kredi kartı optimizasyonu, Avalanche/Snowball
 
         Bu mesaj için hangi ajanlar çalışmalı? Ve mesajdan çıkartılan bilgileri döndür.
         PROMPT;
