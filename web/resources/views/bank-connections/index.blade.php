@@ -1,6 +1,18 @@
 <x-app-layout>
   <x-slot name="title">Banka Hesapları</x-slot>
 
+  <x-slot name="pageCss">
+  <style>
+    .bank-logo-box { background:#fff; border-radius:6px; padding:4px 8px; display:inline-flex; align-items:center; justify-content:center; min-width:60px; height:36px; border:1px solid rgba(0,0,0,.08); }
+    [data-bs-theme="dark"] .bank-logo-box { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); }
+    .bank-logo-box img { max-height:24px; width:auto; object-fit:contain; }
+    .bank-logo-wrap { background:#fff; border-radius:6px; border:1px solid rgba(0,0,0,.08); }
+    [data-bs-theme="dark"] .bank-logo-wrap { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); }
+    .bank-logo-wrap img { max-height:24px; width:auto; object-fit:contain; }
+    .detail-box { background:var(--bs-secondary-bg); border:1px solid var(--bs-border-color); border-radius:8px; padding:.5rem .75rem; }
+  </style>
+  </x-slot>
+
   {{-- Header --}}
   <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>

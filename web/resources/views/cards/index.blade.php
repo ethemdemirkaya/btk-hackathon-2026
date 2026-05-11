@@ -3,28 +3,52 @@
 
   <x-slot name="pageCss">
   <style>
-    .bank-card-visual {
-      border-radius: 14px;
-      background: linear-gradient(135deg, #1A56DB 0%, #7367f0 100%);
-      color: #fff; padding: 1.4rem 1.6rem; position: relative; overflow: hidden;
-      min-height: 160px;
+    .pn-card {
+      border-radius: 18px; position: relative; overflow: hidden;
+      min-height: 200px; padding: 1.5rem; color: #fff;
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
+      transition: transform .2s, box-shadow .2s;
     }
-    .bank-card-visual.debit {
-      background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-    }
-    .bank-card-visual::after {
-      content:''; position:absolute; right:-30px; top:-30px;
-      width:140px; height:140px; border-radius:50%;
+    .pn-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,.3); }
+    .pn-card::before {
+      content:''; position:absolute; top:-40px; right:-40px;
+      width:160px; height:160px; border-radius:50%;
       background:rgba(255,255,255,.08);
     }
-    .bank-card-visual .card-number {
-      letter-spacing: .2em; font-size: 1.05rem; font-family: monospace;
+    .pn-card::after {
+      content:''; position:absolute; bottom:-60px; left:20%;
+      width:200px; height:200px; border-radius:50%;
+      background:rgba(255,255,255,.05);
     }
-    .card-chip {
-      width: 36px; height: 26px;
-      background: linear-gradient(135deg,#c9a227,#f5d066);
-      border-radius: 5px; flex-shrink: 0;
+    .pn-chip {
+      width:40px; height:30px; border-radius:6px;
+      background:linear-gradient(135deg,#c9a227,#f5d066);
+      position:relative; overflow:hidden; flex-shrink:0;
     }
+    .pn-chip::after {
+      content:''; position:absolute; inset:0;
+      background:repeating-linear-gradient(
+        90deg, rgba(0,0,0,.15) 0, rgba(0,0,0,.15) 1px,
+        transparent 1px, transparent 8px
+      );
+    }
+    .pn-number {
+      font-family: 'Courier New', monospace;
+      letter-spacing: .22em; font-size: 1.1rem; opacity: .9;
+    }
+    .pn-hologram {
+      width:42px; height:42px; border-radius:50%;
+      background:conic-gradient(
+        from 0deg,
+        #ff006690,#ffbe0b90,#fb549690,#8338ec90,#3a86ff90,#ff006690
+      );
+      opacity:.7; flex-shrink:0;
+    }
+
+    .bank-logo-img { height:20px; width:auto; object-fit:contain; }
+    [data-bs-theme="light"] .bank-logo-img { filter:none; }
+    [data-bs-theme="dark"]  .bank-logo-img { filter:brightness(0) invert(1) opacity(.85); }
+    .pn-card-logo { height:28px; width:auto; object-fit:contain; filter:brightness(0) invert(1); opacity:.9; }
   </style>
   </x-slot>
 
@@ -35,7 +59,7 @@
     </div>
   </div>
 
-  {{-- Premium stat cards --}}
+  {{-- Stat Cards --}}
   <div class="row g-4 mb-6">
     <div class="col-sm-4">
       <div class="card stat-card position-relative overflow-hidden h-100">
@@ -101,39 +125,66 @@
     </div>
   </div>
 
-  {{-- Card grid --}}
+  {{-- Card Grid --}}
   <div class="row g-5 mb-6">
     @forelse($cards as $card)
     @php
-      $isCredit = $card->type === 'credit';
-      $usage    = $isCredit && $card->credit_limit > 0
-                    ? min(100, round($card->current_debt / $card->credit_limit * 100))
-                    : 0;
+      $isCredit  = $card->type === 'credit';
+      $usage     = $isCredit && $card->credit_limit > 0
+                     ? min(100, round($card->current_debt / $card->credit_limit * 100))
+                     : 0;
       $available = max(0, (float)$card->credit_limit - (float)$card->current_debt);
+
+      $slug = strtolower($card->bank_slug ?? '');
+      if (str_contains($slug, 'ziraat')) {
+          $cardGradient = 'linear-gradient(135deg,#cc0000 0%,#8b0000 100%)';
+      } elseif (str_contains($slug, 'garanti')) {
+          $cardGradient = 'linear-gradient(135deg,#009900 0%,#006600 100%)';
+      } elseif (str_contains($slug, 'isbank') || str_contains($slug, 'iş')) {
+          $cardGradient = 'linear-gradient(135deg,#003087 0%,#001a4d 100%)';
+      } elseif (str_contains($slug, 'akbank')) {
+          $cardGradient = 'linear-gradient(135deg,#e8000d 0%,#a0000a 100%)';
+      } elseif ($isCredit) {
+          $cardGradient = 'linear-gradient(135deg,#1A56DB 0%,#7367F0 100%)';
+      } else {
+          $cardGradient = 'linear-gradient(135deg,#2d3748 0%,#1a202c 100%)';
+      }
     @endphp
     <div class="col-md-6 col-xl-4">
       <div class="card h-100 shadow-sm">
         <div class="card-body p-0">
 
-          {{-- Visual card --}}
-          <div class="bank-card-visual {{ $isCredit ? '' : 'debit' }} m-4 mb-3">
-            <div class="d-flex align-items-start justify-content-between mb-4">
+          {{-- Plastic card visual --}}
+          <div class="pn-card m-4 mb-3" style="background:{{ $cardGradient }};">
+            {{-- Top row: bank logo + card type badge --}}
+            <div class="d-flex align-items-start justify-content-between mb-4" style="position:relative;z-index:1;">
               <div>
                 @if($card->bank_logo)
                   <img src="{{ asset($card->bank_logo) }}" alt="{{ $card->bank_name }}"
-                       style="height:28px;width:auto;object-fit:contain;filter:brightness(0) invert(1);opacity:.9;">
+                       class="pn-card-logo">
                 @else
                   <span class="fw-bold text-white opacity-75 small">{{ $card->bank_name }}</span>
                 @endif
               </div>
-              <span class="badge {{ $isCredit ? 'bg-label-warning' : 'bg-label-secondary' }} small">
+              <div class="pn-hologram"></div>
+            </div>
+
+            {{-- Chip row --}}
+            <div class="d-flex align-items-center gap-3 mb-4" style="position:relative;z-index:1;">
+              <div class="pn-chip"></div>
+              <span class="badge {{ $isCredit ? 'bg-label-warning' : 'bg-label-secondary' }}" style="font-size:.65rem;color:#fff;background:rgba(255,255,255,.18)!important;">
                 {{ $isCredit ? 'KREDİ' : 'DEBİT' }}
               </span>
             </div>
-            <div class="card-chip mb-3"></div>
-            <div class="card-number mb-2 opacity-90">{{ $card->masked_number }}</div>
-            <div class="d-flex justify-content-between align-items-end">
-              <div style="font-size:.72rem;opacity:.75;">
+
+            {{-- Card number --}}
+            <div class="pn-number mb-3" style="position:relative;z-index:1;">
+              {{ $card->masked_number }}
+            </div>
+
+            {{-- Footer: holder + expiry --}}
+            <div class="d-flex justify-content-between align-items-end" style="position:relative;z-index:1;">
+              <div style="font-size:.72rem;opacity:.75;text-transform:uppercase;letter-spacing:.05em;">
                 @if($card->holder_name) {{ strtoupper($card->holder_name) }} @endif
               </div>
               <div style="font-size:.72rem;opacity:.75;">
@@ -142,7 +193,7 @@
             </div>
           </div>
 
-          {{-- Stats --}}
+          {{-- Stats below card --}}
           <div class="px-4 pb-4">
             @if($isCredit)
             <div class="mb-3">
@@ -175,7 +226,9 @@
     <div class="col-12">
       <div class="card">
         <div class="card-body text-center py-6">
-          <i class="icon-base ti tabler-credit-card icon-48px text-muted mb-3 d-block"></i>
+          <div class="d-flex justify-content-center mb-3">
+            <i class="icon-base ti tabler-credit-card icon-48px text-muted"></i>
+          </div>
           <h5 class="mb-2">Bağlı kart bulunamadı</h5>
           <p class="text-muted mb-4">Kredi kartlarınızı banka hesabınıza bağlayarak otomatik takip başlatın.</p>
           <a href="{{ route('bank-connections.create') }}" class="btn btn-primary">
