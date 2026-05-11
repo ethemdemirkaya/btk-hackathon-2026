@@ -409,6 +409,32 @@ Tüm ödeme ve vadeleri tek takvimde birleştiren görünüm:
 
 ---
 
+## Mobil API Referansı
+
+Tüm API endpoint şemaları, request/response örnekleri ve Flutter kod örnekleri ayrı dosyada:
+
+📄 **[mobile-api/README.md](mobile-api/README.md)**
+
+**Özet — 35 endpoint, `/api/v1` prefix:**
+
+| Grup | Endpoint sayısı |
+|------|----------------|
+| Auth (kayıt, giriş, profil, çıkış) | 6 |
+| Dashboard | 1 |
+| Banka bağlantıları | 4 |
+| İşlemler | 2 |
+| Kartlar | 1 |
+| Krediler | 1 |
+| Faturalar | 4 |
+| Abonelikler | 3 |
+| Bütçeler | 3 |
+| Hedefler | 4 |
+| Enflasyon | 1 |
+| AI Ajan (mesaj, geçmiş, öngörü) | 4 |
+| Fişler & OCR | 3 |
+
+---
+
 ## Proje Yapısı
 
 ```
