@@ -16,6 +16,14 @@
 
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
 
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Paranette">
+    <meta name="theme-color" content="#7367F0">
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
@@ -127,6 +135,12 @@
                 <div>Banka Hesapları</div>
               </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('investments.*') ? 'active' : '' }}">
+              <a href="{{ route('investments.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-chart-candle"></i>
+                <div>Yatırımlar</div>
+              </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
               <a href="{{ route('cards.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-credit-card"></i>
@@ -187,6 +201,18 @@
               <a href="{{ route('calendar.index') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-calendar-event"></i>
                 <div>Ödeme Takvimi</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('personal-debts.*') ? 'active' : '' }}">
+              <a href="{{ route('personal-debts.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-users-group"></i>
+                <div>Kişisel Borçlar</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('fx-alerts.*') ? 'active' : '' }}">
+              <a href="{{ route('fx-alerts.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-bell-ringing"></i>
+                <div>Kur Alarmları</div>
               </a>
             </li>
 
@@ -416,6 +442,15 @@
       // Apply persisted theme immediately to avoid flash
       applyTheme(getTheme());
     })();
+    </script>
+
+    {{-- PWA Service Worker --}}
+    <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
     </script>
 
     @isset($pageJs){{ $pageJs }}@endisset
