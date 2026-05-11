@@ -6,9 +6,79 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\View\View;
 
 class ReportController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $user = $request->user();
+
+        // 6-month cash flow for chart
+        $cashFlow = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $label = $month->locale('tr')->isoFormat('MMM YY');
+            $key   = $month->format('Y-m');
+
+            $row = DB::table('transactions as t')
+                ->join('accounts as a', 'a.id', '=', 't.account_id')
+                ->where('a.user_id', $user->id)
+                ->whereRaw("DATE_FORMAT(t.posted_at, '%Y-%m') = ?", [$key])
+                ->selectRaw('SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) as income')
+                ->selectRaw('SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END) as expense')
+                ->first();
+
+            $cashFlow->push([
+                'label'   => $label,
+                'income'  => (float) ($row->income ?? 0),
+                'expense' => (float) ($row->expense ?? 0),
+                'net'     => (float) ($row->income ?? 0) - (float) ($row->expense ?? 0),
+            ]);
+        }
+
+        // Summary stats
+        $totalIncome  = $cashFlow->sum('income');
+        $totalExpense = $cashFlow->sum('expense');
+        $totalNet     = $totalIncome - $totalExpense;
+        $bestMonth    = $cashFlow->sortByDesc('net')->first();
+        $worstMonth   = $cashFlow->sortBy('net')->first();
+
+        // Top categories (last 6 months)
+        $categoryBreakdown = DB::table('transactions as t')
+            ->join('accounts as a', 'a.id', '=', 't.account_id')
+            ->where('a.user_id', $user->id)
+            ->where('t.amount', '<', 0)
+            ->where('t.posted_at', '>=', now()->subMonths(6))
+            ->groupBy('t.merchant_category')
+            ->selectRaw('t.merchant_category, SUM(ABS(t.amount)) as total, COUNT(*) as cnt')
+            ->orderByDesc('total')
+            ->limit(8)
+            ->get();
+
+        // Available months (for PDF picker)
+        $availableMonths = collect();
+        for ($i = 11; $i >= 0; $i--) {
+            $m = now()->subMonths($i);
+            $availableMonths->push([
+                'value' => $m->format('Y-m'),
+                'label' => $m->locale('tr')->isoFormat('MMMM YYYY'),
+            ]);
+        }
+
+        // Transaction count
+        $txCount = DB::table('transactions as t')
+            ->join('accounts as a', 'a.id', '=', 't.account_id')
+            ->where('a.user_id', $user->id)
+            ->where('t.posted_at', '>=', now()->subMonths(6))
+            ->count();
+
+        return view('reports.index', compact(
+            'cashFlow', 'totalIncome', 'totalExpense', 'totalNet',
+            'bestMonth', 'worstMonth', 'categoryBreakdown', 'availableMonths', 'txCount'
+        ));
+    }
+
     public function generate(Request $request)
     {
         $request->validate([

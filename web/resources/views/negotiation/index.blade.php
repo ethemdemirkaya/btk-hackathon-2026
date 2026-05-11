@@ -20,7 +20,7 @@
       font-size: .93rem;
       line-height: 1.8;
       white-space: pre-wrap;
-      background: var(--bs-body-bg);
+      background: var(--bs-secondary-bg);
       border: 1px solid var(--bs-border-color);
       border-radius: 8px;
       padding: 1.5rem;
@@ -34,19 +34,91 @@
       padding: .25rem .75rem;
       font-size: .78rem; font-weight: 500;
     }
-    .chance-badge {
-      font-size: 1rem; font-weight: 700;
+    .chance-badge { font-size: 1rem; font-weight: 700; }
+    .gen-loading-box {
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: .5rem;
+      padding: .75rem 1rem;
     }
   </style>
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5">
     <div>
       <h4 class="fw-bold mb-1">Pazarlık Ajanı</h4>
       <p class="text-muted mb-0">Bankan veya kurumlarla müzakere için Gemini Pro resmi mektup yazar</p>
     </div>
   </div>
+
+  {{-- Stat cards --}}
+  @php
+    $sentCount    = $drafts->where('status', 'sent')->count();
+    $draftCount   = $drafts->where('status', 'draft')->count();
+    $acceptedCount= $drafts->where('status', 'accepted')->count();
+  @endphp
+  @if($drafts->isNotEmpty())
+  <div class="row g-4 mb-6">
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Toplam Taslak</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">{{ $drafts->count() }}</div>
+              <span class="small text-muted">{{ $draftCount }} beklemede</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-file-text icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-info"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Gönderilen</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-info">{{ $sentCount }}</div>
+              <span class="small text-muted">kuruma iletildi</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="icon-base ti tabler-send icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Kabul Edildi</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-success">{{ $acceptedCount }}</div>
+              <span class="small text-muted">başarılı müzakere</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-trophy icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
 
   <div class="row g-6">
 
@@ -106,9 +178,12 @@
             <i class="icon-base ti tabler-wand me-2"></i>Gemini ile Mektup Yaz
           </button>
           <div id="genLoading" class="d-none mt-3">
-            <div class="d-flex align-items-center gap-3 p-3 bg-light rounded">
+            <div class="gen-loading-box d-flex align-items-center gap-3">
               <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-              <div class="small">Gemini Pro mektup yazıyor…</div>
+              <div>
+                <div class="fw-medium small">Gemini Pro mektup yazıyor…</div>
+                <div class="text-muted" style="font-size:.75rem;">Finansal verileriniz analiz ediliyor</div>
+              </div>
             </div>
           </div>
 

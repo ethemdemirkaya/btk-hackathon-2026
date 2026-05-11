@@ -84,7 +84,8 @@ Route::middleware('auth')->group(function () {
     // Personal Inflation
     Route::get('/inflation', [InflationController::class, 'index'])->name('inflation.index');
 
-    // Monthly PDF Report
+    // Reports
+    Route::get('/report', [ReportController::class, 'index'])->name('report.index');
     Route::get('/report/monthly', [ReportController::class, 'generate'])->name('report.monthly');
 
     // Negotiation Agent

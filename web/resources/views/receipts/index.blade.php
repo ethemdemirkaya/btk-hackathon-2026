@@ -21,27 +21,99 @@
     }
     .receipt-img-wrap {
       width: 56px; height: 56px; flex-shrink: 0;
-      border-radius: 8px; overflow: hidden; background: #f5f5f5;
+      border-radius: 8px; overflow: hidden;
+      background: var(--bs-secondary-bg);
       display: flex; align-items: center; justify-content: center;
     }
     .receipt-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
     .item-badge { font-size: .72rem; }
-    .ocr-status-processing { animation: pulse 1.2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .ocr-status-processing { animation: paranette-pulse 1.2s infinite; }
+    @@keyframes paranette-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     .preview-img { max-height: 200px; border-radius: 8px; margin-top: 1rem; object-fit: contain; }
+    .upload-status-box {
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: .5rem;
+      padding: .75rem 1rem;
+    }
   </style>
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5">
     <div>
       <h4 class="fw-bold mb-1">Fişler & OCR</h4>
       <p class="text-muted mb-0">Fiş veya fatura yükle — Gemini Vision otomatik analiz eder</p>
     </div>
-    <span class="badge bg-label-primary fs-6">
-      {{ $receipts->count() }} fiş
-    </span>
   </div>
+
+  {{-- Stat cards --}}
+  @if($receipts->isNotEmpty())
+  @php
+    $totalSpent    = $receipts->sum(fn($r) => (float)($r->total_amount ?? 0));
+    $withWarranty  = $receipts->filter(fn($r) => !empty($r->warranty_until))->count();
+    $avgAmount     = $receipts->count() > 0 ? $totalSpent / $receipts->count() : 0;
+  @endphp
+  <div class="row g-4 mb-6">
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Toplam Harcama</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalSpent, 0, ',', '.') }}</div>
+              <span class="small text-muted">{{ $receipts->count() }} fiş</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-receipt icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-info"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Ortalama Fiş</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($avgAmount, 0, ',', '.') }}</div>
+              <span class="small text-muted">Gemini ile analiz edildi</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="icon-base ti tabler-robot icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Garanti Takibi</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-success">{{ $withWarranty }}</div>
+              <span class="small text-muted">ürünün garantisi aktif</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-shield-check icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
 
   {{-- Flash messages --}}
   @if(session('success'))
@@ -82,7 +154,7 @@
 
           {{-- Progress / status --}}
           <div id="uploadStatus" class="d-none mb-4">
-            <div class="d-flex align-items-center gap-3 p-3 bg-light rounded">
+            <div class="upload-status-box d-flex align-items-center gap-3">
               <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
               <div>
                 <div class="fw-medium small" id="statusText">Gemini Vision analiz ediyor…</div>
@@ -157,7 +229,7 @@
                               <span class="badge bg-label-info item-badge mt-1">{{ strtoupper($cat) }}</span>
                             @endif
                           @else
-                            <span class="badge bg-label-warning item-badge mt-1 ocr-status-processing">İşleniyor…</span>
+                            <span class="badge bg-label-warning item-badge mt-1 ocr-status-processing" style="animation:paranette-pulse 1.2s infinite;">İşleniyor…</span>
                           @endif
                         </div>
                       </div>

@@ -167,6 +167,12 @@
                 <div>Fişler & OCR</div>
               </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('report.*') ? 'active' : '' }}">
+              <a href="{{ route('report.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-report-analytics"></i>
+                <div>Raporlar</div>
+              </a>
+            </li>
 
             <li class="menu-header small"><span class="menu-header-text">Yapay Zeka</span></li>
             <li class="menu-item {{ request()->routeIs('agent-chat.*') ? 'active' : '' }}">
