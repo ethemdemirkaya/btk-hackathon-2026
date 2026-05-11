@@ -36,6 +36,7 @@ class IntentRouter
             'transaction_classifier',
             'forecaster',
             'debt_optimizer',
+            'subscription_hunter',
         ]);
 
         $prompt = <<<PROMPT
@@ -50,6 +51,7 @@ class IntentRouter
         - transaction_classifier: işlem kategorize etme talebi
         - forecaster: gelecek projeksiyon, birikim tahmini, 3-12 ay finansal görünüm
         - debt_optimizer: borç azaltma stratejisi, kredi kartı optimizasyonu, Avalanche/Snowball
+        - subscription_hunter: abonelik tespiti, tekrarlayan ödeme analizi, gereksiz abonelik
 
         Bu mesaj için hangi ajanlar çalışmalı? Ve mesajdan çıkartılan bilgileri döndür.
         PROMPT;

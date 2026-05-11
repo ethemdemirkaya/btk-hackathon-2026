@@ -12,6 +12,7 @@ use App\Services\Agents\Specialists\DebtOptimizerAgent;
 use App\Services\Agents\Specialists\ForecasterAgent;
 use App\Services\Agents\Specialists\InflationAwareAgent;
 use App\Services\Agents\Specialists\PurchasePlannerAgent;
+use App\Services\Agents\Specialists\SubscriptionHunterAgent;
 use App\Services\Agents\Specialists\TransactionClassifierAgent;
 use App\Services\Gemini\GeminiClient;
 use App\Services\Gemini\GeminiModelEnum;
@@ -89,7 +90,7 @@ class OrchestratorAgent
         $final = $this->synthesize($user, $message, $specialistResults);
 
         // ── 4. Persist insight if there are budget/anomaly recommendations ────
-        $this->maybeStoreInsight($user, $routing['context'], $final, $specialistResults);
+        $this->maybeStoreInsight($user, $final, $specialistResults);
 
         return [
             'session_id'         => $sessionId,
@@ -100,7 +101,7 @@ class OrchestratorAgent
         ];
     }
 
-    private function maybeStoreInsight(User $user, string $context, string $final, array $results): void
+    private function maybeStoreInsight(User $user, string $final, array $results): void
     {
         // Only store if budget or anomaly results are present
         $hasContent = isset($results['budget_advisor']) || isset($results['anomaly_detector']);
@@ -135,6 +136,7 @@ class OrchestratorAgent
             'transaction_classifier' => new TransactionClassifierAgent($user),
             'forecaster'             => new ForecasterAgent($user),
             'debt_optimizer'         => new DebtOptimizerAgent($user),
+            'subscription_hunter'    => new SubscriptionHunterAgent($user),
             default                  => null,
         };
     }
