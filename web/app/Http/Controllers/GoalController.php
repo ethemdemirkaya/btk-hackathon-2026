@@ -23,7 +23,7 @@ class GoalController extends Controller
                     : 0;
                 $g->remaining = max(0, (float)$g->target_amount - (float)$g->current_amount);
                 $g->months_left = $g->target_date
-                    ? max(0, now()->diffInMonths(\Carbon\Carbon::parse($g->target_date), false))
+                    ? max(0, (int) round(now()->diffInMonths(\Carbon\Carbon::parse($g->target_date), false)))
                     : null;
                 return $g;
             });

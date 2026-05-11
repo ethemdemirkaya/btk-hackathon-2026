@@ -36,7 +36,7 @@
           <div class="fw-bold fs-5">
             @if($nextDue)
               {{ \Carbon\Carbon::parse($nextDue->next_payment_date)->format('d.m.Y') }}
-              @php $daysLeft = now()->diffInDays(\Carbon\Carbon::parse($nextDue->next_payment_date), false); @endphp
+              @php $daysLeft = (int) round(now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($nextDue->next_payment_date)->startOfDay(), false)); @endphp
               <span class="badge {{ $daysLeft <= 3 ? 'bg-label-danger' : ($daysLeft <= 7 ? 'bg-label-warning' : 'bg-label-success') }} ms-1">
                 {{ $daysLeft }} gün
               </span>

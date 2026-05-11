@@ -28,8 +28,66 @@ class DashboardService
             'total_balance'   => (float) $totalBalance,
             'total_card_debt' => (float) $totalCardDebt,
             'total_loan'      => (float) $totalLoanBal,
+            'net_worth'       => (float) $totalBalance - (float) $totalCardDebt - (float) $totalLoanBal,
             'health_score'    => $healthScore ? (int) $healthScore : null,
         ];
+    }
+
+    /** Returns smart financial alerts: upcoming payments, high card usage */
+    public function getSmartAlerts(User $user): array
+    {
+        $alerts = [];
+
+        // Upcoming loan payments within 15 days
+        $loans = DB::table('loans as l')
+            ->join('bank_connections as bc', 'bc.id', '=', 'l.bank_connection_id')
+            ->join('banks as b', 'b.id', '=', 'bc.bank_id')
+            ->where('l.user_id', $user->id)
+            ->whereNotNull('l.next_payment_date')
+            ->where('l.next_payment_date', '>=', now()->toDateString())
+            ->where('l.next_payment_date', '<=', now()->addDays(15)->toDateString())
+            ->select('l.next_payment_date', 'l.next_payment_amount', 'b.name as bank_name')
+            ->orderBy('l.next_payment_date')
+            ->get();
+
+        foreach ($loans as $loan) {
+            $daysLeft = (int) round(Carbon::now()->startOfDay()->diffInDays(
+                Carbon::parse($loan->next_payment_date)->startOfDay(), false
+            ));
+            $alerts[] = [
+                'type'  => $daysLeft <= 3 ? 'danger' : 'warning',
+                'icon'  => 'tabler-file-invoice',
+                'title' => $daysLeft === 0 ? 'Bugün kredi ödemesi var' : ($daysLeft . ' gün sonra kredi ödemesi'),
+                'body'  => $loan->bank_name . ' — ₺' . number_format((float) $loan->next_payment_amount, 0, ',', '.'),
+                'link'  => route('loans.index'),
+            ];
+        }
+
+        // High credit card usage
+        $cards = DB::table('cards as c')
+            ->join('accounts as a', 'a.id', '=', 'c.account_id')
+            ->join('bank_connections as bc', 'bc.id', '=', 'a.bank_connection_id')
+            ->join('banks as b', 'b.id', '=', 'bc.bank_id')
+            ->where('c.user_id', $user->id)
+            ->where('c.type', 'credit')
+            ->where('c.credit_limit', '>', 0)
+            ->select('c.current_debt', 'c.credit_limit', 'b.name as bank_name')
+            ->get();
+
+        foreach ($cards as $card) {
+            $usage = min(100, (int) round((float) $card->current_debt / (float) $card->credit_limit * 100));
+            if ($usage >= 65) {
+                $alerts[] = [
+                    'type'  => $usage >= 80 ? 'danger' : 'warning',
+                    'icon'  => 'tabler-credit-card',
+                    'title' => 'Kart limiti %' . $usage . ' kullanıldı',
+                    'body'  => $card->bank_name . ' — ₺' . number_format((float) $card->current_debt, 0, ',', '.') . ' borç',
+                    'link'  => route('cards.index'),
+                ];
+            }
+        }
+
+        return array_slice($alerts, 0, 4);
     }
 
     /** Returns 6-month cash flow: array of { month, income, expense } */

@@ -17,10 +17,10 @@
     </a>
   </div>
 
-  {{-- ══ ROW 1 — 4 Metrik Kart ══════════════════════════════════════════ --}}
-  <div class="row g-6 mb-6">
+  {{-- ══ ROW 1 — 5 Metrik Kart ══════════════════════════════════════════ --}}
+  <div class="row row-cols-2 row-cols-xl-5 g-4 mb-6">
     {{-- Toplam Bakiye --}}
-    <div class="col-sm-6 col-xl-3">
+    <div class="col">
       <div class="card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
@@ -45,7 +45,7 @@
     </div>
 
     {{-- Kart Borcu --}}
-    <div class="col-sm-6 col-xl-3">
+    <div class="col">
       <div class="card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
@@ -69,7 +69,7 @@
     </div>
 
     {{-- Aktif Kredi --}}
-    <div class="col-sm-6 col-xl-3">
+    <div class="col">
       <div class="card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
@@ -91,7 +91,7 @@
     </div>
 
     {{-- Finansal Sağlık --}}
-    <div class="col-sm-6 col-xl-3">
+    <div class="col">
       <div class="card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
@@ -117,7 +117,57 @@
         </div>
       </div>
     </div>
+
+    {{-- Net Varlık --}}
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="content-left">
+              <span class="text-heading">Net Varlık</span>
+              <div class="d-flex align-items-center my-1">
+                <h4 class="mb-0 me-2 @if(($summary['net_worth'] ?? 0) >= 0) text-success @else text-danger @endif">
+                  ₺{{ number_format($summary['net_worth'] ?? 0, 2, ',', '.') }}
+                </h4>
+              </div>
+              <small class="text-muted">Bakiye − Borçlar</small>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded @if(($summary['net_worth'] ?? 0) >= 0) bg-label-success @else bg-label-danger @endif">
+                <i class="icon-base ti tabler-scale icon-26px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  {{-- ══ Smart Alerts ═════════════════════════════════════════════════════ --}}
+  @if(count($smartAlerts) > 0)
+  <div class="row g-4 mb-6">
+    @foreach($smartAlerts as $alert)
+    <div class="col-md-6 col-xl-3">
+      <div class="card border-{{ $alert['type'] }} h-100">
+        <div class="card-body py-3 d-flex align-items-center gap-3">
+          <div class="avatar flex-shrink-0">
+            <span class="avatar-initial rounded bg-label-{{ $alert['type'] }}">
+              <i class="icon-base ti {{ $alert['icon'] }} icon-22px"></i>
+            </span>
+          </div>
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="fw-semibold small text-{{ $alert['type'] }}">{{ $alert['title'] }}</div>
+            <div class="text-muted" style="font-size:.75rem;">{{ $alert['body'] }}</div>
+          </div>
+          <a href="{{ $alert['link'] }}" class="text-{{ $alert['type'] }} flex-shrink-0">
+            <i class="icon-base ti tabler-chevron-right icon-18px"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    @endforeach
+  </div>
+  @endif
 
   {{-- ══ ROW 2 — Nakit Akışı + Kategori Donut ════════════════════════════ --}}
   <div class="row g-6 mb-6">
@@ -184,7 +234,7 @@
       <div class="card h-100">
         <div class="card-header d-flex align-items-center justify-content-between">
           <h5 class="card-title mb-0">Banka Hesapları</h5>
-          <a href="#" class="btn btn-sm btn-primary">
+          <a href="{{ route('bank-connections.create') }}" class="btn btn-sm btn-primary">
             <i class="icon-base ti tabler-plus me-1"></i> Banka Bağla
           </a>
         </div>
@@ -233,7 +283,7 @@
             <div class="text-center py-6">
               <i class="icon-base ti tabler-building-bank icon-48px text-muted mb-3 d-block"></i>
               <p class="text-muted mb-3">Henüz banka hesabı bağlanmamış.</p>
-              <a href="#" class="btn btn-outline-primary">
+              <a href="{{ route('bank-connections.create') }}" class="btn btn-outline-primary">
                 <i class="icon-base ti tabler-plus me-1"></i> Banka Bağla
               </a>
             </div>
@@ -250,7 +300,7 @@
       <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
           <h5 class="card-title mb-0">Son İşlemler</h5>
-          <a href="#" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
+          <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
         </div>
         <div class="card-body p-0">
           @if($recentTxns->isNotEmpty())
@@ -325,7 +375,7 @@
               <li>En yüksek harcama kategorim hangisi?</li>
             </ul>
           </div>
-          <a href="#" class="btn btn-primary mt-auto">
+          <a href="{{ route('agent-chat.index') }}" class="btn btn-primary mt-auto">
             <i class="icon-base ti tabler-message-2 me-2"></i>Ajana Sor
           </a>
         </div>
