@@ -39,6 +39,74 @@
       </div>
     </div>
   @else
+  @php
+    $totalBalance  = $connections->flatMap->accounts->sum('balance');
+    $activeCount   = $connections->where('status', 'active')->count();
+    $errorCount    = $connections->where('status', 'error')->count();
+    $accountCount  = $connections->flatMap->accounts->count();
+  @endphp
+  <div class="row g-4 mb-6">
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Toplam Bakiye</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalBalance, 0, ',', '.') }}</div>
+              <span class="small text-muted">{{ $accountCount }} hesap</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-building-bank icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bağlı Banka</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-success">{{ $activeCount }}</div>
+              <span class="small text-muted">{{ $connections->count() }} toplam bağlantı</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-link icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar {{ $errorCount > 0 ? 'bg-danger' : 'bg-success' }}"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bağlantı Durumu</span>
+              <div class="h5 fw-bold mt-1 mb-0 {{ $errorCount > 0 ? 'text-danger' : 'text-success' }}">
+                {{ $errorCount > 0 ? "{$errorCount} Hata" : 'Sağlıklı' }}
+              </div>
+              <span class="small text-muted">{{ $errorCount > 0 ? 'Yeniden bağlanın' : 'Tüm bağlantılar aktif' }}</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-{{ $errorCount > 0 ? 'danger' : 'success' }}">
+                <i class="icon-base ti {{ $errorCount > 0 ? 'tabler-alert-triangle' : 'tabler-shield-check' }} icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
     {{-- Connected banks list --}}
     <div class="row g-6 mb-6">
       @foreach($connections as $conn)
@@ -48,7 +116,7 @@
               <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-3">
                   {{-- Bank logo --}}
-                  <div class="bank-logo-wrap rounded overflow-hidden d-flex align-items-center justify-content-center bg-white border"
+                  <div class="bank-logo-wrap bank-logo-box rounded overflow-hidden d-flex align-items-center justify-content-center"
                        style="width:88px;height:56px;padding:8px;">
                     @if($conn->bank->logo)
                       <img src="{{ asset($conn->bank->logo) }}"
@@ -147,7 +215,7 @@
             @foreach($banks->whereNotIn('id', $connectedBankIds) as $bank)
               <div class="col-sm-6 col-xl-3">
                 <div class="d-flex align-items-center gap-3 p-3 border rounded">
-                  <div class="bank-logo-wrap rounded d-flex align-items-center justify-content-center bg-white border"
+                  <div class="bank-logo-wrap bank-logo-box rounded d-flex align-items-center justify-content-center"
                        style="width:88px;height:56px;padding:8px;flex-shrink:0;">
                     @if($bank->logo)
                       <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"

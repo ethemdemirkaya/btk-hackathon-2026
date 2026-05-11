@@ -1,10 +1,10 @@
 <x-app-layout>
   <x-slot name="title">Hedefler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5">
     <div>
-      <h4 class="fw-bold mb-1">Tasarruf Hedefleri</h4>
-      <p class="text-muted mb-0">Finansal hedeflerini belirle ve ilerlemeyi takip et</p>
+      <h4 class="fw-bold mb-0">Tasarruf Hedefleri</h4>
+      <p class="text-muted small mb-0">Finansal hedeflerini belirle ve ilerlemeyi takip et</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
       <i class="icon-base ti tabler-plus me-1"></i>Hedef Ekle
@@ -18,9 +18,89 @@
     </div>
   @endif
 
+  {{-- Summary stat cards (computed in view) --}}
+  @if($goals->isNotEmpty())
+  @php
+    $activeGoals    = $goals->where('status', '!=', 'completed');
+    $completedGoals = $goals->where('status', 'completed');
+    $totalTarget    = $activeGoals->sum('target_amount');
+    $totalCurrent   = $activeGoals->sum('current_amount');
+    $avgPct         = $activeGoals->count() > 0 ? round($activeGoals->avg('pct')) : 0;
+  @endphp
+  <div class="row g-4 mb-6">
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Toplam Birikilen</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalCurrent, 0, ',', '.') }}</div>
+              <span class="small text-muted">/ ₺{{ number_format($totalTarget, 0, ',', '.') }} hedef</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-piggy-bank icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar {{ $avgPct >= 75 ? 'bg-success' : ($avgPct >= 40 ? 'bg-info' : 'bg-warning') }}"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Ortalama İlerleme</span>
+              <div class="h5 fw-bold mt-1 mb-0 {{ $avgPct >= 75 ? 'text-success' : ($avgPct >= 40 ? 'text-info' : 'text-warning') }}">
+                %{{ $avgPct }}
+              </div>
+              <div class="progress mt-2" style="height:4px;width:80px;">
+                <div class="{{ $avgPct >= 75 ? 'progress-bar-gradient-success' : ($avgPct >= 40 ? 'progress-bar-gradient-info' : 'progress-bar-gradient-warning') }}"
+                     style="width:{{ $avgPct }}%;height:100%;border-radius:4px;"></div>
+              </div>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-{{ $avgPct >= 75 ? 'success' : ($avgPct >= 40 ? 'info' : 'warning') }}">
+                <i class="icon-base ti tabler-target icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Tamamlanan</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-success">{{ $completedGoals->count() }}</div>
+              <span class="small text-muted">{{ $activeGoals->count() }} aktif hedef</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-rosette-discount-check icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
+  @php
+    $goalIcons  = ['tabler-beach','tabler-shield-check','tabler-device-laptop','tabler-home-2','tabler-car','tabler-plane','tabler-school','tabler-heart'];
+    $goalColors = ['warning','success','info','primary','danger','info','primary','danger'];
+  @endphp
+
   @if($goals->isEmpty())
   <div class="card">
-    <div class="card-body text-center py-8">
+    <div class="card-body text-center py-6">
       <i class="icon-base ti tabler-target icon-64px text-muted mb-4 d-block"></i>
       <h5 class="mb-2">Henüz hedef eklenmedi</h5>
       <p class="text-muted mb-4">Tatil, araba, acil fon… bir hedef belirle ve birikimini takip et.</p>
@@ -31,38 +111,47 @@
   </div>
   @else
   <div class="row g-5">
-    @foreach($goals as $goal)
+    @foreach($goals as $i => $goal)
     @php
       $isCompleted = $goal->status === 'completed';
-      $barColor    = $isCompleted ? 'bg-success' : ($goal->pct >= 75 ? 'bg-info' : ($goal->pct >= 40 ? 'bg-warning' : 'bg-primary'));
+      $gi          = $goalIcons[$i % count($goalIcons)];
+      $gc          = $goalColors[$i % count($goalColors)];
+      $barClass    = $isCompleted ? 'progress-bar-gradient-success' : ($goal->pct >= 75 ? 'progress-bar-gradient-info' : ($goal->pct >= 40 ? 'progress-bar-gradient-primary' : 'progress-bar-gradient-warning'));
     @endphp
     <div class="col-md-6 col-xl-4">
-      <div class="card h-100 {{ $isCompleted ? 'border-success' : '' }}">
+      <div class="card h-100 shadow-sm {{ $isCompleted ? 'border-success' : '' }}">
         <div class="card-body">
 
-          <div class="d-flex align-items-start justify-content-between mb-3">
-            <div>
-              <div class="fw-semibold">{{ $goal->name }}</div>
-              @if($goal->target_date)
-                <div class="text-muted small">
-                  <i class="icon-base ti tabler-calendar me-1"></i>
-                  {{ \Carbon\Carbon::parse($goal->target_date)->format('d.m.Y') }}
-                  @if($goal->months_left !== null && !$isCompleted)
-                    <span class="ms-1 text-{{ $goal->months_left < 3 ? 'danger' : 'muted' }}">
-                      ({{ $goal->months_left }} ay kaldı)
-                    </span>
-                  @endif
-                </div>
-              @endif
+          <div class="d-flex align-items-start justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar">
+                <span class="avatar-initial rounded bg-label-{{ $gc }}">
+                  <i class="icon-base ti {{ $gi }} icon-20px"></i>
+                </span>
+              </div>
+              <div>
+                <div class="fw-semibold text-heading">{{ $goal->name }}</div>
+                @if($goal->target_date)
+                  <div class="text-muted small">
+                    <i class="icon-base ti tabler-calendar me-1"></i>
+                    {{ \Carbon\Carbon::parse($goal->target_date)->format('d.m.Y') }}
+                    @if($goal->months_left !== null && !$isCompleted && $goal->months_left >= 0)
+                      <span class="text-{{ $goal->months_left < 3 ? 'danger' : 'muted' }}">
+                        · {{ $goal->months_left }} ay kaldı
+                      </span>
+                    @endif
+                  </div>
+                @endif
+              </div>
             </div>
             @if($isCompleted)
-              <span class="badge bg-label-success"><i class="icon-base ti tabler-check me-1"></i>Tamamlandı</span>
+              <span class="badge bg-label-success"><i class="icon-base ti tabler-check me-1"></i>Tamam</span>
             @else
-              <span class="badge bg-label-primary">%{{ $goal->pct }}</span>
+              <span class="badge bg-label-{{ $gc }}">%{{ $goal->pct }}</span>
             @endif
           </div>
 
-          <div class="mb-2 d-flex justify-content-between small">
+          <div class="d-flex justify-content-between small mb-2">
             <span class="text-muted">Birikim</span>
             <span class="fw-bold">
               ₺{{ number_format($goal->current_amount, 0, ',', '.') }}
@@ -70,15 +159,15 @@
             </span>
           </div>
 
-          <div class="progress mb-3" style="height:10px;border-radius:5px;">
-            <div class="progress-bar {{ $barColor }}" style="width:{{ $goal->pct }}%;border-radius:5px;"></div>
+          <div class="progress mb-3" style="height:10px;border-radius:10px;background:var(--bs-secondary-bg);">
+            <div class="{{ $barClass }}" style="width:{{ $goal->pct }}%;height:100%;border-radius:10px;"></div>
           </div>
 
           @if(!$isCompleted)
-          <div class="text-muted small mb-3">
+          <div class="text-muted small mb-4">
             Kalan: <strong>₺{{ number_format($goal->remaining, 0, ',', '.') }}</strong>
             @if($goal->monthly_contribution)
-              &nbsp;·&nbsp; Aylık katkı: ₺{{ number_format($goal->monthly_contribution, 0, ',', '.') }}
+              &nbsp;·&nbsp; ₺{{ number_format($goal->monthly_contribution, 0, ',', '.') }}/ay
             @endif
           </div>
           @endif
@@ -86,8 +175,7 @@
           <div class="d-flex gap-2">
             @if(!$isCompleted)
             <button class="btn btn-sm btn-outline-primary flex-fill"
-                    data-bs-toggle="modal"
-                    data-bs-target="#fundsModal{{ $goal->id }}">
+                    data-bs-toggle="modal" data-bs-target="#fundsModal{{ $goal->id }}">
               <i class="icon-base ti tabler-plus me-1"></i>Ödeme Ekle
             </button>
             @endif
@@ -110,15 +198,19 @@
           <form action="{{ route('goals.funds', $goal->id) }}" method="POST">
             @csrf
             <div class="modal-content">
-              <div class="modal-header">
+              <div class="modal-header border-0">
                 <h5 class="modal-title">{{ $goal->name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
               </div>
-              <div class="modal-body">
+              <div class="modal-body pt-0">
                 <label class="form-label">Eklenecek Tutar (₺)</label>
-                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                <input type="number" name="amount" class="form-control" step="0.01" min="0.01"
+                       value="{{ $goal->monthly_contribution ?? '' }}" required>
+                <div class="text-muted small mt-1">
+                  Kalan: ₺{{ number_format($goal->remaining, 0, ',', '.') }}
+                </div>
               </div>
-              <div class="modal-footer">
+              <div class="modal-footer border-0">
                 <button type="submit" class="btn btn-primary w-100">Ekle</button>
               </div>
             </div>
@@ -138,11 +230,11 @@
       <form action="{{ route('goals.store') }}" method="POST">
         @csrf
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header border-0">
             <h5 class="modal-title">Yeni Hedef</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body pt-0">
             <div class="mb-4">
               <label class="form-label">Hedef Adı <span class="text-danger">*</span></label>
               <input type="text" name="name" class="form-control" placeholder="örn: Tatil Fonu, Araba, Acil Fon" required>
@@ -168,7 +260,7 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer border-0">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
             <button type="submit" class="btn btn-primary">Hedef Oluştur</button>
           </div>
@@ -182,20 +274,13 @@
   <script>
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const name = this.dataset.name;
       Swal.fire({
-        title: '"' + name + '" hedefini sil?',
-        text: 'Bu hedef ve tüm ödeme geçmişi kalıcı olarak silinecek.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Evet, sil',
-        cancelButtonText: 'Vazgeç',
-        reverseButtons: true,
-      }).then(function (result) {
-        if (result.isConfirmed) btn.closest('form').submit();
-      });
+        title: '"' + this.dataset.name + '" hedefini sil?',
+        text: 'Bu hedef kalıcı olarak silinecek.',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç', reverseButtons: true,
+      }).then(result => { if (result.isConfirmed) this.closest('form').submit(); });
     });
   });
   </script>

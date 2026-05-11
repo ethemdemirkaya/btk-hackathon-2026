@@ -27,6 +27,46 @@
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
 
+    {{-- Global Paranette overrides (shared across all pages) --}}
+    <style>
+      /* ── Stat cards ─────────────────────────────────────────────────── */
+      .stat-card { transition: transform .18s ease, box-shadow .18s ease; }
+      .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(115,103,240,.15) !important; }
+      .stat-card .accent-bar { height: 3px; border-radius: 3px 3px 0 0; position: absolute; top: 0; left: 0; right: 0; }
+      /* ── Gradient progress bars ──────────────────────────────────────── */
+      .progress-bar-gradient-success { background: linear-gradient(90deg,#28C76F,#48DA89); }
+      .progress-bar-gradient-warning { background: linear-gradient(90deg,#FF9F43,#FFBD60); }
+      .progress-bar-gradient-danger  { background: linear-gradient(90deg,#EA5455,#F08182); }
+      .progress-bar-gradient-primary { background: linear-gradient(90deg,#7367F0,#9E95F5); }
+      .progress-bar-gradient-info    { background: linear-gradient(90deg,#00CFE8,#1CE7FF); }
+      /* ── Dark-mode-safe bank logo box ────────────────────────────────── */
+      .bank-logo-box {
+        background: rgba(255,255,255,.9);
+        border: 1px solid rgba(0,0,0,.1);
+        transition: background .2s, border-color .2s;
+      }
+      [data-bs-theme="dark"] .bank-logo-box {
+        background: rgba(255,255,255,.07) !important;
+        border-color: rgba(255,255,255,.12) !important;
+      }
+      /* ── Dark-mode-safe detail box (loans/simulator) ─────────────────── */
+      .detail-box {
+        background: var(--bs-secondary-bg);
+        border-radius: .375rem;
+        padding: .5rem;
+        text-align: center;
+      }
+      /* ── Table header consistent across pages ────────────────────────── */
+      .paranette-thead th {
+        background: rgba(115,103,240,.05);
+        font-size: .72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--bs-secondary-color);
+      }
+    </style>
+
     @isset($pageCss){{ $pageCss }}@endisset
 
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>

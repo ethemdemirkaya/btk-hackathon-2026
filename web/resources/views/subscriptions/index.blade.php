@@ -1,10 +1,10 @@
 <x-app-layout>
   <x-slot name="title">Abonelikler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5">
     <div>
-      <h4 class="fw-bold mb-1">Abonelikler</h4>
-      <p class="text-muted mb-0">Tekrarlayan ödemeler ve dijital abonelikler</p>
+      <h4 class="fw-bold mb-0">Abonelikler</h4>
+      <p class="text-muted small mb-0">Tekrarlayan ödemeler ve dijital abonelikler</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
       <i class="icon-base ti tabler-plus me-1"></i>Abonelik Ekle
@@ -18,37 +18,96 @@
     </div>
   @endif
 
-  {{-- Monthly total --}}
+  {{-- Premium stat cards --}}
   @if($totalMonthly > 0)
-  <div class="alert alert-info mb-6">
-    <i class="icon-base ti tabler-coin me-2"></i>
-    Aylık toplam abonelik gideriniz: <strong>₺{{ number_format($totalMonthly, 2, ',', '.') }}</strong>
-    &mdash; yıllık <strong>₺{{ number_format($totalMonthly * 12, 0, ',', '.') }}</strong>
+  <div class="row g-4 mb-6">
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-info"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Aylık Toplam</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalMonthly, 2, ',', '.') }}</div>
+              <span class="small text-muted">{{ $subscriptions->count() }} aktif abonelik</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="icon-base ti tabler-repeat icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-warning"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Yıllık Toplam</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalMonthly * 12, 0, ',', '.') }}</div>
+              <span class="small text-muted">Yıllık projeksiyon</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-warning">
+                <i class="icon-base ti tabler-calendar-repeat icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        @php $monthlyPct = auth()->user()->monthly_income > 0 ? round($totalMonthly / auth()->user()->monthly_income * 100, 1) : 0; @endphp
+        <div class="accent-bar {{ $monthlyPct > 10 ? 'bg-danger' : ($monthlyPct > 5 ? 'bg-warning' : 'bg-success') }}"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Gelirin %'si</span>
+              <div class="h5 fw-bold mt-1 mb-0 {{ $monthlyPct > 10 ? 'text-danger' : ($monthlyPct > 5 ? 'text-warning' : 'text-success') }}">
+                %{{ $monthlyPct }}
+              </div>
+              <span class="small text-muted">{{ $monthlyPct > 10 ? 'Fazla! Gözden geçir' : 'Makul seviye' }}</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-{{ $monthlyPct > 10 ? 'danger' : ($monthlyPct > 5 ? 'warning' : 'success') }}">
+                <i class="icon-base ti tabler-percentage icon-22px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   @endif
 
   {{-- Auto-detected candidates --}}
   @if($candidates->isNotEmpty())
-  <div class="card mb-6">
-    <div class="card-header pb-2">
+  <div class="card mb-6 shadow-sm">
+    <div class="card-header d-flex align-items-center gap-2">
       <h5 class="card-title mb-0">
         <i class="icon-base ti tabler-sparkles me-2 text-warning"></i>Otomatik Tespit Edilenler
       </h5>
+      <span class="badge bg-label-warning">{{ $candidates->count() }} aday</span>
     </div>
     <div class="card-body">
-      <p class="text-muted small mb-3">İşlemlerinde tekrar eden bu ödemeler abonelik olabilir:</p>
+      <p class="text-muted small mb-4">İşlemlerinde tekrar eden bu ödemeler abonelik olabilir:</p>
       <div class="row g-3">
         @foreach($candidates as $c)
         <div class="col-sm-6 col-xl-3">
           <div class="border rounded p-3 d-flex align-items-center gap-3">
-            <div class="rounded-circle bg-label-primary d-flex align-items-center justify-content-center flex-shrink-0"
-                 style="width:40px;height:40px;">
-              <i class="icon-base ti tabler-repeat text-primary"></i>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-repeat icon-20px"></i>
+              </span>
             </div>
             <div class="flex-grow-1 min-w-0">
               <div class="fw-medium small text-truncate">{{ $c->merchant_name ?: $c->description }}</div>
               <div class="text-muted" style="font-size:.75rem;">
-                ~₺{{ number_format($c->avg_amount, 2, ',', '.') }} · {{ $c->occurrences }}x
+                ~₺{{ number_format($c->avg_amount, 2, ',', '.') }} · {{ $c->occurrences }}× görüldü
               </div>
             </div>
             <button type="button"
@@ -70,7 +129,7 @@
   {{-- Subscriptions list --}}
   @if($subscriptions->isEmpty())
   <div class="card">
-    <div class="card-body text-center py-8">
+    <div class="card-body text-center py-6">
       <i class="icon-base ti tabler-repeat-off icon-64px text-muted mb-4 d-block"></i>
       <h5 class="mb-2">Abonelik eklenmedi</h5>
       <p class="text-muted mb-4">Dijital aboneliklerini ve tekrarlayan ödemelerini takip et.</p>
@@ -80,20 +139,30 @@
     </div>
   </div>
   @else
+  @php
+    $subIcons = ['tabler-brand-netflix','tabler-brand-spotify','tabler-brand-youtube','tabler-device-tv','tabler-cloud','tabler-package','tabler-star'];
+    $subColors = ['danger','success','danger','info','primary','warning','secondary'];
+  @endphp
   <div class="row g-4">
-    @foreach($subscriptions as $sub)
+    @foreach($subscriptions as $i => $sub)
+    @php
+      $si = $i % count($subIcons);
+      $monthlyEq = match($sub->billing_cycle) { 'yearly' => $sub->amount / 12, 'weekly' => $sub->amount * 4.33, default => $sub->amount };
+      $daysToNext = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($sub->next_billing_date), false);
+    @endphp
     <div class="col-md-6 col-xl-4">
-      <div class="card h-100">
+      <div class="card h-100 shadow-sm">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between mb-3">
             <div class="d-flex align-items-center gap-3">
-              <div class="rounded-circle bg-label-primary d-flex align-items-center justify-content-center flex-shrink-0"
-                   style="width:44px;height:44px;">
-                <i class="icon-base ti tabler-repeat text-primary icon-22px"></i>
+              <div class="avatar">
+                <span class="avatar-initial rounded bg-label-{{ $subColors[$si] }}">
+                  <i class="icon-base ti {{ $subIcons[$si] }} icon-22px"></i>
+                </span>
               </div>
               <div>
                 <div class="fw-semibold">{{ $sub->name }}</div>
-                <div class="text-muted small">{{ $sub->merchant_name }}</div>
+                <div class="text-muted small">{{ $sub->merchant_name ?: '—' }}</div>
               </div>
             </div>
             <div class="text-end">
@@ -103,11 +172,19 @@
               </div>
             </div>
           </div>
-          <div class="d-flex align-items-center justify-content-between">
-            <div class="text-muted small">
-              <i class="icon-base ti tabler-calendar me-1"></i>
-              Sonraki: {{ \Carbon\Carbon::parse($sub->next_billing_date)->format('d.m.Y') }}
-            </div>
+
+          @if($sub->billing_cycle !== 'monthly')
+          <div class="text-muted small mb-2">
+            <i class="icon-base ti tabler-calculator me-1"></i>
+            Aylık denk: ₺{{ number_format($monthlyEq, 2, ',', '.') }}
+          </div>
+          @endif
+
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <span class="badge bg-label-{{ $daysToNext <= 3 ? 'danger' : ($daysToNext <= 7 ? 'warning' : 'secondary') }}">
+              <i class="icon-base ti tabler-calendar icon-12px me-1"></i>
+              {{ $daysToNext <= 0 ? 'Bugün!' : "{$daysToNext} gün sonra" }}
+            </span>
             <form action="{{ route('subscriptions.destroy', $sub->id) }}" method="POST" class="d-inline">
               @csrf @method('DELETE')
               <button type="button" class="btn btn-icon btn-sm btn-text-danger btn-swal-delete"
@@ -129,11 +206,11 @@
       <form action="{{ route('subscriptions.store') }}" method="POST">
         @csrf
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header border-0">
             <h5 class="modal-title">Abonelik Ekle</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body pt-0">
             <div class="mb-4">
               <label class="form-label">Abonelik Adı <span class="text-danger">*</span></label>
               <input type="text" name="name" class="form-control" placeholder="örn: Spotify Premium" required>
@@ -162,7 +239,7 @@
                      value="{{ now()->addMonth()->format('Y-m-d') }}" required>
             </div>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer border-0">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
             <button type="submit" class="btn btn-primary">Ekle</button>
           </div>
@@ -174,27 +251,18 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
-  // Delete subscription
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const name = this.dataset.name;
       Swal.fire({
-        title: '"' + name + '" aboneliğini iptal et?',
+        title: '"' + this.dataset.name + '" aboneliğini iptal et?',
         text: 'Bu abonelik iptal edilecek.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Evet, iptal et',
-        cancelButtonText: 'Vazgeç',
-        reverseButtons: true,
-      }).then(function (result) {
-        if (result.isConfirmed) btn.closest('form').submit();
-      });
+        icon: 'warning', showCancelButton: true,
+        confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Evet, iptal et', cancelButtonText: 'Vazgeç', reverseButtons: true,
+      }).then(result => { if (result.isConfirmed) this.closest('form').submit(); });
     });
   });
 
-  // Convert candidate to subscription — pre-fill the add modal
   const addModal   = document.getElementById('addModal');
   const nameInput  = addModal.querySelector('[name="name"]');
   const merchantIn = addModal.querySelector('[name="merchant_name"]');

@@ -1,7 +1,6 @@
 <x-app-layout>
   <x-slot name="title">İşlemler</x-slot>
 
-  {{-- Header + stats --}}
   <div class="d-flex align-items-center justify-content-between mb-5">
     <div>
       <h4 class="fw-bold mb-0">İşlemler</h4>
@@ -18,36 +17,69 @@
     </div>
   </div>
 
-  {{-- This month mini stats --}}
+  {{-- Premium stat cards --}}
   <div class="row g-4 mb-6">
     <div class="col-sm-4">
-      <div class="card">
-        <div class="card-body py-3">
-          <div class="text-muted small">Bu Ay Gelir</div>
-          <div class="fw-bold fs-5 text-success">₺{{ number_format($stats->income ?? 0, 0, ',', '.') }}</div>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bu Ay Gelir</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-success">₺{{ number_format($stats->income ?? 0, 0, ',', '.') }}</div>
+              <span class="small text-muted">{{ now()->translatedFormat('F') }}</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-arrow-down-left icon-22px"></i>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="card">
-        <div class="card-body py-3">
-          <div class="text-muted small">Bu Ay Gider</div>
-          <div class="fw-bold fs-5 text-danger">₺{{ number_format($stats->expense ?? 0, 0, ',', '.') }}</div>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-danger"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bu Ay Gider</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-danger">₺{{ number_format($stats->expense ?? 0, 0, ',', '.') }}</div>
+              <span class="small text-muted">Harcamalar</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-danger">
+                <i class="icon-base ti tabler-arrow-up-right icon-22px"></i>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="card">
-        <div class="card-body py-3">
-          <div class="text-muted small">Bu Ay İşlem</div>
-          <div class="fw-bold fs-5">{{ $stats->total_count ?? 0 }}</div>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bu Ay İşlem</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">{{ $stats->total_count ?? 0 }}</div>
+              <span class="small text-muted">Toplam hareket</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-arrows-exchange icon-22px"></i>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   {{-- Filters --}}
-  <div class="card mb-5">
+  <div class="card mb-5 shadow-sm">
     <div class="card-body py-3">
       <form method="GET" action="{{ route('transactions.index') }}" class="row g-3 align-items-end">
         <div class="col-md-4">
@@ -84,42 +116,51 @@
   </div>
 
   {{-- Table --}}
-  <div class="card">
+  <div class="card shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
+          <thead>
+            <tr class="paranette-thead">
               <th class="ps-4 py-3">Tarih</th>
-              <th>Açıklama</th>
-              <th>Mağaza</th>
-              <th>Banka</th>
-              <th class="text-end pe-4">Tutar</th>
+              <th class="py-3">Açıklama</th>
+              <th class="py-3 d-none d-md-table-cell">Mağaza</th>
+              <th class="py-3 d-none d-sm-table-cell">Banka</th>
+              <th class="py-3 pe-4 text-end">Tutar</th>
             </tr>
           </thead>
           <tbody>
             @forelse($transactions as $tx)
               <tr>
-                <td class="ps-4">
+                <td class="ps-4 py-3">
                   <div class="fw-medium small">{{ \Carbon\Carbon::parse($tx->posted_at)->format('d.m.Y') }}</div>
                   <div class="text-muted" style="font-size:.72rem;">{{ \Carbon\Carbon::parse($tx->posted_at)->format('H:i') }}</div>
                 </td>
-                <td>
-                  <div class="small fw-medium">{{ $tx->description }}</div>
-                  @if($tx->merchant_category)
-                    <span class="badge bg-label-secondary" style="font-size:.68rem;">{{ $tx->merchant_category }}</span>
-                  @endif
+                <td class="py-3">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="avatar avatar-sm flex-shrink-0">
+                      <span class="avatar-initial rounded bg-label-{{ $tx->amount >= 0 ? 'success' : 'danger' }}">
+                        <i class="icon-base ti {{ $tx->amount >= 0 ? 'tabler-arrow-down-left' : 'tabler-arrow-up-right' }} icon-14px"></i>
+                      </span>
+                    </div>
+                    <div class="overflow-hidden">
+                      <div class="small fw-medium text-truncate" style="max-width:220px;">{{ $tx->description }}</div>
+                      @if($tx->merchant_category)
+                        <span class="badge bg-label-secondary" style="font-size:.68rem;">{{ $tx->merchant_category }}</span>
+                      @endif
+                    </div>
+                  </div>
                 </td>
-                <td class="small text-muted">{{ $tx->merchant_name ?: '—' }}</td>
-                <td>
+                <td class="py-3 d-none d-md-table-cell small text-muted">{{ $tx->merchant_name ?: '—' }}</td>
+                <td class="py-3 d-none d-sm-table-cell">
                   @if($tx->bank_logo)
                     <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}"
                          style="height:18px;width:auto;object-fit:contain;">
                   @else
-                    <span class="small text-muted">{{ $tx->bank_name }}</span>
+                    <span class="badge bg-label-secondary small">{{ $tx->bank_name }}</span>
                   @endif
                 </td>
-                <td class="text-end pe-4">
+                <td class="py-3 pe-4 text-end">
                   <span class="fw-bold {{ $tx->amount >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ $tx->amount >= 0 ? '+' : '' }}₺{{ number_format(abs($tx->amount), 2, ',', '.') }}
                   </span>
@@ -127,8 +168,8 @@
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="text-center py-8 text-muted">
-                  <i class="icon-base ti tabler-inbox icon-48px d-block mb-3"></i>
+                <td colspan="5" class="text-center py-6 text-muted">
+                  <i class="icon-base ti tabler-inbox icon-48px d-block mb-3 mx-auto"></i>
                   Filtreye uyan işlem bulunamadı.
                 </td>
               </tr>
@@ -143,9 +184,7 @@
           Toplam <strong>{{ $transactions->total() }}</strong> işlem —
           {{ $transactions->firstItem() }}–{{ $transactions->lastItem() }} gösteriliyor
         </div>
-        <div>
-          {{ $transactions->links() }}
-        </div>
+        {{ $transactions->links() }}
       </div>
     @endif
   </div>
