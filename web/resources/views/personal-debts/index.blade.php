@@ -146,7 +146,9 @@
 
       @if($given->isEmpty())
       <div class="card-body text-center py-8">
-        <i class="icon-base ti tabler-mood-happy icon-48px text-muted mb-3 d-block"></i>
+        <div class="d-flex justify-content-center mb-3">
+          <i class="icon-base ti tabler-mood-happy icon-48px text-muted"></i>
+        </div>
         <p class="text-muted mb-0">Henüz alacak kaydı yok.</p>
       </div>
       @else
@@ -249,7 +251,9 @@
 
       @if($received->isEmpty())
       <div class="card-body text-center py-8">
-        <i class="icon-base ti tabler-mood-happy icon-48px text-muted mb-3 d-block"></i>
+        <div class="d-flex justify-content-center mb-3">
+          <i class="icon-base ti tabler-mood-happy icon-48px text-muted"></i>
+        </div>
         <p class="text-muted mb-0">Henüz borç kaydı yok.</p>
       </div>
       @else

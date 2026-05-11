@@ -1,6 +1,18 @@
 <x-app-layout>
   <x-slot name="title">Faturalar</x-slot>
 
+  <x-slot name="pageCss">
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+  <style>
+    .select2-container--default .select2-selection--single { height: 38px; border: 1px solid var(--bs-border-color); background: var(--bs-body-bg); border-radius: 0.375rem; padding: 4px 8px; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { color: var(--bs-body-color); line-height: 28px; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
+    .select2-dropdown { border-color: var(--bs-border-color); background: var(--bs-body-bg); z-index: 9999 !important; }
+    .select2-container--default .select2-results__option--highlighted { background: #7367f0; }
+    .select2-search--dropdown .select2-search__field { background: var(--bs-body-bg); color: var(--bs-body-color); border-color: var(--bs-border-color); }
+  </style>
+  </x-slot>
+
   <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Faturalar</h4>
@@ -104,7 +116,9 @@
   @if($bills->isEmpty())
   <div class="card">
     <div class="card-body text-center py-8">
-      <i class="icon-base ti tabler-file-dollar icon-64px text-muted mb-4 d-block"></i>
+      <div class="d-flex justify-content-center mb-4">
+        <i class="icon-base ti tabler-file-dollar icon-64px text-muted"></i>
+      </div>
       <h5 class="mb-2">Henüz fatura eklenmedi</h5>
       <p class="text-muted mb-4">Elektrik, su, doğalgaz gibi sabit giderlerini takip et.</p>
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
@@ -222,7 +236,7 @@
             <div class="row g-4 mb-4">
               <div class="col-6">
                 <label class="form-label">Tür <span class="text-danger">*</span></label>
-                <select name="type" class="form-select @error('type') is-invalid @enderror" required>
+                <select name="type" id="billTypeSelect" class="form-select @error('type') is-invalid @enderror" required>
                   <option value="electricity" {{ old('type') === 'electricity' ? 'selected' : '' }}>Elektrik</option>
                   <option value="water" {{ old('type') === 'water' ? 'selected' : '' }}>Su</option>
                   <option value="gas" {{ old('type') === 'gas' ? 'selected' : '' }}>Doğalgaz</option>
@@ -302,7 +316,22 @@
 
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+  // Initialize Select2 for bill type - dropdownParent fixes modal z-index
+  const addModal = document.getElementById('addModal');
+  addModal.addEventListener('shown.bs.modal', function() {
+    $('#billTypeSelect').select2({
+      dropdownParent: $('#addModal'),
+      minimumResultsForSearch: -1,
+      width: '100%'
+    });
+  });
+  // Pre-select old value if validation failed
+  @if(old('type'))
+  $('#billTypeSelect').val('{{ old("type") }}');
+  @endif
+
   // Re-open add modal if validation failed
   @if($errors->any())
   bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();

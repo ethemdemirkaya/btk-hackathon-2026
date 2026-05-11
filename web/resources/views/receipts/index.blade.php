@@ -144,7 +144,9 @@
 
           <div class="drop-zone mb-4" id="dropZone">
             <input type="file" id="fileInput" accept="image/*,.pdf">
-            <i class="icon-base ti tabler-camera-plus icon-48px text-primary mb-3 d-block"></i>
+            <div class="d-flex justify-content-center mb-3">
+              <i class="icon-base ti tabler-camera-plus icon-48px text-primary"></i>
+            </div>
             <h6 class="mb-1">Fişi buraya sürükle veya tıkla</h6>
             <p class="text-muted small mb-0">JPG, PNG, PDF — max 10 MB</p>
             <div id="previewWrap" class="d-none">
@@ -196,7 +198,9 @@
 
           @if($receipts->isEmpty())
             <div class="text-center py-8">
-              <i class="icon-base ti tabler-receipt-off icon-48px text-muted mb-3 d-block"></i>
+              <div class="d-flex justify-content-center mb-3">
+                <i class="icon-base ti tabler-receipt-off icon-48px text-muted"></i>
+              </div>
               <p class="text-muted mb-0">Henüz fiş yüklenmedi. Soldaki alandan bir fiş yükleyin.</p>
             </div>
           @else

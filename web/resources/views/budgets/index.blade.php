@@ -107,7 +107,9 @@
   @if($budgets->isEmpty())
   <div class="card">
     <div class="card-body text-center py-6">
-      <i class="icon-base ti tabler-chart-pie icon-64px text-muted mb-4 d-block"></i>
+      <div class="d-flex justify-content-center mb-4">
+        <i class="icon-base ti tabler-chart-pie icon-64px text-muted"></i>
+      </div>
       <h5 class="mb-2">Bu ay bütçe tanımlanmadı</h5>
       <p class="text-muted mb-4">Kategoriler için harcama limitleri belirle ve ne kadar harcadığını gör.</p>
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">

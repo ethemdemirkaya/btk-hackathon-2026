@@ -101,7 +101,9 @@
   @if($goals->isEmpty())
   <div class="card">
     <div class="card-body text-center py-6">
-      <i class="icon-base ti tabler-target icon-64px text-muted mb-4 d-block"></i>
+      <div class="d-flex justify-content-center mb-4">
+        <i class="icon-base ti tabler-target icon-64px text-muted"></i>
+      </div>
       <h5 class="mb-2">Henüz hedef eklenmedi</h5>
       <p class="text-muted mb-4">Tatil, araba, acil fon… bir hedef belirle ve birikimini takip et.</p>
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">

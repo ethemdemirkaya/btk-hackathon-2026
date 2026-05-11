@@ -147,7 +147,9 @@
           </div>
         @else
           <div class="text-center opacity-75">
-            <i class="icon-base ti tabler-heart-rate-monitor icon-32px mb-1 d-block"></i>
+            <div class="d-flex justify-content-center mb-1">
+              <i class="icon-base ti tabler-heart-rate-monitor icon-32px"></i>
+            </div>
             <div class="small">Skor hesaplanıyor…</div>
           </div>
         @endif
@@ -392,7 +394,9 @@
             <div id="categoryDonutChart" class="w-100"></div>
           @else
             <div class="text-center py-5">
-              <i class="icon-base ti tabler-chart-donut-3 icon-48px text-muted mb-3 d-block"></i>
+              <div class="d-flex justify-content-center mb-3">
+                <i class="icon-base ti tabler-chart-donut-3 icon-48px text-muted"></i>
+              </div>
               <p class="text-muted small mb-0">Henüz kategori verisi yok.</p>
             </div>
           @endif
@@ -607,7 +611,9 @@
             </div>
           @else
             <div class="text-center py-6">
-              <i class="icon-base ti tabler-building-bank icon-48px text-muted mb-3 d-block"></i>
+              <div class="d-flex justify-content-center mb-3">
+                <i class="icon-base ti tabler-building-bank icon-48px text-muted"></i>
+              </div>
               <p class="text-muted mb-3">Henüz banka hesabı bağlanmamış.</p>
               <a href="{{ route('bank-connections.create') }}" class="btn btn-outline-primary">
                 <i class="icon-base ti tabler-plus me-1"></i>Banka Bağla
@@ -683,7 +689,9 @@
             </div>
           @else
             <div class="text-center py-6">
-              <i class="icon-base ti tabler-receipt-2 icon-48px text-muted mb-3 d-block"></i>
+              <div class="d-flex justify-content-center mb-3">
+                <i class="icon-base ti tabler-receipt-2 icon-48px text-muted"></i>
+              </div>
               <p class="text-muted mb-0">İşlem geçmişi bulunamadı.</p>
             </div>
           @endif
@@ -757,7 +765,9 @@
           @else
             <div class="flex-grow-1 d-flex flex-column justify-content-center p-4">
               <div class="bg-label-primary rounded-3 p-4 mb-4 text-center">
-                <i class="icon-base ti tabler-robot icon-40px text-primary mb-2 d-block"></i>
+                <div class="d-flex justify-content-center mb-2">
+                  <i class="icon-base ti tabler-robot icon-40px text-primary"></i>
+                </div>
                 <p class="text-muted small mb-3">
                   Yapay zeka ajanları finansal durumunuzu analiz ederek kişiselleştirilmiş öneriler üretebilir.
                 </p>

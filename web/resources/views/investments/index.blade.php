@@ -141,7 +141,9 @@
 
         @if($assets->isEmpty())
         <div class="card-body text-center py-8">
-          <i class="icon-base ti tabler-coins icon-64px text-muted mb-4 d-block"></i>
+          <div class="d-flex justify-content-center mb-4">
+            <i class="icon-base ti tabler-coins icon-64px text-muted"></i>
+          </div>
           <h5 class="mb-2">Henüz varlık eklenmedi</h5>
           <p class="text-muted mb-4">Altın, döviz, hisse veya kripto para ekleyerek portföyünü oluştur.</p>
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAssetModal">
@@ -237,7 +239,9 @@
         <div class="card-body d-flex align-items-center justify-content-center">
           @if($assets->isEmpty())
             <div class="text-center py-6">
-              <i class="icon-base ti tabler-chart-donut icon-64px text-muted mb-3 d-block"></i>
+              <div class="d-flex justify-content-center mb-3">
+                <i class="icon-base ti tabler-chart-donut icon-64px text-muted"></i>
+              </div>
               <p class="text-muted small mb-0">Grafik için en az bir varlık ekleyin.</p>
             </div>
           @else
