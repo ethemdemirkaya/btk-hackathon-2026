@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\DashboardService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -24,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Use Bootstrap 5 pagination instead of Tailwind (default in Laravel)
+        Paginator::useBootstrapFive();
 
         // Share smart alerts with the app layout for the notification bell
         View::composer('layouts.app', function ($view) {

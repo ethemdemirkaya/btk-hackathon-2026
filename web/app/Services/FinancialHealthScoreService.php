@@ -60,10 +60,22 @@ class FinancialHealthScoreService
             $consistencyScore * 0.15
         );
 
+        $componentData = [
+            'debt_ratio'          => $debtRatioScore,
+            'savings_rate'        => $savingsRateScore,
+            'emergency_fund'      => $emergencyScore,
+            'expense_consistency' => $consistencyScore,
+            'monthly_income'      => round($monthlyIncome, 2),
+            'monthly_expense'     => round($monthlyExpense, 2),
+            'total_balance'       => round($totalBalance, 2),
+            'total_debt'          => round($totalDebt, 2),
+        ];
+
         $record = FinancialHealthScore::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'score'                     => max(0, min(100, $total)),
+                'components'                => $componentData,
                 'debt_ratio_score'          => $debtRatioScore,
                 'savings_rate_score'        => $savingsRateScore,
                 'emergency_fund_score'      => $emergencyScore,

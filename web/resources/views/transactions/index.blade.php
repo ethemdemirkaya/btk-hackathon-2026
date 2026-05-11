@@ -138,8 +138,14 @@
       </div>
     </div>
     @if($transactions->hasPages())
-      <div class="card-footer py-3 px-4">
-        {{ $transactions->links() }}
+      <div class="card-footer py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="text-muted small">
+          Toplam <strong>{{ $transactions->total() }}</strong> işlem —
+          {{ $transactions->firstItem() }}–{{ $transactions->lastItem() }} gösteriliyor
+        </div>
+        <div>
+          {{ $transactions->links() }}
+        </div>
       </div>
     @endif
   </div>

@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FinancialHealthScore extends Model
 {
     protected $fillable = [
-        'user_id', 'score', 'debt_ratio_score', 'savings_rate_score',
+        'user_id', 'score', 'components',
+        'debt_ratio_score', 'savings_rate_score',
         'expense_consistency_score', 'emergency_fund_score',
         'details', 'calculated_at',
     ];
@@ -19,6 +20,7 @@ class FinancialHealthScore extends Model
         'savings_rate_score'       => 'integer',
         'expense_consistency_score'=> 'integer',
         'emergency_fund_score'     => 'integer',
+        'components'               => 'array',
         'details'                  => 'array',
         'calculated_at'            => 'datetime',
     ];
