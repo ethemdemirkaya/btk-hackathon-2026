@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/chat/insights/{insight}/dismiss', [AgentChatController::class, 'dismissInsight'])->name('agent-chat.insight-dismiss');
     Route::get('/chat/history', [AgentChatController::class, 'history'])->name('agent-chat.history');
     Route::get('/chat/runs', [AgentChatController::class, 'runs'])->name('agent-chat.runs');
+    Route::get('/chat/poll/{messageId}', [AgentChatController::class, 'poll'])->name('agent-chat.poll');
 
     // Receipts (OCR)
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
