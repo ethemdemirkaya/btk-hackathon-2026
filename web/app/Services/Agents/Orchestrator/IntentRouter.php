@@ -37,6 +37,7 @@ class IntentRouter
             'forecaster',
             'debt_optimizer',
             'subscription_hunter',
+            'receipt_ocr',
         ]);
 
         $prompt = <<<PROMPT
@@ -52,6 +53,7 @@ class IntentRouter
         - forecaster: gelecek projeksiyon, birikim tahmini, 3-12 ay finansal görünüm
         - debt_optimizer: borç azaltma stratejisi, kredi kartı optimizasyonu, Avalanche/Snowball
         - subscription_hunter: abonelik tespiti, tekrarlayan ödeme analizi, gereksiz abonelik
+        - receipt_ocr: fiş analizi, OCR işleme, garanti takibi, market fişi, fatura okuma, ürün listesi çıkarma
 
         Bu mesaj için hangi ajanlar çalışmalı? Ve mesajdan çıkartılan bilgileri döndür.
         PROMPT;

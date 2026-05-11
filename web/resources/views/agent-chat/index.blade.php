@@ -88,7 +88,7 @@
                 <p class="text-muted mb-4 mx-auto" style="max-width:400px">
                   Finansal kararlarınız için uzman ajanlar devreye girer, canlı analiz sunar.
                 </p>
-                <div class="row g-3 justify-content-center" style="max-width:600px; margin: 0 auto;">
+                <div class="row g-3 justify-content-center" style="max-width:700px; margin: 0 auto;">
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="50.000 TL'ye telefon almak istiyorum, nasıl yaparım?">
                       <div class="card-body p-3 text-start">
@@ -118,6 +118,38 @@
                       <div class="card-body p-3 text-start">
                         <i class="icon-base ti tabler-alert-triangle text-danger mb-2"></i>
                         <p class="small mb-0">Harcamalarımda anormal bir durum var mı?</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card border cursor-pointer suggestion-card" data-msg="Önümüzdeki 6 ayda ne kadar biriktirebilirim?">
+                      <div class="card-body p-3 text-start">
+                        <i class="icon-base ti tabler-chart-line text-info mb-2"></i>
+                        <p class="small mb-0">Önümüzdeki 6 ayda ne kadar biriktirebilirim?</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card border cursor-pointer suggestion-card" data-msg="Kredi kartı borçlarımı en hızlı nasıl kapatabilirim?">
+                      <div class="card-body p-3 text-start">
+                        <i class="icon-base ti tabler-credit-card text-danger mb-2"></i>
+                        <p class="small mb-0">Kredi kartı borçlarımı nasıl kapatabilirim?</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card border cursor-pointer suggestion-card" data-msg="Gereksiz aboneliklerim var mı, tespit eder misin?">
+                      <div class="card-body p-3 text-start">
+                        <i class="icon-base ti tabler-repeat text-secondary mb-2"></i>
+                        <p class="small mb-0">Gereksiz aboneliklerimi tespit et</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card border cursor-pointer suggestion-card" data-msg="Bu harcamayı hangi kategoriye koymalıyım?">
+                      <div class="card-body p-3 text-start">
+                        <i class="icon-base ti tabler-tag text-success mb-2"></i>
+                        <p class="small mb-0">Bu harcamayı kategorize et</p>
                       </div>
                     </div>
                   </div>
@@ -203,7 +235,17 @@
         </div>
         <div class="card-body p-0">
           <ul class="list-group list-group-flush" id="agent-status-list">
-            @foreach(['purchase_planner' => ['Satın Alma Planlayıcı','tabler-shopping-cart','primary'], 'inflation_aware' => ['Enflasyon Analisti','tabler-trending-up','warning'], 'budget_advisor' => ['Bütçe Danışmanı','tabler-chart-pie','success'], 'anomaly_detector' => ['Anomali Dedektörü','tabler-alert-triangle','danger'], 'transaction_classifier' => ['İşlem Sınıflandırıcı','tabler-tag','info']] as $key => [$label, $icon, $color])
+            @foreach([
+              'purchase_planner'       => ['Satın Alma Planlayıcı',  'tabler-shopping-cart',   'primary'],
+              'budget_advisor'         => ['Bütçe Danışmanı',         'tabler-chart-pie',       'success'],
+              'inflation_aware'        => ['Enflasyon Analisti',      'tabler-trending-up',     'warning'],
+              'anomaly_detector'       => ['Anomali Dedektörü',       'tabler-alert-triangle',  'danger'],
+              'transaction_classifier' => ['İşlem Sınıflandırıcı',   'tabler-tag',             'info'],
+              'forecaster'             => ['Projeksiyon & Tahmin',    'tabler-chart-line',      'info'],
+              'debt_optimizer'         => ['Borç Optimizasyonu',      'tabler-credit-card',     'danger'],
+              'subscription_hunter'    => ['Abonelik Avcısı',         'tabler-repeat',          'secondary'],
+              'receipt_ocr'            => ['Fiş & OCR Analizi',       'tabler-receipt',         'primary'],
+            ] as $key => [$label, $icon, $color])
               <li class="list-group-item d-flex align-items-center gap-2 py-2" id="agent-{{ $key }}">
                 <div class="avatar avatar-sm bg-label-{{ $color }}">
                   <i class="icon-base ti {{ $icon }} text-{{ $color }}" style="font-size:13px"></i>
@@ -290,6 +332,11 @@
       inflation_aware:         'Enflasyon Analisti',
       anomaly_detector:        'Anomali Dedektörü',
       transaction_classifier:  'İşlem Sınıflandırıcı',
+      forecaster:              'Projeksiyon & Tahmin',
+      debt_optimizer:          'Borç Optimizasyonu',
+      subscription_hunter:     'Abonelik Avcısı',
+      receipt_ocr:             'Fiş & OCR Analizi',
+      critic:                  'Eleştirmen Ajan',
     };
 
     // Suggestion cards

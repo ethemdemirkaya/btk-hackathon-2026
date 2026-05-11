@@ -6,9 +6,14 @@
       <h4 class="fw-bold mb-0">Bütçeler</h4>
       <p class="text-muted small mb-0">{{ now()->translatedFormat('F Y') }} — Harcama limitlerini belirle ve takip et</p>
     </div>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-      <i class="icon-base ti tabler-plus me-1"></i>Bütçe Ekle
-    </button>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-outline-primary btn-sm" id="aiSuggestBtn">
+        <i class="icon-base ti tabler-sparkles me-1"></i>AI ile Bütçemi Kur
+      </button>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+        <i class="icon-base ti tabler-plus me-1"></i>Bütçe Ekle
+      </button>
+    </div>
   </div>
 
   @if(session('success'))
@@ -169,6 +174,69 @@
   </div>
   @endif
 
+  {{-- AI Suggest Modal --}}
+  <div class="modal fade" id="aiSuggestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">
+            <i class="icon-base ti tabler-sparkles me-2 text-primary"></i>AI ile Bütçe Önerileri
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-0">
+
+          {{-- Loading state --}}
+          <div id="aiLoadingState" class="text-center py-6">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted mb-0">Son 3 ayın harcamaları analiz ediliyor…</p>
+          </div>
+
+          {{-- Error state --}}
+          <div id="aiErrorState" class="d-none">
+            <div class="alert alert-danger mb-0">
+              <i class="icon-base ti tabler-alert-circle me-2"></i>
+              <span id="aiErrorText">Bir hata oluştu.</span>
+            </div>
+          </div>
+
+          {{-- Result state --}}
+          <div id="aiResultState" class="d-none">
+            <p class="text-muted small mb-3">
+              Aşağıdaki bütçe önerileri son 3 aylık harcama ortalamanıza göre %5 tampon eklenerek oluşturuldu.
+              Uygulamak istediğiniz kategorileri seçin ve limitleri düzenleyebilirsiniz.
+            </p>
+            <form action="{{ route('budgets.ai-apply') }}" method="POST" id="aiApplyForm">
+              @csrf
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:40px">
+                        <input type="checkbox" class="form-check-input" id="aiSelectAll" checked>
+                      </th>
+                      <th>Kategori</th>
+                      <th class="text-end">Ort. 3 Aylık</th>
+                      <th style="width:160px">Önerilen Limit (₺)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="aiSuggestionsBody"></tbody>
+                </table>
+              </div>
+              <div class="mt-4 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="submit" class="btn btn-primary" id="aiApplyBtn">
+                  <i class="icon-base ti tabler-check me-1"></i>Hepsini Uygula
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   {{-- Add modal --}}
   <div class="modal fade" id="addModal" tabindex="-1">
     <div class="modal-dialog">
@@ -244,6 +312,123 @@
       }).then(result => { if (result.isConfirmed) this.closest('form').submit(); });
     });
   });
+
+  // ── AI Budget Suggest ───────────────────────────────────────────────
+  (function () {
+    const aiSuggestBtn    = document.getElementById('aiSuggestBtn');
+    const aiLoadingState  = document.getElementById('aiLoadingState');
+    const aiErrorState    = document.getElementById('aiErrorState');
+    const aiErrorText     = document.getElementById('aiErrorText');
+    const aiResultState   = document.getElementById('aiResultState');
+    const aiSuggestionsBody = document.getElementById('aiSuggestionsBody');
+    const aiSelectAll     = document.getElementById('aiSelectAll');
+    const aiApplyForm     = document.getElementById('aiApplyForm');
+    const aiApplyBtn      = document.getElementById('aiApplyBtn');
+    const csrfToken       = document.querySelector('meta[name=csrf-token]').content;
+
+    aiSuggestBtn.addEventListener('click', function () {
+      // Reset modal state
+      aiLoadingState.classList.remove('d-none');
+      aiErrorState.classList.add('d-none');
+      aiResultState.classList.add('d-none');
+      aiSuggestionsBody.innerHTML = '';
+
+      const modal = new bootstrap.Modal(document.getElementById('aiSuggestModal'));
+      modal.show();
+
+      fetch('{{ route("budgets.ai-suggest") }}', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({}),
+      })
+      .then(function (r) {
+        if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || 'Sunucu hatası.'); });
+        return r.json();
+      })
+      .then(function (data) {
+        const suggestions = data.suggestions || [];
+
+        if (suggestions.length === 0) {
+          throw new Error('Tüm kategoriler için bu ay zaten bütçe tanımlanmış.');
+        }
+
+        suggestions.forEach(function (s, idx) {
+          const avg = parseFloat(s.monthly_avg).toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+          const row = document.createElement('tr');
+          row.innerHTML =
+            '<td><input type="checkbox" class="form-check-input ai-row-check" checked data-idx="' + idx + '"></td>' +
+            '<td><span class="fw-medium">' + escapeHtml(s.category_name) + '</span></td>' +
+            '<td class="text-end text-muted">₺' + avg + '</td>' +
+            '<td>' +
+              '<input type="number" class="form-control form-control-sm ai-amount-input" ' +
+                     'value="' + s.suggested + '" min="50" step="50" ' +
+                     'data-category-id="' + s.category_id + '">' +
+            '</td>';
+          aiSuggestionsBody.appendChild(row);
+        });
+
+        aiLoadingState.classList.add('d-none');
+        aiResultState.classList.remove('d-none');
+      })
+      .catch(function (err) {
+        aiLoadingState.classList.add('d-none');
+        aiErrorText.textContent = err.message || 'Bir hata oluştu.';
+        aiErrorState.classList.remove('d-none');
+      });
+    });
+
+    // Select all toggle
+    aiSelectAll.addEventListener('change', function () {
+      document.querySelectorAll('.ai-row-check').forEach(function (cb) {
+        cb.checked = aiSelectAll.checked;
+      });
+    });
+
+    // Build hidden inputs on submit
+    aiApplyForm.addEventListener('submit', function (e) {
+      // Remove any previously built hidden inputs
+      aiApplyForm.querySelectorAll('.ai-hidden-input').forEach(function (el) { el.remove(); });
+
+      const checked = aiApplyForm.querySelectorAll('.ai-row-check:checked');
+      if (checked.length === 0) {
+        e.preventDefault();
+        Swal.fire({ icon: 'warning', title: 'Seçim yapılmadı', text: 'Lütfen en az bir kategori seçin.', confirmButtonColor: '#7367f0' });
+        return;
+      }
+
+      checked.forEach(function (cb, i) {
+        const row       = cb.closest('tr');
+        const amountInput = row.querySelector('.ai-amount-input');
+        const categoryId  = amountInput.dataset.categoryId;
+        const amount      = amountInput.value;
+
+        const hidCat = document.createElement('input');
+        hidCat.type  = 'hidden';
+        hidCat.name  = 'suggestions[' + i + '][category_id]';
+        hidCat.value = categoryId;
+        hidCat.className = 'ai-hidden-input';
+
+        const hidAmt = document.createElement('input');
+        hidAmt.type  = 'hidden';
+        hidAmt.name  = 'suggestions[' + i + '][amount]';
+        hidAmt.value = amount;
+        hidAmt.className = 'ai-hidden-input';
+
+        aiApplyForm.appendChild(hidCat);
+        aiApplyForm.appendChild(hidAmt);
+      });
+    });
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
+    }
+  })();
   </script>
   </x-slot>
 </x-app-layout>

@@ -172,6 +172,12 @@
             </div>
           </div>
 
+          {{-- Camera capture button (mobile only) --}}
+          <button type="button" class="btn btn-outline-secondary w-100 mb-2 d-md-none" id="cameraBtn">
+            <i class="icon-base ti tabler-camera me-2"></i>Fotoğraf Çek
+          </button>
+          <input type="file" id="receiptCameraInput" accept="image/*" capture="environment" class="d-none">
+
           <button type="button" class="btn btn-primary w-100 mt-auto" id="uploadBtn" disabled>
             <i class="icon-base ti tabler-robot me-2"></i>Gemini ile Analiz Et
           </button>
@@ -289,9 +295,11 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
   (function () {
-    const dropZone   = document.getElementById('dropZone');
-    const fileInput  = document.getElementById('fileInput');
-    const uploadBtn  = document.getElementById('uploadBtn');
+    const dropZone        = document.getElementById('dropZone');
+    const fileInput       = document.getElementById('fileInput');
+    const cameraBtn       = document.getElementById('cameraBtn');
+    const cameraInput     = document.getElementById('receiptCameraInput');
+    const uploadBtn       = document.getElementById('uploadBtn');
     const previewWrap= document.getElementById('previewWrap');
     const previewImg = document.getElementById('previewImg');
     const previewName= document.getElementById('previewName');
@@ -317,6 +325,12 @@
     });
     fileInput.addEventListener('change', () => {
       if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    // Camera capture (mobile) — feeds photo into the main drop-zone flow
+    cameraBtn.addEventListener('click', () => cameraInput.click());
+    cameraInput.addEventListener('change', () => {
+      if (cameraInput.files[0]) setFile(cameraInput.files[0]);
     });
 
     function setFile(file) {

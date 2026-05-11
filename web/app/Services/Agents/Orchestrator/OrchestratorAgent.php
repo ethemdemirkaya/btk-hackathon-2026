@@ -12,6 +12,7 @@ use App\Services\Agents\Specialists\DebtOptimizerAgent;
 use App\Services\Agents\Specialists\ForecasterAgent;
 use App\Services\Agents\Specialists\InflationAwareAgent;
 use App\Services\Agents\Specialists\PurchasePlannerAgent;
+use App\Services\Agents\Specialists\ReceiptOCRAgent;
 use App\Services\Agents\Specialists\SubscriptionHunterAgent;
 use App\Services\Agents\Specialists\TransactionClassifierAgent;
 use App\Services\Gemini\GeminiClient;
@@ -137,6 +138,7 @@ class OrchestratorAgent
             'forecaster'             => new ForecasterAgent($user),
             'debt_optimizer'         => new DebtOptimizerAgent($user),
             'subscription_hunter'    => new SubscriptionHunterAgent($user),
+            'receipt_ocr'            => new ReceiptOCRAgent($user),
             default                  => null,
         };
     }

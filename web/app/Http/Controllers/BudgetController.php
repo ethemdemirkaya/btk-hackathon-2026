@@ -76,4 +76,95 @@ class BudgetController extends Controller
         if ($request->wantsJson()) return response()->json(['success' => true]);
         return redirect()->route('budgets.index')->with('success', 'Bütçe silindi.');
     }
+
+    public function aiSuggest(Request $request)
+    {
+        $spending = DB::table('transactions as t')
+            ->join('accounts as a', 't.account_id', '=', 'a.id')
+            ->join('categories as c', 't.category_id', '=', 'c.id')
+            ->where('a.user_id', auth()->id())
+            ->where('t.amount', '<', 0)
+            ->where('t.posted_at', '>=', now()->subMonths(3))
+            ->groupBy('c.id', 'c.name', 'c.slug')
+            ->select(
+                'c.id as category_id',
+                'c.name as category_name',
+                'c.slug',
+                DB::raw('ABS(SUM(t.amount)) / 3 as monthly_avg')
+            )
+            ->orderByDesc('monthly_avg')
+            ->get();
+
+        if ($spending->isEmpty()) {
+            return response()->json(['error' => 'Son 3 ayda harcama verisi bulunamadı.'], 422);
+        }
+
+        $existingCategoryIds = DB::table('budgets')
+            ->where('user_id', auth()->id())
+            ->where('period', now()->format('Y-m'))
+            ->pluck('category_id')
+            ->toArray();
+
+        $suggestions = $spending
+            ->filter(fn($row) => ! in_array($row->category_id, $existingCategoryIds))
+            ->values()
+            ->map(function ($row) {
+                $raw       = (float) $row->monthly_avg * 1.05;
+                $suggested = round($raw / 50) * 50;
+                if ($suggested < 50) $suggested = 50;
+
+                return [
+                    'category_id'   => $row->category_id,
+                    'category_name' => $row->category_name,
+                    'monthly_avg'   => round($row->monthly_avg, 2),
+                    'suggested'     => (int) $suggested,
+                ];
+            });
+
+        return response()->json(['suggestions' => $suggestions]);
+    }
+
+    public function aiApply(Request $request)
+    {
+        $data = $request->validate([
+            'suggestions'             => 'required|array|min:1',
+            'suggestions.*.category_id' => 'required|integer|exists:categories,id',
+            'suggestions.*.amount'    => 'required|numeric|min:1',
+        ]);
+
+        $period  = now()->format('Y-m');
+        $userId  = $request->user()->id;
+        $created = 0;
+
+        foreach ($data['suggestions'] as $item) {
+            $categoryId = (int) $item['category_id'];
+            $amount     = (float) $item['amount'];
+
+            // Skip if budget already exists for this category this month
+            $exists = DB::table('budgets')
+                ->where('user_id', $userId)
+                ->where('category_id', $categoryId)
+                ->where('period', $period)
+                ->exists();
+
+            if ($exists) continue;
+
+            DB::table('budgets')->insert([
+                'user_id'         => $userId,
+                'category_id'     => $categoryId,
+                'amount'          => $amount,
+                'alert_threshold' => 80,
+                'period'          => $period,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+            $created++;
+        }
+
+        $message = $created > 0
+            ? "AI önerisi ile {$created} bütçe kategorisi oluşturuldu."
+            : 'Seçilen kategoriler için bu ay zaten bütçe mevcut.';
+
+        return redirect()->route('budgets.index')->with('success', $message);
+    }
 }
