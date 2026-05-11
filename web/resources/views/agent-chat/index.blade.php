@@ -42,6 +42,25 @@
     }
     .specialist-panel { font-size: 13px; }
     .specialist-panel pre { font-size: 11px; white-space: pre-wrap; }
+    .cursor-pointer { cursor: pointer; }
+    .suggestion-card:hover {
+      border-color: var(--bs-primary) !important;
+      background: rgba(var(--bs-primary-rgb), .04);
+      transition: border-color .15s, background .15s;
+    }
+    /* Pulsing dot for running agents */
+    .agent-pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ff9f43;
+      flex-shrink: 0;
+      animation: agentPulse 1.1s ease-in-out infinite;
+    }
+    @@keyframes agentPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .45; transform: scale(.7); }
+    }
   </style>
   </x-slot>
 
@@ -91,64 +110,64 @@
                 <div class="row g-3 justify-content-center" style="max-width:700px; margin: 0 auto;">
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="50.000 TL'ye telefon almak istiyorum, nasıl yaparım?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-device-mobile text-primary mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-device-mobile text-primary"></i></div>
                         <p class="small mb-0">50.000 TL'ye telefon almak istiyorum</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Aylık bütçemi nasıl optimize edebilirim?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-chart-pie text-success mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-chart-pie text-success"></i></div>
                         <p class="small mb-0">Aylık bütçemi nasıl optimize edebilirim?</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Enflasyon birikimimi nasıl etkiliyor?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-trending-up text-warning mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-trending-up text-warning"></i></div>
                         <p class="small mb-0">Enflasyon birikimimi nasıl etkiliyor?</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Son harcamalarımda anormal bir durum var mı?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-alert-triangle text-danger mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-alert-triangle text-danger"></i></div>
                         <p class="small mb-0">Harcamalarımda anormal bir durum var mı?</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Önümüzdeki 6 ayda ne kadar biriktirebilirim?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-chart-line text-info mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-chart-line text-info"></i></div>
                         <p class="small mb-0">Önümüzdeki 6 ayda ne kadar biriktirebilirim?</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Kredi kartı borçlarımı en hızlı nasıl kapatabilirim?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-credit-card text-danger mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-credit-card text-danger"></i></div>
                         <p class="small mb-0">Kredi kartı borçlarımı nasıl kapatabilirim?</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Gereksiz aboneliklerim var mı, tespit eder misin?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-repeat text-secondary mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-repeat text-secondary"></i></div>
                         <p class="small mb-0">Gereksiz aboneliklerimi tespit et</p>
                       </div>
                     </div>
                   </div>
                   <div class="col-sm-6">
                     <div class="card border cursor-pointer suggestion-card" data-msg="Bu harcamayı hangi kategoriye koymalıyım?">
-                      <div class="card-body p-3 text-start">
-                        <i class="icon-base ti tabler-tag text-success mb-2"></i>
+                      <div class="card-body p-3 text-center">
+                        <div class="d-flex justify-content-center mb-2"><i class="icon-base ti tabler-tag text-success"></i></div>
                         <p class="small mb-0">Bu harcamayı kategorize et</p>
                       </div>
                     </div>
@@ -384,15 +403,20 @@
 
     function setAgentStates(agents, state) {
       document.querySelectorAll('.agent-state').forEach(el => {
-        el.textContent = 'Beklemede';
+        el.innerHTML = 'Beklemede';
         el.className = 'badge bg-label-secondary agent-state';
       });
       agents.forEach(a => {
         const li = document.getElementById(`agent-${a}`);
         if (li) {
           const badge = li.querySelector('.agent-state');
-          badge.textContent = state === 'running' ? 'Çalışıyor' : 'Tamamlandı';
-          badge.className = `badge ${state === 'running' ? 'bg-label-warning' : 'bg-label-success'} agent-state`;
+          if (state === 'running') {
+            badge.className = 'badge bg-label-warning agent-state d-inline-flex align-items-center gap-1';
+            badge.innerHTML = '<span class="agent-pulse"></span>Çalışıyor';
+          } else {
+            badge.className = 'badge bg-label-success agent-state';
+            badge.innerHTML = 'Tamamlandı';
+          }
         }
       });
     }
