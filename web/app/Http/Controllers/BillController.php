@@ -29,13 +29,14 @@ class BillController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'           => 'required|string|max:200',
-            'type'           => 'required|string|in:electricity,water,gas,internet,phone,rent,insurance,other',
-            'provider'       => 'nullable|string|max:200',
-            'account_number' => 'nullable|string|max:100',
-            'average_amount' => 'nullable|numeric|min:0',
-            'due_day'        => 'nullable|integer|min:1|max:31',
-            'is_autopay'     => 'boolean',
+            'name'               => 'required|string|max:200',
+            'type'               => 'required|string|in:electricity,water,gas,internet,phone,rent,insurance,other',
+            'provider'           => 'nullable|string|max:200',
+            'account_number'     => 'nullable|string|max:100',
+            'average_amount'     => 'nullable|numeric|min:0',
+            'due_day'            => 'nullable|integer|min:1|max:31',
+            'is_autopay'         => 'boolean',
+            'autopay_account_id' => 'nullable|integer|exists:accounts,id,user_id,' . $request->user()->id,
         ]);
 
         $data['user_id']   = $request->user()->id;

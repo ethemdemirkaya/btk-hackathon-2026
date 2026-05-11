@@ -106,9 +106,12 @@ class CalendarController extends Controller
 
         foreach ($loans as $loan) {
             $loanDate = Carbon::parse($loan->next_payment_date);
-            $day      = $loanDate->day;
 
-            if ($day >= 1 && $day <= $endOfMonth->day) {
+            // Use the payment day of month, clamped to the last valid day of the viewed month
+            // (e.g. a loan due on the 31st shows on the 28th/29th in February)
+            $day = min($loanDate->day, $endOfMonth->day);
+
+            if ($day >= 1) {
                 $typeLabel = match ($loan->type) {
                     'mortgage' => 'Konut Kredisi',
                     'vehicle'  => 'Araç Kredisi',

@@ -279,7 +279,7 @@
   {{-- Pay Record Modal --}}
   <div class="modal fade" id="payModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
-      <form id="payForm" method="POST">
+      <form id="payForm" method="POST" action="">
         @csrf @method('PATCH')
         <div class="modal-content">
           <div class="modal-header">
@@ -337,10 +337,15 @@
   document.querySelectorAll('.btn-pay-record').forEach(function (btn) {
     btn.addEventListener('click', function () {
       payForm.action    = this.dataset.action;
+      payForm.dataset.ready = '1';
       payAmountEl.value = this.dataset.amount;
       payNameEl.textContent = this.dataset.name + ' için tutar girin:';
       bootstrap.Modal.getOrCreateInstance(payModal).show();
     });
+  });
+
+  document.getElementById('payForm').addEventListener('submit', function(e) {
+    if (!this.dataset.ready) { e.preventDefault(); }
   });
   </script>
   </x-slot>

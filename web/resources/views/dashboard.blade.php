@@ -311,9 +311,9 @@
               </div>
             </div>
             <p class="text-muted small mb-0">
-              @if($personalInflation['diff'] > 0)
+              @if($personalInflation['diff'] !== null && $personalInflation['diff'] > 0)
                 Genel enflasyonun <strong>{{ number_format($personalInflation['diff'], 1, ',', '.') }} puan üstünde</strong> etkileniyorsun.
-              @else
+              @elseif($personalInflation['diff'] !== null && $personalInflation['diff'] <= 0)
                 Genel enflasyonun altında etkileniyorsun — finansal kararların etkili.
               @endif
             </p>

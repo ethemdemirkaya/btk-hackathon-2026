@@ -467,11 +467,17 @@
   <script>
   document.querySelectorAll('.btn-debt-tag').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.getElementById('debtForm').action = '/transactions/' + this.dataset.txId + '/debt';
+      const debtForm = document.getElementById('debtForm');
+      debtForm.action = '/transactions/' + this.dataset.txId + '/debt';
+      debtForm.dataset.ready = '1';
       document.getElementById('debtTxInfo').textContent = this.dataset.txDesc;
       document.getElementById('debtAmount').value   = parseFloat(this.dataset.txAmount).toFixed(2);
       document.getElementById('debtDirection').value = this.dataset.txDir;
     });
+  });
+
+  document.getElementById('debtForm').addEventListener('submit', function(e) {
+    if (!this.dataset.ready) { e.preventDefault(); }
   });
   </script>
   </x-slot>

@@ -166,7 +166,7 @@
                 <div class="fw-medium mb-1">Dosyayı buraya sürükleyin</div>
                 <div class="text-muted small mb-3">veya</div>
                 <button type="button" class="btn btn-outline-primary btn-sm"
-                        onclick="document.getElementById('csvFile').click()">
+                        onclick="event.stopPropagation(); document.getElementById('csvFile').click()">
                   Dosya Seç
                 </button>
                 <div id="fileNameDisplay" class="mt-3 text-success small d-none">

@@ -120,8 +120,8 @@ class ReportController extends Controller
             ->get();
 
         $income   = $transactions->where('amount', '>', 0)->sum('amount');
-        $expense  = $transactions->where('amount', '<', 0)->sum('amount');
-        $netFlow  = $income + $expense;
+        $expense  = abs($transactions->where('amount', '<', 0)->sum('amount'));
+        $netFlow  = $income - $expense;
 
         // ── Category breakdown ───────────────────────────────────────────
         $categoryBreakdown = DB::table('transactions as t')

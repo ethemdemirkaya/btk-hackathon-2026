@@ -34,8 +34,9 @@ class PersonalInflationService
     {
         $asOf   ??= Carbon::now();
         $since    = $asOf->copy()->subDays(90);
-        $year     = $asOf->subMonth()->year;
-        $month    = $asOf->subMonth()->month;
+        $prevMonth = $asOf->copy()->subMonth();
+        $year     = $prevMonth->year;
+        $month    = $prevMonth->month;
 
         // TÜİK kategori oranlarını al
         $tuikRates = $this->getTuikRates($year, $month);

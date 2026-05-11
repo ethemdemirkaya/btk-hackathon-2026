@@ -238,6 +238,7 @@ class TransactionController extends Controller
             ->where('id', $data['account_id'])
             ->where('user_id', $request->user()->id)
             ->first();
+        session()->forget('import_preview');
         abort_unless($account, 403);
 
         $colDate  = (int) $request->col_date;

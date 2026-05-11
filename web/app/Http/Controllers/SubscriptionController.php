@@ -15,6 +15,7 @@ class SubscriptionController extends Controller
         $subscriptions = DB::table('subscriptions')
             ->where('user_id', $user->id)
             ->whereNull('cancelled_at')
+            ->whereNull('deleted_at')
             ->orderBy('next_billing_date')
             ->get();
 

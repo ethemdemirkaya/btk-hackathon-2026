@@ -114,7 +114,7 @@ class DecisionSimulatorController extends Controller
         }
 
         // Estimate new health score components (simplified)
-        $debtRatioScore = $this->scoreDebtRatio(($cardDebt / 12 + 0) / max($newIncome, 1));
+        $debtRatioScore = $this->scoreDebtRatio(($cardDebt * 0.02) / max($newIncome, 1));
         $savingsScore   = $this->scoreSavingsRate($savingsRate);
         $emergencyMonths = $newExpense > 0 ? $balance / $newExpense : 0;
         $emergencyScore = $this->scoreEmergency($emergencyMonths);

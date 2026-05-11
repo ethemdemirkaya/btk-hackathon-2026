@@ -268,7 +268,7 @@
                       <button class="btn btn-icon btn-sm btn-text-primary btn-view-draft"
                               data-id="{{ $draft->id }}"
                               data-subject="{{ $draft->subject }}"
-                              data-body="{{ htmlspecialchars($draft->body) }}"
+                              data-body="{{ $draft->body }}"
                               title="Görüntüle">
                         <i class="icon-base ti tabler-eye icon-18px"></i>
                       </button>
