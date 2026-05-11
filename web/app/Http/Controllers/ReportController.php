@@ -168,12 +168,45 @@ class ReportController extends Controller
             ->limit(5)
             ->get();
 
+        // ── Active Goals ──────────────────────────────────────────────────
+        $goals = DB::table('goals')
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->orderByDesc('target_amount')
+            ->get();
+
+        // ── Active Budgets (with per-period spending) ─────────────────────
+        $budgets = DB::table('budgets as b')
+            ->join('categories as c', 'c.id', '=', 'b.category_id')
+            ->where('b.user_id', $user->id)
+            ->select('b.id', 'b.amount', 'b.period', 'b.alert_threshold', 'b.category_id', 'c.name as category_name')
+            ->get()
+            ->map(function ($bgt) use ($user, $periodStart, $periodEnd) {
+                $spent = DB::table('transactions as t')
+                    ->join('accounts as a', 'a.id', '=', 't.account_id')
+                    ->where('a.user_id', $user->id)
+                    ->where('t.amount', '<', 0)
+                    ->whereBetween('t.posted_at', [$periodStart, $periodEnd])
+                    ->sum(DB::raw('ABS(t.amount)'));
+                $bgt->spent = (float) $spent;
+                return $bgt;
+            });
+
+        // ── Active Subscriptions ──────────────────────────────────────────
+        $subscriptions = DB::table('subscriptions')
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
+
         $data = compact(
             'user', 'periodLabel', 'periodStart', 'periodEnd',
             'accounts', 'totalBalance', 'cards', 'totalCardDebt',
             'transactions', 'income', 'expense', 'netFlow',
             'categoryBreakdown', 'healthScore', 'personalInflation',
-            'loans', 'topMerchants'
+            'loans', 'topMerchants', 'goals', 'budgets', 'subscriptions'
         );
 
         $pdf = Pdf::loadView('reports.monthly', $data)
