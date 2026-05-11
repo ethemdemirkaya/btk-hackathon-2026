@@ -2,90 +2,106 @@
 <x-slot name="title">Piyasa & Kur Alarmları</x-slot>
 
 <style>
-/* ── Ticker ─────────────────────────────────────────── */
-.mkt-ticker-wrap{overflow:hidden;border-bottom:1px solid var(--bs-border-color);background:var(--bs-body-bg)}
-.mkt-ticker-track{display:flex;width:max-content;animation:ticker 45s linear infinite}
+/* ── Ticker ──────────────────────────────────────────────────────────── */
+.mkt-ticker-wrap{overflow:hidden;border-top:1px solid var(--bs-border-color);
+                 border-bottom:1px solid var(--bs-border-color)}
+.mkt-ticker-track{display:flex;width:max-content;animation:ticker 50s linear infinite}
 .mkt-ticker-wrap:hover .mkt-ticker-track{animation-play-state:paused}
-.mkt-ticker-item{display:flex;align-items:center;gap:.4rem;padding:.5rem 1.25rem;
-                 border-right:1px solid var(--bs-border-color);white-space:nowrap;font-size:.8rem}
+.mkt-ticker-item{display:flex;align-items:center;gap:.35rem;padding:.45rem 1.1rem;
+                 border-right:1px solid var(--bs-border-color);white-space:nowrap;font-size:.78rem}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* ── Rate card ──────────────────────────────────────── */
-.mkt-card{transition:transform .15s ease,box-shadow .15s ease}
-.mkt-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.13)}
-.mkt-rate{font-size:1.65rem;font-weight:700;letter-spacing:-.5px;line-height:1.1}
-.mkt-pair{font-size:.7rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
-.mkt-sparkline{height:52px;width:100%}
+/* ── Compact rate card ───────────────────────────────────────────────── */
+.mkt-card{transition:box-shadow .15s}
+.mkt-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.1)}
+.mkt-rate{font-size:1.25rem;font-weight:700;letter-spacing:-.4px;line-height:1}
+.mkt-spark-wrap{height:36px;flex:1;min-width:0}
 
-/* ── Change pills ───────────────────────────────────── */
-.pill{display:inline-flex;align-items:center;gap:.18rem;padding:.2rem .55rem;
-      border-radius:20px;font-size:.72rem;font-weight:700;line-height:1}
+/* ── Change pills ────────────────────────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;gap:.15rem;padding:.18rem .48rem;
+      border-radius:20px;font-size:.7rem;font-weight:700;line-height:1;white-space:nowrap}
 .pill-up  {color:#28c76f;background:rgba(40,199,111,.13)}
 .pill-dn  {color:#ea5455;background:rgba(234,84,85,.13)}
 .pill-flat{color:#a8aaae;background:rgba(168,170,174,.12)}
 
-/* ── Live dot ───────────────────────────────────────── */
-.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#28c76f;
-          animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+/* ── Live dot ────────────────────────────────────────────────────────── */
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#28c76f;
+          flex-shrink:0;animation:ldot 1.5s ease-in-out infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:.25}}
 
-/* ── Source chip ────────────────────────────────────── */
-.src-chip{font-size:.7rem;padding:.15rem .55rem;border-radius:12px;font-weight:600}
-.src-yahoo  {background:rgba(0,207,232,.13);color:#00cfe8}
-.src-open-er{background:rgba(115,103,240,.13);color:#7367f0}
-.src-db     {background:rgba(168,170,174,.13);color:#a8aaae}
+/* ── Source chip ─────────────────────────────────────────────────────── */
+.src-chip{font-size:.68rem;padding:.12rem .48rem;border-radius:10px;font-weight:600}
+.src-yahoo  {background:rgba(0,207,232,.12);color:#00cfe8}
+.src-open-er{background:rgba(115,103,240,.12);color:#7367f0}
+.src-db     {background:rgba(168,170,174,.12);color:#a8aaae}
 
-/* ── Alert table accent ─────────────────────────────── */
+/* ── Countdown ring ──────────────────────────────────────────────────── */
+.cnt-ring{position:relative;width:32px;height:32px;flex-shrink:0}
+.cnt-ring svg{transform:rotate(-90deg)}
+.cnt-ring circle{fill:none;stroke-width:2.5}
+.cnt-ring .bg{stroke:var(--bs-border-color)}
+.cnt-ring .fg{stroke:#7367f0;stroke-linecap:round;
+               stroke-dasharray:88;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear}
+.cnt-ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+               font-size:.55rem;font-weight:700;color:var(--bs-body-color)}
+
+/* ── Triggered row ───────────────────────────────────────────────────── */
 .triggered-row td{background:rgba(234,84,85,.04)}
 </style>
 
-{{-- ═══════════════════════════ HEADER ═══════════════════════════════ --}}
-<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
+{{-- ═══════════════════ HEADER (compact) ══════════════════════════════ --}}
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
   <div>
-    <h4 class="fw-bold mb-1 text-heading">Piyasa & Kur Alarmları</h4>
-    <p class="text-muted small mb-0 d-flex align-items-center gap-2 flex-wrap">
+    <h5 class="fw-bold mb-0 text-heading">Piyasa & Kur Alarmları</h5>
+    <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
       <span class="live-dot"></span>
-      <span id="hdr-time">—</span>
+      <span class="text-muted small" id="hdr-time">—</span>
       <span class="src-chip src-db" id="hdr-src">DB</span>
-      <span class="text-muted">·</span>
-      <span id="hdr-countdown" class="text-muted">güncelleniyor…</span>
-    </p>
+    </div>
   </div>
-  <button class="btn btn-primary d-flex align-items-center gap-1"
-          data-bs-toggle="modal" data-bs-target="#addAlarmModal">
-    <i class="ti tabler-bell-plus icon-16px"></i>Alarm Ekle
-  </button>
+  <div class="d-flex align-items-center gap-3">
+    {{-- Countdown ring --}}
+    <div class="cnt-ring" title="Sonraki güncelleme">
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <circle class="bg" cx="16" cy="16" r="14"/>
+        <circle class="fg" id="cnt-arc" cx="16" cy="16" r="14"/>
+      </svg>
+      <span id="cnt-label">5:00</span>
+    </div>
+    <button class="btn btn-primary btn-sm d-flex align-items-center gap-1"
+            data-bs-toggle="modal" data-bs-target="#addAlarmModal">
+      <i class="ti tabler-bell-plus icon-14px"></i>Alarm Ekle
+    </button>
+  </div>
 </div>
 
 {{-- flash --}}
 @if(session('success'))
-<div class="alert alert-success alert-dismissible mb-4">
+<div class="alert alert-success alert-dismissible mb-3 py-2">
   <i class="ti tabler-circle-check me-2"></i>{{ session('success') }}
   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 @endif
 @if(session('error'))
-<div class="alert alert-danger alert-dismissible mb-4">
+<div class="alert alert-danger alert-dismissible mb-3 py-2">
   <i class="ti tabler-alert-circle me-2"></i>{{ session('error') }}
   <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 @endif
 
-{{-- ═══════════════════════════ TICKER ════════════════════════════════ --}}
-<div class="card mb-5 py-0 overflow-hidden border-0 shadow-none">
-  <div class="mkt-ticker-wrap">
+{{-- ═══════════════════════════ TICKER ═════════════════════════════════ --}}
+<div class="mb-3">
+  <div class="mkt-ticker-wrap" style="border-radius:.5rem;overflow:hidden">
     <div class="mkt-ticker-track" id="ticker-track">
-      @php $tickerSet = array_values($ratesData); @endphp
-      @foreach(array_merge($tickerSet, $tickerSet) as $t)
+      @php $ts = array_values($ratesData); @endphp
+      @foreach(array_merge($ts,$ts) as $t)
       <div class="mkt-ticker-item" data-ticker-code="{{ $t['currency'] }}">
         <span>{{ $t['flag'] }}</span>
         <span class="fw-semibold">{{ $t['currency'] }}/TRY</span>
-        <span class="fw-bold" data-ticker-rate>
-          ₺{{ number_format($t['rate'], $t['currency']==='XAU'?0:2, ',', '.') }}
-        </span>
+        <span class="fw-bold" data-ticker-rate>₺{{ number_format($t['rate'],$t['currency']==='XAU'?0:2,',','.') }}</span>
         @php $p=$t['change_pct']; @endphp
         <span class="pill {{ $p>0?'pill-up':($p<0?'pill-dn':'pill-flat') }}" data-ticker-chg>
-          {{ $p>0?'▲':'▼' }} {{ abs($p) }}%
+          {{ $p>0?'▲':($p<0?'▼':'±') }} {{ abs($p) }}%
         </span>
       </div>
       @endforeach
@@ -93,177 +109,139 @@
   </div>
 </div>
 
-{{-- ═══════════════════════ RATE CARDS GRID ═══════════════════════════ --}}
-<div class="row g-4 mb-5">
+{{-- ══════════════════ RATE CARDS (compact horizontal) ═════════════════ --}}
+<div class="row g-3 mb-3">
   @foreach($ratesData as $code => $r)
-  @php
-    $color = $r['color'];
-    $pct   = $r['change_pct'];
-    $dpFmt = $code === 'XAU' ? 0 : 2;
-  @endphp
-  <div class="col-6 col-md-4 col-xxl-3">
-    <div class="card mkt-card h-100 position-relative overflow-hidden" data-card="{{ $code }}">
-      <div class="accent-bar bg-{{ $color }}"></div>
-      <div class="card-body pt-4 pb-2">
+  @php $c=$r['color']; $p=$r['change_pct']; $dp=$code==='XAU'?0:2; @endphp
+  <div class="col-12 col-sm-6 col-xl-4 col-xxl-3">
+    <div class="card mkt-card position-relative overflow-hidden mb-0">
+      <div class="accent-bar bg-{{ $c }}"></div>
+      <div class="card-body py-3 px-4">
 
-        {{-- pair label + change pill --}}
-        <div class="d-flex align-items-center justify-content-between mb-3">
-          <div>
-            <div class="d-flex align-items-center gap-2">
-              <span style="font-size:1.3rem">{{ $r['flag'] }}</span>
-              <div>
-                <span class="mkt-pair text-muted">{{ $code }}/TRY</span>
-                <div class="text-muted" style="font-size:.68rem;margin-top:1px">{{ $r['name'] }}</div>
-              </div>
-            </div>
-          </div>
-          <span class="pill {{ $pct>0?'pill-up':($pct<0?'pill-dn':'pill-flat') }}" data-chg="{{ $code }}">
-            @if($pct>0)<i class="ti tabler-trending-up" style="font-size:.7rem"></i>+{{ $pct }}%
-            @elseif($pct<0)<i class="ti tabler-trending-down" style="font-size:.7rem"></i>{{ $pct }}%
+        {{-- Row 1: flag + pair + change + alarm btn --}}
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span style="font-size:1.1rem;line-height:1">{{ $r['flag'] }}</span>
+          <span class="fw-bold small text-heading">{{ $code }}/TRY</span>
+          <span class="pill {{ $p>0?'pill-up':($p<0?'pill-dn':'pill-flat') }} ms-1" data-chg="{{ $code }}">
+            @if($p>0)<i class="ti tabler-trending-up" style="font-size:.65rem"></i>+{{ $p }}%
+            @elseif($p<0)<i class="ti tabler-trending-down" style="font-size:.65rem"></i>{{ $p }}%
             @else±0%@endif
           </span>
+          <button class="btn btn-icon btn-sm btn-text-secondary p-0 ms-auto alarm-quick"
+                  data-currency="{{ $code }}" data-rate="{{ $r['rate'] }}"
+                  data-bs-toggle="modal" data-bs-target="#addAlarmModal"
+                  title="Alarm kur">
+            <i class="ti tabler-bell-plus icon-16px"></i>
+          </button>
         </div>
 
-        {{-- rate --}}
-        <div class="mkt-rate text-heading mb-1" data-rate="{{ $code }}">
-          ₺{{ number_format($r['rate'], $dpFmt, ',', '.') }}
-        </div>
-        <div class="text-muted mb-3" style="font-size:.69rem">
-          Önceki: <span data-prev="{{ $code }}">₺{{ number_format($r['prev_rate'], $dpFmt, ',', '.') }}</span>
-          &nbsp;·&nbsp;
-          <span data-rdate="{{ $code }}">{{ \Carbon\Carbon::parse($r['date'])->format('d.m.Y') }}</span>
+        {{-- Row 2: rate + sparkline --}}
+        <div class="d-flex align-items-center gap-3">
+          <div class="flex-shrink-0">
+            <div class="mkt-rate text-heading" data-rate="{{ $code }}">
+              ₺{{ number_format($r['rate'],$dp,',','.') }}
+            </div>
+            <div class="text-muted" style="font-size:.63rem;margin-top:2px">
+              {{ $r['name'] }}
+            </div>
+          </div>
+          <div class="mkt-spark-wrap">
+            <canvas id="spark-{{ $code }}"
+                    data-history="{{ json_encode($r['history']) }}"
+                    data-labels="{{ json_encode($r['labels']) }}"
+                    data-change="{{ $p }}"
+                    style="width:100%;height:36px"></canvas>
+          </div>
         </div>
 
-        {{-- sparkline --}}
-        <canvas id="spark-{{ $code }}" class="mkt-sparkline"
-                data-history="{{ json_encode($r['history']) }}"
-                data-labels="{{ json_encode($r['labels']) }}"
-                data-color="{{ $color }}"
-                data-change="{{ $pct }}"></canvas>
-      </div>
-
-      <div class="card-footer bg-transparent pt-0 pb-3 border-0">
-        <button class="btn btn-sm btn-outline-{{ $color }} w-100 alarm-quick"
-                data-currency="{{ $code }}"
-                data-rate="{{ $r['rate'] }}"
-                data-bs-toggle="modal" data-bs-target="#addAlarmModal">
-          <i class="ti tabler-bell-plus me-1" style="font-size:.8rem"></i>Alarm Kur
-        </button>
       </div>
     </div>
   </div>
   @endforeach
 </div>
 
-{{-- ════════════════════════ ALERTS TABLE ═════════════════════════════ --}}
-<div class="card mb-5">
-  <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <h6 class="mb-0 fw-semibold">
+{{-- ══════════════════════ ALERTS TABLE ════════════════════════════════ --}}
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center justify-content-between py-2">
+    <h6 class="mb-0 fw-semibold small">
       <i class="ti tabler-bell me-2 text-primary"></i>Alarmlarım
     </h6>
     <div class="d-flex align-items-center gap-2">
-      @php
-        $triggered = $alerts->where('is_triggered', true)->count();
-      @endphp
-      @if($triggered > 0)
-      <span class="badge bg-danger">{{ $triggered }} tetiklendi</span>
-      @endif
+      @php $triggered=$alerts->where('is_triggered',true)->count(); @endphp
+      @if($triggered)<span class="badge bg-danger">{{ $triggered }} tetiklendi</span>@endif
       <span class="badge bg-label-primary">{{ $alerts->count() }} toplam</span>
     </div>
   </div>
 
   @if($alerts->isEmpty())
-  <div class="card-body text-center py-8">
-    <i class="ti tabler-bell-off icon-64px text-muted mb-3 d-block"></i>
-    <h5 class="mb-2">Henüz alarm kurulmadı</h5>
-    <p class="text-muted mb-4 small">Kur kartlarındaki <strong>Alarm Kur</strong> butonuna tıkla ya da sağ üstten ekle.</p>
+  <div class="card-body text-center py-5">
+    <i class="ti tabler-bell-off icon-48px text-muted mb-3 d-block"></i>
+    <p class="fw-semibold mb-1">Henüz alarm yok</p>
+    <p class="text-muted small mb-3">Kur kartlarındaki <i class="ti tabler-bell-plus"></i> ikonuna tıkla.</p>
     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAlarmModal">
       <i class="ti tabler-bell-plus me-1"></i>İlk Alarmı Ekle
     </button>
   </div>
   @else
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover align-middle mb-0 table-sm">
       <thead class="paranette-thead">
         <tr>
-          <th class="ps-4 py-3">Kur</th>
-          <th class="py-3">Koşul</th>
-          <th class="py-3">Eşik</th>
-          <th class="py-3">Güncel</th>
-          <th class="py-3">Fark</th>
-          <th class="py-3">Durum</th>
-          <th class="py-3 pe-4 text-end">Sil</th>
+          <th class="ps-4 py-2">Kur</th>
+          <th class="py-2">Koşul</th>
+          <th class="py-2">Eşik</th>
+          <th class="py-2">Güncel</th>
+          <th class="py-2">Fark</th>
+          <th class="py-2">Durum</th>
+          <th class="py-2 pe-4 text-end">Sil</th>
         </tr>
       </thead>
       <tbody>
         @foreach($alerts as $alert)
         @php
-          $key    = $alert->currency === 'GOLD' ? 'XAU' : $alert->currency;
-          $meta   = $labels[$key] ?? ['name'=>$key,'flag'=>'','color'=>'secondary'];
-          $color  = $meta['color'];
-          $dist   = $alert->current_rate !== null
-                  ? round($alert->current_rate - (float)$alert->threshold, 2)
-                  : null;
-          $dpFmt  = $key === 'XAU' ? 0 : 2;
+          $key   = $alert->currency==='GOLD'?'XAU':$alert->currency;
+          $meta  = $labels[$key]??['name'=>$key,'flag'=>'','color'=>'secondary'];
+          $dist  = $alert->current_rate!==null?round($alert->current_rate-(float)$alert->threshold,2):null;
+          $dp2   = $key==='XAU'?0:2;
         @endphp
-        <tr class="{{ $alert->is_triggered ? 'triggered-row' : '' }}">
-          <td class="ps-4 py-3">
+        <tr class="{{ $alert->is_triggered?'triggered-row':'' }}">
+          <td class="ps-4 py-2">
             <div class="d-flex align-items-center gap-2">
-              <span style="font-size:1.15rem">{{ $meta['flag'] }}</span>
-              <div>
-                <div class="fw-semibold small">{{ $key }}/TRY</div>
-                <div class="text-muted" style="font-size:.68rem">{{ $meta['name'] }}</div>
-              </div>
+              <span>{{ $meta['flag'] }}</span>
+              <span class="fw-semibold small">{{ $key }}/TRY</span>
             </div>
           </td>
-          <td class="py-3">
-            @if($alert->condition === 'above')
-              <span class="badge bg-label-danger">
-                <i class="ti tabler-arrow-up icon-12px me-1"></i>Üstüne Geçince
-              </span>
+          <td class="py-2">
+            @if($alert->condition==='above')
+              <span class="badge bg-label-danger"><i class="ti tabler-arrow-up icon-10px me-1"></i>Üstüne</span>
             @else
-              <span class="badge bg-label-info">
-                <i class="ti tabler-arrow-down icon-12px me-1"></i>Altına Düşünce
-              </span>
+              <span class="badge bg-label-info"><i class="ti tabler-arrow-down icon-10px me-1"></i>Altına</span>
             @endif
           </td>
-          <td class="py-3 fw-semibold small">
-            ₺{{ number_format((float)$alert->threshold, $dpFmt, ',', '.') }}
+          <td class="py-2 fw-semibold small">₺{{ number_format((float)$alert->threshold,$dp2,',','.') }}</td>
+          <td class="py-2 small" data-alert-rate="{{ $key }}">
+            {{ $alert->current_rate!==null?'₺'.number_format($alert->current_rate,$dp2,',','.'):'—' }}
           </td>
-          <td class="py-3 small" data-alert-rate="{{ $key }}">
-            @if($alert->current_rate !== null)
-              ₺{{ number_format($alert->current_rate, $dpFmt, ',', '.') }}
-            @else
-              <span class="text-muted">—</span>
-            @endif
-          </td>
-          <td class="py-3 small">
-            @if($dist !== null)
+          <td class="py-2 small">
+            @if($dist!==null)
               <span class="pill {{ $dist>0?'pill-up':($dist<0?'pill-dn':'pill-flat') }}">
-                {{ $dist>0?'+':'' }}₺{{ number_format(abs($dist),$dpFmt,',','.') }}
+                {{ $dist>0?'+':'' }}₺{{ number_format(abs($dist),$dp2,',','.') }}
               </span>
-            @else
-              <span class="text-muted">—</span>
-            @endif
+            @else—@endif
           </td>
-          <td class="py-3">
+          <td class="py-2">
             @if($alert->is_triggered)
-              <span class="badge bg-danger">
-                <i class="ti tabler-bell-ringing icon-12px me-1"></i>Tetiklendi
-              </span>
+              <span class="badge bg-danger"><i class="ti tabler-bell-ringing icon-10px me-1"></i>Tetiklendi</span>
             @else
-              <span class="badge bg-label-success">
-                <i class="ti tabler-bell icon-12px me-1"></i>İzleniyor
-              </span>
+              <span class="badge bg-label-success"><i class="ti tabler-bell icon-10px me-1"></i>İzleniyor</span>
             @endif
           </td>
-          <td class="py-3 pe-4 text-end">
-            <form action="{{ route('fx-alerts.destroy', $alert->id) }}" method="POST" class="d-inline">
+          <td class="py-2 pe-4 text-end">
+            <form action="{{ route('fx-alerts.destroy',$alert->id) }}" method="POST" class="d-inline">
               @csrf @method('DELETE')
-              <button type="button"
-                      class="btn btn-icon btn-sm btn-text-danger btn-del"
+              <button type="button" class="btn btn-icon btn-sm btn-text-danger btn-del"
                       data-name="{{ $key }}/TRY @ ₺{{ number_format((float)$alert->threshold,2,',','.') }}">
-                <i class="ti tabler-trash icon-18px"></i>
+                <i class="ti tabler-trash icon-16px"></i>
               </button>
             </form>
           </td>
@@ -275,113 +253,95 @@
   @endif
 </div>
 
-{{-- ════════════════════ INFO / SOURCE FOOTER ══════════════════════════ --}}
-<div class="alert alert-secondary d-flex gap-3 align-items-start mb-0 py-3">
-  <i class="ti tabler-info-circle fs-5 mt-1 flex-shrink-0 text-muted"></i>
-  <p class="mb-0 small text-muted">
-    <strong>Veri hiyerarşisi:</strong>
-    İlk olarak Yahoo Finance anlık FX verileri denenir (dakika başı);
-    başarısız olursa <em>open.er-api.com</em> (saatlik) devreye girer;
-    son çare olarak TCMB günlük verisi gösterilir.
-    Gram altın her durumda <em>gold-api.com</em>'dan çekilir (USD/troy oz → TRY/gram).
-    Japon Yeni 100 JPY = ₺X formatında gösterilmektedir.
-  </p>
-</div>
+{{-- ════════════ SOURCE NOTE (collapsed, 1 line) ══════════════════════ --}}
+<p class="text-muted mb-0" style="font-size:.7rem">
+  <i class="ti tabler-info-circle me-1"></i>
+  Veri kaynakları: Yahoo Finance (anlık) → open.er-api.com (saatlik) → TCMB DB (günlük).
+  Altın: gold-api.com (USD/oz → TRY/gram). JPY: 100 birim üzerinden.
+  Her <strong>5 dakikada</strong> bir otomatik güncellenir.
+</p>
 
-{{-- ════════════════════════ ADD ALARM MODAL ══════════════════════════ --}}
+{{-- ══════════════════════ ADD ALARM MODAL ════════════════════════════ --}}
 <div class="modal fade" id="addAlarmModal" tabindex="-1" aria-modal="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
     <form action="{{ route('fx-alerts.store') }}" method="POST">
       @csrf
       <div class="modal-content">
-        <div class="modal-header border-bottom-0 pb-0">
-          <h5 class="modal-title fw-bold">
-            <i class="ti tabler-bell-plus text-primary me-2"></i>Kur Alarmı Ekle
-          </h5>
+        <div class="modal-header pb-2">
+          <h6 class="modal-title fw-bold">
+            <i class="ti tabler-bell-plus text-primary me-1"></i>Kur Alarmı
+          </h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <div class="modal-body py-3">
 
-        <div class="modal-body pt-3">
           @if($errors->any())
-          <div class="alert alert-danger alert-dismissible mb-4">
+          <div class="alert alert-danger py-2 mb-3">
             <ul class="mb-0 ps-3 small">
-              @foreach($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+              @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
             </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
           @endif
 
-          {{-- Live preview --}}
-          <div class="card bg-label-primary border-0 mb-4 py-2 px-3 d-flex flex-row align-items-center justify-content-between"
-               id="modal-preview" style="min-height:52px">
+          {{-- Preview chip --}}
+          <div id="modal-preview" class="rounded-3 px-3 py-2 mb-3 d-flex align-items-center justify-content-between"
+               style="background:var(--bs-light);min-height:44px">
             <span class="text-muted small">Kur seçin…</span>
           </div>
 
-          {{-- Currency --}}
-          <div class="mb-4">
-            <label class="form-label fw-semibold">Kur / Emtia <span class="text-danger">*</span></label>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small mb-1">Kur <span class="text-danger">*</span></label>
             <select name="currency" id="modal-cur"
-                    class="form-select @error('currency') is-invalid @enderror" required>
-              <option value="" disabled {{ old('currency') ? '' : 'selected' }}>Seç…</option>
+                    class="form-select form-select-sm @error('currency') is-invalid @enderror" required>
+              <option value="" disabled {{ old('currency')?'':'selected' }}>Seç…</option>
               @foreach($ratesData as $code => $r)
               <option value="{{ $code }}"
-                      data-rate="{{ $r['rate'] }}"
-                      data-color="{{ $r['color'] }}"
-                      data-flag="{{ $r['flag'] }}"
-                      data-name="{{ $r['name'] }}"
-                      {{ old('currency') === $code ? 'selected' : '' }}>
-                {{ $r['flag'] }} {{ $code }}/TRY — {{ $r['name'] }}
-                &nbsp;(₺{{ number_format($r['rate'], $code==='XAU'?0:2, ',', '.') }})
+                      data-rate="{{ $r['rate'] }}" data-color="{{ $r['color'] }}"
+                      data-flag="{{ $r['flag'] }}" data-name="{{ $r['name'] }}"
+                      {{ old('currency')===$code?'selected':'' }}>
+                {{ $r['flag'] }} {{ $code }}/TRY
+                (₺{{ number_format($r['rate'],$code==='XAU'?0:2,',','.') }})
               </option>
               @endforeach
             </select>
-            @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            @error('currency')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          {{-- Condition --}}
-          <div class="mb-4">
-            <label class="form-label fw-semibold">Koşul <span class="text-danger">*</span></label>
-            <div class="d-flex gap-3 mt-1">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small mb-1">Koşul <span class="text-danger">*</span></label>
+            <div class="d-flex gap-3">
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="condition"
                        id="cond-above" value="above"
-                       {{ old('condition','above') === 'above' ? 'checked' : '' }} required>
-                <label class="form-check-label" for="cond-above">
-                  <span class="pill pill-dn me-1">▲</span>Üstüne Geçince
-                </label>
+                       {{ old('condition','above')==='above'?'checked':'' }} required>
+                <label class="form-check-label small" for="cond-above">▲ Üstüne</label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="condition"
                        id="cond-below" value="below"
-                       {{ old('condition') === 'below' ? 'checked' : '' }}>
-                <label class="form-check-label" for="cond-below">
-                  <span class="pill pill-up me-1">▼</span>Altına Düşünce
-                </label>
+                       {{ old('condition')==='below'?'checked':'' }}>
+                <label class="form-check-label small" for="cond-below">▼ Altına</label>
               </div>
             </div>
-            @error('condition') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
           </div>
 
-          {{-- Threshold --}}
-          <div class="mb-2">
-            <label class="form-label fw-semibold">Eşik Fiyat <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <span class="input-group-text fw-bold">₺</span>
+          <div>
+            <label class="form-label fw-semibold small mb-1">Eşik Fiyat <span class="text-danger">*</span></label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">₺</span>
               <input type="number" name="threshold" id="modal-thr"
                      class="form-control @error('threshold') is-invalid @enderror"
-                     step="0.01" min="0.01"
-                     placeholder="örn: 38.50"
+                     step="0.01" min="0.01" placeholder="38.50"
                      value="{{ old('threshold') }}" required>
-              @error('threshold') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              @error('threshold')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <div class="form-text" id="modal-hint">Güncel kur seçilen para biriminde gösterilir.</div>
+            <div class="form-text small" id="modal-hint">Güncel kur kur seçince görünür.</div>
           </div>
         </div>
-
-        <div class="modal-footer border-top-0 pt-0">
+        <div class="modal-footer py-2">
           <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">İptal</button>
           <button type="submit" class="btn btn-primary btn-sm">
-            <i class="ti tabler-bell-plus me-1"></i>Alarm Ekle
+            <i class="ti tabler-bell-plus me-1"></i>Ekle
           </button>
         </div>
       </div>
@@ -393,217 +353,174 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script>
-// ── palette ────────────────────────────────────────────────────────────
-const COLORS = {
-  success:'#28c76f', primary:'#7367f0', warning:'#ff9f43',
-  danger:'#ea5455',  info:'#00cfe8',    secondary:'#a8aaae', dark:'#535c68'
-};
-
-// ── Chart.js sparklines (30-day DB history) ────────────────────────────
+// ── Sparklines ────────────────────────────────────────────────────────
 document.querySelectorAll('[id^="spark-"]').forEach(canvas => {
   const history = JSON.parse(canvas.dataset.history || '[]');
   const labels  = JSON.parse(canvas.dataset.labels  || '[]');
-  const accent  = COLORS[canvas.dataset.color] || '#7367f0';
   const up      = parseFloat(canvas.dataset.change || '0') >= 0;
+  const color   = up ? '#28c76f' : '#ea5455';
   if (!history.length) return;
-
   new Chart(canvas, {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        data: history,
-        borderColor: up ? '#28c76f' : '#ea5455',
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: true,
+        data: history, borderColor: color, borderWidth: 1.5,
+        pointRadius: 0, fill: true, tension: 0.4,
         backgroundColor: ctx => {
-          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 52);
-          g.addColorStop(0, (up ? '#28c76f' : '#ea5455') + '30');
-          g.addColorStop(1, (up ? '#28c76f' : '#ea5455') + '00');
-          return g;
-        },
-        tension: 0.4,
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,36);
+          g.addColorStop(0, color+'28'); g.addColorStop(1, color+'00'); return g;
+        }
       }]
     },
     options: {
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => '₺' + parseFloat(ctx.parsed.y).toLocaleString('tr-TR', { minimumFractionDigits: 2 })
-          }
-        }
-      },
-      scales: { x: { display: false }, y: { display: false } }
+      animation:false, responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{
+        callbacks:{ label:c=>'₺'+parseFloat(c.parsed.y).toLocaleString('tr-TR',{minimumFractionDigits:2}) }
+      }},
+      scales:{ x:{display:false}, y:{display:false} }
     }
   });
 });
 
-// ── Auto-refresh live rates ────────────────────────────────────────────
-const MARKET_URL = '{{ route('fx-alerts.market') }}';
-let liveRates = {};
-let countdown = 0;
-
+// ── Auto-refresh (5 minutes = 300 s) ─────────────────────────────────
+const MARKET_URL  = '{{ route('fx-alerts.market') }}';
+const TOTAL_SECS  = 300;
+const CIRCUMF     = 2 * Math.PI * 14; // r=14 → ~87.96
+const arc         = document.getElementById('cnt-arc');
+const cntLabel    = document.getElementById('cnt-label');
 const srcEl       = document.getElementById('hdr-src');
 const timeEl      = document.getElementById('hdr-time');
-const cntEl       = document.getElementById('hdr-countdown');
+const SRC_LABELS  = { yahoo:'Yahoo Finance', 'open-er':'OpenER', db:'TCMB DB' };
+const SRC_CLASSES = { yahoo:'src-yahoo', 'open-er':'src-open-er', db:'src-db' };
+let liveRates = {};
+let remaining = TOTAL_SECS;
 
-const SRC_LABELS  = { yahoo: 'Yahoo Finance', 'open-er': 'OpenER', db: 'TCMB DB' };
-const SRC_CLASSES = { yahoo: 'src-yahoo', 'open-er': 'src-open-er', db: 'src-db' };
+function setRing(secs) {
+  const pct = secs / TOTAL_SECS;
+  if (arc) arc.style.strokeDashoffset = CIRCUMF * (1 - pct);
+  if (cntLabel) {
+    const m = Math.floor(secs / 60), s = secs % 60;
+    cntLabel.textContent = m + ':' + String(s).padStart(2,'0');
+  }
+}
 
 function fmtRate(v, code) {
   const dp = code === 'XAU' ? 0 : 2;
-  return '₺' + parseFloat(v).toLocaleString('tr-TR', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  return '₺' + parseFloat(v).toLocaleString('tr-TR',{minimumFractionDigits:dp,maximumFractionDigits:dp});
 }
 
-function updateCards(rates) {
+function applyRates(rates) {
   Object.entries(rates).forEach(([code, r]) => {
-    // Rate value
-    const rateEl = document.querySelector(`[data-rate="${code}"]`);
-    if (rateEl) rateEl.textContent = fmtRate(r.rate, code);
+    const dp = code === 'XAU' ? 0 : 2;
 
-    // Prev / date
-    const prevEl = document.querySelector(`[data-prev="${code}"]`);
-    if (prevEl && r.prev_rate != null) prevEl.textContent = fmtRate(r.prev_rate, code);
-    const rdEl = document.querySelector(`[data-rdate="${code}"]`);
-    if (rdEl && r.date) rdEl.textContent = r.date;
+    // Rate card
+    const rEl = document.querySelector(`[data-rate="${code}"]`);
+    if (rEl) rEl.textContent = fmtRate(r.rate, code);
 
-    // Change pill on card
-    const chgEl = document.querySelector(`[data-chg="${code}"]`);
-    if (chgEl) {
+    // Change pill
+    const cEl = document.querySelector(`[data-chg="${code}"]`);
+    if (cEl) {
       const p = parseFloat(r.change_pct || 0);
-      chgEl.className = `pill ${p > 0 ? 'pill-up' : p < 0 ? 'pill-dn' : 'pill-flat'}`;
-      const icon = p > 0 ? '▲' : '▼';
-      const iconClass = p > 0 ? 'ti-trending-up' : 'ti-trending-down';
-      chgEl.innerHTML = `<i class="ti ${iconClass}" style="font-size:.7rem"></i>${p > 0 ? '+' : ''}${Math.abs(p)}%`;
+      cEl.className = `pill ${p>0?'pill-up':p<0?'pill-dn':'pill-flat'}`;
+      const icon = p>0?'tabler-trending-up':'tabler-trending-down';
+      cEl.innerHTML = `<i class="ti ${icon}" style="font-size:.65rem"></i>${p>0?'+':''}${Math.abs(p).toFixed(2)}%`;
     }
 
-    // Ticker items (both copies)
+    // Ticker
     document.querySelectorAll(`[data-ticker-code="${code}"]`).forEach(item => {
       const p = parseFloat(r.change_pct || 0);
-      const rEl = item.querySelector('[data-ticker-rate]');
-      if (rEl) rEl.textContent = fmtRate(r.rate, code);
-      const cEl = item.querySelector('[data-ticker-chg]');
-      if (cEl) {
-        cEl.className = `pill ${p > 0 ? 'pill-up' : p < 0 ? 'pill-dn' : 'pill-flat'}`;
-        cEl.textContent = `${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%`;
+      const rr = item.querySelector('[data-ticker-rate]');
+      if (rr) rr.textContent = fmtRate(r.rate, code);
+      const cc = item.querySelector('[data-ticker-chg]');
+      if (cc) {
+        cc.className = `pill ${p>0?'pill-up':p<0?'pill-dn':'pill-flat'}`;
+        cc.textContent = `${p>=0?'▲':'▼'} ${Math.abs(p).toFixed(2)}%`;
       }
     });
 
-    // Quick-fill alarm button
-    const btn = document.querySelector(`.alarm-quick[data-currency="${code}"]`);
-    if (btn) btn.dataset.rate = r.rate;
+    // Alarm button data-rate
+    const ab = document.querySelector(`.alarm-quick[data-currency="${code}"]`);
+    if (ab) ab.dataset.rate = r.rate;
   });
-
-  // Store for alarm modal prefill
   liveRates = rates;
 }
 
 function fetchRates() {
-  fetch(MARKET_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-    .then(res => res.ok ? res.json() : Promise.reject(res.status))
+  fetch(MARKET_URL, {headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(res => res.ok ? res.json() : Promise.reject())
     .then(data => {
       if (!data.rates) return;
-
-      // Update header
       if (timeEl) timeEl.textContent = data.date + ' ' + data.at;
       if (srcEl) {
         srcEl.textContent = SRC_LABELS[data.source] || data.source;
         srcEl.className   = 'src-chip ' + (SRC_CLASSES[data.source] || 'src-db');
       }
-
-      updateCards(data.rates);
-      countdown = 60;
+      applyRates(data.rates);
     })
-    .catch(() => { /* silent fallback */ });
+    .catch(() => {});
 }
 
-// Countdown tick
+// Tick every second, fetch when remaining hits 0
 setInterval(() => {
-  if (countdown > 0) countdown--;
-  if (cntEl) cntEl.textContent = countdown > 0
-    ? `${countdown}s sonra yenilenir`
-    : 'yenileniyor…';
-  if (countdown === 0) fetchRates();
+  remaining--;
+  if (remaining < 0) remaining = TOTAL_SECS;
+  setRing(remaining);
+  if (remaining === 0) fetchRates();
 }, 1000);
 
-// Fetch immediately on page load
-fetchRates();
+setRing(TOTAL_SECS);
+fetchRates(); // immediate on load
 
-// ── Add alarm modal: currency select prefill ───────────────────────────
-const modalCur = document.getElementById('modal-cur');
-const modalThr = document.getElementById('modal-thr');
+// ── Modal: currency select preview ───────────────────────────────────
+const modalCur  = document.getElementById('modal-cur');
+const modalThr  = document.getElementById('modal-thr');
 const modalHint = document.getElementById('modal-hint');
 const preview   = document.getElementById('modal-preview');
 
-function updateModalPreview(sel) {
-  if (!sel || !sel.value) return;
-  const opt   = sel.options[sel.selectedIndex];
-  const rate  = parseFloat(opt.dataset.rate || 0);
-  const flag  = opt.dataset.flag || '';
-  const name  = opt.dataset.name || '';
-  const color = opt.dataset.color || 'primary';
-  const code  = sel.value;
-
+function syncPreview() {
+  if (!modalCur || !modalCur.value) return;
+  const opt   = modalCur.options[modalCur.selectedIndex];
+  const code  = modalCur.value;
+  const live  = liveRates[code];
+  const rate  = live ? parseFloat(live.rate) : parseFloat(opt.dataset.rate || 0);
+  const dp    = code === 'XAU' ? 0 : 2;
   if (preview) {
-    preview.className = `card bg-label-${color} border-0 mb-4 py-2 px-3 d-flex flex-row align-items-center justify-content-between`;
+    preview.style.background = '';
     preview.innerHTML = `
       <div class="d-flex align-items-center gap-2">
-        <span style="font-size:1.2rem">${flag}</span>
-        <span class="fw-semibold small">${code}/TRY — ${name}</span>
+        <span style="font-size:1.1rem">${opt.dataset.flag||''}</span>
+        <span class="fw-semibold small">${code}/TRY</span>
+        <span class="src-chip src-${opt.dataset.color||'primary'} ms-1">${opt.dataset.name||''}</span>
       </div>
-      <span class="fw-bold">₺${rate.toLocaleString('tr-TR', { minimumFractionDigits: code === 'XAU' ? 0 : 2 })}</span>
-    `;
+      <span class="fw-bold">₺${rate.toLocaleString('tr-TR',{minimumFractionDigits:dp,maximumFractionDigits:dp})}</span>`;
   }
-  if (modalHint) {
-    const live = liveRates[code];
-    const display = live ? parseFloat(live.rate) : rate;
-    modalHint.textContent = `Anlık: ₺${display.toLocaleString('tr-TR', { minimumFractionDigits: code === 'XAU' ? 0 : 2 })}`;
-  }
+  if (modalHint) modalHint.textContent = `Anlık: ₺${rate.toLocaleString('tr-TR',{minimumFractionDigits:dp})}`;
 }
 
-if (modalCur) {
-  modalCur.addEventListener('change', () => updateModalPreview(modalCur));
-}
+if (modalCur) modalCur.addEventListener('change', syncPreview);
 
-// Prefill from "Alarm Kur" card buttons
 document.querySelectorAll('.alarm-quick').forEach(btn => {
   btn.addEventListener('click', () => {
-    const code = btn.dataset.currency;
-    const rate = btn.dataset.rate;
-    if (modalCur) {
-      modalCur.value = code;
-      updateModalPreview(modalCur);
-    }
-    if (modalThr && !modalThr.value) {
-      modalThr.value = parseFloat(rate).toFixed(2);
-    }
+    if (modalCur) { modalCur.value = btn.dataset.currency; syncPreview(); }
+    if (modalThr && !modalThr.value)
+      modalThr.value = parseFloat(btn.dataset.rate).toFixed(2);
   });
 });
 
-// Re-open if validation failed
 const _hasErrors = {{ $errors->any() ? 'true' : 'false' }};
-if (_hasErrors) {
+if (_hasErrors)
   bootstrap.Modal.getOrCreateInstance(document.getElementById('addAlarmModal')).show();
-}
 
-// ── Delete confirm ─────────────────────────────────────────────────────
+// ── Delete confirm ────────────────────────────────────────────────────
 document.querySelectorAll('.btn-del').forEach(btn => {
-  btn.addEventListener('click', function() {
+  btn.addEventListener('click', function () {
     Swal.fire({
       title: 'Alarm silinsin mi?',
       html: `<span class="text-muted small">${this.dataset.name}</span>`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ea5455',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Evet, sil',
-      cancelButtonText: 'Vazgeç',
-      reverseButtons: true,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor:'#ea5455', cancelButtonColor:'#6c757d',
+      confirmButtonText:'Evet, sil', cancelButtonText:'Vazgeç', reverseButtons:true,
     }).then(r => { if (r.isConfirmed) this.closest('form').submit(); });
   });
 });
