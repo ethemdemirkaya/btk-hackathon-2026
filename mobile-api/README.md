@@ -26,7 +26,7 @@ Laravel Sanctum tabanlı, Flutter mobil uygulaması için REST API.
 | DELETE | `/bank-connections/{id}` | ✓ | Bağlantıyı sil |
 | GET | `/transactions` | ✓ | İşlem listesi (filtreli, sayfalı) |
 | GET | `/transactions/{id}` | ✓ | İşlem detayı |
-| GET | `/cards` | ✓ | Kredi kartları |
+| GET | `/cards` | ✓ | Kart listesi + özet |
 | GET | `/loans` | ✓ | Krediler |
 | GET | `/bills` | ✓ | Faturalar |
 | POST | `/bills` | ✓ | Fatura ekle |
@@ -38,11 +38,34 @@ Laravel Sanctum tabanlı, Flutter mobil uygulaması için REST API.
 | GET | `/budgets` | ✓ | Bütçeler (aylık) |
 | POST | `/budgets` | ✓ | Bütçe oluştur / güncelle |
 | DELETE | `/budgets/{id}` | ✓ | Bütçe sil |
+| POST | `/budgets/ai-suggest` | ✓ | AI bütçe önerisi al |
+| POST | `/budgets/ai-apply` | ✓ | AI önerilerini toplu uygula |
 | GET | `/goals` | ✓ | Hedefler |
 | POST | `/goals` | ✓ | Hedef oluştur |
 | POST | `/goals/{id}/add-funds` | ✓ | Hedefe para ekle |
+| GET | `/goals/{id}/suggest` | ✓ | Aylık katkı önerisi al |
 | DELETE | `/goals/{id}` | ✓ | Hedef sil |
 | GET | `/inflation` | ✓ | Kişisel + resmi enflasyon |
+| GET | `/personal-debts` | ✓ | Kişisel borç listesi |
+| POST | `/personal-debts` | ✓ | Borç ekle |
+| PATCH | `/personal-debts/{id}/settle` | ✓ | Borcu kapat |
+| DELETE | `/personal-debts/{id}` | ✓ | Borç sil |
+| GET | `/investments` | ✓ | Yatırım portföyü |
+| POST | `/investments` | ✓ | Varlık ekle |
+| DELETE | `/investments/{id}` | ✓ | Varlık sil |
+| GET | `/fx-alerts` | ✓ | Kur alarmları + anlık kurlar |
+| POST | `/fx-alerts` | ✓ | Alarm oluştur |
+| DELETE | `/fx-alerts/{id}` | ✓ | Alarm sil |
+| GET | `/fx-alerts/rates` | ✓ | Canlı kur/altın verileri |
+| GET | `/negotiation` | ✓ | Müzakere taslakları |
+| POST | `/negotiation/generate` | ✓ | AI mektubu oluştur |
+| PATCH | `/negotiation/{id}/status` | ✓ | Taslak durumunu güncelle |
+| DELETE | `/negotiation/{id}` | ✓ | Taslak sil |
+| GET | `/simulator` | ✓ | Mevcut finansal durum |
+| POST | `/simulator/calculate` | ✓ | Senaryo hesapla |
+| GET | `/calendar` | ✓ | Aylık finansal takvim |
+| GET | `/report/summary` | ✓ | Aylık rapor özeti (JSON) |
+| GET | `/report/pdf` | ✓ | PDF rapor indir |
 | POST | `/agent/send` | ✓ | AI ajan mesajı gönder |
 | GET | `/agent/history` | ✓ | Konuşma geçmişi |
 | GET | `/agent/insights` | ✓ | AI öngörüleri |
@@ -1190,6 +1213,836 @@ Content-Type: multipart/form-data
 DELETE /api/v1/receipts/{id}
 Authorization: Bearer <token>
 ```
+
+---
+
+## Bütçe — AI Önerileri
+
+### AI Bütçe Önerisi Al
+
+Son 3 ayın harcama örüntüsüne göre kategori bazlı bütçe önerileri üretir.
+
+```http
+POST /api/v1/budgets/ai-suggest
+Authorization: Bearer <token>
+```
+
+Body gönderilmez. Kullanıcının işlem geçmişi otomatik analiz edilir.
+
+**Response `200`:**
+```json
+{
+  "suggestions": [
+    {
+      "category_id": 2,
+      "category_name": "Market",
+      "monthly_avg": 4250.00,
+      "suggested": 4500.00
+    },
+    {
+      "category_id": 3,
+      "category_name": "Restoran & Kafe",
+      "monthly_avg": 1820.00,
+      "suggested": 2000.00
+    }
+  ]
+}
+```
+
+> `suggested` = son 3 aylık ortalama × 1.05 (küçük tampon bırakılır).
+
+---
+
+### AI Önerilerini Toplu Uygula
+
+```http
+POST /api/v1/budgets/ai-apply
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "suggestions": [
+    { "category_id": 2, "amount": 4500 },
+    { "category_id": 3, "amount": 2000 }
+  ]
+}
+```
+
+**Response `200`:**
+```json
+{
+  "created": 3,
+  "message": "AI önerisi ile 3 bütçe kategorisi oluşturuldu."
+}
+```
+
+Mevcut aynı ay + kategori kombinasyonu varsa **güncellenir** (upsert).
+
+---
+
+## Hedefler — Katkı Önerisi
+
+```http
+GET /api/v1/goals/{id}/suggest
+Authorization: Bearer <token>
+```
+
+Kullanıcının ortalama aylık tasarrufuna ve hedefe kalan süreye göre öneri hesaplar.
+
+**Response `200`:**
+```json
+{
+  "suggested": 2000.00,
+  "affordable": 1600.00,
+  "avg_savings": 4000.00,
+  "months_left": 24,
+  "remaining": 48000.00
+}
+```
+
+| Alan | Açıklama |
+|------|----------|
+| `suggested` | Hedefe zamanında ulaşmak için gereken aylık katkı |
+| `affordable` | Ortalama aylık tasarrufun %40'ı (gerçekçi öneri) |
+| `avg_savings` | Son 3 ayın ortalama net tasarrufu |
+| `months_left` | `target_date` varsa kalan ay sayısı, yoksa `null` |
+| `remaining` | `target_amount - current_amount` |
+
+---
+
+## Kişisel Borçlar
+
+### Listele
+
+```http
+GET /api/v1/personal-debts
+Authorization: Bearer <token>
+```
+
+**Response `200`:**
+```json
+{
+  "given": [
+    {
+      "id": 1,
+      "contact_name": "Ahmet Yılmaz",
+      "amount": 500.00,
+      "direction": "given",
+      "note": "Akşam yemeği borcu",
+      "is_settled": false,
+      "settled_at": null,
+      "transaction_id": null,
+      "created_at": "2026-05-01T10:00:00+03:00"
+    }
+  ],
+  "received": [
+    {
+      "id": 2,
+      "contact_name": "Zeynep Kaya",
+      "amount": 200.00,
+      "direction": "received",
+      "note": null,
+      "is_settled": false,
+      "settled_at": null,
+      "transaction_id": "uuid-...",
+      "created_at": "2026-04-28T14:00:00+03:00"
+    }
+  ],
+  "stats": {
+    "given_active": 1500.00,
+    "received_active": 800.00,
+    "net_position": 700.00,
+    "settled_count": 3
+  }
+}
+```
+
+**`direction` değerleri:** `given` (verilen) · `received` (alınan)  
+**`net_position`:** pozitif = net alacaklısın, negatif = net borçlusun
+
+---
+
+### Borç Ekle
+
+```http
+POST /api/v1/personal-debts
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "contact_name": "Ahmet Yılmaz",
+  "amount": 500,
+  "direction": "given",
+  "note": "Akşam yemeği"
+}
+```
+
+**Validasyon:**
+
+| Alan | Kural |
+|------|-------|
+| `contact_name` | zorunlu, max 120 |
+| `amount` | zorunlu, sayısal, min 0.01 |
+| `direction` | zorunlu, `given` veya `received` |
+| `note` | opsiyonel, max 500 |
+
+**Response `201`:**
+```json
+{ "debt": { /* borç nesnesi */ } }
+```
+
+---
+
+### Borcu Kapat
+
+```http
+PATCH /api/v1/personal-debts/{id}/settle
+Authorization: Bearer <token>
+```
+
+Body gönderilmez. `is_settled = true`, `settled_at = now()` olarak işaretlenir.
+
+**Response `200`:**
+```json
+{ "debt": { /* güncel borç nesnesi, is_settled: true */ } }
+```
+
+---
+
+### Borç Sil
+
+```http
+DELETE /api/v1/personal-debts/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+## Yatırım Portföyü
+
+### Portföy Listesi (Canlı Fiyatlı)
+
+```http
+GET /api/v1/investments
+Authorization: Bearer <token>
+```
+
+**Response `200`:**
+```json
+{
+  "assets": [
+    {
+      "id": 1,
+      "asset_type": "usd",
+      "name": "Amerikan Doları",
+      "quantity": 1000.00,
+      "buy_price_try": 30.50,
+      "buy_value_try": 30500.00,
+      "current_price_try": 32.25,
+      "current_value_try": 32250.00,
+      "gain_loss_try": 1750.00,
+      "gain_loss_pct": 5.74,
+      "buy_date": "2025-11-15",
+      "notes": null,
+      "type_label": "Amerikan Doları (USD)",
+      "type_icon": "tabler-currency-dollar",
+      "type_color": "success"
+    },
+    {
+      "id": 2,
+      "asset_type": "gold_gram",
+      "name": "Gram Altın",
+      "quantity": 50.00,
+      "buy_price_try": 2800.00,
+      "buy_value_try": 140000.00,
+      "current_price_try": 3150.00,
+      "current_value_try": 157500.00,
+      "gain_loss_try": 17500.00,
+      "gain_loss_pct": 12.50,
+      "buy_date": "2025-09-01",
+      "notes": null,
+      "type_label": "Gram Altın",
+      "type_icon": "tabler-coin",
+      "type_color": "warning"
+    }
+  ],
+  "totals": {
+    "current_value": 189750.00,
+    "buy_value": 170500.00,
+    "gain_loss": 19250.00,
+    "gain_loss_pct": 11.29
+  }
+}
+```
+
+> `current_price_try` ve `current_value_try` canlı kur/altın verilerinden hesaplanır. Veri alınamazsa `null` olabilir.
+
+**`asset_type` değerleri:**
+
+| Değer | Açıklama |
+|-------|----------|
+| `gold_gram` | Gram altın |
+| `gold_quarter` | Çeyrek altın |
+| `gold_republic` | Cumhuriyet altını |
+| `usd` | Amerikan Doları |
+| `eur` | Euro |
+| `gbp` | İngiliz Sterlini |
+| `btc` | Bitcoin |
+| `eth` | Ethereum |
+| `bist` | BIST hisse senedi |
+| `fund` | Yatırım fonu |
+| `mevduat` | Vadeli mevduat |
+| `other` | Diğer |
+
+---
+
+### Varlık Ekle
+
+```http
+POST /api/v1/investments
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "asset_type": "usd",
+  "name": "Amerikan Doları",
+  "quantity": 1000,
+  "buy_price_try": 30.50,
+  "buy_date": "2025-11-15",
+  "notes": "Birikim hesabından"
+}
+```
+
+**Validasyon:**
+
+| Alan | Kural |
+|------|-------|
+| `asset_type` | zorunlu, geçerli değer (yukarıdaki liste) |
+| `name` | zorunlu, max 120 |
+| `quantity` | zorunlu, sayısal, min 0.0001 (kripto için 8 ondalık hassasiyet) |
+| `buy_price_try` | zorunlu, sayısal, min 0.01 |
+| `buy_date` | zorunlu, geçerli tarih |
+| `notes` | opsiyonel, max 1000 |
+
+**Response `201`:**
+```json
+{ "asset": { /* varlık nesnesi */ } }
+```
+
+---
+
+### Varlık Sil
+
+```http
+DELETE /api/v1/investments/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+## Kur & Altın Alarmları
+
+### Alarmlar + Anlık Kurlar
+
+```http
+GET /api/v1/fx-alerts
+Authorization: Bearer <token>
+```
+
+**Response `200`:**
+```json
+{
+  "alerts": [
+    {
+      "id": 1,
+      "currency": "USD",
+      "condition": "above",
+      "threshold": 33.00,
+      "is_active": true,
+      "triggered_at": null,
+      "current_rate": 32.25,
+      "is_triggered": false
+    }
+  ],
+  "rates": {
+    "USD": {
+      "currency": "USD",
+      "name": "Amerikan Doları",
+      "symbol": "$",
+      "rate": 32.25,
+      "change": 0.15,
+      "change_pct": 0.47,
+      "date": "2026-05-12"
+    },
+    "EUR": {
+      "currency": "EUR",
+      "name": "Euro",
+      "symbol": "€",
+      "rate": 34.80,
+      "change": -0.10,
+      "change_pct": -0.29,
+      "date": "2026-05-12"
+    },
+    "GOLD": {
+      "currency": "GOLD",
+      "name": "Gram Altın",
+      "symbol": "₺",
+      "rate": 3150.00,
+      "change": 25.00,
+      "change_pct": 0.80,
+      "date": "2026-05-12"
+    }
+  }
+}
+```
+
+**`condition` değerleri:** `above` (üstüne çıkınca tetikle) · `below` (altına düşünce tetikle)
+
+---
+
+### Canlı Kur/Altın Verileri
+
+```http
+GET /api/v1/fx-alerts/rates
+Authorization: Bearer <token>
+```
+
+Alarm olmadan sadece güncel kur verilerini döner. 55 saniye cache'lenir.
+
+**Response `200`:**
+```json
+{
+  "source": "yahoo",
+  "at": "14:32:15",
+  "date": "12.05.2026",
+  "rates": {
+    "USD": { "currency": "USD", "rate": 32.25, "change": 0.15, "change_pct": 0.47 },
+    "EUR": { "currency": "EUR", "rate": 34.80, "change": -0.10, "change_pct": -0.29 },
+    "GBP": { "currency": "GBP", "rate": 41.20, "change": 0.30, "change_pct": 0.73 },
+    "GOLD": { "currency": "GOLD", "rate": 3150.00, "change": 25.00, "change_pct": 0.80 }
+  }
+}
+```
+
+---
+
+### Alarm Oluştur
+
+```http
+POST /api/v1/fx-alerts
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "currency": "USD",
+  "condition": "above",
+  "threshold": 33.00
+}
+```
+
+**Validasyon:**
+
+| Alan | Kural |
+|------|-------|
+| `currency` | zorunlu, max 10 (USD, EUR, GBP, GOLD, BTC...) |
+| `condition` | zorunlu, `above` veya `below` |
+| `threshold` | zorunlu, sayısal, min 0.01 |
+
+**Response `201`:**
+```json
+{ "alert": { /* alarm nesnesi */ } }
+```
+
+---
+
+### Alarm Sil
+
+```http
+DELETE /api/v1/fx-alerts/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+## Müzakere Ajanı
+
+### Taslak Listesi
+
+```http
+GET /api/v1/negotiation
+Authorization: Bearer <token>
+```
+
+**Response `200`:**
+```json
+{
+  "drafts": [
+    {
+      "id": 1,
+      "target": "card_interest",
+      "target_label": "Kredi Kartı Faiz İndirimi",
+      "recipient_name": "Müşteri Hizmetleri",
+      "subject": "Kredi Kartı Faiz Oranı İndirimi Talebim",
+      "body": "Sayın yetkili...",
+      "status": "sent",
+      "created_at": "2026-05-01T10:00:00+03:00"
+    }
+  ]
+}
+```
+
+**`target` değerleri:**
+
+| Değer | Açıklama |
+|-------|----------|
+| `card_interest` | Kredi kartı faiz indirimi |
+| `loan_restructure` | Kredi yeniden yapılandırma |
+| `bank_fee_waiver` | Banka ücreti muafiyeti |
+| `subscription_cancel` | Abonelik iptali müzakeresi |
+| `insurance_discount` | Sigorta indirimi |
+| `salary_raise` | Maaş artışı talebi |
+| `other` | Diğer |
+
+**`status` değerleri:** `draft` · `sent` · `accepted` · `rejected`
+
+---
+
+### AI Mektubu Oluştur
+
+```http
+POST /api/v1/negotiation/generate
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "target": "card_interest",
+  "recipient_name": "Garanti BBVA Müşteri Hizmetleri",
+  "extra_context": "5 yıldır müşteriyim, son 6 ayda hiç gecikme yaşamadım."
+}
+```
+
+**Validasyon:**
+
+| Alan | Kural |
+|------|-------|
+| `target` | zorunlu, geçerli değer |
+| `recipient_name` | opsiyonel, max 200 |
+| `extra_context` | opsiyonel, max 1000 — AI'ya ek bağlam verir |
+
+**Response `200`:**
+```json
+{
+  "draft": {
+    "id": 3,
+    "target": "card_interest",
+    "target_label": "Kredi Kartı Faiz İndirimi",
+    "recipient_name": "Garanti BBVA Müşteri Hizmetleri",
+    "subject": "Kredi Kartı Faiz Oranı İndirimi Talebim",
+    "body": "Sayın Yetkili,\n\nGaranti BBVA'nın değerli bir müşterisi olarak...",
+    "status": "draft",
+    "created_at": "2026-05-12T11:00:00+03:00"
+  },
+  "key_arguments": [
+    "5 yıllık müşteri sadakati",
+    "Düzenli ödeme geçmişi (0 gecikme)",
+    "Rakip bankaların daha düşük faiz oranları"
+  ],
+  "success_tips": [
+    "Sabah 09:00-11:00 saatleri arasında arayın",
+    "Nezaket ve sakinlik üslubunu koruyun"
+  ],
+  "estimated_chance": 72.5
+}
+```
+
+> `body` alanı kullanıcının gerçek finansal verileriyle kişiselleştirilmiş, Türkçe Gemini Pro çıktısıdır.
+
+---
+
+### Taslak Durumunu Güncelle
+
+```http
+PATCH /api/v1/negotiation/{id}/status
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{ "status": "sent" }
+```
+
+Geçerli geçişler: `draft → sent → accepted` veya `draft → sent → rejected`
+
+**Response `200`:**
+```json
+{ "draft": { /* güncel taslak */ } }
+```
+
+---
+
+### Taslak Sil
+
+```http
+DELETE /api/v1/negotiation/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+## Karar Simülatörü
+
+### Mevcut Finansal Durum
+
+Simülatör için ön yükleme verisi — kullanıcının güncel rakamları.
+
+```http
+GET /api/v1/simulator
+Authorization: Bearer <token>
+```
+
+**Response `200`:**
+```json
+{
+  "monthly_income": 45000.00,
+  "avg_monthly_expense": 32000.00,
+  "total_balance": 48240.00,
+  "total_card_debt": 3200.00,
+  "health_score": 74,
+  "inflation_rate": 37.9
+}
+```
+
+---
+
+### Senaryo Hesapla
+
+```http
+POST /api/v1/simulator/calculate
+Authorization: Bearer <token>
+```
+
+**Body:**
+```json
+{
+  "income_change_pct": 10,
+  "expense_change_pct": -5,
+  "inflation_rate": 38,
+  "months_horizon": 12,
+  "monthly_income": 45000,
+  "avg_monthly_expense": 32000,
+  "total_balance": 48240,
+  "total_card_debt": 3200
+}
+```
+
+**Validasyon:**
+
+| Alan | Kural | Açıklama |
+|------|-------|----------|
+| `income_change_pct` | sayısal, -50 ile 200 arası | Gelir değişim yüzdesi |
+| `expense_change_pct` | sayısal, -50 ile 100 arası | Gider değişim yüzdesi |
+| `inflation_rate` | sayısal, 0 ile 100 arası | Yıllık enflasyon varsayımı |
+| `months_horizon` | tam sayı, 1 ile 60 arası | Projeksiyon süresi (ay) |
+| `monthly_income` | sayısal, min 0 | Aylık net gelir |
+| `avg_monthly_expense` | sayısal, min 0 | Aylık ortalama gider |
+| `total_balance` | sayısal | Toplam mevcut bakiye |
+| `total_card_debt` | sayısal, min 0 | Toplam kart borcu |
+
+**Response `200`:**
+```json
+{
+  "projections": [
+    { "month": 1,  "balance": 61240.00, "real_balance": 59842.00, "card_debt": 0.00 },
+    { "month": 6,  "balance": 121240.00, "real_balance": 113520.00, "card_debt": 0.00 },
+    { "month": 12, "balance": 191240.00, "real_balance": 172350.00, "card_debt": 0.00 }
+  ],
+  "new_income": 49500.00,
+  "new_expense": 30400.00,
+  "new_savings": 19100.00,
+  "savings_rate_pct": 38.6,
+  "estimated_score": 82,
+  "final_balance": 191240.00,
+  "real_final_balance": 172350.00,
+  "inflation_loss": 18890.00,
+  "months_emergency": 5.97
+}
+```
+
+| Alan | Açıklama |
+|------|----------|
+| `projections` | Her ay için nominal ve reel bakiye (tüm aylar veya önemli noktalar) |
+| `real_balance` | Enflasyona göre düzeltilmiş satın alma gücü |
+| `inflation_loss` | Enflasyon nedeniyle eriyen değer |
+| `months_emergency` | Son bakiyeyle kaç aylık gideri karşılayabilirsin |
+| `estimated_score` | Projeksiyon sonunda tahmini finansal sağlık skoru |
+
+---
+
+## Finansal Takvim
+
+```http
+GET /api/v1/calendar?month=2026-05
+Authorization: Bearer <token>
+```
+
+**Query parametreleri:**
+
+| Param | Tip | Açıklama |
+|-------|-----|----------|
+| `month` | string | `YYYY-MM` formatı, varsayılan mevcut ay |
+
+**Response `200`:**
+```json
+{
+  "month": "2026-05",
+  "prev_month": "2026-04",
+  "next_month": "2026-06",
+  "total_monthly_payments": 4850.00,
+  "event_count": 8,
+  "events": {
+    "3": [
+      {
+        "type": "card_due",
+        "title": "Garanti Kredi Kartı — Son Ödeme",
+        "amount": 3200.00,
+        "color": "danger",
+        "icon": "tabler-credit-card",
+        "link": "/cards"
+      }
+    ],
+    "15": [
+      {
+        "type": "bill",
+        "title": "Elektrik (BEDAŞ)",
+        "amount": 1150.00,
+        "color": "warning",
+        "icon": "tabler-bolt",
+        "link": "/bills"
+      },
+      {
+        "type": "subscription",
+        "title": "Netflix",
+        "amount": 149.99,
+        "color": "info",
+        "icon": "tabler-device-tv",
+        "link": "/subscriptions"
+      }
+    ],
+    "20": [
+      {
+        "type": "bill",
+        "title": "Doğalgaz (İGDAŞ)",
+        "amount": 800.00,
+        "color": "warning",
+        "icon": "tabler-flame",
+        "link": "/bills"
+      },
+      {
+        "type": "loan",
+        "title": "Konut Kredisi Taksiti",
+        "amount": 9800.00,
+        "color": "primary",
+        "icon": "tabler-home",
+        "link": "/loans"
+      }
+    ]
+  }
+}
+```
+
+> `events` objesi anahtar olarak ayın günü (string), değer olarak o günün etkinlik dizisini içerir.
+
+**`type` değerleri:**
+
+| Değer | Açıklama |
+|-------|----------|
+| `bill` | Fatura vade günü |
+| `subscription` | Abonelik yenileme |
+| `loan` | Kredi taksit günü |
+| `card_due` | Kredi kartı son ödeme günü |
+| `card_statement` | Kredi kartı ekstre günü |
+
+---
+
+## Aylık Rapor
+
+### Rapor Özeti (JSON)
+
+```http
+GET /api/v1/report/summary?month=2026-04
+Authorization: Bearer <token>
+```
+
+**Query parametreleri:**
+
+| Param | Tip | Açıklama |
+|-------|-----|----------|
+| `month` | string | `YYYY-MM` formatı, varsayılan mevcut ay |
+
+**Response `200`:**
+```json
+{
+  "period": "2026-04",
+  "period_label": "Nisan 2026",
+  "income": {
+    "total": 45000.00,
+    "transactions": 3
+  },
+  "expenses": {
+    "total": 31420.00,
+    "transactions": 87
+  },
+  "net_savings": 13580.00,
+  "savings_rate_pct": 30.2,
+  "top_categories": [
+    { "name": "Market", "amount": 4250.00, "pct": 13.5, "icon": "tabler-shopping-cart" },
+    { "name": "Restoran & Kafe", "amount": 2800.00, "pct": 8.9, "icon": "tabler-knife" },
+    { "name": "Ulaşım", "amount": 2100.00, "pct": 6.7, "icon": "tabler-car" }
+  ],
+  "health_score": {
+    "score": 74,
+    "change": 2
+  },
+  "personal_inflation": {
+    "rate": 42.8,
+    "vs_official": 4.9
+  },
+  "available_months": ["2026-05", "2026-04", "2026-03", "2026-02", "2026-01", "2025-12"]
+}
+```
+
+---
+
+### PDF Rapor İndir
+
+```http
+GET /api/v1/report/pdf?month=2026-04
+Authorization: Bearer <token>
+```
+
+**Response:** Binary PDF dosyası  
+**Content-Type:** `application/pdf`  
+**Content-Disposition:** `attachment; filename="paranette-rapor-2026-04.pdf"`
+
+> Flutter'da `dio` ile indirme:
+> ```dart
+> final response = await dio.get(
+>   '/report/pdf',
+>   queryParameters: {'month': '2026-04'},
+>   options: Options(responseType: ResponseType.bytes),
+> );
+> // response.data → Uint8List (PDF bytes)
+> ```
 
 ---
 
