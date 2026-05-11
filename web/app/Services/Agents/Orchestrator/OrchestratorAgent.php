@@ -142,7 +142,7 @@ class OrchestratorAgent
 
         try {
             $result = $this->gemini->generate(
-                GeminiModelEnum::PRO,
+                GeminiModelEnum::FLASH,
                 $contents,
                 $systemPrompt,
                 [],

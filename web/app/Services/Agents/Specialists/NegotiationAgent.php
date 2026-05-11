@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class NegotiationAgent extends AbstractAgent
 {
     public function getName(): string { return 'negotiation'; }
-    protected function getModel(): GeminiModelEnum { return GeminiModelEnum::PRO; }
+    protected function getModel(): GeminiModelEnum { return GeminiModelEnum::FLASH; }
 
     protected function getSystemPrompt(): string
     {
