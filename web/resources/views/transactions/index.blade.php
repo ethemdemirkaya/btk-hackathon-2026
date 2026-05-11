@@ -3,41 +3,134 @@
 
   <x-slot name="pageCss">
   <style>
-    .filter-chip { cursor:pointer; transition:all .15s; border-radius:20px; padding:.2rem .65rem; }
-    .filter-chip:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(0,0,0,.1); }
-    .debt-given    { border-left:3px solid #EA5455 !important; }
-    .debt-received { border-left:3px solid #28C76F !important; }
+    /* ── Bank logo landscape box ──────────────────────────────────────────── */
+    .bank-logo-box {
+      background: #fff;
+      border-radius: 6px;
+      padding: 3px 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      height: 28px;
+      border: 1px solid rgba(0,0,0,.09);
+      flex-shrink: 0;
+    }
+    [data-bs-theme="dark"] .bank-logo-box {
+      background: rgba(255,255,255,.1);
+      border-color: rgba(255,255,255,.12);
+    }
+    .bank-logo-box img { max-height: 18px; width: auto; object-fit: contain; }
+    .bank-slug-badge {
+      font-size: .6rem; font-weight: 700; letter-spacing: .04em;
+      color: var(--bs-secondary-color);
+    }
 
-    .bank-logo-img { height:20px; width:auto; object-fit:contain; }
-    [data-bs-theme="light"] .bank-logo-img { filter:none; }
-    [data-bs-theme="dark"]  .bank-logo-img { filter:brightness(0) invert(1); opacity:.85; }
-    .bank-logo-box { background:#fff; border-radius:6px; padding:4px 8px; display:inline-flex; align-items:center; justify-content:center; min-width:60px; height:36px; border:1px solid rgba(0,0,0,.08); }
-    [data-bs-theme="dark"] .bank-logo-box { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); }
-    .bank-logo-box img { max-height:24px; width:auto; object-fit:contain; }
-    .detail-box { background:var(--bs-secondary-bg); border:1px solid var(--bs-border-color); border-radius:8px; padding:.5rem .75rem; }
+    /* ── Stat card accent bar ─────────────────────────────────────────────── */
+    .stat-card { transition: transform .18s, box-shadow .18s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(115,103,240,.14) !important; }
+    .stat-card .accent-bar { height: 3px; border-radius: 3px 3px 0 0; position: absolute; top:0; left:0; right:0; }
 
-    .tx-date-header {
+    /* ── Date group header ────────────────────────────────────────────────── */
+    .tx-date-group {
       background: var(--bs-tertiary-bg);
-      font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .5px; color: var(--bs-secondary);
-      padding: .4rem 1rem;
       border-top: 1px solid var(--bs-border-color);
       border-bottom: 1px solid var(--bs-border-color);
+      padding: .35rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
-    .tx-item {
-      border-bottom: 1px solid var(--bs-border-color);
-      transition: background .12s;
+    .tx-date-group .date-label {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--bs-secondary-color);
     }
-    .tx-item:last-child { border-bottom: none; }
-    .tx-item:hover { background: var(--bs-secondary-bg); }
+    .tx-date-group .date-net {
+      font-size: .7rem; font-weight: 600;
+    }
 
-    .btn-debt-tag { opacity:0; transition:opacity .15s; }
-    .tx-item:hover .btn-debt-tag { opacity:1; }
-    @media (max-width:767px) { .btn-debt-tag { opacity:1; } }
+    /* ── Transaction row ─────────────────────────────────────────────────── */
+    .tx-row {
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      padding: .75rem 1.25rem;
+      border-bottom: 1px solid var(--bs-border-color);
+      transition: background .1s;
+      cursor: default;
+    }
+    .tx-row:last-child { border-bottom: none; }
+    .tx-row:hover { background: var(--bs-secondary-bg); }
+
+    .tx-avatar { flex-shrink: 0; }
+
+    .tx-body { flex: 1 1 0; min-width: 0; }
+    .tx-desc {
+      font-size: .84rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--bs-heading-color);
+    }
+    .tx-meta {
+      display: flex; align-items: center; gap: .45rem; margin-top: .18rem; flex-wrap: wrap;
+    }
+    .tx-merchant { font-size: .7rem; color: var(--bs-secondary-color); }
+    .tx-time     { font-size: .68rem; color: var(--bs-tertiary-color); }
+    .tx-cat-chip {
+      font-size: .6rem; padding: .1rem .45rem; border-radius: 10px;
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+      color: var(--bs-secondary-color);
+      font-weight: 600; letter-spacing: .03em;
+      white-space: nowrap;
+    }
+    .tx-channel-chip {
+      font-size: .58rem; padding: .08rem .38rem; border-radius: 8px;
+      background: rgba(var(--bs-info-rgb), .1);
+      color: var(--bs-info);
+      font-weight: 600;
+    }
+
+    .tx-bank { flex-shrink: 0; }
+
+    .tx-amount {
+      text-align: right; flex-shrink: 0; min-width: 80px;
+    }
+    .tx-amount .amount-val {
+      font-size: .92rem; font-weight: 700; display: block;
+    }
+    .tx-amount .amount-val.income  { color: #28C76F; }
+    .tx-amount .amount-val.expense { color: #EA5455; }
+
+    /* ── Debt tag button (reveal on hover) ───────────────────────────────── */
+    .btn-debt-tag {
+      opacity: 0; transition: opacity .14s; flex-shrink: 0;
+    }
+    .tx-row:hover .btn-debt-tag { opacity: 1; }
+    @media (max-width: 767px) { .btn-debt-tag { opacity: 1; } }
+
+    /* ── Filter quick chips ──────────────────────────────────────────────── */
+    .date-chip {
+      cursor: pointer; border-radius: 18px; padding: .22rem .7rem;
+      font-size: .75rem; font-weight: 500;
+      border: 1px solid var(--bs-border-color);
+      color: var(--bs-secondary-color);
+      background: transparent;
+      transition: all .14s; text-decoration: none; display: inline-block;
+    }
+    .date-chip:hover, .date-chip.active {
+      background: var(--bs-primary); border-color: var(--bs-primary); color: #fff;
+    }
+
+    /* ── Open debts panel ────────────────────────────────────────────────── */
+    .debt-given    { border-left: 3px solid #EA5455 !important; }
+    .debt-received { border-left: 3px solid #28C76F !important; }
   </style>
   </x-slot>
 
-  {{-- Header --}}
+  {{-- ═══ Page Header ═══════════════════════════════════════════════════════ --}}
   <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">İşlemler</h4>
@@ -63,7 +156,6 @@
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
   @endif
-
   @if(session('error'))
     <div class="alert alert-danger alert-dismissible mb-5" role="alert">
       <i class="icon-base ti tabler-alert-circle me-2"></i>{{ session('error') }}
@@ -71,7 +163,7 @@
     </div>
   @endif
 
-  {{-- Stat Cards --}}
+  {{-- ═══ Stat Cards ════════════════════════════════════════════════════════ --}}
   <div class="row g-4 mb-5">
     <div class="col-6 col-xl-3">
       <div class="card stat-card position-relative overflow-hidden h-100">
@@ -151,9 +243,9 @@
     </div>
   </div>
 
-  {{-- Personal Debts Panel --}}
+  {{-- ═══ Open Personal Debts ════════════════════════════════════════════════ --}}
   @if($personalDebts->isNotEmpty())
-  <div class="card mb-5 shadow-sm" style="border:1px solid rgba(115,103,240,.25);background:var(--bs-body-bg);">
+  <div class="card mb-5 shadow-sm" style="border:1px solid rgba(115,103,240,.2);">
     <div class="card-header border-0 d-flex align-items-center justify-content-between py-3">
       <h6 class="card-title mb-0 fw-semibold">
         <i class="icon-base ti tabler-users me-2 text-primary"></i>Açık Borçlar
@@ -216,7 +308,7 @@
   </div>
   @endif
 
-  {{-- Filters --}}
+  {{-- ═══ Filters ════════════════════════════════════════════════════════════ --}}
   <div class="card mb-5 shadow-sm">
     <div class="card-body py-3">
       <form method="GET" action="{{ route('transactions.index') }}">
@@ -229,11 +321,19 @@
             ['label' => 'Son 7 Gün',  'from' => now()->subDays(7)->format('Y-m-d'),  'to' => now()->format('Y-m-d')],
             ['label' => 'Son 90 Gün', 'from' => now()->subDays(90)->format('Y-m-d'), 'to' => now()->format('Y-m-d')],
           ] as $chip)
+          @php
+            $isActive = request('from') === $chip['from'] && request('to') === $chip['to'];
+          @endphp
           <a href="{{ route('transactions.index', array_merge(request()->except(['from','to','page']), ['from'=>$chip['from'],'to'=>$chip['to']])) }}"
-             class="badge bg-label-secondary text-secondary filter-chip text-decoration-none">
+             class="date-chip {{ $isActive ? 'active' : '' }}">
             {{ $chip['label'] }}
           </a>
           @endforeach
+          @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+            <a href="{{ route('transactions.index') }}" class="date-chip text-danger" style="border-color:var(--bs-danger-border-subtle);">
+              <i class="icon-base ti tabler-x icon-12px me-1"></i>Temizle
+            </a>
+          @endif
         </div>
 
         <div class="row g-3 align-items-end mb-2">
@@ -265,9 +365,6 @@
             <button type="submit" class="btn btn-primary btn-sm flex-fill">
               <i class="icon-base ti tabler-search icon-14px"></i>
             </button>
-            <a href="{{ route('transactions.index') }}" class="btn btn-outline-secondary btn-sm">
-              <i class="icon-base ti tabler-x icon-14px"></i>
-            </a>
           </div>
         </div>
 
@@ -321,12 +418,13 @@
     </div>
   </div>
 
-  {{-- Transaction List grouped by date --}}
-  <div class="card shadow-sm">
+  {{-- ═══ Transaction List ══════════════════════════════════════════════════ --}}
+  <div class="card shadow-sm overflow-hidden">
     @if($transactions->total() > 0)
-    <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom"
+         style="background:var(--bs-body-bg);">
       <span class="text-muted small">
-        Toplam <strong>{{ $transactions->total() }}</strong> işlem
+        Toplam <strong class="text-heading">{{ $transactions->total() }}</strong> işlem
         @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
           <span class="badge bg-label-warning ms-2">Filtreli</span>
         @endif
@@ -335,101 +433,112 @@
     </div>
     @endif
 
-    <div class="card-body p-0">
-      @php $currentDate = null; @endphp
-      @forelse($transactions as $tx)
-        @php $txDate = \Carbon\Carbon::parse($tx->posted_at)->format('Y-m-d'); @endphp
-        @if($txDate !== $currentDate)
-          @php $currentDate = $txDate; @endphp
-          <div class="tx-date-header">
+    @php $currentDate = null; $dayNet = 0; @endphp
+    @forelse($transactions as $tx)
+      @php
+        $txDate = \Carbon\Carbon::parse($tx->posted_at)->format('Y-m-d');
+        $isIncome = $tx->amount >= 0;
+        // Calculate daily net for the group header (we can only show it on the first tx of each day)
+      @endphp
+      @if($txDate !== $currentDate)
+        @php $currentDate = $txDate; @endphp
+        {{-- Date group header --}}
+        <div class="tx-date-group">
+          <span class="date-label">
             {{ \Carbon\Carbon::parse($tx->posted_at)->translatedFormat('d F Y — l') }}
-          </div>
-        @endif
+          </span>
+        </div>
+      @endif
 
-        <div class="tx-item d-flex align-items-center gap-3 px-4 py-3">
+      <div class="tx-row">
 
-          {{-- Icon avatar --}}
-          <div class="avatar avatar-sm flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-{{ $tx->amount >= 0 ? 'success' : 'danger' }}">
-              <i class="icon-base ti {{ $tx->amount >= 0 ? 'tabler-arrow-down-left' : 'tabler-arrow-up-right' }} icon-14px"></i>
+        {{-- Direction icon avatar --}}
+        <div class="tx-avatar">
+          <div class="avatar avatar-sm">
+            <span class="avatar-initial rounded bg-label-{{ $isIncome ? 'success' : 'danger' }}">
+              <i class="icon-base ti {{ $isIncome ? 'tabler-arrow-down-left' : 'tabler-arrow-up-right' }} icon-14px"></i>
             </span>
           </div>
+        </div>
 
-          {{-- Description + bank badge --}}
-          <div class="flex-grow-1 overflow-hidden">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="small fw-medium text-truncate" style="max-width:260px;">{{ $tx->description }}</span>
-              @if($tx->merchant_name)
-                <span class="text-muted" style="font-size:.7rem;">{{ $tx->merchant_name }}</span>
-              @endif
-              @if(in_array($tx->channel, ['transfer']) || preg_match('/havale|eft|gönder|transfer/i', $tx->description))
-                <span class="badge bg-label-info" style="font-size:.58rem;line-height:1.6;">EFT/Havale</span>
-              @endif
-            </div>
-            <div class="d-flex align-items-center gap-2 mt-1">
-              @if($tx->bank_logo)
-                <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}"
-                     class="bank-logo-img" title="{{ $tx->bank_name }}">
-              @else
-                <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ strtoupper(substr($tx->bank_slug ?? $tx->bank_name, 0, 6)) }}</span>
-              @endif
-              <span class="text-muted" style="font-size:.7rem;">{{ \Carbon\Carbon::parse($tx->posted_at)->format('H:i') }}</span>
-            </div>
-          </div>
-
-          {{-- Amount + category chip --}}
-          <div class="d-flex flex-column align-items-end flex-shrink-0 gap-1">
-            <span class="fw-bold {{ $tx->amount >= 0 ? 'text-success' : 'text-danger' }}">
-              {{ $tx->amount >= 0 ? '+' : '' }}₺{{ number_format(abs($tx->amount), 2, ',', '.') }}
-            </span>
+        {{-- Description + meta --}}
+        <div class="tx-body">
+          <div class="tx-desc">{{ $tx->description }}</div>
+          <div class="tx-meta">
+            @if($tx->merchant_name)
+              <span class="tx-merchant">{{ $tx->merchant_name }}</span>
+              <span class="tx-time">·</span>
+            @endif
+            <span class="tx-time">{{ \Carbon\Carbon::parse($tx->posted_at)->format('H:i') }}</span>
             @if($tx->category_name)
-              <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ $tx->category_name }}</span>
+              <span class="tx-cat-chip">{{ $tx->category_name }}</span>
             @elseif($tx->merchant_category)
-              <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ $tx->merchant_category }}</span>
+              <span class="tx-cat-chip">{{ $tx->merchant_category }}</span>
+            @endif
+            @if(in_array($tx->channel, ['transfer']) || preg_match('/havale|eft|gönder|transfer/i', $tx->description))
+              <span class="tx-channel-chip">EFT/Havale</span>
             @endif
           </div>
-
-          {{-- Debt tag button (visible on hover) --}}
-          <button type="button"
-                  class="btn btn-icon btn-sm btn-text-secondary btn-debt-tag flex-shrink-0"
-                  title="Borç Kaydet"
-                  data-tx-id="{{ $tx->id }}"
-                  data-tx-desc="{{ \Illuminate\Support\Str::limit($tx->description, 45) }}"
-                  data-tx-amount="{{ abs($tx->amount) }}"
-                  data-tx-dir="{{ $tx->amount >= 0 ? 'received' : 'given' }}"
-                  data-bs-toggle="modal" data-bs-target="#debtModal">
-            <i class="icon-base ti tabler-users icon-14px"></i>
-          </button>
-
         </div>
-      @empty
-        <div class="text-center py-6">
-          <div class="d-flex justify-content-center mb-3">
-            <i class="icon-base ti tabler-inbox icon-48px text-muted"></i>
-          </div>
-          <h6 class="fw-semibold mb-1">İşlem bulunamadı</h6>
-          <p class="text-muted small mb-3">
-            @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
-              Seçilen filtrelere uyan işlem kaydı yok.
+
+        {{-- Bank logo (landscape box) --}}
+        <div class="tx-bank d-none d-sm-block">
+          <div class="bank-logo-box" title="{{ $tx->bank_name }}">
+            @if($tx->bank_logo)
+              <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}">
             @else
-              Henüz hiç işlem kaydedilmemiş.
+              <span class="bank-slug-badge">{{ strtoupper(substr($tx->bank_slug ?? $tx->bank_name, 0, 6)) }}</span>
             @endif
-          </p>
-          @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
-            <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">
-              <i class="icon-base ti tabler-x me-1"></i>Filtreleri Temizle
-            </a>
-          @else
-            <a href="{{ route('transactions.import') }}" class="btn btn-sm btn-outline-primary">
-              <i class="icon-base ti tabler-upload me-1"></i>CSV İçe Aktar
-            </a>
-          @endif
+          </div>
         </div>
-      @endforelse
-    </div>
+
+        {{-- Amount --}}
+        <div class="tx-amount">
+          <span class="amount-val {{ $isIncome ? 'income' : 'expense' }}">
+            {{ $isIncome ? '+' : '' }}₺{{ number_format(abs($tx->amount), 2, ',', '.') }}
+          </span>
+        </div>
+
+        {{-- Debt tag button (hover reveal) --}}
+        <button type="button"
+                class="btn btn-icon btn-sm btn-text-secondary btn-debt-tag"
+                title="Borç Kaydet"
+                data-tx-id="{{ $tx->id }}"
+                data-tx-desc="{{ \Illuminate\Support\Str::limit($tx->description, 45) }}"
+                data-tx-amount="{{ abs($tx->amount) }}"
+                data-tx-dir="{{ $isIncome ? 'received' : 'given' }}"
+                data-bs-toggle="modal" data-bs-target="#debtModal">
+          <i class="icon-base ti tabler-users icon-14px"></i>
+        </button>
+
+      </div>
+    @empty
+      <div class="text-center py-6">
+        <div class="d-flex justify-content-center mb-3">
+          <i class="icon-base ti tabler-inbox icon-48px text-muted"></i>
+        </div>
+        <h6 class="fw-semibold mb-1">İşlem bulunamadı</h6>
+        <p class="text-muted small mb-3">
+          @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+            Seçilen filtrelere uyan işlem kaydı yok.
+          @else
+            Henüz hiç işlem kaydedilmemiş.
+          @endif
+        </p>
+        @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+          <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="icon-base ti tabler-x me-1"></i>Filtreleri Temizle
+          </a>
+        @else
+          <a href="{{ route('transactions.import') }}" class="btn btn-sm btn-outline-primary">
+            <i class="icon-base ti tabler-upload me-1"></i>CSV İçe Aktar
+          </a>
+        @endif
+      </div>
+    @endforelse
 
     @if($transactions->hasPages())
-      <div class="card-footer py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 px-4 py-3 border-top">
         <div class="text-muted small">
           {{ $transactions->firstItem() }}–{{ $transactions->lastItem() }} / {{ $transactions->total() }} işlem
         </div>
@@ -438,7 +547,7 @@
     @endif
   </div>
 
-  {{-- Debt Tag Modal --}}
+  {{-- ═══ Debt Tag Modal ═══════════════════════════════════════════════════ --}}
   <div class="modal fade" id="debtModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
       <form id="debtForm" method="POST" action="">
@@ -472,8 +581,7 @@
             </div>
             <div>
               <label class="form-label small">Not</label>
-              <input type="text" name="note" class="form-control form-control-sm"
-                     placeholder="Opsiyonel…">
+              <input type="text" name="note" class="form-control form-control-sm" placeholder="Opsiyonel…">
             </div>
           </div>
           <div class="modal-footer border-0 pt-0">
@@ -493,12 +601,12 @@
       debtForm.action = '/transactions/' + this.dataset.txId + '/debt';
       debtForm.dataset.ready = '1';
       document.getElementById('debtTxInfo').textContent = this.dataset.txDesc;
-      document.getElementById('debtAmount').value   = parseFloat(this.dataset.txAmount).toFixed(2);
+      document.getElementById('debtAmount').value  = parseFloat(this.dataset.txAmount).toFixed(2);
       document.getElementById('debtDirection').value = this.dataset.txDir;
     });
   });
 
-  document.getElementById('debtForm').addEventListener('submit', function(e) {
+  document.getElementById('debtForm').addEventListener('submit', function (e) {
     if (!this.dataset.ready) { e.preventDefault(); }
   });
   </script>
