@@ -31,6 +31,31 @@
       border-radius: 4px;
       transition: width .4s ease, background-color .4s;
     }
+    /* Tutorial step tabs */
+    .tut-step-tab {
+      flex: 1;
+      padding: .6rem .5rem;
+      text-align: center;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--bs-secondary-color);
+      border-bottom: 3px solid transparent;
+      cursor: default;
+      transition: color .2s, border-color .2s;
+    }
+    .tut-step-tab.active {
+      color: var(--bs-primary);
+      border-bottom-color: var(--bs-primary);
+    }
+    .tut-panel { display: none; padding: 1.5rem 1.75rem; }
+    .tut-panel.active { display: block; }
+    .tut-icon-wrap {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.6rem;
+    }
   </style>
   </x-slot>
 
@@ -39,6 +64,248 @@
     <div>
       <h4 class="fw-bold mb-0">Karar Simülatörü</h4>
       <p class="text-muted mb-0">"Ya şu olsa?" — Finansal kararlarınızın geleceğe etkisini simüle edin</p>
+    </div>
+    <div>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="showTutorialBtn">
+        <i class="icon-base ti tabler-help-circle me-1"></i>Nasıl Kullanılır?
+      </button>
+    </div>
+  </div>
+
+  {{-- ══════════════ TUTORIAL MODAL ══════════════ --}}
+  <div class="modal fade" id="tutorialModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="tutModalLabel" aria-modal="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header pb-2">
+          <div>
+            <h5 class="modal-title mb-0" id="tutModalLabel">Karar Simülatörü Rehberi</h5>
+            <small class="text-muted" id="tutStepLabel">Adım 1 / 4</small>
+          </div>
+          <button type="button" class="btn-close" id="tutCloseBtn" data-bs-dismiss="modal" aria-label="Kapat"></button>
+        </div>
+        <div class="modal-body p-0">
+
+          {{-- Step indicator tabs --}}
+          <div class="d-flex border-bottom">
+            <div class="tut-step-tab active" data-tut-tab="0">
+              <i class="icon-base ti tabler-info-circle d-block mx-auto mb-1" style="font-size:1.1rem"></i>
+              Nedir?
+            </div>
+            <div class="tut-step-tab" data-tut-tab="1">
+              <i class="icon-base ti tabler-layout-dashboard d-block mx-auto mb-1" style="font-size:1.1rem"></i>
+              Mevcut Durum
+            </div>
+            <div class="tut-step-tab" data-tut-tab="2">
+              <i class="icon-base ti tabler-adjustments-horizontal d-block mx-auto mb-1" style="font-size:1.1rem"></i>
+              Parametreler
+            </div>
+            <div class="tut-step-tab" data-tut-tab="3">
+              <i class="icon-base ti tabler-chart-line d-block mx-auto mb-1" style="font-size:1.1rem"></i>
+              Sonuçlar
+            </div>
+          </div>
+
+          {{-- Panel 0: Nedir? --}}
+          <div class="tut-panel active" id="tut-panel-0">
+            <div class="text-center">
+              <div class="tut-icon-wrap bg-label-primary">
+                <i class="icon-base ti tabler-robot text-primary"></i>
+              </div>
+              <h5 class="fw-bold mb-2">Karar Simülatörü Nedir?</h5>
+              <p class="text-muted mb-3" style="max-width:480px; margin: 0 auto;">
+                Karar Simülatörü, "ya gelirim %20 artarsa?", "ya enflasyon yükselirse?" gibi
+                <strong>hipotetik finansal senaryoları</strong> gerçek verilerinizle test etmenizi sağlar.
+              </p>
+            </div>
+            <div class="row g-3 mt-2">
+              <div class="col-md-4">
+                <div class="rounded border p-3 h-100">
+                  <i class="icon-base ti tabler-calculator text-success mb-2 d-block" style="font-size:1.3rem"></i>
+                  <div class="fw-semibold small mb-1">Anlık Hesaplama</div>
+                  <p class="text-muted small mb-0">Slider'ları hareket ettirdikçe sonuçlar anında güncellenir.</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="rounded border p-3 h-100">
+                  <i class="icon-base ti tabler-chart-area text-primary mb-2 d-block" style="font-size:1.3rem"></i>
+                  <div class="fw-semibold small mb-1">Projeksiyon Grafiği</div>
+                  <p class="text-muted small mb-0">Nominal ve reel bakiyenizin aylara göre gidişatını görün.</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="rounded border p-3 h-100">
+                  <i class="icon-base ti tabler-heart-rate-monitor text-danger mb-2 d-block" style="font-size:1.3rem"></i>
+                  <div class="fw-semibold small mb-1">Sağlık Skoru Etkisi</div>
+                  <p class="text-muted small mb-0">Her senaryo için tahmini finansal sağlık skorunuzu görün.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Panel 1: Mevcut Durum --}}
+          <div class="tut-panel" id="tut-panel-1">
+            <div class="text-center mb-3">
+              <div class="tut-icon-wrap bg-label-info">
+                <i class="icon-base ti tabler-layout-dashboard text-info"></i>
+              </div>
+              <h5 class="fw-bold mb-1">Mevcut Durum Paneli</h5>
+              <p class="text-muted small" style="max-width:480px; margin: 0 auto;">
+                Sol kolondaki <strong>"Mevcut Durum"</strong> kartı, hesabınızdan çekilen gerçek finansal anlık görüntünüzü gösterir.
+                Bu değerler simülasyonun başlangıç noktasıdır ve değişmez.
+              </p>
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-coin text-warning mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Aylık Gelir &amp; Ortalama Gider</div>
+                    <p class="text-muted small mb-0">Son 3 ayın ortalaması kullanılarak hesaplanır.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-wallet text-success mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Toplam Bakiye</div>
+                    <p class="text-muted small mb-0">Tüm bağlı hesaplarınızın anlık toplamı.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-credit-card text-danger mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Kredi Kartı Borcu</div>
+                    <p class="text-muted small mb-0">Var ise kırmızı ile gösterilir; simülasyonda hesaba katılır.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-heart-rate-monitor text-primary mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Sağlık Skoru &amp; Acil Fon</div>
+                    <p class="text-muted small mb-0">Mevcut finansal sağlık puanı ve kaç aylık giderinizi karşılayacak birikminiz.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Panel 2: Senaryo Parametreleri --}}
+          <div class="tut-panel" id="tut-panel-2">
+            <div class="text-center mb-3">
+              <div class="tut-icon-wrap bg-label-warning">
+                <i class="icon-base ti tabler-adjustments-horizontal text-warning"></i>
+              </div>
+              <h5 class="fw-bold mb-1">Senaryo Parametreleri</h5>
+              <p class="text-muted small" style="max-width:480px; margin: 0 auto;">
+                Sol kolondaki <strong>"Senaryo Parametreleri"</strong> kartındaki 4 slider ile farklı senaryolar oluşturabilirsiniz.
+              </p>
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-trending-up text-success mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Gelir Değişimi (−50% → +200%)</div>
+                    <p class="text-muted small mb-0">Gelirinizin mevcut duruma göre yüzde kaç artacağını/azalacağını simüle eder. Zam, yeni iş veya ek gelir senaryoları için kullanın.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-trending-down text-danger mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Gider Değişimi (−50% → +100%)</div>
+                    <p class="text-muted small mb-0">Aylık harcamalarınızdaki artış veya tasarruf oranını belirleyin. Kira artışı, yeni abonelik veya tasarruf senaryoları için ideal.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-coin text-warning mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Yıllık Enflasyon (%0 → %100)</div>
+                    <p class="text-muted small mb-0">Varsayılan değer kişisel enflasyonunuzdur. Bu değer, reel satın alma gücü hesabında kullanılır.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-calendar text-primary mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Zaman Dilimi (1 → 60 ay)</div>
+                    <p class="text-muted small mb-0">Projeksiyon kaç aylık süreyi kapsayacak? Kısa vadeli (3–6 ay) veya uzun vadeli (12–60 ay) planlar yapabilirsiniz.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Panel 3: Sonuçları Yorumla --}}
+          <div class="tut-panel" id="tut-panel-3">
+            <div class="text-center mb-3">
+              <div class="tut-icon-wrap bg-label-success">
+                <i class="icon-base ti tabler-chart-line text-success"></i>
+              </div>
+              <h5 class="fw-bold mb-1">Sonuçları Yorumla</h5>
+              <p class="text-muted small" style="max-width:480px; margin: 0 auto;">
+                Sağ kolonda 4 özet kart, bir projeksiyon grafiği ve finansal sağlık çubuğu bulunur.
+              </p>
+            </div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-pig-money text-success mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Yeni Aylık Tasarruf &amp; Tasarruf Oranı</div>
+                    <p class="text-muted small mb-0">Gelir − gider farkı. Pozitif ise yeşil, negatif ise kırmızı gösterilir.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-chart-area text-primary mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Bakiye Projeksiyonu Grafiği</div>
+                    <p class="text-muted small mb-0">Mor çizgi nominal bakiye, yeşil çizgi enflasyon düzeltmeli reel bakiye, kırmızı ise kart borcunu gösterir.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-flame text-danger mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Enflasyon Kaybı &amp; Reel Bakiye</div>
+                    <p class="text-muted small mb-0">Seçilen dönemde enflasyonun erittiği satın alma gücünü gösterir.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="d-flex align-items-start gap-2 p-3 rounded border">
+                  <i class="icon-base ti tabler-heart-rate-monitor text-warning mt-1" style="font-size:1.1rem"></i>
+                  <div>
+                    <div class="fw-semibold small">Tahmini Finansal Sağlık Skoru</div>
+                    <p class="text-muted small mb-0">0&#8211;100 arasında. 70+ iyi, 40&#8211;70 orta, 40 altı kritik. Delta mevcut skorunuzla farkı gösterir.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" id="tutPrevBtn" disabled>
+            <i class="icon-base ti tabler-arrow-left me-1"></i>Geri
+          </button>
+          <button type="button" class="btn btn-primary" id="tutNextBtn">
+            İleri<i class="icon-base ti tabler-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -411,6 +678,64 @@
     // Trigger initial calculation on load
     calculate();
 
+  })();
+
+  // ── Tutorial modal ──────────────────────────────────────────────────
+  (function () {
+    const LS_KEY      = 'paranette_sim_tutorial_seen';
+    const modal       = document.getElementById('tutorialModal');
+    const bsModal     = bootstrap.Modal.getOrCreateInstance(modal);
+    const prevBtn     = document.getElementById('tutPrevBtn');
+    const nextBtn     = document.getElementById('tutNextBtn');
+    const stepLabel   = document.getElementById('tutStepLabel');
+    const tabs        = document.querySelectorAll('.tut-step-tab');
+    const panels      = document.querySelectorAll('.tut-panel');
+    const TOTAL_STEPS = 4;
+    let current = 0;
+
+    function goTo(step) {
+      current = step;
+      tabs.forEach((t, i)   => t.classList.toggle('active', i === current));
+      panels.forEach((p, i) => p.classList.toggle('active', i === current));
+      stepLabel.textContent  = 'Adım ' + (current + 1) + ' / ' + TOTAL_STEPS;
+      prevBtn.disabled       = current === 0;
+      if (current === TOTAL_STEPS - 1) {
+        nextBtn.innerHTML = 'Tamam<i class="icon-base ti tabler-check ms-1"></i>';
+      } else {
+        nextBtn.innerHTML = 'İleri<i class="icon-base ti tabler-arrow-right ms-1"></i>';
+      }
+    }
+
+    prevBtn.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
+
+    nextBtn.addEventListener('click', () => {
+      if (current < TOTAL_STEPS - 1) {
+        goTo(current + 1);
+      } else {
+        localStorage.setItem(LS_KEY, '1');
+        bsModal.hide();
+      }
+    });
+
+    // Dismiss button also marks as seen
+    document.getElementById('tutCloseBtn').addEventListener('click', () => {
+      localStorage.setItem(LS_KEY, '1');
+    });
+
+    // "?" button always opens the tutorial
+    const showBtn = document.getElementById('showTutorialBtn');
+    if (showBtn) {
+      showBtn.addEventListener('click', () => {
+        goTo(0);
+        bsModal.show();
+      });
+    }
+
+    // Auto-open on first visit
+    if (!localStorage.getItem(LS_KEY)) {
+      goTo(0);
+      bsModal.show();
+    }
   })();
   </script>
   </x-slot>
