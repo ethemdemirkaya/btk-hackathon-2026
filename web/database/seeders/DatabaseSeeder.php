@@ -32,6 +32,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserBankConnectionSeeder::class,
             BillSeeder::class,
+            SubscriptionSeeder::class,
+            BudgetSeeder::class,
+            GoalSeeder::class,
+            AgentInsightSeeder::class,
+            EconomicIndicatorSeeder::class,
+            HealthScoreSeeder::class,
         ]);
     }
 }
