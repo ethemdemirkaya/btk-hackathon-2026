@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/history', [AgentChatController::class, 'history'])->name('agent-chat.history');
     Route::get('/chat/runs', [AgentChatController::class, 'runs'])->name('agent-chat.runs');
     Route::get('/chat/poll/{messageId}', [AgentChatController::class, 'poll'])->name('agent-chat.poll');
+    Route::post('/chat/action', [AgentChatController::class, 'executeAction'])->name('agent-chat.action');
 
     // Receipts (OCR)
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');

@@ -6,7 +6,9 @@ use App\Jobs\ProcessAgentJob;
 use App\Models\AgentInsight;
 use App\Models\AgentMessage;
 use App\Models\AgentRun;
-use App\Services\Agents\Orchestrator\OrchestratorAgent;
+use App\Models\Budget;
+use App\Models\Category;
+use App\Models\Goal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -177,5 +179,60 @@ class AgentChatController extends Controller
             ->get(['id', 'agent_name', 'status', 'model_used', 'tokens_in', 'tokens_out', 'duration_ms', 'started_at']);
 
         return response()->json(['runs' => $runs]);
+    }
+
+    /** Agent executes a real app action: create goal or create budget */
+    public function executeAction(Request $request): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:create_goal,create_budget',
+            'data'   => 'required|array',
+        ]);
+
+        $user   = $request->user();
+        $action = $request->input('action');
+        $data   = $request->input('data');
+
+        if ($action === 'create_goal') {
+            if (empty($data['name']) || empty($data['target_amount'])) {
+                return response()->json(['status' => 'error', 'message' => 'Hedef adı ve tutar zorunludur.'], 422);
+            }
+            Goal::create([
+                'user_id'              => $user->id,
+                'name'                 => trim($data['name']),
+                'target_amount'        => (float) $data['target_amount'],
+                'current_amount'       => 0,
+                'target_date'          => !empty($data['target_date']) ? $data['target_date'] : null,
+                'monthly_contribution' => !empty($data['monthly_contribution']) ? (float) $data['monthly_contribution'] : null,
+                'status'               => 'active',
+            ]);
+            return response()->json([
+                'status'   => 'ok',
+                'message'  => '"' . trim($data['name']) . '" hedefi oluşturuldu!',
+                'redirect' => route('goals.index'),
+            ]);
+        }
+
+        if ($action === 'create_budget') {
+            if (empty($data['category_name']) || empty($data['amount'])) {
+                return response()->json(['status' => 'error', 'message' => 'Kategori ve tutar zorunludur.'], 422);
+            }
+            $category = Category::where('name', $data['category_name'])->first()
+                ?? Category::where('slug', 'diger')->first();
+            if (! $category) {
+                return response()->json(['status' => 'error', 'message' => 'Kategori bulunamadı.'], 422);
+            }
+            Budget::updateOrCreate(
+                ['user_id' => $user->id, 'category_id' => $category->id, 'period' => 'monthly'],
+                ['amount' => (float) $data['amount'], 'alert_threshold' => 80]
+            );
+            return response()->json([
+                'status'   => 'ok',
+                'message'  => $data['category_name'] . ' için aylık ' . number_format((float) $data['amount'], 0, ',', '.') . ' TL bütçesi oluşturuldu!',
+                'redirect' => route('budgets.index'),
+            ]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Geçersiz eylem.'], 422);
     }
 }
