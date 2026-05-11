@@ -17,6 +17,9 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\BillController;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\PersonalDebtController;
+use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\FxAlertController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -63,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions/import', [TransactionController::class, 'previewImport'])->name('transactions.import.preview');
     Route::post('/transactions/import/confirm', [TransactionController::class, 'confirmImport'])->name('transactions.import.confirm');
     Route::post('/transactions/{id}/debt', [TransactionController::class, 'storeDebt'])->name('transactions.debt.store');
+    Route::get('/personal-debts', [PersonalDebtController::class, 'index'])->name('personal-debts.index');
+    Route::post('/personal-debts', [PersonalDebtController::class, 'store'])->name('personal-debts.store');
     Route::patch('/personal-debts/{id}/settle', [TransactionController::class, 'settleDebt'])->name('personal-debts.settle');
     Route::delete('/personal-debts/{id}', [TransactionController::class, 'destroyDebt'])->name('personal-debts.destroy');
 
@@ -84,6 +89,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/budgets', [BudgetController::class, 'index'])->name('budgets.index');
     Route::post('/budgets', [BudgetController::class, 'store'])->name('budgets.store');
     Route::delete('/budgets/{id}', [BudgetController::class, 'destroy'])->name('budgets.destroy');
+    Route::post('/budgets/ai-suggest', [BudgetController::class, 'aiSuggest'])->name('budgets.ai-suggest');
+    Route::post('/budgets/ai-apply', [BudgetController::class, 'aiApply'])->name('budgets.ai-apply');
+
+    // Investments (Portfolio Tracker)
+    Route::get('/investments', [InvestmentController::class, 'index'])->name('investments.index');
+    Route::post('/investments', [InvestmentController::class, 'store'])->name('investments.store');
+    Route::delete('/investments/{id}', [InvestmentController::class, 'destroy'])->name('investments.destroy');
+
+    // FX / Gold Alerts
+    Route::get('/fx-alerts', [FxAlertController::class, 'index'])->name('fx-alerts.index');
+    Route::post('/fx-alerts', [FxAlertController::class, 'store'])->name('fx-alerts.store');
+    Route::delete('/fx-alerts/{id}', [FxAlertController::class, 'destroy'])->name('fx-alerts.destroy');
 
     // Goals
     Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');
