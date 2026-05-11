@@ -1,7 +1,7 @@
 <x-app-layout>
   <x-slot name="title">Hedefler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Tasarruf Hedefleri</h4>
       <p class="text-muted small mb-0">Finansal hedeflerini belirle ve ilerlemeyi takip et</p>
@@ -110,7 +110,7 @@
     </div>
   </div>
   @else
-  <div class="row g-5">
+  <div class="row g-4">
     @foreach($goals as $i => $goal)
     @php
       $isCompleted = $goal->status === 'completed';
@@ -176,7 +176,7 @@
             @if(!$isCompleted)
             <button class="btn btn-sm btn-outline-primary flex-fill"
                     data-bs-toggle="modal" data-bs-target="#fundsModal{{ $goal->id }}">
-              <i class="icon-base ti tabler-plus me-1"></i>Ödeme Ekle
+              <i class="icon-base ti tabler-plus me-1"></i>Fon Ekle
             </button>
             @endif
             <form action="{{ route('goals.destroy', $goal->id) }}" method="POST">
@@ -245,28 +245,48 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body pt-0">
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+              <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
             <div class="mb-4">
               <label class="form-label">Hedef Adı <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control" placeholder="örn: Tatil Fonu, Araba, Acil Fon" required>
+              <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                     placeholder="örn: Tatil Fonu, Araba, Acil Fon" value="{{ old('name') }}" required>
+              @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="row g-4 mb-4">
               <div class="col-6">
                 <label class="form-label">Hedef Tutar (₺) <span class="text-danger">*</span></label>
-                <input type="number" name="target_amount" class="form-control" step="0.01" min="1" required>
+                <input type="number" name="target_amount" class="form-control @error('target_amount') is-invalid @enderror"
+                       step="0.01" min="1" value="{{ old('target_amount') }}" required>
+                @error('target_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="col-6">
                 <label class="form-label">Mevcut Birikim (₺)</label>
-                <input type="number" name="current_amount" class="form-control" step="0.01" min="0" value="0">
+                <input type="number" name="current_amount" class="form-control @error('current_amount') is-invalid @enderror"
+                       step="0.01" min="0" value="{{ old('current_amount', 0) }}">
+                @error('current_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
             <div class="row g-4">
               <div class="col-6">
                 <label class="form-label">Hedef Tarih</label>
-                <input type="date" name="target_date" class="form-control">
+                <input type="date" name="target_date" class="form-control @error('target_date') is-invalid @enderror"
+                       value="{{ old('target_date') }}">
+                @error('target_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="col-6">
                 <label class="form-label">Aylık Katkı (₺)</label>
-                <input type="number" name="monthly_contribution" class="form-control" step="0.01" min="0">
+                <input type="number" name="monthly_contribution" class="form-control @error('monthly_contribution') is-invalid @enderror"
+                       step="0.01" min="0" value="{{ old('monthly_contribution') }}">
+                @error('monthly_contribution') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
           </div>
@@ -282,6 +302,11 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
+  // Re-open add modal if validation failed
+  @if($errors->any())
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  @endif
+
   // Delete confirmation
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {

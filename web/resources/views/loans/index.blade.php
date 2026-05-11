@@ -1,7 +1,7 @@
 <x-app-layout>
   <x-slot name="title">Krediler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Krediler</h4>
       <p class="text-muted small mb-0">{{ $loans->count() }} aktif kredi · taksit takibi</p>
@@ -88,7 +88,7 @@
 
           {{-- Header --}}
           <div class="d-flex align-items-start gap-3 mb-4">
-            <div class="bank-logo-box rounded flex-shrink-0 d-flex align-items-center justify-content-center"
+            <div class="bank-logo-box rounded flex-shrink-0 d-flex align-items-center justify-content-center border"
                  style="width:72px;height:48px;padding:6px;">
               @if($loan->bank_logo)
                 <img src="{{ asset($loan->bank_logo) }}" alt="{{ $loan->bank_name }}"
@@ -169,7 +169,11 @@
       <div class="card">
         <div class="card-body text-center py-6">
           <i class="icon-base ti tabler-file-invoice icon-48px text-muted mb-3 d-block"></i>
-          <p class="text-muted mb-0">Aktif krediniz bulunmuyor.</p>
+          <h5 class="mb-2">Aktif krediniz bulunmuyor</h5>
+          <p class="text-muted mb-4">Banka hesabınızı bağladıktan sonra kredileriniz otomatik olarak listelenir.</p>
+          <a href="{{ route('bank-connections.create') }}" class="btn btn-primary">
+            <i class="icon-base ti tabler-plus me-1"></i>Banka Bağla
+          </a>
         </div>
       </div>
     </div>

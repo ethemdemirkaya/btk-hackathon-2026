@@ -30,7 +30,7 @@
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <a href="{{ route('transactions.index') }}" class="text-muted">
@@ -41,6 +41,13 @@
       <p class="text-muted small mb-0 ms-4">Banka ekstresi yükle, sütun eşle, onayla</p>
     </div>
   </div>
+
+  @if(session('success'))
+    <div class="alert alert-success alert-dismissible mb-5" role="alert">
+      <i class="icon-base ti tabler-circle-check me-2"></i>{{ session('success') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
 
   @if($errors->any())
     <div class="alert alert-danger alert-dismissible mb-5" role="alert">

@@ -40,6 +40,13 @@
     </div>
   @endif
 
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible mb-5" role="alert">
+      <i class="icon-base ti tabler-alert-circle me-2"></i>{{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
+
   {{-- Stat Cards --}}
   <div class="row g-4 mb-5">
     <div class="col-6 col-xl-3">
@@ -122,7 +129,7 @@
 
   {{-- Personal Debts Panel --}}
   @if($personalDebts->isNotEmpty())
-  <div class="card mb-5 shadow-sm" style="border:1px solid rgba(115,103,240,.2);background:rgba(115,103,240,.02);">
+  <div class="card mb-5 shadow-sm" style="border:1px solid rgba(115,103,240,.25);background:var(--bs-body-bg);">
     <div class="card-header border-0 d-flex align-items-center justify-content-between py-3">
       <h6 class="card-title mb-0 fw-semibold">
         <i class="icon-base ti tabler-users me-2 text-primary"></i>Açık Borçlar
@@ -304,8 +311,8 @@
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead>
-            <tr class="paranette-thead">
+          <thead class="paranette-thead">
+            <tr>
               <th class="ps-4 py-3" style="width:95px;">Tarih</th>
               <th class="py-3">Açıklama</th>
               <th class="py-3 d-none d-md-table-cell" style="width:130px;">Kategori</th>
@@ -373,12 +380,23 @@
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="text-center py-6 text-muted">
-                  <i class="icon-base ti tabler-inbox icon-48px d-block mb-3 mx-auto"></i>
-                  <p class="mb-3">Filtreye uyan işlem bulunamadı.</p>
+                <td colspan="5" class="text-center py-5">
+                  <i class="icon-base ti tabler-inbox icon-48px text-muted d-block mb-3 mx-auto"></i>
+                  <h6 class="fw-semibold mb-1">İşlem bulunamadı</h6>
+                  <p class="text-muted small mb-3">
+                    @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+                      Seçilen filtrelere uyan işlem kaydı yok.
+                    @else
+                      Henüz hiç işlem kaydedilmemiş.
+                    @endif
+                  </p>
                   @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
                     <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">
                       <i class="icon-base ti tabler-x me-1"></i>Filtreleri Temizle
+                    </a>
+                  @else
+                    <a href="{{ route('transactions.import') }}" class="btn btn-sm btn-outline-primary">
+                      <i class="icon-base ti tabler-upload me-1"></i>CSV İçe Aktar
                     </a>
                   @endif
                 </td>

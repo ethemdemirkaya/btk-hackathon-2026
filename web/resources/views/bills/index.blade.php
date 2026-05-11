@@ -1,9 +1,9 @@
 <x-app-layout>
   <x-slot name="title">Faturalar</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Faturalar</h4>
+      <h4 class="fw-bold mb-0">Faturalar</h4>
       <p class="text-muted mb-0">Elektrik, su, doğalgaz ve diğer sabit giderler</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
@@ -22,61 +22,77 @@
   @if($totalMonthly > 0)
   <div class="row g-4 mb-6">
     <div class="col-sm-6 col-xl-3">
-      <div class="card">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-primary">
-              <i class="icon-base ti tabler-file-dollar"></i>
-            </span>
-          </div>
-          <div>
-            <small class="text-muted d-block">Aylık Toplam</small>
-            <span class="fw-bold">₺{{ number_format($totalMonthly, 2, ',', '.') }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="card">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-warning">
-              <i class="icon-base ti tabler-calendar-due"></i>
-            </span>
-          </div>
-          <div>
-            <small class="text-muted d-block">Bu Ay Bekleyen</small>
-            <span class="fw-bold">{{ $upcoming->count() }} fatura</span>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-primary"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Aylık Toplam</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalMonthly, 0, ',', '.') }}</div>
+              <span class="small text-muted">{{ $bills->count() }} fatura</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="icon-base ti tabler-file-dollar icon-22px"></i>
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-      <div class="card">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-success">
-              <i class="icon-base ti tabler-robot"></i>
-            </span>
-          </div>
-          <div>
-            <small class="text-muted d-block">Otomatik Ödeme</small>
-            <span class="fw-bold">{{ $bills->where('is_autopay', true)->count() }} fatura</span>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-warning"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Bu Ay Bekleyen</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">{{ $upcoming->count() }}</div>
+              <span class="small text-muted">fatura bekliyor</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-warning">
+                <i class="icon-base ti tabler-calendar-due icon-22px"></i>
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-      <div class="card">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-info">
-              <i class="icon-base ti tabler-list"></i>
-            </span>
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-success"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Otomatik Ödeme</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">{{ $bills->where('is_autopay', true)->count() }}</div>
+              <span class="small text-muted">fatura otomatik</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="icon-base ti tabler-robot icon-22px"></i>
+              </span>
+            </div>
           </div>
-          <div>
-            <small class="text-muted d-block">Toplam Kayıt</small>
-            <span class="fw-bold">{{ $bills->count() }} fatura</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card position-relative overflow-hidden h-100">
+        <div class="accent-bar bg-info"></div>
+        <div class="card-body pt-4">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="text-muted small">Toplam Kayıt</span>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">{{ $bills->count() }}</div>
+              <span class="small text-muted">kayıtlı fatura</span>
+            </div>
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="icon-base ti tabler-list icon-22px"></i>
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -187,45 +203,67 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+              <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
             <div class="mb-4">
               <label class="form-label">Fatura Adı <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control" placeholder="örn: Evim Elektrik" required>
+              <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                     placeholder="örn: Evim Elektrik" value="{{ old('name') }}" required>
+              @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="row g-4 mb-4">
               <div class="col-6">
                 <label class="form-label">Tür <span class="text-danger">*</span></label>
-                <select name="type" class="form-select" required>
-                  <option value="electricity">Elektrik</option>
-                  <option value="water">Su</option>
-                  <option value="gas">Doğalgaz</option>
-                  <option value="internet">İnternet</option>
-                  <option value="phone">Telefon</option>
-                  <option value="rent">Kira</option>
-                  <option value="insurance">Sigorta</option>
-                  <option value="other">Diğer</option>
+                <select name="type" class="form-select @error('type') is-invalid @enderror" required>
+                  <option value="electricity" {{ old('type') === 'electricity' ? 'selected' : '' }}>Elektrik</option>
+                  <option value="water" {{ old('type') === 'water' ? 'selected' : '' }}>Su</option>
+                  <option value="gas" {{ old('type') === 'gas' ? 'selected' : '' }}>Doğalgaz</option>
+                  <option value="internet" {{ old('type') === 'internet' ? 'selected' : '' }}>İnternet</option>
+                  <option value="phone" {{ old('type') === 'phone' ? 'selected' : '' }}>Telefon</option>
+                  <option value="rent" {{ old('type') === 'rent' ? 'selected' : '' }}>Kira</option>
+                  <option value="insurance" {{ old('type') === 'insurance' ? 'selected' : '' }}>Sigorta</option>
+                  <option value="other" {{ old('type') === 'other' ? 'selected' : '' }}>Diğer</option>
                 </select>
+                @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="col-6">
                 <label class="form-label">Son Ödeme Günü</label>
-                <input type="number" name="due_day" class="form-control" min="1" max="31" placeholder="örn: 15">
+                <input type="number" name="due_day" class="form-control @error('due_day') is-invalid @enderror"
+                       min="1" max="31" placeholder="örn: 15" value="{{ old('due_day') }}">
+                @error('due_day') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
             <div class="row g-4 mb-4">
               <div class="col-6">
                 <label class="form-label">Tedarikçi / Firma</label>
-                <input type="text" name="provider" class="form-control" placeholder="örn: AYEDAŞ">
+                <input type="text" name="provider" class="form-control @error('provider') is-invalid @enderror"
+                       placeholder="örn: AYEDAŞ" value="{{ old('provider') }}">
+                @error('provider') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="col-6">
                 <label class="form-label">Ortalama Tutar</label>
-                <input type="number" name="average_amount" class="form-control" step="0.01" min="0" placeholder="₺">
+                <input type="number" name="average_amount" class="form-control @error('average_amount') is-invalid @enderror"
+                       step="0.01" min="0" placeholder="₺" value="{{ old('average_amount') }}">
+                @error('average_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
             <div class="mb-4">
               <label class="form-label">Abone / Sözleşme No</label>
-              <input type="text" name="account_number" class="form-control" placeholder="Opsiyonel">
+              <input type="text" name="account_number" class="form-control @error('account_number') is-invalid @enderror"
+                     placeholder="Opsiyonel" value="{{ old('account_number') }}">
+              @error('account_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="is_autopay" value="1" id="chkAutopay">
+              <input class="form-check-input" type="checkbox" name="is_autopay" value="1" id="chkAutopay"
+                     {{ old('is_autopay') ? 'checked' : '' }}>
               <label class="form-check-label" for="chkAutopay">Otomatik ödeme aktif</label>
             </div>
           </div>
@@ -265,6 +303,11 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
+  // Re-open add modal if validation failed
+  @if($errors->any())
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  @endif
+
   // Delete
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {

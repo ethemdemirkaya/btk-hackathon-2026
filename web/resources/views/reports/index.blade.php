@@ -11,7 +11,7 @@
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-1">Raporlar</h4>
       <p class="text-muted mb-0">Son 6 aylık finansal özet · PDF indir</p>
@@ -181,8 +181,8 @@
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-hover mb-0">
-              <thead>
-                <tr class="paranette-thead">
+              <thead class="paranette-thead">
+                <tr>
                   <th class="ps-4 py-3">Dönem</th>
                   <th class="py-3 text-end">Gelir</th>
                   <th class="py-3 text-end">Gider</th>
@@ -211,7 +211,7 @@
                 @endforeach
               </tbody>
               <tfoot>
-                <tr class="fw-bold" style="background:rgba(115,103,240,.04);">
+                <tr class="fw-bold table-active">
                   <td class="ps-4 py-3">Toplam</td>
                   <td class="py-3 text-end text-success">₺{{ number_format($totalIncome, 0, ',', '.') }}</td>
                   <td class="py-3 text-end text-danger">₺{{ number_format($totalExpense, 0, ',', '.') }}</td>

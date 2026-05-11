@@ -15,7 +15,7 @@
         </a>
       </div>
 
-      <h4 class="mb-1">Paranette'e Hoş Geldiniz! 👋</h4>
+      <h4 class="mb-1">Paranette'e Hoş Geldiniz</h4>
       <p class="mb-6">Hesabınıza giriş yaparak devam edin</p>
 
       <x-auth-session-status class="alert alert-info mb-4" :status="session('status')" />

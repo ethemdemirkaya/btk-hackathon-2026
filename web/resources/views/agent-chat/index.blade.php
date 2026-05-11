@@ -19,8 +19,8 @@
       border-radius: 18px 18px 4px 18px;
     }
     .message-bubble.assistant {
-      background: var(--bs-card-bg, #fff);
-      border: 1px solid rgba(0,0,0,.08);
+      background: var(--bs-tertiary-bg);
+      border: 1px solid var(--bs-border-color);
       border-radius: 18px 18px 18px 4px;
     }
     .agent-badge {
@@ -46,9 +46,9 @@
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">
+      <h4 class="fw-bold mb-0">
         <i class="icon-base ti tabler-robot text-primary me-2"></i>Ajan Asistan
       </h4>
       <p class="text-muted mb-0">Paralel çalışan yapay zeka ajanlarıyla finansal kararlar al</p>

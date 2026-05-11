@@ -37,7 +37,7 @@
     }
     .cal-day.today .cal-day-num {
       background: #7367F0;
-      color: #fff;
+      color: var(--bs-white, #fff);
       border-radius: 50%;
       width: 24px;
       height: 24px;
@@ -83,7 +83,7 @@
       <h4 class="fw-bold mb-0">Ödeme Takvimi</h4>
       <p class="text-muted small mb-0">Fatura, abonelik ve kredi ödemelerini tek ekranda gör</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
       <a href="{{ route('calendar.index', ['month' => $prevMonth]) }}" class="btn btn-outline-secondary btn-sm">
         <i class="icon-base ti tabler-chevron-left icon-16px"></i>
       </a>
@@ -102,6 +102,20 @@
       </a>
     </div>
   </div>
+
+  @if(session('success'))
+    <div class="alert alert-success alert-dismissible mb-5" role="alert">
+      <i class="icon-base ti tabler-circle-check me-2"></i>{{ session('success') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible mb-5" role="alert">
+      <i class="icon-base ti tabler-alert-circle me-2"></i>{{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
 
   {{-- Summary Stats --}}
   <div class="row g-4 mb-5">
@@ -295,9 +309,10 @@
 
       @if($eventCount === 0)
       <div class="mt-4">
-        <div class="card border-0 shadow-sm" style="background:rgba(115,103,240,.05);">
+        <div class="card border-0 shadow-sm" style="background:var(--bs-secondary-bg);">
           <div class="card-body text-center py-4">
             <i class="icon-base ti tabler-calendar-plus icon-32px text-primary mb-2 d-block"></i>
+            <h6 class="fw-semibold mb-1">Takvim boş</h6>
             <p class="small text-muted mb-3">Fatura, abonelik veya kredi ekleyerek takvimi doldurun.</p>
             <a href="{{ route('bills.index') }}" class="btn btn-sm btn-outline-warning me-2">Fatura Ekle</a>
             <a href="{{ route('subscriptions.index') }}" class="btn btn-sm btn-outline-info">Abonelik</a>

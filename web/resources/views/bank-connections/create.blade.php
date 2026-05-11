@@ -1,6 +1,15 @@
 <x-app-layout>
   <x-slot name="title">Banka Bağla</x-slot>
 
+  <x-slot name="pageCss">
+  <style>
+    /* Bank option cards: 2px border, thickens to primary on selection */
+    .bank-card { border-width: 2px !important; transition: border-color .15s, box-shadow .15s; }
+    .bank-card:hover { border-color: var(--bs-primary) !important; box-shadow: 0 0 0 3px rgba(115,103,240,.12); }
+    .bank-card.border-primary { box-shadow: 0 0 0 3px rgba(115,103,240,.18); }
+  </style>
+  </x-slot>
+
   <div class="row justify-content-center">
     <div class="col-xl-8">
 
@@ -15,12 +24,13 @@
       </div>
 
       @if($errors->any())
-        <div class="alert alert-danger mb-6">
+        <div class="alert alert-danger alert-dismissible mb-6" role="alert">
           <ul class="mb-0 ps-3">
             @foreach($errors->all() as $error)
               <li>{{ $error }}</li>
             @endforeach
           </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       @endif
 
@@ -42,8 +52,8 @@
                     <input type="radio" name="bank_id" value="{{ $bank->id }}"
                            class="d-none bank-radio"
                            {{ old('bank_id', request('bank_id')) == $bank->id ? 'checked' : '' }}>
-                    <div class="card border-2 bank-card h-100 p-3 text-center @if(old('bank_id', request('bank_id')) == $bank->id) border-primary @else border-light @endif">
-                      <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-white border rounded"
+                    <div class="card border bank-card h-100 p-3 text-center @if(old('bank_id', request('bank_id')) == $bank->id) border-primary @endif">
+                      <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bank-logo-box rounded"
                            style="width:110px;height:68px;padding:10px;">
                         @if($bank->logo)
                           <img src="{{ asset($bank->logo) }}" alt="{{ $bank->name }}"
@@ -217,10 +227,8 @@
         // Update card styles
         document.querySelectorAll('.bank-card').forEach(c => {
           c.classList.remove('border-primary');
-          c.classList.add('border-light');
         });
         myCard.classList.add('border-primary');
-        myCard.classList.remove('border-light');
 
         // Show credentials section
         document.getElementById('credentialsCard').style.display = '';

@@ -1,9 +1,9 @@
 <x-app-layout>
   <x-slot name="title">Profil</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-6 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Profil Ayarları</h4>
+      <h4 class="fw-bold mb-0">Profil Ayarları</h4>
       <p class="text-muted mb-0">Hesap bilgilerini ve şifreni güncelle</p>
     </div>
   </div>

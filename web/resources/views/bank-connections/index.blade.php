@@ -2,10 +2,10 @@
   <x-slot name="title">Banka Hesapları</x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Banka Hesapları</h4>
-      <p class="text-muted mb-0">Bağlı bankalar ve hesaplar</p>
+      <h4 class="fw-bold mb-0">Banka Hesapları</h4>
+      <p class="text-muted small mb-0">Bağlı bankalar ve hesaplar</p>
     </div>
     <a href="{{ route('bank-connections.create') }}" class="btn btn-primary">
       <i class="icon-base ti tabler-plus me-1"></i> Banka Bağla

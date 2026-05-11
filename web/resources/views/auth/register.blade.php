@@ -15,8 +15,8 @@
         </a>
       </div>
 
-      <h4 class="mb-1">Yeni Hesap Oluştur 🚀</h4>
-      <p class="mb-6">Finansal özgürlüğünüze giden yolda ilk adım!</p>
+      <h4 class="mb-1">Yeni Hesap Oluştur</h4>
+      <p class="mb-6">Finansal özgürlüğünüze giden yolda ilk adım</p>
 
       <form method="POST" action="{{ route('register') }}">
         @csrf
@@ -55,6 +55,19 @@
                    placeholder="············" autocomplete="new-password" />
             <span class="input-group-text cursor-pointer"><i class="icon-base ti tabler-eye-off"></i></span>
           </div>
+        </div>
+
+        <div class="mb-6">
+          <label class="form-label" for="monthly_income">Aylık Net Gelir (₺) <span class="text-muted fw-normal small">— isteğe bağlı</span></label>
+          <div class="input-group">
+            <span class="input-group-text">₺</span>
+            <input type="number" class="form-control @error('monthly_income') is-invalid @enderror"
+                   id="monthly_income" name="monthly_income"
+                   value="{{ old('monthly_income') }}"
+                   min="0" step="0.01" placeholder="örn: 25000" />
+            @error('monthly_income')<div class="invalid-feedback">{{ $message }}</div>@enderror
+          </div>
+          <div class="form-text">AI ajanları ve karar simülatörü için kullanılır</div>
         </div>
 
         <div class="mb-6">

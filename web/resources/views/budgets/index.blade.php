@@ -1,7 +1,7 @@
 <x-app-layout>
   <x-slot name="title">Bütçeler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Bütçeler</h4>
       <p class="text-muted small mb-0">{{ now()->translatedFormat('F Y') }} — Harcama limitlerini belirle ve takip et</p>
@@ -180,23 +180,40 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body pt-0">
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+              <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
             <div class="mb-4">
               <label class="form-label">Kategori <span class="text-danger">*</span></label>
-              <select name="category_id" class="form-select" required>
+              <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
                 <option value="">Seçin…</option>
                 @foreach($categories as $cat)
-                  <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                  <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->name }}
+                  </option>
                 @endforeach
               </select>
+              @error('category_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="mb-4">
               <label class="form-label">Aylık Limit (₺) <span class="text-danger">*</span></label>
-              <input type="number" name="amount" class="form-control" step="0.01" min="1" required>
+              <input type="number" name="amount" class="form-control @error('amount') is-invalid @enderror"
+                     step="0.01" min="1" value="{{ old('amount') }}" required>
+              @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div>
               <label class="form-label">Uyarı Eşiği (%)</label>
-              <input type="number" name="alert_threshold" class="form-control" min="1" max="100"
-                     placeholder="örn: 80 — bütçenin %80'ine ulaşınca uyar" value="80">
+              <input type="number" name="alert_threshold" class="form-control @error('alert_threshold') is-invalid @enderror"
+                     min="1" max="100" placeholder="örn: 80 — bütçenin %80'ine ulaşınca uyar"
+                     value="{{ old('alert_threshold', 80) }}">
+              @error('alert_threshold') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
           </div>
           <div class="modal-footer border-0">
@@ -211,6 +228,11 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
+  // Re-open add modal if validation failed
+  @if($errors->any())
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  @endif
+
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
       Swal.fire({

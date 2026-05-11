@@ -11,14 +11,14 @@
     .inflation-hero .rate { font-size: 3.5rem; font-weight: 800; line-height: 1; }
     .inflation-hero .delta { font-size: 1rem; opacity: .85; }
     .cat-row { margin-bottom: .75rem; }
-    .cat-bar-bg  { background: #e9ecef; border-radius: 4px; height: 8px; }
+    .cat-bar-bg  { background: var(--bs-secondary-bg); border-radius: 4px; height: 8px; }
     .cat-bar-fill { height: 8px; border-radius: 4px; transition: width .5s; }
   </style>
   </x-slot>
 
-  <div class="d-flex align-items-center mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Kişisel Enflasyon</h4>
+      <h4 class="fw-bold mb-0">Kişisel Enflasyon</h4>
       <p class="text-muted mb-0">Harcama profiline göre hesaplanan kişisel TÜFE — {{ $periodLabel }}</p>
     </div>
   </div>
@@ -100,10 +100,12 @@
                 <span class="text-danger fw-bold">+%{{ $item['impact'] }} etki</span>
               </div>
             </div>
+            @php
+              $barColor = $item['impact'] > 15 ? 'bg-danger' : ($item['impact'] > 8 ? 'bg-warning' : 'bg-success');
+            @endphp
             <div class="cat-bar-bg">
-              <div class="cat-bar-fill"
-                   style="width:{{ round($item['impact'] / $maxImpact * 100) }}%;
-                          background:{{ $item['impact'] > 15 ? '#ea5455' : ($item['impact'] > 8 ? '#ff9f43' : '#28c76f') }};">
+              <div class="cat-bar-fill {{ $barColor }}"
+                   style="width:{{ round($item['impact'] / $maxImpact * 100) }}%;">
               </div>
             </div>
           </div>

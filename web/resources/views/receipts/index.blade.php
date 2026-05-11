@@ -11,6 +11,7 @@
       cursor: pointer;
       transition: background .2s, border-color .2s;
       position: relative;
+      background: var(--bs-tertiary-bg);
     }
     .drop-zone.dragover {
       background: rgba(var(--bs-primary-rgb), .06);
@@ -40,9 +41,9 @@
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Fişler & OCR</h4>
+      <h4 class="fw-bold mb-0">Fişler &amp; OCR</h4>
       <p class="text-muted mb-0">Fiş veya fatura yükle — Gemini Vision otomatik analiz eder</p>
     </div>
   </div>

@@ -28,7 +28,7 @@
   </style>
   </x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Kredi Kartları</h4>
       <p class="text-muted small mb-0">{{ $cards->count() }} kart bağlı</p>
@@ -126,7 +126,7 @@
                   <span class="fw-bold text-white opacity-75 small">{{ $card->bank_name }}</span>
                 @endif
               </div>
-              <span class="badge {{ $isCredit ? 'bg-warning text-dark' : 'bg-light text-dark' }} small">
+              <span class="badge {{ $isCredit ? 'bg-label-warning' : 'bg-label-secondary' }} small">
                 {{ $isCredit ? 'KREDİ' : 'DEBİT' }}
               </span>
             </div>
@@ -176,7 +176,11 @@
       <div class="card">
         <div class="card-body text-center py-6">
           <i class="icon-base ti tabler-credit-card icon-48px text-muted mb-3 d-block"></i>
-          <p class="text-muted mb-0">Bağlı kart bulunamadı.</p>
+          <h5 class="mb-2">Bağlı kart bulunamadı</h5>
+          <p class="text-muted mb-4">Kredi kartlarınızı banka hesabınıza bağlayarak otomatik takip başlatın.</p>
+          <a href="{{ route('bank-connections.create') }}" class="btn btn-primary">
+            <i class="icon-base ti tabler-plus me-1"></i>Banka Bağla
+          </a>
         </div>
       </div>
     </div>
@@ -198,8 +202,8 @@
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
-          <thead>
-            <tr class="paranette-thead">
+          <thead class="paranette-thead">
+            <tr>
               <th class="ps-4 py-3">Tarih</th>
               <th class="py-3">Açıklama / Mağaza</th>
               <th class="py-3 pe-4 text-end">Tutar</th>

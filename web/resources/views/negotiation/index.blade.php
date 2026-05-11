@@ -45,9 +45,9 @@
   </x-slot>
 
   {{-- Header --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Pazarlık Ajanı</h4>
+      <h4 class="fw-bold mb-0">Pazarlık Ajanı</h4>
       <p class="text-muted mb-0">Bankan veya kurumlarla müzakere için Gemini Pro resmi mektup yazar</p>
     </div>
   </div>

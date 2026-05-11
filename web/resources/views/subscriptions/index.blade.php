@@ -1,7 +1,7 @@
 <x-app-layout>
   <x-slot name="title">Abonelikler</x-slot>
 
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Abonelikler</h4>
       <p class="text-muted small mb-0">Tekrarlayan ödemeler ve dijital abonelikler</p>
@@ -28,7 +28,7 @@
           <div class="d-flex align-items-start justify-content-between">
             <div>
               <span class="text-muted small">Aylık Toplam</span>
-              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalMonthly, 2, ',', '.') }}</div>
+              <div class="h5 fw-bold mt-1 mb-0 text-heading">₺{{ number_format($totalMonthly, 0, ',', '.') }}</div>
               <span class="small text-muted">{{ $subscriptions->count() }} aktif abonelik</span>
             </div>
             <div class="avatar">
@@ -313,32 +313,50 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body pt-0">
+            @if($errors->any())
+            <div class="alert alert-danger alert-dismissible mb-4" role="alert">
+              <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
             <div class="mb-4">
               <label class="form-label">Abonelik Adı <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control" placeholder="örn: Spotify Premium" required>
+              <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
+                     placeholder="örn: Spotify Premium" value="{{ old('name') }}" required>
+              @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="mb-4">
               <label class="form-label">Mağaza / Hizmet</label>
-              <input type="text" name="merchant_name" class="form-control" placeholder="örn: Spotify AB">
+              <input type="text" name="merchant_name" class="form-control @error('merchant_name') is-invalid @enderror"
+                     placeholder="örn: Spotify AB" value="{{ old('merchant_name') }}">
+              @error('merchant_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="row g-4">
               <div class="col-6">
                 <label class="form-label">Tutar <span class="text-danger">*</span></label>
-                <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
+                <input type="number" name="amount" class="form-control @error('amount') is-invalid @enderror"
+                       step="0.01" min="0" value="{{ old('amount') }}" required>
+                @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
               <div class="col-6">
                 <label class="form-label">Döngü</label>
-                <select name="billing_cycle" class="form-select">
-                  <option value="monthly">Aylık</option>
-                  <option value="yearly">Yıllık</option>
-                  <option value="weekly">Haftalık</option>
+                <select name="billing_cycle" class="form-select @error('billing_cycle') is-invalid @enderror">
+                  <option value="monthly" {{ old('billing_cycle', 'monthly') === 'monthly' ? 'selected' : '' }}>Aylık</option>
+                  <option value="yearly" {{ old('billing_cycle') === 'yearly' ? 'selected' : '' }}>Yıllık</option>
+                  <option value="weekly" {{ old('billing_cycle') === 'weekly' ? 'selected' : '' }}>Haftalık</option>
                 </select>
+                @error('billing_cycle') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
             <div class="mt-4">
               <label class="form-label">Sonraki Ödeme <span class="text-danger">*</span></label>
-              <input type="date" name="next_billing_date" class="form-control"
-                     value="{{ now()->addMonth()->format('Y-m-d') }}" required>
+              <input type="date" name="next_billing_date" class="form-control @error('next_billing_date') is-invalid @enderror"
+                     value="{{ old('next_billing_date', now()->addMonth()->format('Y-m-d')) }}" required>
+              @error('next_billing_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
           </div>
           <div class="modal-footer border-0">
@@ -353,6 +371,11 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
+  // Re-open add modal if validation failed
+  @if($errors->any())
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  @endif
+
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
       Swal.fire({

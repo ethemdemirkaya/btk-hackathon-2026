@@ -23,7 +23,7 @@
     .score-bar-wrap {
       height: 8px;
       border-radius: 4px;
-      background: #e9ecef;
+      background: var(--bs-secondary-bg);
       overflow: hidden;
     }
     .score-bar-fill {
@@ -35,9 +35,9 @@
   </x-slot>
 
   {{-- Page header --}}
-  <div class="d-flex align-items-center mb-6">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
-      <h4 class="fw-bold mb-1">Karar Simülatörü</h4>
+      <h4 class="fw-bold mb-0">Karar Simülatörü</h4>
       <p class="text-muted mb-0">"Ya şu olsa?" — Finansal kararlarınızın geleceğe etkisini simüle edin</p>
     </div>
   </div>
@@ -177,8 +177,9 @@
       {{-- Impact summary cards --}}
       <div class="row g-4 mb-6">
         <div class="col-sm-6 col-xl-3">
-          <div class="card text-center h-100">
-            <div class="card-body py-4">
+          <div class="card stat-card position-relative overflow-hidden h-100">
+            <div class="accent-bar bg-success"></div>
+            <div class="card-body pt-4 text-center">
               <div class="text-muted small mb-1">Yeni Aylık Tasarruf</div>
               <div class="fw-bold fs-5" id="impact-savings">—</div>
               <div class="small mt-1" id="impact-savings-rate">—</div>
@@ -186,8 +187,9 @@
           </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-          <div class="card text-center h-100">
-            <div class="card-body py-4">
+          <div class="card stat-card position-relative overflow-hidden h-100">
+            <div class="accent-bar bg-primary"></div>
+            <div class="card-body pt-4 text-center">
               <div class="text-muted small mb-1">Tahmini Skor</div>
               <div class="fw-bold fs-5" id="impact-score">—</div>
               <div class="small mt-1" id="impact-score-delta">—</div>
@@ -195,8 +197,9 @@
           </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-          <div class="card text-center h-100">
-            <div class="card-body py-4">
+          <div class="card stat-card position-relative overflow-hidden h-100">
+            <div class="accent-bar bg-info"></div>
+            <div class="card-body pt-4 text-center">
               <div class="text-muted small mb-1">Nominal Bakiye</div>
               <div class="fw-bold fs-5" id="impact-balance">—</div>
               <div class="small mt-1 text-muted" id="impact-months-emergency">— ay</div>
@@ -204,8 +207,9 @@
           </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-          <div class="card text-center h-100">
-            <div class="card-body py-4">
+          <div class="card stat-card position-relative overflow-hidden h-100">
+            <div class="accent-bar bg-danger"></div>
+            <div class="card-body pt-4 text-center">
               <div class="text-muted small mb-1">Enflasyon Kaybı</div>
               <div class="fw-bold fs-5 text-danger" id="impact-inflation-loss">—</div>
               <div class="small mt-1 text-muted" id="impact-real-balance">Reel: —</div>
@@ -233,7 +237,7 @@
             <span class="fw-bold" id="score-label">—</span>
           </div>
           <div class="score-bar-wrap mb-1">
-            <div class="score-bar-fill" id="score-bar" style="width:0%;background:#28c76f;"></div>
+            <div class="score-bar-fill bg-success" id="score-bar" style="width:0%;"></div>
           </div>
           <div class="d-flex justify-content-between mt-1">
             <small class="text-muted">0 — Kritik</small>

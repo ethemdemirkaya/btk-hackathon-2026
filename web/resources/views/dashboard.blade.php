@@ -82,7 +82,7 @@
   </x-slot>
 
   {{-- ══ Page Header ═══════════════════════════════════════════════════════ --}}
-  <div class="d-flex align-items-center justify-content-between mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Hoş geldin, {{ explode(' ', auth()->user()->name)[0] }} 👋</h4>
       <p class="text-muted mb-0 small">
@@ -294,7 +294,7 @@
         <div class="col-md-5">
           <div class="d-flex align-items-center gap-2 mb-2">
             <h5 class="fw-bold mb-0">Kişisel Enflasyonun</h5>
-            <span class="badge bg-warning text-dark">TÜİK Verisi</span>
+            <span class="badge bg-label-warning">TÜİK Verisi</span>
           </div>
           @if($personalInflation['personal_rate'] !== null)
             <div class="d-flex align-items-end gap-3 mb-2">
@@ -495,7 +495,7 @@
                 </div>
                 <span class="badge bg-label-{{ $gi['color'] }} fs-6 fw-bold">%{{ $pct }}</span>
               </div>
-              <div class="progress mb-2" style="height:6px;border-radius:6px;background:rgba(0,0,0,.06);">
+              <div class="progress mb-2" style="height:6px;border-radius:6px;background:var(--bs-secondary-bg);">
                 <div class="{{ $barClass }}" style="width:{{ $pct }}%;height:100%;border-radius:6px;"></div>
               </div>
               @if($goal['target_date'])
@@ -561,12 +561,12 @@
           @if($bankConnections->isNotEmpty())
             <div class="table-responsive">
               <table class="table table-hover mb-0">
-                <thead>
-                  <tr style="background:rgba(115,103,240,.04);">
-                    <th class="ps-4 py-3 small text-muted fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em;">Banka</th>
-                    <th class="py-3 small text-muted fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em;">Tür</th>
-                    <th class="py-3 small text-muted fw-semibold text-uppercase d-none d-md-table-cell" style="font-size:.72rem;letter-spacing:.05em;">IBAN</th>
-                    <th class="py-3 pe-4 text-end small text-muted fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em;">Bakiye</th>
+                <thead class="paranette-thead">
+                  <tr>
+                    <th class="ps-4 py-3">Banka</th>
+                    <th class="py-3">Tür</th>
+                    <th class="py-3 d-none d-md-table-cell">IBAN</th>
+                    <th class="py-3 pe-4 text-end">Bakiye</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -637,12 +637,12 @@
           @if($recentTxns->isNotEmpty())
             <div class="table-responsive">
               <table class="table table-hover mb-0">
-                <thead>
-                  <tr style="background:rgba(115,103,240,.04);">
-                    <th class="ps-4 py-3 small text-muted fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em;">İşlem</th>
-                    <th class="py-3 small text-muted fw-semibold text-uppercase d-none d-sm-table-cell" style="font-size:.72rem;letter-spacing:.05em;">Banka</th>
-                    <th class="py-3 small text-muted fw-semibold text-uppercase d-none d-md-table-cell" style="font-size:.72rem;letter-spacing:.05em;">Tarih</th>
-                    <th class="py-3 pe-4 text-end small text-muted fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em;">Tutar</th>
+                <thead class="paranette-thead">
+                  <tr>
+                    <th class="ps-4 py-3">İşlem</th>
+                    <th class="py-3 d-none d-sm-table-cell">Banka</th>
+                    <th class="py-3 d-none d-md-table-cell">Tarih</th>
+                    <th class="py-3 pe-4 text-end">Tutar</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -804,7 +804,7 @@
           @if($macroIndicators->has($type))
           @php $ind = $macroIndicators->get($type); @endphp
           <div class="col-6 col-md-4 col-xl-2">
-            <div class="p-3 rounded border h-100" style="background:rgba(0,207,232,.03);">
+            <div class="p-3 rounded border h-100" style="background:var(--bs-secondary-bg);">
               <div class="d-flex align-items-center gap-2 mb-2">
                 <div class="avatar avatar-sm flex-shrink-0">
                   <span class="avatar-initial rounded bg-label-{{ $ind->trend === 'up' ? 'success' : ($ind->trend === 'down' ? 'danger' : 'secondary') }}">
@@ -855,7 +855,7 @@
             @endphp
             <div class="circle-progress mb-2" style="width:100px;height:100px;">
               <svg width="100" height="100" viewBox="0 0 72 72">
-                <circle cx="36" cy="36" r="30" fill="none" stroke="#f0f0f0" stroke-width="6"/>
+                <circle cx="36" cy="36" r="30" fill="none" stroke="var(--bs-border-color)" stroke-width="6"/>
                 <circle cx="36" cy="36" r="30" fill="none"
                         stroke="{{ $s >= 70 ? '#28C76F' : ($s >= 40 ? '#FF9F43' : '#EA5455') }}"
                         stroke-width="6" stroke-linecap="round"
@@ -888,7 +888,7 @@
             </div>
             @endforeach
           </div>
-          <div class="alert alert-light mt-4 mb-0 small d-flex align-items-center gap-2">
+          <div class="alert alert-secondary mt-4 mb-0 small d-flex align-items-center gap-2">
             <i class="icon-base ti tabler-clock icon-16px text-muted flex-shrink-0"></i>
             <span>Son güncelleme: {{ \Carbon\Carbon::parse($healthDetails->calculated_at)->diffForHumans() }}</span>
           </div>
