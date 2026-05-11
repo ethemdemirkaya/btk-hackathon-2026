@@ -542,6 +542,55 @@
     </div>
   </div>
 
+  {{-- ══ Türkiye Ekonomik Göstergeler Widget ════════════════════════════ --}}
+  @php
+    $macroLabels = [
+      'tufe'                  => ['label' => 'TÜFE', 'unit' => '%', 'icon' => 'tabler-flame'],
+      'unemployment'          => ['label' => 'İşsizlik', 'unit' => '%', 'icon' => 'tabler-briefcase'],
+      'gdp_growth'            => ['label' => 'GSYH Büyüme', 'unit' => '%', 'icon' => 'tabler-trending-up'],
+      'industrial_production' => ['label' => 'Sanayi Üretim', 'unit' => '%', 'icon' => 'tabler-building-factory'],
+      'consumer_confidence'   => ['label' => 'Tüketici Güven', 'unit' => '', 'icon' => 'tabler-mood-smile'],
+      'population'            => ['label' => 'Nüfus', 'unit' => 'M', 'icon' => 'tabler-users'],
+    ];
+  @endphp
+  @if($macroIndicators->isNotEmpty())
+  <div class="card mt-6 mb-0">
+    <div class="card-header d-flex align-items-center pb-2">
+      <h5 class="card-title mb-0 me-auto">
+        <i class="icon-base ti tabler-chart-infographic me-2 text-info"></i>Türkiye Ekonomik Göstergeler
+      </h5>
+      <span class="badge bg-label-info">TÜİK</span>
+    </div>
+    <div class="card-body py-3">
+      <div class="row g-3">
+        @foreach($macroLabels as $type => $meta)
+          @if($macroIndicators->has($type))
+          @php $ind = $macroIndicators->get($type); @endphp
+          <div class="col-6 col-md-4 col-xl-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="avatar avatar-sm flex-shrink-0">
+                <span class="avatar-initial rounded bg-label-{{ $ind->trend === 'up' ? 'success' : ($ind->trend === 'down' ? 'danger' : 'secondary') }}">
+                  <i class="icon-base ti {{ $meta['icon'] }} icon-16px"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1 overflow-hidden">
+                <div class="text-muted" style="font-size:.72rem;">{{ $meta['label'] }}</div>
+                <div class="fw-bold small">
+                  {{ number_format($ind->value, $ind->value > 10 ? 1 : 2, ',', '.') }}{{ $meta['unit'] }}
+                  @if($ind->trend === 'up') <i class="icon-base ti tabler-arrow-up-right text-success icon-14px"></i>
+                  @elseif($ind->trend === 'down') <i class="icon-base ti tabler-arrow-down-right text-danger icon-14px"></i>
+                  @endif
+                </div>
+              </div>
+            </div>
+          </div>
+          @endif
+        @endforeach
+      </div>
+    </div>
+  </div>
+  @endif
+
   {{-- ══ Finansal Sağlık Modal ══════════════════════════════════════════ --}}
   @if($healthDetails)
   <div class="modal fade" id="healthModal" tabindex="-1">

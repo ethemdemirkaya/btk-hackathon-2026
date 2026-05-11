@@ -33,7 +33,9 @@ class DashboardController extends Controller
             $aiInsights       = $this->service->getRecentInsights($user);
             $budgetSummary    = $this->service->getBudgetSummary($user);
             $healthDetails    = $this->service->getHealthScoreDetails($user);
-        } catch (\Throwable $e) {
+            $macroIndicators  = \Illuminate\Support\Facades\DB::table('economic_indicators')
+                ->orderByDesc('fetched_at')->limit(6)->get()->keyBy('type');
+        } catch (\Throwable) {
             // DB not yet migrated or no data — use empty state
             $summary          = ['total_balance' => 0, 'total_card_debt' => 0, 'total_loan' => 0, 'net_worth' => 0, 'health_score' => null];
             $cashFlow         = [];
@@ -46,12 +48,13 @@ class DashboardController extends Controller
             $aiInsights       = collect();
             $budgetSummary    = [];
             $healthDetails    = null;
+            $macroIndicators  = collect();
         }
 
         return view('dashboard', compact(
             'summary', 'cashFlow', 'categorySpend',
             'recentTxns', 'bankConnections', 'inflationData', 'personalInflation',
-            'smartAlerts', 'aiInsights', 'budgetSummary', 'healthDetails'
+            'smartAlerts', 'aiInsights', 'budgetSummary', 'healthDetails', 'macroIndicators'
         ));
     }
 }
