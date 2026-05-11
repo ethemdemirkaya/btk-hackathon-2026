@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -78,5 +79,47 @@ class GoalController extends Controller
 
         if ($request->wantsJson()) return response()->json(['success' => true]);
         return redirect()->route('goals.index')->with('success', 'Hedef silindi.');
+    }
+
+    /**
+     * Suggest a monthly contribution amount based on the user's average
+     * monthly savings over the last 3 months and the goal's remaining amount.
+     */
+    public function suggestContribution(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $goal = DB::table('goals')->where('id', $id)->where('user_id', $user->id)->first();
+        abort_unless($goal, 404);
+
+        // Avg monthly net savings (last 3 months)
+        $sub = DB::table('transactions as t2')
+            ->join('accounts as a2', 'a2.id', '=', 't2.account_id')
+            ->select(
+                DB::raw("DATE_FORMAT(t2.posted_at, '%Y-%m') as month"),
+                DB::raw('SUM(t2.amount) as net')
+            )
+            ->where('a2.user_id', $user->id)
+            ->where('t2.posted_at', '>=', now()->subMonths(3))
+            ->groupBy('month');
+
+        $avgSavings = (float) DB::table($sub, 'monthly_sums')->avg('net') ?? 0;
+
+        $remaining   = max(0, (float)$goal->target_amount - (float)$goal->current_amount);
+        $monthsLeft  = $goal->target_date
+            ? max(1, (int) ceil(now()->diffInMonths(\Carbon\Carbon::parse($goal->target_date), false)))
+            : 12;
+
+        // Suggested = ceiling of (remaining / months_left), but no more than avg savings
+        $suggested   = $remaining > 0 ? ceil($remaining / $monthsLeft) : 0;
+        $affordable  = $avgSavings > 0 ? min($suggested, $avgSavings * 0.4) : $suggested;
+        $affordable  = max(1, round($affordable, -2)); // round to nearest 100
+
+        return response()->json([
+            'suggested'       => $suggested,
+            'affordable'      => $affordable,
+            'avg_savings'     => round($avgSavings, 0),
+            'months_left'     => $monthsLeft,
+            'remaining'       => $remaining,
+        ]);
     }
 }

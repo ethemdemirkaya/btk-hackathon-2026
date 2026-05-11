@@ -204,11 +204,21 @@
               </div>
               <div class="modal-body pt-0">
                 <label class="form-label">Eklenecek Tutar (₺)</label>
-                <input type="number" name="amount" class="form-control" step="0.01" min="0.01"
-                       value="{{ $goal->monthly_contribution ?? '' }}" required>
-                <div class="text-muted small mt-1">
+                <div class="input-group mb-2">
+                  <input type="number" name="amount" id="fundsAmount{{ $goal->id }}"
+                         class="form-control" step="0.01" min="0.01"
+                         value="{{ $goal->monthly_contribution ?? '' }}" required>
+                  <button type="button" class="btn btn-outline-info btn-suggest-contrib"
+                          data-goal="{{ $goal->id }}"
+                          data-url="{{ route('goals.suggest', $goal->id) }}"
+                          title="Tasarruf geçmişine göre tavsiye al">
+                    <i class="icon-base ti tabler-bulb"></i>
+                  </button>
+                </div>
+                <div class="text-muted small mb-1">
                   Kalan: ₺{{ number_format($goal->remaining, 0, ',', '.') }}
                 </div>
+                <div id="suggestBox{{ $goal->id }}" class="d-none alert alert-info py-2 px-3 small mb-0"></div>
               </div>
               <div class="modal-footer border-0">
                 <button type="submit" class="btn btn-primary w-100">Ekle</button>
@@ -272,6 +282,7 @@
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
+  // Delete confirmation
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
       Swal.fire({
@@ -281,6 +292,46 @@
         confirmButtonColor: '#d33', cancelButtonColor: '#6c757d',
         confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç', reverseButtons: true,
       }).then(result => { if (result.isConfirmed) this.closest('form').submit(); });
+    });
+  });
+
+  // AI contribution suggestion
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+  document.querySelectorAll('.btn-suggest-contrib').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      const goalId   = this.dataset.goal;
+      const url      = this.dataset.url;
+      const amountEl = document.getElementById('fundsAmount' + goalId);
+      const boxEl    = document.getElementById('suggestBox' + goalId);
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+      try {
+        const resp = await fetch(url, {
+          headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        });
+        const data = await resp.json();
+
+        const fmt = v => parseFloat(v).toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+
+        boxEl.innerHTML =
+          '<i class="icon-base ti tabler-bulb me-1"></i>' +
+          '<strong>Tavsiye:</strong> ₺' + fmt(data.affordable) + '/ay &nbsp;·&nbsp; ' +
+          'Ort. aylık tasarruf: ₺' + fmt(data.avg_savings) + ' &nbsp;·&nbsp; ' +
+          data.months_left + ' ay kaldı';
+        boxEl.classList.remove('d-none');
+
+        // Pre-fill the amount input
+        amountEl.value = data.affordable;
+      } catch (e) {
+        boxEl.innerHTML = 'Öneri hesaplanamadı. Lütfen manuel girin.';
+        boxEl.classList.remove('d-none');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="icon-base ti tabler-bulb"></i>';
+      }
     });
   });
   </script>

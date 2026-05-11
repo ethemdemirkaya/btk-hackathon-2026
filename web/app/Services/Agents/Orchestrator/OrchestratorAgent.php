@@ -174,7 +174,17 @@ class OrchestratorAgent
             );
             return $result['text'];
         } catch (\Throwable $e) {
-            return "Analiz tamamlandı ancak sentez sırasında hata oluştu: " . $e->getMessage();
+            $msg = $e->getMessage();
+            if (str_contains($msg, '503') || str_contains($msg, 'high demand') || str_contains($msg, 'overloaded')) {
+                return "Gemini şu anda yoğun talep nedeniyle geçici olarak yavaşladı. Uzman ajanlar analizleri tamamladı ancak sonuç birleştirilemiyor. Lütfen 30-60 saniye sonra tekrar deneyin. 🔄";
+            }
+            if (str_contains($msg, '429') || str_contains($msg, 'rate')) {
+                return "API kotası aşıldı. Lütfen 1 dakika bekleyip tekrar deneyin.";
+            }
+            if (str_contains($msg, '401') || str_contains($msg, 'API key')) {
+                return "Yapay zeka servisine bağlanılamıyor. Lütfen yöneticinize bildirin.";
+            }
+            return "Analiz tamamlandı ancak yanıt oluşturulurken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.";
         }
     }
 }

@@ -356,6 +356,45 @@
       return d.innerHTML;
     }
 
+    // ── Real-time agent polling ─────────────────────────────────────
+    let pollingTimer = null;
+    const agentStepLabels = [
+      'İstek yönlendiriliyor…',
+      'Uzman ajanlar seçiliyor…',
+      'Finansal veriler analiz ediliyor…',
+      'Bütçe ve harcamalar değerlendiriliyor…',
+      'Sonuçlar sentezleniyor…',
+    ];
+    let stepIdx = 0;
+
+    function startPolling() {
+      stepIdx = 0;
+      pollingTimer = setInterval(async () => {
+        // Cycle through descriptive labels
+        typingLabel.textContent = agentStepLabels[stepIdx % agentStepLabels.length];
+        stepIdx++;
+
+        // Fetch recent runs to light up agent badges
+        try {
+          const r = await fetch('{{ route("agent-chat.runs") }}', {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+          });
+          const d = await r.json();
+          const recent = (d.runs ?? []).slice(0, 5);
+          const runningNames = recent
+            .filter(run => run.status === 'running')
+            .map(run => run.agent_name);
+          if (runningNames.length) setAgentStates(runningNames, 'running');
+        } catch (_) {}
+      }, 2500);
+    }
+
+    function stopPolling() {
+      clearInterval(pollingTimer);
+      pollingTimer = null;
+      typingLabel.textContent = 'Ajanlar çalışıyor…';
+    }
+
     async function sendMessage(msg) {
       if (!msg.trim()) return;
 
@@ -363,8 +402,15 @@
       input.value = '';
       sendBtn.disabled = true;
 
+      // Reset agent badges to "waiting"
+      document.querySelectorAll('.agent-state').forEach(el => {
+        el.textContent = 'Beklemede';
+        el.className = 'badge bg-label-secondary agent-state';
+      });
+
       typingIndicator.classList.remove('d-none');
       scrollToBottom();
+      startPolling();
 
       try {
         const resp = await fetch('{{ route("agent-chat.send") }}', {
@@ -377,6 +423,7 @@
           body: JSON.stringify({ message: msg, session_id: sessionId }),
         });
 
+        stopPolling();
         const data = await resp.json();
         typingIndicator.classList.add('d-none');
 
@@ -384,11 +431,16 @@
           setAgentStates(data.agents_used, 'done');
         }
 
-        appendMessage('assistant', data.reply, data.agents_used ?? []);
+        if (data.status === 'error') {
+          appendMessage('assistant', '⚠️ ' + (data.reply ?? 'Bir hata oluştu. Lütfen tekrar deneyin.'), []);
+        } else {
+          appendMessage('assistant', data.reply, data.agents_used ?? []);
+        }
 
       } catch (err) {
+        stopPolling();
         typingIndicator.classList.add('d-none');
-        appendMessage('assistant', 'Bağlantı hatası. Lütfen tekrar deneyin.');
+        appendMessage('assistant', 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.');
       } finally {
         sendBtn.disabled = false;
         input.focus();

@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/goals', [GoalController::class, 'index'])->name('goals.index');
     Route::post('/goals', [GoalController::class, 'store'])->name('goals.store');
     Route::post('/goals/{id}/funds', [GoalController::class, 'addFunds'])->name('goals.funds');
+    Route::get('/goals/{id}/suggest', [GoalController::class, 'suggestContribution'])->name('goals.suggest');
     Route::delete('/goals/{id}', [GoalController::class, 'destroy'])->name('goals.destroy');
 
     // Personal Inflation
