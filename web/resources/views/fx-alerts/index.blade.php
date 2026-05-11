@@ -109,51 +109,74 @@
   </div>
 </div>
 
-{{-- ══════════════════ RATE CARDS (compact horizontal) ═════════════════ --}}
+{{-- ══════════════════ RATE CARDS ═════════════════════════════════════ --}}
+@php
+$mktIcons = [
+  'USD' => 'tabler-currency-dollar',
+  'EUR' => 'tabler-currency-euro',
+  'GBP' => 'tabler-currency-pound',
+  'XAU' => 'tabler-coins',
+  'CHF' => 'tabler-currency-frank',
+  'JPY' => 'tabler-currency-yen',
+  'AUD' => 'tabler-currency-dollar',
+];
+@endphp
 <div class="row g-3 mb-3">
   @foreach($ratesData as $code => $r)
-  @php $c=$r['color']; $p=$r['change_pct']; $dp=$code==='XAU'?0:2; @endphp
+  @php
+    $c    = $r['color'];
+    $p    = $r['change_pct'];
+    $dp   = $code === 'XAU' ? 0 : 2;
+    $icon = $mktIcons[$code] ?? 'tabler-coin';
+  @endphp
   <div class="col-12 col-sm-6 col-xl-4 col-xxl-3">
-    <div class="card mkt-card position-relative overflow-hidden mb-0">
-      <div class="accent-bar bg-{{ $c }}"></div>
-      <div class="card-body py-3 px-4">
-
-        {{-- Row 1: flag + pair + change + alarm btn --}}
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span style="font-size:1.1rem;line-height:1">{{ $r['flag'] }}</span>
-          <span class="fw-bold small text-heading">{{ $code }}/TRY</span>
-          <span class="pill {{ $p>0?'pill-up':($p<0?'pill-dn':'pill-flat') }} ms-1" data-chg="{{ $code }}">
-            @if($p>0)<i class="ti tabler-trending-up" style="font-size:.65rem"></i>+{{ $p }}%
-            @elseif($p<0)<i class="ti tabler-trending-down" style="font-size:.65rem"></i>{{ $p }}%
-            @else±0%@endif
-          </span>
-          <button class="btn btn-icon btn-sm btn-text-secondary p-0 ms-auto alarm-quick"
-                  data-currency="{{ $code }}" data-rate="{{ $r['rate'] }}"
-                  data-bs-toggle="modal" data-bs-target="#addAlarmModal"
-                  title="Alarm kur">
-            <i class="ti tabler-bell-plus icon-16px"></i>
-          </button>
-        </div>
-
-        {{-- Row 2: rate + sparkline --}}
+    <div class="card mkt-card mb-0">
+      <div class="card-body py-3 px-3">
         <div class="d-flex align-items-center gap-3">
-          <div class="flex-shrink-0">
-            <div class="mkt-rate text-heading" data-rate="{{ $code }}">
-              ₺{{ number_format($r['rate'],$dp,',','.') }}
-            </div>
-            <div class="text-muted" style="font-size:.63rem;margin-top:2px">
-              {{ $r['name'] }}
-            </div>
+
+          {{-- Avatar icon (centered, like agent cards) --}}
+          <div class="avatar avatar-md flex-shrink-0">
+            <span class="avatar-initial rounded-3 bg-label-{{ $c }}">
+              <i class="ti {{ $icon }} icon-22px"></i>
+            </span>
           </div>
-          <div class="mkt-spark-wrap">
-            <canvas id="spark-{{ $code }}"
-                    data-history="{{ json_encode($r['history']) }}"
-                    data-labels="{{ json_encode($r['labels']) }}"
-                    data-change="{{ $p }}"
-                    style="width:100%;height:36px"></canvas>
+
+          {{-- Text + sparkline --}}
+          <div class="flex-grow-1 min-w-0">
+
+            {{-- Top row: code + change pill + alarm button --}}
+            <div class="d-flex align-items-center gap-1 mb-1">
+              <span class="fw-bold small text-heading">{{ $code }}/TRY</span>
+              <span class="pill {{ $p>0?'pill-up':($p<0?'pill-dn':'pill-flat') }} ms-1" data-chg="{{ $code }}">
+                @if($p>0)▲+{{ $p }}%@elseif($p<0)▼{{ $p }}%@else±0%@endif
+              </span>
+              <button class="btn btn-icon btn-sm btn-text-{{ $c }} p-0 ms-auto alarm-quick"
+                      data-currency="{{ $code }}" data-rate="{{ $r['rate'] }}"
+                      data-bs-toggle="modal" data-bs-target="#addAlarmModal"
+                      title="Alarm kur — {{ $code }}/TRY">
+                <i class="ti tabler-bell-plus icon-16px"></i>
+              </button>
+            </div>
+
+            {{-- Bottom row: rate value + mini sparkline --}}
+            <div class="d-flex align-items-end gap-2">
+              <div class="flex-shrink-0">
+                <div class="mkt-rate text-heading lh-1" data-rate="{{ $code }}">
+                  ₺{{ number_format($r['rate'], $dp, ',', '.') }}
+                </div>
+                <div class="text-muted mt-1" style="font-size:.62rem">{{ $r['name'] }}</div>
+              </div>
+              <div class="mkt-spark-wrap flex-grow-1" style="height:36px">
+                <canvas id="spark-{{ $code }}"
+                        data-history="{{ json_encode($r['history']) }}"
+                        data-labels="{{ json_encode($r['labels']) }}"
+                        data-change="{{ $p }}"
+                        style="width:100%;height:36px"></canvas>
+              </div>
+            </div>
+
           </div>
         </div>
-
       </div>
     </div>
   </div>
