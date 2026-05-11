@@ -25,26 +25,18 @@ class DecisionSimulatorController extends Controller
         $totalLoanBalance = (float) DB::table('loans')
             ->where('user_id', $user->id)->sum('current_balance');
 
-        $avgMonthlyExpense = (float) DB::table('transactions as t')
-            ->join('accounts as a', 'a.id', '=', 't.account_id')
-            ->where('a.user_id', $user->id)
-            ->where('t.amount', '<', 0)
-            ->where('t.posted_at', '>=', now()->subMonths(3))
-            ->selectRaw('AVG(monthly_total) as avg')
-            ->fromSub(
-                DB::table('transactions as t2')
-                    ->join('accounts as a2', 'a2.id', '=', 't2.account_id')
-                    ->select(
-                        DB::raw("DATE_FORMAT(t2.posted_at, '%Y-%m') as month"),
-                        DB::raw('SUM(ABS(t2.amount)) as monthly_total')
-                    )
-                    ->where('a2.user_id', $user->id)
-                    ->where('t2.amount', '<', 0)
-                    ->where('t2.posted_at', '>=', now()->subMonths(3))
-                    ->groupBy('month'),
-                'monthly_sums'
+        $sub = DB::table('transactions as t2')
+            ->join('accounts as a2', 'a2.id', '=', 't2.account_id')
+            ->select(
+                DB::raw("DATE_FORMAT(t2.posted_at, '%Y-%m') as month"),
+                DB::raw('SUM(ABS(t2.amount)) as monthly_total')
             )
-            ->value('avg') ?? 0;
+            ->where('a2.user_id', $user->id)
+            ->where('t2.amount', '<', 0)
+            ->where('t2.posted_at', '>=', now()->subMonths(3))
+            ->groupBy('month');
+
+        $avgMonthlyExpense = (float) DB::table($sub, 'monthly_sums')->avg('monthly_total') ?? 0;
 
         $healthScore = FinancialHealthScore::where('user_id', $user->id)
             ->orderByDesc('calculated_at')

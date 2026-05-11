@@ -36,7 +36,7 @@
     }
     .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
     .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-    @keyframes bounce {
+    @@keyframes bounce {
       0%, 80%, 100% { transform: scale(0); }
       40%            { transform: scale(1); }
     }
