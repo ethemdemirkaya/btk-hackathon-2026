@@ -2,38 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\PersonalInflationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class InflationController extends Controller
 {
-    // Maps transaction descriptions → TÜİK slugs
-    private const DESC_MAP = [
-        'Market'        => 'gida', 'market'       => 'gida',
-        'Haftalık'      => 'gida', 'Manav'        => 'gida',
-        'Restoran'      => 'lokanta', 'Yemek'     => 'lokanta',
-        'Kafe'          => 'lokanta', 'Kahve'      => 'lokanta',
-        'Öğle Yemeği'   => 'lokanta', 'Akşam Yemeği' => 'lokanta',
-        'Benzin'        => 'ulastirma', 'Motorin'  => 'ulastirma',
-        'Ulaşım'        => 'ulastirma', 'Taksi'    => 'ulastirma',
-        'Elektrik'      => 'konut', 'Doğalgaz'    => 'konut',
-        'Su Fatura'     => 'konut', 'Kira'        => 'konut',
-        'İnternet'      => 'haberlesme', 'Telefon' => 'haberlesme',
-        'iCloud'        => 'haberlesme', 'GSM'     => 'haberlesme',
-        'Sağlık'        => 'saglik', 'Eczane'     => 'saglik',
-        'Doktor'        => 'saglik',
-        'Okul'          => 'egitim', 'Kurs'       => 'egitim',
-        'Kitap'         => 'egitim',
-        'Sinema'        => 'eglence', 'Spor'      => 'eglence',
-        'Spotify'       => 'eglence', 'Netflix'   => 'eglence',
-        'Giyim'         => 'giyim', 'Kıyafet'    => 'giyim',
-        'Mobilya'       => 'mobilya', 'Beyaz Eşya'=> 'mobilya',
-        'Alkol'         => 'alkol', 'Sigara'      => 'alkol',
-        'Banka'         => 'finans', 'Kredi'      => 'finans',
-        'Sigorta'       => 'finans',
-    ];
-
     public function index(Request $request): View
     {
         $user = $request->user();
@@ -77,46 +52,25 @@ class InflationController extends Controller
             ->get(['period_year', 'period_month', 'annual_change_rate'])
             ->reverse()->values();
 
-        // Calculate personal inflation from user spending
-        $spendingByDesc = DB::table('transactions as t')
-            ->join('accounts as a', 'a.id', '=', 't.account_id')
-            ->where('a.user_id', $user->id)
-            ->where('t.amount', '<', 0)
-            ->where('t.posted_at', '>=', now()->subMonths(3))
-            ->select('t.description', DB::raw('SUM(ABS(t.amount)) as total'))
-            ->groupBy('t.description')
-            ->get();
+        // Calculate personal inflation using PersonalInflationService
+        $personalResult  = app(PersonalInflationService::class)->calculate($user);
+        $personalRate    = $personalResult['personal_rate'] ?? $headline;
+        $personalDelta   = isset($personalResult['diff']) ? $personalResult['diff'] : 0.0;
+        $totalSpend      = $personalResult['total_spending'] ?? 0;
 
-        $spendingByTuik = [];
-        $totalSpend = 0;
-        foreach ($spendingByDesc as $row) {
-            $slug = $this->mapDescToTuik($row->description);
-            $spendingByTuik[$slug] = ($spendingByTuik[$slug] ?? 0) + (float)$row->total;
-            $totalSpend += (float) $row->total;
-        }
-
-        $personalRate = 0.0;
+        // Build personal breakdown from service result
         $personalBreakdown = [];
-        if ($totalSpend > 0 && $categoryRates->isNotEmpty()) {
-            $rateMap = $categoryRates->keyBy('tuik_category_slug');
-            foreach ($spendingByTuik as $slug => $amount) {
-                $weight = $amount / $totalSpend;
-                $rate   = (float) ($rateMap[$slug]?->annual_change_rate ?? $headline);
-                $personalRate += $weight * $rate;
-                $personalBreakdown[] = [
-                    'slug'   => $slug,
-                    'amount' => round($amount, 0),
-                    'weight' => round($weight * 100, 1),
-                    'rate'   => round($rate, 2),
-                    'impact' => round($weight * $rate, 2),
-                ];
-            }
-            usort($personalBreakdown, fn($a,$b) => $b['impact'] <=> $a['impact']);
+        foreach ($personalResult['breakdown'] ?? [] as $b) {
+            $personalBreakdown[] = [
+                'slug'   => $b['tuik_slug'],
+                'amount' => round($b['weight_pct'] / 100 * $totalSpend, 0),
+                'weight' => $b['weight_pct'],
+                'rate'   => $b['tuik_rate'],
+                'impact' => round($b['contribution'], 2),
+            ];
         }
 
-        $personalRate    = round($personalRate, 2) ?: $headline;
-        $personalDelta   = round($personalRate - $headline, 2);
-        $topImpact       = $personalBreakdown[0] ?? null;
+        $topImpact = $personalBreakdown[0] ?? null;
 
         return view('inflation.index', compact(
             'categoryRates', 'headline', 'periodLabel', 'historical',
@@ -125,11 +79,4 @@ class InflationController extends Controller
         ));
     }
 
-    private function mapDescToTuik(string $desc): string
-    {
-        foreach (self::DESC_MAP as $keyword => $slug) {
-            if (str_contains($desc, $keyword)) return $slug;
-        }
-        return 'diger';
-    }
 }
