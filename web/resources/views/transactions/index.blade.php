@@ -5,11 +5,35 @@
   <style>
     .filter-chip { cursor:pointer; transition:all .15s; border-radius:20px; padding:.2rem .65rem; }
     .filter-chip:hover { transform:translateY(-1px); box-shadow:0 2px 8px rgba(0,0,0,.1); }
-    .debt-given   { border-left:3px solid #EA5455 !important; }
-    .debt-received{ border-left:3px solid #28C76F !important; }
+    .debt-given    { border-left:3px solid #EA5455 !important; }
+    .debt-received { border-left:3px solid #28C76F !important; }
+
+    .bank-logo-img { height:20px; width:auto; object-fit:contain; }
+    [data-bs-theme="light"] .bank-logo-img { filter:none; }
+    [data-bs-theme="dark"]  .bank-logo-img { filter:brightness(0) invert(1); opacity:.85; }
+    .bank-logo-box { background:#fff; border-radius:6px; padding:4px 8px; display:inline-flex; align-items:center; justify-content:center; min-width:60px; height:36px; border:1px solid rgba(0,0,0,.08); }
+    [data-bs-theme="dark"] .bank-logo-box { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.1); }
+    .bank-logo-box img { max-height:24px; width:auto; object-fit:contain; }
+    .detail-box { background:var(--bs-secondary-bg); border:1px solid var(--bs-border-color); border-radius:8px; padding:.5rem .75rem; }
+
+    .tx-date-header {
+      background: var(--bs-tertiary-bg);
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--bs-secondary);
+      padding: .4rem 1rem;
+      border-top: 1px solid var(--bs-border-color);
+      border-bottom: 1px solid var(--bs-border-color);
+    }
+    .tx-item {
+      border-bottom: 1px solid var(--bs-border-color);
+      transition: background .12s;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item:hover { background: var(--bs-secondary-bg); }
+
     .btn-debt-tag { opacity:0; transition:opacity .15s; }
-    .tx-row:hover .btn-debt-tag { opacity:1; }
-    @media(max-width:767px){ .btn-debt-tag { opacity:1; } }
+    .tx-item:hover .btn-debt-tag { opacity:1; }
+    @media (max-width:767px) { .btn-debt-tag { opacity:1; } }
   </style>
   </x-slot>
 
@@ -192,10 +216,26 @@
   </div>
   @endif
 
-  {{-- Advanced Filters --}}
+  {{-- Filters --}}
   <div class="card mb-5 shadow-sm">
     <div class="card-body py-3">
       <form method="GET" action="{{ route('transactions.index') }}">
+
+        {{-- Quick date chips --}}
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          @foreach([
+            ['label' => 'Bu Ay',      'from' => now()->startOfMonth()->format('Y-m-d'), 'to' => now()->format('Y-m-d')],
+            ['label' => 'Geçen Ay',   'from' => now()->subMonth()->startOfMonth()->format('Y-m-d'), 'to' => now()->subMonth()->endOfMonth()->format('Y-m-d')],
+            ['label' => 'Son 7 Gün',  'from' => now()->subDays(7)->format('Y-m-d'),  'to' => now()->format('Y-m-d')],
+            ['label' => 'Son 90 Gün', 'from' => now()->subDays(90)->format('Y-m-d'), 'to' => now()->format('Y-m-d')],
+          ] as $chip)
+          <a href="{{ route('transactions.index', array_merge(request()->except(['from','to','page']), ['from'=>$chip['from'],'to'=>$chip['to']])) }}"
+             class="badge bg-label-secondary text-secondary filter-chip text-decoration-none">
+            {{ $chip['label'] }}
+          </a>
+          @endforeach
+        </div>
+
         <div class="row g-3 align-items-end mb-2">
           <div class="col-md-5">
             <label class="form-label small mb-1">Arama</label>
@@ -277,25 +317,11 @@
           </div>
         </div>
 
-        {{-- Quick date chips --}}
-        <div class="d-flex gap-2 flex-wrap mt-1">
-          @foreach([
-            ['label' => 'Bu Ay',       'from' => now()->startOfMonth()->format('Y-m-d'), 'to' => now()->format('Y-m-d')],
-            ['label' => 'Geçen Ay',    'from' => now()->subMonth()->startOfMonth()->format('Y-m-d'), 'to' => now()->subMonth()->endOfMonth()->format('Y-m-d')],
-            ['label' => 'Son 7 Gün',   'from' => now()->subDays(7)->format('Y-m-d'),  'to' => now()->format('Y-m-d')],
-            ['label' => 'Son 90 Gün',  'from' => now()->subDays(90)->format('Y-m-d'), 'to' => now()->format('Y-m-d')],
-          ] as $chip)
-          <a href="{{ route('transactions.index', array_merge(request()->except(['from','to','page']), ['from'=>$chip['from'],'to'=>$chip['to']])) }}"
-             class="badge bg-label-secondary text-secondary filter-chip text-decoration-none">
-            {{ $chip['label'] }}
-          </a>
-          @endforeach
-        </div>
       </form>
     </div>
   </div>
 
-  {{-- Transaction Table --}}
+  {{-- Transaction List grouped by date --}}
   <div class="card shadow-sm">
     @if($transactions->total() > 0)
     <div class="card-header d-flex align-items-center justify-content-between py-3">
@@ -308,104 +334,100 @@
       <span class="text-muted small">{{ $transactions->firstItem() }}–{{ $transactions->lastItem() }} gösteriliyor</span>
     </div>
     @endif
+
     <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="paranette-thead">
-            <tr>
-              <th class="ps-4 py-3" style="width:95px;">Tarih</th>
-              <th class="py-3">Açıklama</th>
-              <th class="py-3 d-none d-md-table-cell" style="width:130px;">Kategori</th>
-              <th class="py-3 d-none d-sm-table-cell" style="width:110px;">Banka</th>
-              <th class="py-3 pe-4 text-end" style="width:140px;">Tutar</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($transactions as $tx)
-              <tr class="tx-row">
-                <td class="ps-4 py-3">
-                  <div class="fw-medium small">{{ \Carbon\Carbon::parse($tx->posted_at)->format('d.m.Y') }}</div>
-                  <div class="text-muted" style="font-size:.7rem;">{{ \Carbon\Carbon::parse($tx->posted_at)->format('H:i') }}</div>
-                </td>
-                <td class="py-3">
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="avatar avatar-sm flex-shrink-0">
-                      <span class="avatar-initial rounded bg-label-{{ $tx->amount >= 0 ? 'success' : 'danger' }}">
-                        <i class="icon-base ti {{ $tx->amount >= 0 ? 'tabler-arrow-down-left' : 'tabler-arrow-up-right' }} icon-14px"></i>
-                      </span>
-                    </div>
-                    <div class="overflow-hidden flex-grow-1">
-                      <div class="small fw-medium text-truncate" style="max-width:220px;">{{ $tx->description }}</div>
-                      @if($tx->merchant_name)
-                        <div class="text-muted" style="font-size:.7rem;">{{ $tx->merchant_name }}</div>
-                      @endif
-                      @if(in_array($tx->channel, ['transfer']) || preg_match('/havale|eft|gönder|transfer/i', $tx->description))
-                        <span class="badge bg-label-info" style="font-size:.58rem; line-height:1.6;">EFT/Havale</span>
-                      @endif
-                    </div>
-                    <button type="button"
-                            class="btn btn-icon btn-sm btn-text-secondary btn-debt-tag flex-shrink-0"
-                            title="Borç Kaydet"
-                            data-tx-id="{{ $tx->id }}"
-                            data-tx-desc="{{ \Illuminate\Support\Str::limit($tx->description, 45) }}"
-                            data-tx-amount="{{ abs($tx->amount) }}"
-                            data-tx-dir="{{ $tx->amount >= 0 ? 'received' : 'given' }}"
-                            data-bs-toggle="modal" data-bs-target="#debtModal">
-                      <i class="icon-base ti tabler-users icon-14px"></i>
-                    </button>
-                  </div>
-                </td>
-                <td class="py-3 d-none d-md-table-cell">
-                  @if($tx->category_name)
-                    <span class="badge bg-label-secondary" style="font-size:.68rem;">{{ $tx->category_name }}</span>
-                  @elseif($tx->merchant_category)
-                    <span class="badge bg-label-secondary" style="font-size:.68rem;">{{ $tx->merchant_category }}</span>
-                  @else
-                    <span class="text-muted small">—</span>
-                  @endif
-                </td>
-                <td class="py-3 d-none d-sm-table-cell">
-                  @if($tx->bank_logo)
-                    <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}"
-                         style="height:18px;width:auto;object-fit:contain;" title="{{ $tx->bank_name }}">
-                  @else
-                    <span class="badge bg-label-secondary small">{{ strtoupper(substr($tx->bank_slug ?? $tx->bank_name, 0, 6)) }}</span>
-                  @endif
-                </td>
-                <td class="py-3 pe-4 text-end">
-                  <span class="fw-bold {{ $tx->amount >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ $tx->amount >= 0 ? '+' : '' }}₺{{ number_format(abs($tx->amount), 2, ',', '.') }}
-                  </span>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="5" class="text-center py-5">
-                  <i class="icon-base ti tabler-inbox icon-48px text-muted d-block mb-3 mx-auto"></i>
-                  <h6 class="fw-semibold mb-1">İşlem bulunamadı</h6>
-                  <p class="text-muted small mb-3">
-                    @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
-                      Seçilen filtrelere uyan işlem kaydı yok.
-                    @else
-                      Henüz hiç işlem kaydedilmemiş.
-                    @endif
-                  </p>
-                  @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
-                    <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">
-                      <i class="icon-base ti tabler-x me-1"></i>Filtreleri Temizle
-                    </a>
-                  @else
-                    <a href="{{ route('transactions.import') }}" class="btn btn-sm btn-outline-primary">
-                      <i class="icon-base ti tabler-upload me-1"></i>CSV İçe Aktar
-                    </a>
-                  @endif
-                </td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
+      @php $currentDate = null; @endphp
+      @forelse($transactions as $tx)
+        @php $txDate = \Carbon\Carbon::parse($tx->posted_at)->format('Y-m-d'); @endphp
+        @if($txDate !== $currentDate)
+          @php $currentDate = $txDate; @endphp
+          <div class="tx-date-header">
+            {{ \Carbon\Carbon::parse($tx->posted_at)->translatedFormat('d F Y — l') }}
+          </div>
+        @endif
+
+        <div class="tx-item d-flex align-items-center gap-3 px-4 py-3">
+
+          {{-- Icon avatar --}}
+          <div class="avatar avatar-sm flex-shrink-0">
+            <span class="avatar-initial rounded bg-label-{{ $tx->amount >= 0 ? 'success' : 'danger' }}">
+              <i class="icon-base ti {{ $tx->amount >= 0 ? 'tabler-arrow-down-left' : 'tabler-arrow-up-right' }} icon-14px"></i>
+            </span>
+          </div>
+
+          {{-- Description + bank badge --}}
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="small fw-medium text-truncate" style="max-width:260px;">{{ $tx->description }}</span>
+              @if($tx->merchant_name)
+                <span class="text-muted" style="font-size:.7rem;">{{ $tx->merchant_name }}</span>
+              @endif
+              @if(in_array($tx->channel, ['transfer']) || preg_match('/havale|eft|gönder|transfer/i', $tx->description))
+                <span class="badge bg-label-info" style="font-size:.58rem;line-height:1.6;">EFT/Havale</span>
+              @endif
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+              @if($tx->bank_logo)
+                <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}"
+                     class="bank-logo-img" title="{{ $tx->bank_name }}">
+              @else
+                <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ strtoupper(substr($tx->bank_slug ?? $tx->bank_name, 0, 6)) }}</span>
+              @endif
+              <span class="text-muted" style="font-size:.7rem;">{{ \Carbon\Carbon::parse($tx->posted_at)->format('H:i') }}</span>
+            </div>
+          </div>
+
+          {{-- Amount + category chip --}}
+          <div class="d-flex flex-column align-items-end flex-shrink-0 gap-1">
+            <span class="fw-bold {{ $tx->amount >= 0 ? 'text-success' : 'text-danger' }}">
+              {{ $tx->amount >= 0 ? '+' : '' }}₺{{ number_format(abs($tx->amount), 2, ',', '.') }}
+            </span>
+            @if($tx->category_name)
+              <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ $tx->category_name }}</span>
+            @elseif($tx->merchant_category)
+              <span class="badge bg-label-secondary" style="font-size:.62rem;">{{ $tx->merchant_category }}</span>
+            @endif
+          </div>
+
+          {{-- Debt tag button (visible on hover) --}}
+          <button type="button"
+                  class="btn btn-icon btn-sm btn-text-secondary btn-debt-tag flex-shrink-0"
+                  title="Borç Kaydet"
+                  data-tx-id="{{ $tx->id }}"
+                  data-tx-desc="{{ \Illuminate\Support\Str::limit($tx->description, 45) }}"
+                  data-tx-amount="{{ abs($tx->amount) }}"
+                  data-tx-dir="{{ $tx->amount >= 0 ? 'received' : 'given' }}"
+                  data-bs-toggle="modal" data-bs-target="#debtModal">
+            <i class="icon-base ti tabler-users icon-14px"></i>
+          </button>
+
+        </div>
+      @empty
+        <div class="text-center py-6">
+          <div class="d-flex justify-content-center mb-3">
+            <i class="icon-base ti tabler-inbox icon-48px text-muted"></i>
+          </div>
+          <h6 class="fw-semibold mb-1">İşlem bulunamadı</h6>
+          <p class="text-muted small mb-3">
+            @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+              Seçilen filtrelere uyan işlem kaydı yok.
+            @else
+              Henüz hiç işlem kaydedilmemiş.
+            @endif
+          </p>
+          @if(request()->hasAny(['q','type','from','to','category','bank','min_amount','max_amount']))
+            <a href="{{ route('transactions.index') }}" class="btn btn-sm btn-outline-secondary">
+              <i class="icon-base ti tabler-x me-1"></i>Filtreleri Temizle
+            </a>
+          @else
+            <a href="{{ route('transactions.import') }}" class="btn btn-sm btn-outline-primary">
+              <i class="icon-base ti tabler-upload me-1"></i>CSV İçe Aktar
+            </a>
+          @endif
+        </div>
+      @endforelse
     </div>
+
     @if($transactions->hasPages())
       <div class="card-footer py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="text-muted small">
