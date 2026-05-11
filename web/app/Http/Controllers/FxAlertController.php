@@ -49,7 +49,10 @@ class FxAlertController extends Controller
 
         $labels = self::LABELS;
 
-        return view('fx-alerts.index', compact('alerts', 'ratesData', 'labels'));
+        $alarmedCurrencies = $alerts->pluck('currency')->toArray();
+        $alarmIdByCurrency = $alerts->keyBy('currency')->map(fn ($a) => $a->id)->toArray();
+
+        return view('fx-alerts.index', compact('alerts', 'ratesData', 'labels', 'alarmedCurrencies', 'alarmIdByCurrency'));
     }
 
     // ── JSON endpoints ────────────────────────────────────────────────

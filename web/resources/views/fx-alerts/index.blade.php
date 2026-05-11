@@ -124,10 +124,12 @@ $mktIcons = [
 <div class="row g-3 mb-3">
   @foreach($ratesData as $code => $r)
   @php
-    $c    = $r['color'];
-    $p    = $r['change_pct'];
-    $dp   = $code === 'XAU' ? 0 : 2;
-    $icon = $mktIcons[$code] ?? 'tabler-coin';
+    $c        = $r['color'];
+    $p        = $r['change_pct'];
+    $dp       = $code === 'XAU' ? 0 : 2;
+    $icon     = $mktIcons[$code] ?? 'tabler-coin';
+    $hasAlarm = in_array($code, $alarmedCurrencies ?? []);
+    $alarmId  = $alarmIdByCurrency[$code] ?? null;
   @endphp
   <div class="col-12 col-sm-6 col-xl-4 col-xxl-3">
     <div class="card mkt-card mb-0">
@@ -150,12 +152,20 @@ $mktIcons = [
               <span class="pill {{ $p>0?'pill-up':($p<0?'pill-dn':'pill-flat') }} ms-1" data-chg="{{ $code }}">
                 @if($p>0)▲+{{ $p }}%@elseif($p<0)▼{{ $p }}%@else±0%@endif
               </span>
-              <button class="btn btn-icon btn-sm btn-text-{{ $c }} p-0 ms-auto alarm-quick"
-                      data-currency="{{ $code }}" data-rate="{{ $r['rate'] }}"
-                      data-bs-toggle="modal" data-bs-target="#addAlarmModal"
-                      title="Alarm kur — {{ $code }}/TRY">
-                <i class="ti tabler-bell-plus icon-16px"></i>
-              </button>
+              @if($hasAlarm)
+                <button class="btn btn-icon btn-sm btn-text-warning p-0 ms-auto alarm-delete-quick"
+                        data-currency="{{ $code }}" data-alarm-id="{{ $alarmId }}" data-rate="{{ $r['rate'] }}"
+                        title="Alarm aktif — sil için tıkla">
+                  <i class="ti tabler-bell-filled icon-16px text-warning"></i>
+                </button>
+              @else
+                <button class="btn btn-icon btn-sm btn-text-{{ $c }} p-0 ms-auto alarm-quick"
+                        data-currency="{{ $code }}" data-rate="{{ $r['rate'] }}"
+                        data-bs-toggle="modal" data-bs-target="#addAlarmModal"
+                        title="Alarm kur — {{ $code }}/TRY">
+                  <i class="ti tabler-bell-plus icon-16px"></i>
+                </button>
+              @endif
             </div>
 
             {{-- Bottom row: rate value + mini sparkline --}}
@@ -535,7 +545,36 @@ const _hasErrors = {{ $errors->any() ? 'true' : 'false' }};
 if (_hasErrors)
   bootstrap.Modal.getOrCreateInstance(document.getElementById('addAlarmModal')).show();
 
-// ── Delete confirm ────────────────────────────────────────────────────
+// ── Quick-delete active alarm from rate card ──────────────────────────
+document.querySelectorAll('.alarm-delete-quick').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const code    = this.dataset.currency;
+    const alarmId = this.dataset.alarmId;
+    Swal.fire({
+      title: code + '/TRY alarmı silinsin mi?',
+      html: '<span class="text-muted small">Bu kur için aktif alarm kaldırılacak.</span>',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#ea5455', cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Evet, sil', cancelButtonText: 'Vazgeç', reverseButtons: true,
+    }).then(result => {
+      if (!result.isConfirmed || !alarmId) return;
+      const form    = document.createElement('form');
+      form.method   = 'POST';
+      form.action   = '{{ url("fx-alerts") }}/' + alarmId;
+      const tok     = document.createElement('input');
+      tok.type      = 'hidden'; tok.name = '_token';
+      tok.value     = '{{ csrf_token() }}';
+      const meth    = document.createElement('input');
+      meth.type     = 'hidden'; meth.name = '_method'; meth.value = 'DELETE';
+      form.appendChild(tok);
+      form.appendChild(meth);
+      document.body.appendChild(form);
+      form.submit();
+    });
+  });
+});
+
+// ── Delete confirm (table rows) ───────────────────────────────────────
 document.querySelectorAll('.btn-del').forEach(btn => {
   btn.addEventListener('click', function () {
     Swal.fire({
