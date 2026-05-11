@@ -31,6 +31,7 @@ class DashboardController extends Controller
             $smartAlerts     = $this->service->getSmartAlerts($user);
             $aiInsights      = $this->service->getRecentInsights($user);
             $budgetSummary   = $this->service->getBudgetSummary($user);
+            $healthDetails   = $this->service->getHealthScoreDetails($user);
         } catch (\Throwable) {
             // DB not yet migrated or no data — use empty state
             $summary         = ['total_balance' => 0, 'total_card_debt' => 0, 'total_loan' => 0, 'net_worth' => 0, 'health_score' => null];
@@ -42,12 +43,13 @@ class DashboardController extends Controller
             $smartAlerts     = [];
             $aiInsights      = collect();
             $budgetSummary   = [];
+            $healthDetails   = null;
         }
 
         return view('dashboard', compact(
             'summary', 'cashFlow', 'categorySpend',
             'recentTxns', 'bankConnections', 'inflationData', 'smartAlerts', 'aiInsights',
-            'budgetSummary'
+            'budgetSummary', 'healthDetails'
         ));
     }
 }

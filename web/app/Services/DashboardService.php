@@ -188,6 +188,15 @@ class DashboardService
         ])->values()->all();
     }
 
+    /** Returns latest health score record with component breakdown */
+    public function getHealthScoreDetails(User $user): ?object
+    {
+        return DB::table('financial_health_scores')
+            ->where('user_id', $user->id)
+            ->orderByDesc('calculated_at')
+            ->first();
+    }
+
     /** Returns current month budget utilization — top 4 by % used */
     public function getBudgetSummary(User $user, int $limit = 4): array
     {

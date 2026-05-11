@@ -92,7 +92,9 @@
 
     {{-- Finansal Sağlık --}}
     <div class="col">
-      <div class="card">
+      <div class="card h-100 {{ $summary['health_score'] ? 'cursor-pointer' : '' }}"
+           @if($summary['health_score']) data-bs-toggle="modal" data-bs-target="#healthModal" @endif
+           style="{{ $summary['health_score'] ? 'cursor:pointer;' : '' }}">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div class="content-left">
@@ -106,7 +108,7 @@
                   <h4 class="mb-0 me-2 text-muted">--/100</h4>
                 @endif
               </div>
-              <small class="text-muted">Sağlık skoru</small>
+              <small class="text-muted">{{ $summary['health_score'] ? 'Detay için tıkla' : 'Sağlık skoru' }}</small>
             </div>
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-success">
@@ -459,6 +461,72 @@
       </div>
     </div>
   </div>
+
+  {{-- ══ Finansal Sağlık Modal ══════════════════════════════════════════ --}}
+  @if($healthDetails)
+  <div class="modal fade" id="healthModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="icon-base ti tabler-heart-rate-monitor me-2 text-success"></i>Finansal Sağlık Skoru
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          {{-- Total score --}}
+          <div class="text-center mb-5">
+            <div class="display-4 fw-bold @if($healthDetails->score >= 70) text-success @elseif($healthDetails->score >= 40) text-warning @else text-danger @endif">
+              {{ $healthDetails->score }}<span class="fs-4 text-muted">/100</span>
+            </div>
+            <div class="text-muted small mt-1">
+              @if($healthDetails->score >= 70) Sağlıklı Finansal Durum
+              @elseif($healthDetails->score >= 40) Geliştirilmesi Gerekiyor
+              @else Risk Altında — Dikkat!
+              @endif
+            </div>
+          </div>
+
+          {{-- Component bars --}}
+          @php
+            $components = [
+              ['label' => 'Borç Oranı',          'score' => $healthDetails->debt_ratio_score,          'icon' => 'tabler-trending-down', 'color' => 'danger',  'tip' => 'Toplam borcun yıllık gelire oranı'],
+              ['label' => 'Tasarruf Oranı',       'score' => $healthDetails->savings_rate_score,        'icon' => 'tabler-piggy-bank',    'color' => 'success', 'tip' => 'Aylık tasarruf / gelir oranı'],
+              ['label' => 'Acil Fon',             'score' => $healthDetails->emergency_fund_score,      'icon' => 'tabler-shield',        'color' => 'info',    'tip' => 'Bakiyenin aylık gidere oranı (hedef: 6 ay)'],
+              ['label' => 'Harcama Tutarlılığı',  'score' => $healthDetails->expense_consistency_score, 'icon' => 'tabler-chart-line',    'color' => 'warning', 'tip' => 'Aylık giderlerin değişkenliği'],
+            ];
+          @endphp
+          <div class="row g-4">
+            @foreach($components as $c)
+            <div class="col-sm-6">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="icon-base ti {{ $c['icon'] }} text-{{ $c['color'] }} icon-18px"></i>
+                <span class="fw-medium small">{{ $c['label'] }}</span>
+                <span class="ms-auto fw-bold small">{{ $c['score'] }}/100</span>
+              </div>
+              <div class="progress" style="height:6px;">
+                <div class="progress-bar bg-{{ $c['color'] }}" style="width:{{ $c['score'] }}%"></div>
+              </div>
+              <div class="text-muted mt-1" style="font-size:.72rem;">{{ $c['tip'] }}</div>
+            </div>
+            @endforeach
+          </div>
+
+          <div class="alert alert-light mt-4 mb-0 small text-muted">
+            <i class="icon-base ti tabler-clock me-1"></i>
+            Son güncelleme: {{ \Carbon\Carbon::parse($healthDetails->calculated_at)->diffForHumans() }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="{{ route('simulator.index') }}" class="btn btn-primary">
+            <i class="icon-base ti tabler-calculator me-1"></i>Simülatörde Dene
+          </a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
 
   {{-- ══ Apex Charts JS ══════════════════════════════════════════════════ --}}
   <x-slot name="pageJs">
