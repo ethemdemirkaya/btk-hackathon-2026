@@ -76,16 +76,6 @@ class PersonalInflationService
 
         $personalRate = round($personalRate, 2);
 
-        // Kaydet
-        InflationRate::updateOrCreate(
-            ['user_id' => $user->id, 'period_year' => $year, 'period_month' => $month, 'source' => 'personal'],
-            [
-                'annual_rate'  => $personalRate,
-                'monthly_rate' => round($personalRate / 12, 4),
-                'fetched_at'   => now(),
-            ]
-        );
-
         return [
             'personal_rate' => $personalRate,
             'tufe_rate'     => $tufeRate,
@@ -98,33 +88,11 @@ class PersonalInflationService
     }
 
     /**
-     * Kullanıcının son N aylık kişisel enflasyon geçmişi (dashboard grafiği için).
+     * Placeholder — returns empty until personal_inflation_snapshots table exists.
      */
     public function getHistory(User $user, int $months = 6): array
     {
-        $rows = InflationRate::where('user_id', $user->id)
-            ->where('source', 'personal')
-            ->orderByDesc('period_year')
-            ->orderByDesc('period_month')
-            ->limit($months)
-            ->get();
-
-        $result = [];
-        foreach ($rows as $row) {
-            $periodKey = "{$row->period_year}-" . str_pad($row->period_month, 2, '0', STR_PAD_LEFT);
-            $tufeRow   = InflationCategoryRate::where('tuik_category_slug', 'genel')
-                ->where('period_year', $row->period_year)
-                ->where('period_month', $row->period_month)
-                ->first();
-
-            $result[] = [
-                'month'    => $periodKey,
-                'personal' => (float) $row->annual_rate,
-                'tufe'     => $tufeRow ? (float) $tufeRow->annual_change_rate : null,
-            ];
-        }
-
-        return array_reverse($result);
+        return [];
     }
 
     // ──────────────────────────────────────────────────────────────────────

@@ -6,9 +6,12 @@ use App\Models\Account;
 use App\Models\AgentInsight;
 use App\Models\BankConnection;
 use App\Models\Card;
+use App\Models\InflationCategoryRate;
+use App\Models\InflationRate;
 use App\Models\Loan;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\PersonalInflationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -163,29 +166,61 @@ class DashboardService
             ->get();
     }
 
-    /** Returns personal vs TÜFE inflation for last 3 months per category */
+    /** Returns personal vs TÜFE inflation for last 6 months */
     public function getInflationComparison(User $user): array
     {
-        $rows = DB::table('inflation_rates as ir')
-            ->select('ir.reference_month', 'ir.annual_rate')
-            ->where('ir.user_id', $user->id)
-            ->orderByDesc('ir.reference_month')
-            ->limit(6)
-            ->get();
+        $personal = InflationRate::where('user_id', $user->id)
+            ->where('source', 'personal')
+            ->orderByDesc('period_year')->orderByDesc('period_month')
+            ->limit(6)->get();
 
-        $tufe = DB::table('inflation_category_rates as icr')
-            ->select('icr.reference_month', DB::raw('AVG(icr.annual_rate) as rate'))
-            ->groupBy('icr.reference_month')
-            ->orderByDesc('icr.reference_month')
-            ->limit(6)
-            ->get()
-            ->keyBy('reference_month');
+        if ($personal->isEmpty()) {
+            return [];
+        }
 
-        return $rows->map(fn ($r) => [
-            'month'    => $r->reference_month,
-            'personal' => round((float) $r->annual_rate, 2),
-            'tufe'     => round((float) ($tufe->get($r->reference_month)?->rate ?? 0), 2),
-        ])->values()->all();
+        $result = [];
+        foreach ($personal as $row) {
+            $tufeRow = InflationCategoryRate::where('tuik_category_slug', 'genel')
+                ->where('period_year', $row->period_year)
+                ->where('period_month', $row->period_month)
+                ->first();
+
+            $period   = "{$row->period_year}-" . str_pad($row->period_month, 2, '0', STR_PAD_LEFT);
+            $result[] = [
+                'month'    => $period,
+                'personal' => round((float) $row->annual_rate, 2),
+                'tufe'     => $tufeRow ? round((float) $tufeRow->annual_change_rate, 2) : null,
+            ];
+        }
+
+        return array_reverse($result);
+    }
+
+    /**
+     * Returns the current personal inflation snapshot.
+     * ['personal_rate', 'tufe_rate', 'diff', 'breakdown', ...]
+     */
+    public function getPersonalInflation(User $user): array
+    {
+        $tufeRate = (float) (InflationCategoryRate::where('tuik_category_slug', 'genel')
+            ->orderByDesc('period_year')->orderByDesc('period_month')
+            ->value('annual_change_rate') ?? 37.86);
+
+        try {
+            $result = app(PersonalInflationService::class)->calculate($user);
+            if (! isset($result['tufe_rate'])) {
+                $result['tufe_rate'] = $tufeRate;
+            }
+            return $result;
+        } catch (\Throwable) {
+            return [
+                'personal_rate' => null,
+                'tufe_rate'     => $tufeRate,
+                'diff'          => null,
+                'breakdown'     => [],
+                'period'        => null,
+            ];
+        }
     }
 
     /** Returns latest health score record with component breakdown */

@@ -3,6 +3,7 @@
 namespace App\Services\Gemini;
 
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -10,11 +11,19 @@ class GeminiClient
 {
     private const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-    private string $apiKey;
+    /** @var string[] */
+    private array $apiKeys;
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.api_key', '');
+        $keys = config('services.gemini.api_keys', []);
+
+        if (empty($keys)) {
+            $single = config('services.gemini.api_key', '');
+            $keys   = $single ? [$single] : [];
+        }
+
+        $this->apiKeys = array_values(array_filter($keys));
     }
 
     /**
@@ -22,10 +31,8 @@ class GeminiClient
      * Returns parsed JSON body (as array) when responseSchema is set,
      * or raw text otherwise.
      *
-     * @param  array<string, mixed>  $contents    Gemini contents array
-     * @param  string|null           $systemPrompt
-     * @param  array<string, mixed>  $schema       responseSchema for structured output
-     * @param  float                 $temperature
+     * @param  array<string, mixed>  $contents
+     * @param  array<string, mixed>  $schema    responseSchema for structured output
      */
     public function generate(
         GeminiModelEnum $model,
@@ -35,9 +42,9 @@ class GeminiClient
         float $temperature = 0.7,
     ): array {
         $body = [
-            'contents'        => $contents,
+            'contents'         => $contents,
             'generationConfig' => array_filter([
-                'temperature'    => $temperature,
+                'temperature'      => $temperature,
                 'responseMimeType' => $schema ? 'application/json' : null,
                 'responseSchema'   => $schema ?: null,
             ]),
@@ -56,7 +63,6 @@ class GeminiClient
 
     /**
      * Returns a Generator that yields text chunks as they stream in.
-     * Each yielded value is a string delta.
      */
     public function stream(
         GeminiModelEnum $model,
@@ -73,7 +79,8 @@ class GeminiClient
             $body['systemInstruction'] = ['parts' => [['text' => $systemPrompt]]];
         }
 
-        $url = self::BASE . "/{$model->value}:streamGenerateContent?alt=sse&key={$this->apiKey}";
+        $key = $this->pickKey();
+        $url = self::BASE . "/{$model->value}:streamGenerateContent?alt=sse&key={$key}";
 
         $response = Http::withHeaders(['Accept' => 'text/event-stream'])
             ->timeout(120)
@@ -96,27 +103,82 @@ class GeminiClient
 
     // ──────────────────────────────────────────────────────────────────────
 
+    /**
+     * Picks the next available API key via round-robin, skipping keys that
+     * are in a 60-second cooldown due to rate-limit errors.
+     */
+    private function pickKey(): string
+    {
+        if (empty($this->apiKeys)) {
+            throw new RuntimeException('No GEMINI_API_KEY(S) configured.');
+        }
+
+        $count = count($this->apiKeys);
+
+        // Round-robin counter stored in cache
+        $idx = (int) Cache::get('gemini_key_idx', 0);
+
+        for ($attempt = 0; $attempt < $count; $attempt++) {
+            $key       = $this->apiKeys[$idx % $count];
+            $cooldown  = Cache::get("gemini_key_cooldown_{$idx}");
+
+            if (! $cooldown) {
+                // Advance for next call
+                Cache::put('gemini_key_idx', ($idx + 1) % $count, now()->addHour());
+                return $key;
+            }
+
+            $idx = ($idx + 1) % $count;
+        }
+
+        // All keys on cooldown — use first key anyway
+        Cache::put('gemini_key_idx', 1 % $count, now()->addHour());
+        return $this->apiKeys[0];
+    }
+
+    private function cooldownKey(int $idx): void
+    {
+        Cache::put("gemini_key_cooldown_{$idx}", true, now()->addSeconds(60));
+    }
+
     private function post(string $method, array $body): Response
     {
-        if (! $this->apiKey) {
-            throw new RuntimeException('GEMINI_API_KEY is not set.');
+        if (empty($this->apiKeys)) {
+            throw new RuntimeException('No GEMINI_API_KEY(S) configured.');
         }
 
-        $url      = self::BASE . "/{$method}?key={$this->apiKey}";
-        $response = Http::timeout(60)->retry(2, 1000)->post($url, $body);
+        $count    = count($this->apiKeys);
+        $startIdx = (int) Cache::get('gemini_key_idx', 0);
 
-        if (! $response->successful()) {
-            throw new RuntimeException("Gemini API error {$response->status()}: {$response->body()}");
+        for ($attempt = 0; $attempt < $count; $attempt++) {
+            $idx = ($startIdx + $attempt) % $count;
+            $key = $this->apiKeys[$idx];
+
+            $url      = self::BASE . "/{$method}?key={$key}";
+            $response = Http::timeout(60)->post($url, $body);
+
+            if ($response->status() === 429) {
+                $this->cooldownKey($idx);
+                continue;
+            }
+
+            if (! $response->successful()) {
+                throw new RuntimeException("Gemini API error {$response->status()}: {$response->body()}");
+            }
+
+            // Success — advance the index for next call
+            Cache::put('gemini_key_idx', ($idx + 1) % $count, now()->addHour());
+            return $response;
         }
 
-        return $response;
+        throw new RuntimeException('All Gemini API keys are rate-limited. Retry in 60s.');
     }
 
     private function parseResponse(Response $response, bool $jsonMode): array
     {
-        $data     = $response->json();
-        $text     = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
-        $usage    = $data['usageMetadata'] ?? [];
+        $data  = $response->json();
+        $text  = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        $usage = $data['usageMetadata'] ?? [];
 
         $content = $jsonMode ? (json_decode($text, true) ?? []) : ['text' => $text];
 

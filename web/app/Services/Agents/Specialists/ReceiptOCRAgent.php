@@ -8,7 +8,7 @@ use App\Services\Gemini\GeminiModelEnum;
 class ReceiptOCRAgent extends AbstractAgent
 {
     public function getName(): string { return 'receipt_ocr'; }
-    protected function getModel(): GeminiModelEnum { return GeminiModelEnum::VISION; }
+    protected function getModel(): GeminiModelEnum { return GeminiModelEnum::vision(); }
 
     protected function getSystemPrompt(): string
     {

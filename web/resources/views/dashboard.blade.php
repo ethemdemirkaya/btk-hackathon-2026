@@ -145,6 +145,86 @@
     </div>
   </div>
 
+  {{-- ══ Kişisel Enflasyon Kartı (Killer Feature) ═══════════════════════ --}}
+  <div class="card mb-6 border-warning">
+    <div class="card-body">
+      <div class="row align-items-center g-4">
+        <div class="col-md-1 text-center d-none d-md-block">
+          <i class="icon-base ti tabler-flame icon-48px text-warning"></i>
+        </div>
+        <div class="col-md-5">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h5 class="fw-bold mb-0">Kişisel Enflasyonun</h5>
+            <span class="badge bg-warning text-dark">TÜİK Verisi</span>
+          </div>
+          @if($personalInflation['personal_rate'] !== null)
+            <div class="d-flex align-items-end gap-3">
+              <div class="display-5 fw-bold text-danger">%{{ number_format($personalInflation['personal_rate'], 1, ',', '.') }}</div>
+              <div class="mb-2">
+                <div class="text-muted small">TÜFE: <strong class="text-warning">%{{ number_format($personalInflation['tufe_rate'], 2, ',', '.') }}</strong></div>
+                @if($personalInflation['diff'] !== null)
+                  <div class="{{ $personalInflation['diff'] > 0 ? 'text-danger' : 'text-success' }} fw-semibold small">
+                    {{ $personalInflation['diff'] > 0 ? '+' : '' }}%{{ number_format($personalInflation['diff'], 2, ',', '.') }} fark
+                  </div>
+                @endif
+              </div>
+            </div>
+            <p class="text-muted small mb-0">
+              Harcama alışkanlıklarına göre hesaplanan yıllık enflasyon oranın.
+              @if($personalInflation['diff'] > 0)
+                Genel enflasyonun <strong>{{ number_format($personalInflation['diff'], 1, ',', '.') }} puan üstünde</strong> etkileniyorsun.
+              @else
+                Genel enflasyonun altında etkileniyorsun — finansal kararların etkili.
+              @endif
+            </p>
+          @else
+            <div class="display-5 fw-bold text-muted">
+              TÜFE: %{{ number_format($personalInflation['tufe_rate'], 2, ',', '.') }}
+            </div>
+            <p class="text-muted small mb-0 mt-1">
+              Harcamalarını kategorize ettikten sonra <strong>kişisel enflasyonun</strong> hesaplanacak.
+              Genel enflasyon manşet TÜFE: %{{ number_format($personalInflation['tufe_rate'], 2, ',', '.') }}.
+            </p>
+          @endif
+        </div>
+        @if($personalInflation['personal_rate'] !== null && count($personalInflation['breakdown']) > 0)
+        <div class="col-md-6">
+          <div class="small fw-semibold text-muted mb-2">Harcama Ağırlığı × Enflasyon (En Etkili 4)</div>
+          @foreach(array_slice($personalInflation['breakdown'], 0, 4) as $b)
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="text-muted" style="width:130px;font-size:.78rem;">{{ $b['category'] }}</span>
+            <div class="flex-grow-1 progress" style="height:5px;">
+              <div class="progress-bar bg-warning" style="width:{{ min(100, $b['weight_pct']) }}%"></div>
+            </div>
+            <span style="font-size:.78rem;width:48px;" class="text-end text-muted">%{{ number_format($b['weight_pct'], 0) }}</span>
+            <span style="font-size:.78rem;width:52px;" class="text-end fw-semibold text-danger">%{{ number_format($b['tuik_rate'], 1, ',', '.') }}</span>
+          </div>
+          @endforeach
+        </div>
+        @else
+        <div class="col-md-6">
+          <div class="small fw-semibold text-muted mb-2">Güncel TÜİK Kategori Enflasyonları</div>
+          @php
+            $tuikSample = [
+              'Konut' => 59.08, 'Eğitim' => 75.33, 'Lokanta' => 43.51,
+              'Alkol/Sigara' => 42.30, 'Genel TÜFE' => 37.86,
+            ];
+          @endphp
+          @foreach($tuikSample as $cat => $rate)
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="text-muted" style="width:130px;font-size:.78rem;">{{ $cat }}</span>
+            <div class="flex-grow-1 progress" style="height:5px;">
+              <div class="progress-bar bg-warning" style="width:{{ min(100, $rate) }}%"></div>
+            </div>
+            <span style="font-size:.78rem;width:52px;" class="text-end fw-semibold text-danger">%{{ number_format($rate, 2, ',', '.') }}</span>
+          </div>
+          @endforeach
+        </div>
+        @endif
+      </div>
+    </div>
+  </div>
+
   {{-- ══ Smart Alerts ═════════════════════════════════════════════════════ --}}
   @if(count($smartAlerts) > 0)
   <div class="row g-4 mb-6">

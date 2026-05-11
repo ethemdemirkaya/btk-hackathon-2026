@@ -22,34 +22,36 @@ class DashboardController extends Controller
             // Recompute health score if stale (>24 h) or missing
             $this->healthScorer->getOrCompute($user);
 
-            $summary         = $this->service->getSummary($user);
-            $cashFlow        = $this->service->getCashFlowData($user);
-            $categorySpend   = $this->service->getCategorySpending($user);
-            $recentTxns      = $this->service->getRecentTransactions($user);
-            $bankConnections = $this->service->getBankConnections($user);
-            $inflationData   = $this->service->getInflationComparison($user);
-            $smartAlerts     = $this->service->getSmartAlerts($user);
-            $aiInsights      = $this->service->getRecentInsights($user);
-            $budgetSummary   = $this->service->getBudgetSummary($user);
-            $healthDetails   = $this->service->getHealthScoreDetails($user);
-        } catch (\Throwable) {
+            $summary          = $this->service->getSummary($user);
+            $cashFlow         = $this->service->getCashFlowData($user);
+            $categorySpend    = $this->service->getCategorySpending($user);
+            $recentTxns       = $this->service->getRecentTransactions($user);
+            $bankConnections  = $this->service->getBankConnections($user);
+            $inflationData    = $this->service->getInflationComparison($user);
+            $personalInflation= $this->service->getPersonalInflation($user);
+            $smartAlerts      = $this->service->getSmartAlerts($user);
+            $aiInsights       = $this->service->getRecentInsights($user);
+            $budgetSummary    = $this->service->getBudgetSummary($user);
+            $healthDetails    = $this->service->getHealthScoreDetails($user);
+        } catch (\Throwable $e) {
             // DB not yet migrated or no data — use empty state
-            $summary         = ['total_balance' => 0, 'total_card_debt' => 0, 'total_loan' => 0, 'net_worth' => 0, 'health_score' => null];
-            $cashFlow        = [];
-            $categorySpend   = [];
-            $recentTxns      = collect();
-            $bankConnections = collect();
-            $inflationData   = [];
-            $smartAlerts     = [];
-            $aiInsights      = collect();
-            $budgetSummary   = [];
-            $healthDetails   = null;
+            $summary          = ['total_balance' => 0, 'total_card_debt' => 0, 'total_loan' => 0, 'net_worth' => 0, 'health_score' => null];
+            $cashFlow         = [];
+            $categorySpend    = [];
+            $recentTxns       = collect();
+            $bankConnections  = collect();
+            $inflationData    = [];
+            $personalInflation= ['personal_rate' => null, 'tufe_rate' => 37.86, 'diff' => null, 'breakdown' => [], 'period' => null];
+            $smartAlerts      = [];
+            $aiInsights       = collect();
+            $budgetSummary    = [];
+            $healthDetails    = null;
         }
 
         return view('dashboard', compact(
             'summary', 'cashFlow', 'categorySpend',
-            'recentTxns', 'bankConnections', 'inflationData', 'smartAlerts', 'aiInsights',
-            'budgetSummary', 'healthDetails'
+            'recentTxns', 'bankConnections', 'inflationData', 'personalInflation',
+            'smartAlerts', 'aiInsights', 'budgetSummary', 'healthDetails'
         ));
     }
 }

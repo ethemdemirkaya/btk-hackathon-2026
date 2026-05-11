@@ -36,7 +36,11 @@ return [
     ],
 
     'gemini' => [
-        'api_key' => env('GEMINI_API_KEY', ''),
+        'api_key'  => env('GEMINI_API_KEY', ''),
+        'api_keys' => array_filter(array_map(
+            'trim',
+            explode(',', env('GEMINI_API_KEYS', env('GEMINI_API_KEY', '')))
+        )),
     ],
 
     'tuik_evds' => [
