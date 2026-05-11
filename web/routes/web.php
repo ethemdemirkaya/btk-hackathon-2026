@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
     // FX / Gold Alerts
     Route::get('/fx-alerts', [FxAlertController::class, 'index'])->name('fx-alerts.index');
     Route::get('/fx-alerts/live', [FxAlertController::class, 'liveRates'])->name('fx-alerts.live');
+    Route::get('/fx-alerts/market', [FxAlertController::class, 'marketRates'])->name('fx-alerts.market');
     Route::post('/fx-alerts', [FxAlertController::class, 'store'])->name('fx-alerts.store');
     Route::delete('/fx-alerts/{id}', [FxAlertController::class, 'destroy'])->name('fx-alerts.destroy');
 
