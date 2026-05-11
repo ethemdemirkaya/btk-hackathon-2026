@@ -70,6 +70,14 @@
       .progress-bar-gradient-danger  { background: linear-gradient(90deg,#EA5455,#F08182); }
       .progress-bar-gradient-primary { background: linear-gradient(90deg,#7367F0,#9E95F5); }
       .progress-bar-gradient-info    { background: linear-gradient(90deg,#00CFE8,#1CE7FF); }
+      /* ── Inflation card — dark mode aware ────────────── */
+      .inflation-card {
+        background: linear-gradient(135deg, #fff8ee 0%, #fff3e0 100%) !important;
+      }
+      [data-bs-theme="dark"] .inflation-card {
+        background: rgba(255, 159, 67, 0.08) !important;
+        border: 1px solid rgba(255, 159, 67, 0.18) !important;
+      }
     </style>
   </x-slot>
 
@@ -273,7 +281,7 @@
   @endif
 
   {{-- ══ KİŞİSEL ENFLASYON ══════════════════════════════════════════════════ --}}
-  <div class="card mb-6 border-0 shadow-sm" style="background:linear-gradient(135deg,#fff8ee 0%,#fff3e0 100%);">
+  <div class="card mb-6 border-0 shadow-sm inflation-card">
     <div class="card-body">
       <div class="row align-items-center g-4">
         <div class="col-auto d-none d-lg-flex">
