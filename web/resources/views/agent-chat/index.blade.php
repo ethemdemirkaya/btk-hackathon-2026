@@ -2,8 +2,6 @@
   <x-slot name="title">Finansal Zeka Merkezi</x-slot>
 
   <x-slot name="pageCss">
-    {{-- Markdown renderer (lightweight) --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css">
   <style>
     /* ── Markdown content inside analysis cards ─────────────────────────── */
     .markdown-body {
@@ -47,6 +45,15 @@
     }
     .markdown-body hr { border-color: var(--bs-border-color) !important; }
     .markdown-body p { margin-bottom: .5rem !important; }
+
+    /* ── Action proposal forms ───────────────────────────────────────────── */
+    .action-proposal-form { width: 100%; }
+    .agent-action-form {
+      padding: .6rem .75rem; border-radius: 8px; margin-top: .5rem;
+      background: var(--bs-secondary-bg); border: 1px solid var(--bs-border-color);
+    }
+    .agent-action-form .form-label-sm { font-size: .72rem; font-weight: 600; color: var(--bs-secondary-color); }
+    .action-result .alert { border-radius: 8px; font-size: .78rem; }
 
     /* ── Command bar ──────────────────────────────────────────────────────── */
     .command-bar {
@@ -471,32 +478,96 @@
   </div>
 
   <x-slot name="pageJs">
-    <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
   <script>
   (function () {
     'use strict';
 
-    // ── Marked.js config ─────────────────────────────────────────────────────
-    marked.setOptions({ breaks: true, gfm: true });
+    // ── Inline markdown parser (no CDN) ──────────────────────────────────────
+    function hesc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function parseMarkdown(raw) {
+      if (!raw) return '';
+      // Protect fenced code blocks
+      const blocks = [];
+      let t = raw.replace(/```([\w]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+        blocks.push(`<pre><code>${hesc(code.trim())}</code></pre>`);
+        return '\x02B' + (blocks.length - 1) + '\x03';
+      });
+      // Escape HTML in non-code parts
+      t = t.split(/(\x02B\d+\x03)/).map(p =>
+        /^\x02B\d+\x03$/.test(p) ? p : hesc(p)
+      ).join('');
+      // Headers
+      t = t.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+      t = t.replace(/^##\s+(.+)$/gm,  '<h2>$1</h2>');
+      t = t.replace(/^#\s+(.+)$/gm,   '<h1>$1</h1>');
+      // Horizontal rule
+      t = t.replace(/^[-*]{3,}$/gm, '<hr>');
+      // Bold + italic
+      t = t.replace(/\*\*\*([^*\n]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+      t = t.replace(/\*\*([^*\n]+)\*\*/g,     '<strong>$1</strong>');
+      t = t.replace(/__([^_\n]+)__/g,          '<strong>$1</strong>');
+      t = t.replace(/\*([^*\n]+)\*/g,          '<em>$1</em>');
+      t = t.replace(/_([^_\n]+)_/g,            '<em>$1</em>');
+      // Inline code
+      t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+      // Blockquotes (&gt; because HTML is already escaped)
+      t = t.replace(/^&gt;\s*(.+)$/gm, '<blockquote>$1</blockquote>');
+      // Lists
+      const lines = t.split('\n'), out = [];
+      let inUl = false, inOl = false;
+      for (const ln of lines) {
+        const ul = ln.match(/^[-*+]\s+(.+)/);
+        const ol = ln.match(/^\d+\.\s+(.+)/);
+        if (ul) {
+          if (inOl) { out.push('</ol>'); inOl = false; }
+          if (!inUl) { out.push('<ul>'); inUl = true; }
+          out.push(`<li>${ul[1]}</li>`);
+        } else if (ol) {
+          if (inUl) { out.push('</ul>'); inUl = false; }
+          if (!inOl) { out.push('<ol>'); inOl = true; }
+          out.push(`<li>${ol[1]}</li>`);
+        } else {
+          if (inUl) { out.push('</ul>'); inUl = false; }
+          if (inOl) { out.push('</ol>'); inOl = false; }
+          out.push(ln);
+        }
+      }
+      if (inUl) out.push('</ul>');
+      if (inOl) out.push('</ol>');
+      t = out.join('\n');
+      // Paragraphs
+      t = t.split(/\n{2,}/).map(para => {
+        const p = para.trim();
+        if (!p) return '';
+        if (/^<(h[1-6]|ul|ol|blockquote|hr|pre|\x02)/.test(p)) return p;
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      }).filter(Boolean).join('\n');
+      // Restore code blocks
+      t = t.replace(/\x02B(\d+)\x03/g, (_, i) => blocks[+i]);
+      return t;
+    }
 
     function renderMarkdown(el) {
       const raw = el.getAttribute('data-raw');
       if (!raw) return;
-      el.innerHTML = marked.parse(raw);
+      el.innerHTML = parseMarkdown(raw);
     }
 
-    // Render all existing markdown bodies on page load
     document.querySelectorAll('.markdown-body[data-raw]').forEach(renderMarkdown);
 
     // ── Constants ────────────────────────────────────────────────────────────
-    const sessionId = document.getElementById('session-id').value;
-    const csrf      = document.querySelector('meta[name=csrf-token]').content;
-    const feed      = document.getElementById('results-feed');
+    const sessionId  = document.getElementById('session-id').value;
+    const csrf       = document.querySelector('meta[name=csrf-token]').content;
+    const feed       = document.getElementById('results-feed');
     const emptyState = document.getElementById('empty-state');
     const compactBar = document.getElementById('compact-bar');
 
-    const POLL_URL = '/chat/poll/'; // + message_id
-    const RUNS_URL = '{{ route("agent-chat.runs") }}';
+    const POLL_URL   = '/chat/poll/';
+    const RUNS_URL   = '{{ route("agent-chat.runs") }}';
+    const ACTION_URL = '{{ route("agent-chat.action") }}';
 
     const agentLabelMap = {
       purchase_planner:'Satın Alma', budget_advisor:'Bütçe',
@@ -514,51 +585,130 @@
     };
 
     // ── Action detection ─────────────────────────────────────────────────────
-    // Detect actionable keywords in AI response and generate action buttons
+    // Returns typed actions: { type:'create_goal'|'create_budget'|'link', ... }
     function detectActions(text) {
       const actions = [];
-      const lower = text.toLowerCase();
-      if (/hedef\s*(belirle|ekle|koy|oluştur)/i.test(text) || /yeni hedef/i.test(text))
-        actions.push({ label: 'Hedef Ekle', icon: 'tabler-target', color: 'success', href: '/goals' });
-      if (/bütçe\s*(oluştur|ekle|belirle|kur)/i.test(text) || /bütçe\s*ayarla/i.test(text))
-        actions.push({ label: 'Bütçe Kur', icon: 'tabler-chart-pie', color: 'primary', href: '/budgets' });
+
+      function extractAmount() {
+        const m = text.match(/([\d]{1,3}(?:[.]\d{3})*(?:[,]\d{1,2})?|\d+)\s*TL/);
+        if (!m) return null;
+        const n = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+        return isNaN(n) ? null : n;
+      }
+
+      if (/hedef\s*(oluştur|koy|ekle|belirle|oluşturay|kuray)/i.test(text)
+          || /tasarruf\s*hedef/i.test(text) || /birikim\s*hedef/i.test(text)) {
+        actions.push({ type:'create_goal', label:'Hedef Oluştur',
+          icon:'tabler-target', color:'success', suggestedAmount: extractAmount() });
+      }
+      if (/bütçe\s*(oluştur|belirle|kur|ayarla|limit|koyalım)/i.test(text)) {
+        actions.push({ type:'create_budget', label:'Bütçe Kur',
+          icon:'tabler-chart-pie', color:'primary', suggestedAmount: extractAmount() });
+      }
       if (/abonelik\s*(iptal|kaldır|sil)/i.test(text))
-        actions.push({ label: 'Abonelikleri Gör', icon: 'tabler-repeat', color: 'warning', href: '/subscriptions' });
-      if (/borç\s*(öde|kapat|azalt)/i.test(text) || /kart\s*borcunu/i.test(text))
-        actions.push({ label: 'Kartları Gör', icon: 'tabler-credit-card', color: 'danger', href: '/cards' });
-      if (/simülasyon|simülatör|hesapla/i.test(text))
-        actions.push({ label: 'Simülatörü Aç', icon: 'tabler-calculator', color: 'info', href: '/simulator' });
-      if (/işlemlere\s*bak|işlemleri\s*incele/i.test(text))
-        actions.push({ label: 'İşlemler', icon: 'tabler-arrows-exchange', color: 'secondary', href: '/transactions' });
-      if (/yatırım|portföy/i.test(lower))
-        actions.push({ label: 'Yatırımlar', icon: 'tabler-trending-up', color: 'success', href: '/investments' });
+        actions.push({ type:'link', label:'Abonelikleri Gör', icon:'tabler-repeat', color:'warning', href:'/subscriptions' });
+      if (/borç\s*(öde|kapat|azalt)/i.test(text) || /kart\s*borcun/i.test(text))
+        actions.push({ type:'link', label:'Kartları Gör', icon:'tabler-credit-card', color:'danger', href:'/cards' });
+      if (/simülasyon|simülatör/i.test(text))
+        actions.push({ type:'link', label:'Simülatörü Aç', icon:'tabler-calculator', color:'info', href:'/simulator' });
+      if (/yatırım|portföy/i.test(text))
+        actions.push({ type:'link', label:'Yatırımlar', icon:'tabler-trending-up', color:'success', href:'/investments' });
+
       return actions;
+    }
+
+    // ── Action form HTML builders ─────────────────────────────────────────────
+    let _cardIdx = 0;
+
+    function buildActionForm(action) {
+      if (action.type === 'create_goal') {
+        return `<div class="agent-action-form" data-action="create_goal">
+          <div class="d-flex gap-2 flex-wrap align-items-end">
+            <div>
+              <label class="form-label-sm mb-1 d-block">Hedef adı</label>
+              <input type="text" class="form-control form-control-sm action-field" name="name"
+                placeholder="Örn: Tatil Fonu" style="min-width:130px;max-width:180px;">
+            </div>
+            <div>
+              <label class="form-label-sm mb-1 d-block">Tutar (TL)</label>
+              <input type="number" class="form-control form-control-sm action-field" name="target_amount"
+                value="${action.suggestedAmount||''}" placeholder="15000" min="1" style="min-width:90px;max-width:130px;">
+            </div>
+            <div>
+              <label class="form-label-sm mb-1 d-block">Aylık katkı</label>
+              <input type="number" class="form-control form-control-sm action-field" name="monthly_contribution"
+                placeholder="1000" min="0" style="min-width:90px;max-width:130px;">
+            </div>
+            <button type="button" class="btn btn-sm btn-success execute-action-btn" style="font-size:.75rem;">
+              <i class="icon-base ti tabler-check me-1"></i>Oluştur
+            </button>
+            <button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>
+          </div>
+          <div class="action-result mt-2" style="display:none;"></div>
+        </div>`;
+      }
+      if (action.type === 'create_budget') {
+        const cats = ['Market','Restoran & Kafe','Online Yemek','Ulaşım','Yakıt','Faturalar',
+          'Sağlık','Eğitim','Eğlence','Giyim & Aksesuar','Ev & Yaşam','Elektronik',
+          'Dijital Abonelik','Spor','Diğer'];
+        const opts = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        return `<div class="agent-action-form" data-action="create_budget">
+          <div class="d-flex gap-2 flex-wrap align-items-end">
+            <div>
+              <label class="form-label-sm mb-1 d-block">Kategori</label>
+              <select class="form-select form-select-sm action-field" name="category_name" style="min-width:150px;">${opts}</select>
+            </div>
+            <div>
+              <label class="form-label-sm mb-1 d-block">Aylık limit (TL)</label>
+              <input type="number" class="form-control form-control-sm action-field" name="amount"
+                value="${action.suggestedAmount||''}" placeholder="2000" min="1" style="min-width:90px;max-width:130px;">
+            </div>
+            <button type="button" class="btn btn-sm btn-primary execute-action-btn" style="font-size:.75rem;">
+              <i class="icon-base ti tabler-check me-1"></i>Bütçe Kur
+            </button>
+            <button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>
+          </div>
+          <div class="action-result mt-2" style="display:none;"></div>
+        </div>`;
+      }
+      return '';
+    }
+
+    function buildActionsHtml(actions) {
+      if (!actions.length) return '';
+      const id = 'ac-' + (++_cardIdx);
+      const btns = actions.map((a, i) => {
+        if (a.type === 'link') {
+          return `<a href="${a.href}" class="btn btn-sm btn-outline-${a.color}" style="font-size:.72rem;padding:.2rem .6rem;">
+            <i class="icon-base ti ${a.icon} me-1"></i>${a.label}</a>`;
+        }
+        const fId = `${id}-f${i}`;
+        return `<button type="button"
+            class="btn btn-sm btn-outline-${a.color} action-toggle-btn"
+            style="font-size:.72rem;padding:.2rem .6rem;" data-form="${fId}">
+            <i class="icon-base ti ${a.icon} me-1"></i>${a.label}
+          </button>
+          <div id="${fId}" class="action-proposal-form" style="display:none;">${buildActionForm(a)}</div>`;
+      }).join('');
+      return `<div class="ac-actions">
+        <span class="action-label"><i class="icon-base ti tabler-sparkles icon-12px me-1"></i>Ajan önerisi:</span>
+        <div class="d-flex flex-wrap gap-2 align-items-start flex-grow-1">${btns}</div>
+      </div>`;
     }
 
     // ── Build analysis card ───────────────────────────────────────────────────
     function buildAnalysisCard(query, content, agentsUsed, timestamp) {
       const now = timestamp || new Date().toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
       const badges = (agentsUsed || []).map(a => {
-        const c   = agentColorMap[a]  || 'secondary';
-        const lbl = agentLabelMap[a]  || a;
+        const c   = agentColorMap[a] || 'secondary';
+        const lbl = agentLabelMap[a] || a;
         return `<span class="ac-agent-badge bg-label-${c} text-${c}">${lbl}</span>`;
       }).join('');
-
       const qLabel = query
-        ? `<span class="query-label" title="${escHtml(query)}">
+        ? `<span class="query-label" title="${escAttr(query)}">
              <i class="icon-base ti tabler-message-2 icon-12px me-1"></i>${escHtml(query.length > 60 ? query.slice(0,60)+'…' : query)}
            </span>`
         : '';
-
-      const actions = detectActions(content);
-      const actionsHtml = actions.length
-        ? `<div class="ac-actions">
-             <span class="action-label"><i class="icon-base ti tabler-player-play icon-12px me-1"></i>Ajan önerisi:</span>
-             ${actions.map(a => `<a href="${a.href}" class="btn btn-sm btn-outline-${a.color}" style="font-size:.72rem;padding:.2rem .6rem;">
-               <i class="icon-base ti ${a.icon} me-1"></i>${a.label}</a>`).join('')}
-           </div>`
-        : '';
-
       const el = document.createElement('div');
       el.className = 'analysis-card mb-4';
       el.innerHTML = `
@@ -568,14 +718,10 @@
           <span class="ac-time">${now}</span>
         </div>
         <div class="ac-body">
-          <div class="markdown-body" data-raw="${escAttr(content)}"></div>
+          <div class="markdown-body"></div>
         </div>
-        ${actionsHtml}`;
-
-      // Render markdown in the new card
-      const mdEl = el.querySelector('.markdown-body');
-      if (mdEl) renderMarkdown(mdEl);
-
+        ${buildActionsHtml(detectActions(content))}`;
+      el.querySelector('.markdown-body').innerHTML = parseMarkdown(content);
       return el;
     }
 
@@ -612,9 +758,18 @@
       emptyState?.classList.add('d-none');
       compactBar.classList.add('visible');
     }
-
-    // Check on load if there are results
     if (!emptyState || emptyState.classList.contains('d-none')) showResultsMode();
+
+    // ── Post-load: inject action proposals into Blade-rendered history cards ──
+    document.querySelectorAll('.analysis-card .markdown-body[data-raw]').forEach(mdEl => {
+      const raw = mdEl.getAttribute('data-raw');
+      if (!raw) return;
+      const actions = detectActions(raw);
+      if (!actions.length) return;
+      const card = mdEl.closest('.analysis-card');
+      if (!card || card.querySelector('.ac-actions')) return;
+      card.insertAdjacentHTML('beforeend', buildActionsHtml(actions));
+    });
 
     // ── Polling running skeletons on page load ────────────────────────────────
     document.querySelectorAll('.skeleton-card[data-message-id]').forEach(sk => {
@@ -630,7 +785,6 @@
             headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf }
           });
           const d = await r.json();
-
           if (d.status === 'completed' || d.status === 'error') {
             clearInterval(timer);
             const card = buildAnalysisCard(query, d.reply || '(Yanıt alınamadı)', d.agents_used || []);
@@ -659,7 +813,6 @@
         badge.innerHTML = 'Beklemede';
       }
     }
-
     function resetAllAgents() {
       document.querySelectorAll('.agent-state').forEach(el => {
         el.className = 'agent-status-badge bg-label-secondary agent-state';
@@ -668,11 +821,7 @@
       const gs = document.querySelector('.agent-global-status');
       if (gs) { gs.className = 'badge bg-label-success agent-global-status'; gs.textContent = 'Hazır'; }
     }
-
-    function resetAgentsAfter(ms) {
-      setTimeout(resetAllAgents, ms);
-    }
-
+    function resetAgentsAfter(ms) { setTimeout(resetAllAgents, ms); }
     function setGlobalRunning() {
       const gs = document.querySelector('.agent-global-status');
       if (gs) { gs.className = 'badge bg-label-warning agent-global-status'; gs.textContent = 'Çalışıyor'; }
@@ -692,7 +841,6 @@
         } catch (_) {}
       }, 3000);
     }
-
     function stopRunsPolling() { clearInterval(runsTimer); runsTimer = null; }
 
     function updateRunsList(runs) {
@@ -714,57 +862,100 @@
       }).join('');
     }
 
+    // ── Execute agent action via AJAX ─────────────────────────────────────────
+    async function executeAgentAction(action, data, formEl) {
+      const resultEl = formEl.querySelector('.action-result');
+      const btn      = formEl.querySelector('.execute-action-btn');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:.8rem;height:.8rem;"></span>'; }
+      try {
+        const resp = await fetch(ACTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
+          body: JSON.stringify({ action, data }),
+        });
+        const d = await resp.json();
+        if (resp.ok && d.status === 'ok') {
+          if (resultEl) {
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = `<div class="alert alert-success py-2 px-3 mb-0">
+              <i class="icon-base ti tabler-circle-check me-1"></i>${escHtml(d.message || 'Başarıyla oluşturuldu!')}
+              ${d.redirect ? `&nbsp;<a href="${d.redirect}" class="alert-link fw-semibold">Görüntüle →</a>` : ''}
+            </div>`;
+          }
+          if (btn) btn.style.display = 'none';
+        } else {
+          if (resultEl) {
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0">${escHtml(d.message || 'Bir hata oluştu.')}</div>`;
+          }
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="icon-base ti tabler-refresh me-1"></i>Tekrar Dene'; }
+        }
+      } catch (_) {
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0">Bağlantı hatası.</div>`; }
+        if (btn) { btn.disabled = false; }
+      }
+    }
+
+    // ── Event delegation for action forms ────────────────────────────────────
+    document.addEventListener('click', function (e) {
+      const toggleBtn = e.target.closest('.action-toggle-btn');
+      if (toggleBtn) {
+        const form = document.getElementById(toggleBtn.dataset.form);
+        if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        return;
+      }
+      if (e.target.closest('.cancel-action-btn')) {
+        const wrapper = e.target.closest('.action-proposal-form');
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+      }
+      const execBtn = e.target.closest('.execute-action-btn');
+      if (execBtn) {
+        const formEl = execBtn.closest('.agent-action-form');
+        if (!formEl) return;
+        const data = {};
+        formEl.querySelectorAll('.action-field').forEach(f => { data[f.name] = f.value; });
+        executeAgentAction(formEl.dataset.action, data, formEl);
+      }
+    });
+
     // ── Send message ──────────────────────────────────────────────────────────
     async function sendMessage(query) {
       if (!query.trim()) return;
-
-      // Clear all inputs
       ['cmd-input-hero','cmd-input-top'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
+        const el = document.getElementById(id); if (el) el.value = '';
       });
       disableSendButtons(true);
       showResultsMode();
       resetAllAgents();
       setGlobalRunning();
-
       const skeleton = buildSkeleton(query);
       feed.insertBefore(skeleton, feed.firstChild);
       startRunsPolling();
-
       try {
         const resp = await fetch('{{ route("agent-chat.send") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
           body: JSON.stringify({ message: query, session_id: sessionId }),
         });
-
         const data = await resp.json();
         stopRunsPolling();
-
         if (data.status === 'pending' && data.message_id) {
-          // Job queued — attach message_id to skeleton and start polling
           skeleton.id = `skeleton-${data.message_id}`;
           skeleton.setAttribute('data-message-id', data.message_id);
           startPolling(data.message_id, skeleton, query);
-          // Re-enable UI immediately — user can navigate away
           disableSendButtons(false);
           return;
         }
-
-        // Fallback: synchronous response (QUEUE_CONNECTION=sync)
         skeleton.remove();
-        const content = data.reply || '(Yanıt alınamadı)';
-        const card = buildAnalysisCard(query, content, data.agents_used || []);
+        const card = buildAnalysisCard(query, data.reply || '(Yanıt alınamadı)', data.agents_used || []);
         feed.insertBefore(card, feed.firstChild);
         if (data.agents_used?.length) data.agents_used.forEach(a => setAgentState(a, 'done'));
         resetAgentsAfter(3000);
-
-      } catch (err) {
+      } catch (_) {
         stopRunsPolling();
         skeleton.remove();
-        const card = buildAnalysisCard(query, 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.', []);
-        feed.insertBefore(card, feed.firstChild);
+        feed.insertBefore(buildAnalysisCard(query, 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.', []), feed.firstChild);
       } finally {
         disableSendButtons(false);
       }
@@ -772,19 +963,17 @@
 
     function disableSendButtons(disabled) {
       ['cmd-send-hero','cmd-send-top'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.disabled = disabled;
+        const btn = document.getElementById(id); if (btn) btn.disabled = disabled;
       });
     }
 
-    // ── Wire up all send buttons / inputs ─────────────────────────────────────
+    // ── Wire up send buttons / inputs ─────────────────────────────────────────
     ['hero','top'].forEach(suffix => {
       const input = document.getElementById(`cmd-input-${suffix}`);
       const btn   = document.getElementById(`cmd-send-${suffix}`);
       if (btn)   btn.addEventListener('click',  () => sendMessage(getActiveInput()));
       if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input.value.trim()); } });
     });
-
     function getActiveInput() {
       const hero = document.getElementById('cmd-input-hero');
       const top  = document.getElementById('cmd-input-top');
@@ -796,10 +985,10 @@
     // ── Quick trigger pills ───────────────────────────────────────────────────
     document.querySelectorAll('.trigger-pill').forEach(pill => {
       pill.addEventListener('click', () => {
-        const activeInput = emptyState?.classList.contains('d-none')
+        const inp = emptyState?.classList.contains('d-none')
           ? document.getElementById('cmd-input-top')
           : document.getElementById('cmd-input-hero');
-        if (activeInput) { activeInput.value = pill.dataset.msg; activeInput.focus(); }
+        if (inp) { inp.value = pill.dataset.msg; inp.focus(); }
       });
     });
 
@@ -811,13 +1000,11 @@
     // ── Dismiss insights ──────────────────────────────────────────────────────
     document.querySelectorAll('.btn-dismiss-insight').forEach(btn => {
       btn.addEventListener('click', function () {
-        const url = this.dataset.url;
-        const id  = this.dataset.id;
-        fetch(url, { method: 'PATCH', headers: { 'X-CSRF-TOKEN': csrf } })
-          .then(() => {
-            const li = document.getElementById('insight-' + id);
-            if (li) { li.style.opacity = 0; setTimeout(() => li.remove(), 200); }
-          });
+        const url = this.dataset.url, id = this.dataset.id;
+        fetch(url, { method: 'PATCH', headers: { 'X-CSRF-TOKEN': csrf } }).then(() => {
+          const li = document.getElementById('insight-' + id);
+          if (li) { li.style.opacity = 0; setTimeout(() => li.remove(), 200); }
+        });
       });
     });
   })();
