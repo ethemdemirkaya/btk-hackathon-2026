@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgentChatController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\DecisionSimulatorController;
@@ -58,6 +59,15 @@ Route::middleware('auth')->group(function () {
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
+    Route::get('/transactions/import', [TransactionController::class, 'showImport'])->name('transactions.import');
+    Route::post('/transactions/import', [TransactionController::class, 'previewImport'])->name('transactions.import.preview');
+    Route::post('/transactions/import/confirm', [TransactionController::class, 'confirmImport'])->name('transactions.import.confirm');
+    Route::post('/transactions/{id}/debt', [TransactionController::class, 'storeDebt'])->name('transactions.debt.store');
+    Route::patch('/personal-debts/{id}/settle', [TransactionController::class, 'settleDebt'])->name('personal-debts.settle');
+    Route::delete('/personal-debts/{id}', [TransactionController::class, 'destroyDebt'])->name('personal-debts.destroy');
+
+    // Calendar
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 
     // Bills
     Route::get('/bills', [BillController::class, 'index'])->name('bills.index');

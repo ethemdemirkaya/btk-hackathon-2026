@@ -183,6 +183,12 @@
                 <div>Raporlar</div>
               </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('calendar.*') ? 'active' : '' }}">
+              <a href="{{ route('calendar.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-calendar-event"></i>
+                <div>Ödeme Takvimi</div>
+              </a>
+            </li>
 
             <li class="menu-header small"><span class="menu-header-text">Yapay Zeka</span></li>
             <li class="menu-item {{ request()->routeIs('agent-chat.*') ? 'active' : '' }}">

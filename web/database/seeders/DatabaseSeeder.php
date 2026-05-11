@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             AgentInsightSeeder::class,
             EconomicIndicatorSeeder::class,
             HealthScoreSeeder::class,
+            DemoUsersSeeder::class,
         ]);
     }
 }
