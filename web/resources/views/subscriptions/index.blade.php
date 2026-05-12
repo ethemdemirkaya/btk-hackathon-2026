@@ -240,7 +240,7 @@
     @php
       $si = $i % count($subIcons);
       $monthlyEq = match($sub->billing_cycle) { 'yearly' => $sub->amount / 12, 'weekly' => $sub->amount * 4.33, default => $sub->amount };
-      $daysToNext = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($sub->next_billing_date), false);
+      $daysToNext = (int) round(\Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($sub->next_billing_date)->startOfDay(), false));
     @endphp
     <div class="col-md-6 col-xl-4">
       <div class="card h-100 shadow-sm">
