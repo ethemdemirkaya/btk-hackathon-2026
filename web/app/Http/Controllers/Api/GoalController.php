@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\GoalResource;
 use App\Models\Goal;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GoalController extends Controller
 {
@@ -69,5 +71,41 @@ class GoalController extends Controller
         $goal->delete();
 
         return response()->json(['message' => 'Hedef silindi.']);
+    }
+
+    public function suggest(Request $request, Goal $goal): JsonResponse
+    {
+        abort_if($goal->user_id !== $request->user()->id, 403);
+
+        $user = $request->user();
+
+        $sub = DB::table('transactions as t2')
+            ->join('accounts as a2', 'a2.id', '=', 't2.account_id')
+            ->select(
+                DB::raw("DATE_FORMAT(t2.posted_at, '%Y-%m') as month"),
+                DB::raw('SUM(t2.amount) as net')
+            )
+            ->where('a2.user_id', $user->id)
+            ->where('t2.posted_at', '>=', now()->subMonths(3))
+            ->groupBy('month');
+
+        $avgSavings = (float) DB::table($sub, 'monthly_sums')->avg('net') ?? 0;
+
+        $remaining  = max(0, (float) $goal->target_amount - (float) $goal->current_amount);
+        $monthsLeft = $goal->target_date
+            ? max(1, (int) ceil(now()->diffInMonths(Carbon::parse($goal->target_date), false)))
+            : 12;
+
+        $suggested  = $remaining > 0 ? ceil($remaining / $monthsLeft) : 0;
+        $affordable = $avgSavings > 0 ? min($suggested, $avgSavings * 0.4) : $suggested;
+        $affordable = max(1, round($affordable, -2));
+
+        return response()->json([
+            'suggested'   => $suggested,
+            'affordable'  => $affordable,
+            'avg_savings' => round($avgSavings, 0),
+            'months_left' => $monthsLeft,
+            'remaining'   => $remaining,
+        ]);
     }
 }

@@ -5,12 +5,19 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankConnectionController;
 use App\Http\Controllers\Api\BillController;
 use App\Http\Controllers\Api\BudgetController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\CardController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DecisionSimulatorController;
+use App\Http\Controllers\Api\FxAlertController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\InflationController;
+use App\Http\Controllers\Api\InvestmentController;
 use App\Http\Controllers\Api\LoanController;
+use App\Http\Controllers\Api\NegotiationController;
+use App\Http\Controllers\Api\PersonalDebtController;
 use App\Http\Controllers\Api\ReceiptController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\FakeBank\AkbankController;
@@ -86,24 +93,61 @@ Route::prefix('v1')->group(function () {
         Route::delete('subscriptions/{subscription}', [SubscriptionController::class, 'destroy']);
 
         // Budgets
-        Route::get   ('budgets',          [BudgetController::class, 'index']);
-        Route::post  ('budgets',          [BudgetController::class, 'store']);
-        Route::delete('budgets/{budget}', [BudgetController::class, 'destroy']);
+        Route::get   ('budgets',              [BudgetController::class, 'index']);
+        Route::post  ('budgets',              [BudgetController::class, 'store']);
+        Route::delete('budgets/{budget}',     [BudgetController::class, 'destroy']);
+        Route::post  ('budgets/ai-suggest',   [BudgetController::class, 'aiSuggest']);
+        Route::post  ('budgets/ai-apply',     [BudgetController::class, 'aiApply']);
 
         // Goals
-        Route::get   ('goals',                          [GoalController::class, 'index']);
-        Route::post  ('goals',                          [GoalController::class, 'store']);
-        Route::post  ('goals/{goal}/add-funds',         [GoalController::class, 'addFunds']);
-        Route::delete('goals/{goal}',                   [GoalController::class, 'destroy']);
+        Route::get   ('goals',                  [GoalController::class, 'index']);
+        Route::post  ('goals',                  [GoalController::class, 'store']);
+        Route::post  ('goals/{goal}/add-funds', [GoalController::class, 'addFunds']);
+        Route::get   ('goals/{goal}/suggest',   [GoalController::class, 'suggest']);
+        Route::delete('goals/{goal}',           [GoalController::class, 'destroy']);
 
         // Inflation
         Route::get('inflation', [InflationController::class, 'index']);
 
+        // Personal Debts
+        Route::get   ('personal-debts',              [PersonalDebtController::class, 'index']);
+        Route::post  ('personal-debts',              [PersonalDebtController::class, 'store']);
+        Route::patch ('personal-debts/{id}/settle',  [PersonalDebtController::class, 'settle']);
+        Route::delete('personal-debts/{id}',         [PersonalDebtController::class, 'destroy']);
+
+        // Investments / Portfolio
+        Route::get   ('investments',        [InvestmentController::class, 'index']);
+        Route::post  ('investments',        [InvestmentController::class, 'store']);
+        Route::delete('investments/{id}',   [InvestmentController::class, 'destroy']);
+
+        // FX / Gold Alerts
+        Route::get   ('fx-alerts',          [FxAlertController::class, 'index']);
+        Route::post  ('fx-alerts',          [FxAlertController::class, 'store']);
+        Route::delete('fx-alerts/{id}',     [FxAlertController::class, 'destroy']);
+        Route::get   ('fx-alerts/rates',    [FxAlertController::class, 'rates']);
+
+        // Negotiation Agent
+        Route::get   ('negotiation',                    [NegotiationController::class, 'index']);
+        Route::post  ('negotiation/generate',           [NegotiationController::class, 'generate']);
+        Route::patch ('negotiation/{draft}/status',     [NegotiationController::class, 'updateStatus']);
+        Route::delete('negotiation/{draft}',            [NegotiationController::class, 'destroy']);
+
+        // Decision Simulator
+        Route::get ('simulator',            [DecisionSimulatorController::class, 'current']);
+        Route::post('simulator/calculate',  [DecisionSimulatorController::class, 'calculate']);
+
+        // Financial Calendar
+        Route::get('calendar', [CalendarController::class, 'index']);
+
+        // Reports
+        Route::get('report/summary', [ReportController::class, 'summary']);
+        Route::get('report/pdf',     [ReportController::class, 'pdf']);
+
         // AI Agent
-        Route::post('agent/send',                          [AgentChatController::class, 'send']);
-        Route::get ('agent/history',                       [AgentChatController::class, 'history']);
-        Route::get ('agent/insights',                      [AgentChatController::class, 'insights']);
-        Route::patch('agent/insights/{insight}/dismiss',   [AgentChatController::class, 'dismissInsight']);
+        Route::post ('agent/send',                        [AgentChatController::class, 'send']);
+        Route::get  ('agent/history',                     [AgentChatController::class, 'history']);
+        Route::get  ('agent/insights',                    [AgentChatController::class, 'insights']);
+        Route::patch('agent/insights/{insight}/dismiss',  [AgentChatController::class, 'dismissInsight']);
 
         // Receipts (OCR)
         Route::get   ('receipts',           [ReceiptController::class, 'index']);
