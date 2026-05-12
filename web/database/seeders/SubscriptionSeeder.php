@@ -22,9 +22,9 @@ class SubscriptionSeeder extends Seeder
 
         $subs = [
             [
-                'name'              => 'Netflix',
+                'name'              => 'Netflix Standard',
                 'merchant_name'     => 'Netflix Inc.',
-                'amount'            => 219.99,
+                'amount'            => 289.99,
                 'billing_cycle'     => 'monthly',
                 'next_billing_date' => now()->startOfMonth()->addMonths(1)->addDays(4)->toDateString(),
                 'started_at'        => now()->subMonths(14)->toDateString(),
@@ -33,7 +33,7 @@ class SubscriptionSeeder extends Seeder
             [
                 'name'              => 'Spotify Premium',
                 'merchant_name'     => 'Spotify AB',
-                'amount'            => 47.99,
+                'amount'            => 99.00,
                 'billing_cycle'     => 'monthly',
                 'next_billing_date' => now()->startOfMonth()->addMonths(1)->addDays(9)->toDateString(),
                 'started_at'        => now()->subMonths(22)->toDateString(),
@@ -51,7 +51,7 @@ class SubscriptionSeeder extends Seeder
             [
                 'name'              => 'Apple iCloud 50GB',
                 'merchant_name'     => 'Apple Inc.',
-                'amount'            => 49.99,
+                'amount'            => 59.99,
                 'billing_cycle'     => 'monthly',
                 'next_billing_date' => now()->startOfMonth()->addMonths(1)->addDays(1)->toDateString(),
                 'started_at'        => now()->subMonths(18)->toDateString(),
@@ -60,7 +60,7 @@ class SubscriptionSeeder extends Seeder
             [
                 'name'              => 'Amazon Prime',
                 'merchant_name'     => 'Amazon.com',
-                'amount'            => 149.99,
+                'amount'            => 69.90,
                 'billing_cycle'     => 'monthly',
                 'next_billing_date' => now()->startOfMonth()->addMonths(1)->addDays(6)->toDateString(),
                 'started_at'        => now()->subMonths(5)->toDateString(),

@@ -87,20 +87,8 @@
   {{-- Market Price Comparison Widget --}}
   @if($subscriptions->isNotEmpty())
   @php
-    $marketPrices = [
-      ['name' => 'Netflix Basic',       'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 79.99],
-      ['name' => 'Netflix Standard',    'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 139.99],
-      ['name' => 'Netflix Premium',     'icon' => 'tabler-brand-netflix',  'color' => 'danger',   'price' => 199.99],
-      ['name' => 'Spotify Premium',     'icon' => 'tabler-brand-spotify',  'color' => 'success',  'price' => 49.99],
-      ['name' => 'YouTube Premium',     'icon' => 'tabler-brand-youtube',  'color' => 'danger',   'price' => 79.99],
-      ['name' => 'Disney+',             'icon' => 'tabler-movie',          'color' => 'info',     'price' => 79.99],
-      ['name' => 'Amazon Prime',        'icon' => 'tabler-brand-amazon',   'color' => 'warning',  'price' => 139.00],
-      ['name' => 'BeIN Sports',         'icon' => 'tabler-device-tv',      'color' => 'primary',  'price' => 259.90],
-      ['name' => 'Exxen',               'icon' => 'tabler-device-tv',      'color' => 'info',     'price' => 109.90],
-      ['name' => 'BluTV',               'icon' => 'tabler-device-tv',      'color' => 'primary',  'price' => 129.90],
-      ['name' => 'Apple TV+',           'icon' => 'tabler-brand-apple',    'color' => 'secondary','price' => 49.99],
-      ['name' => 'Apple Music',         'icon' => 'tabler-brand-apple',    'color' => 'secondary','price' => 49.99],
-    ];
+    $marketPrices = config('subscription_prices.list');
+    $pricesLastUpdated = config('subscription_prices.last_updated');
 
     // Find user subscriptions by fuzzy name match
     $userSubNames = $subscriptions->pluck('name')->map(fn ($n) => mb_strtolower($n));
@@ -179,7 +167,7 @@
       </div>
       <p class="text-muted small mt-3 mb-1">
         <i class="icon-base ti tabler-info-circle me-1"></i>
-        Referans fiyatlar {{ now()->format('M Y') }} Türkiye piyasa fiyatlarıdır. Kampanya ve paket indirimleri farklılık gösterebilir.
+        Referans fiyatlar son olarak {{ \Carbon\Carbon::parse($pricesLastUpdated)->translatedFormat('d F Y') }} tarihinde güncellendi. Kampanya ve paket indirimleri farklılık gösterebilir.
       </p>
     </div>
   </div>
