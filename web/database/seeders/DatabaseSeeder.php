@@ -31,12 +31,14 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserBankConnectionSeeder::class,
+            TransactionCategorySeeder::class,
             BillSeeder::class,
             SubscriptionSeeder::class,
             BudgetSeeder::class,
             GoalSeeder::class,
             AgentInsightSeeder::class,
             EconomicIndicatorSeeder::class,
+            ExchangeRateSeeder::class,
             HealthScoreSeeder::class,
             DemoUsersSeeder::class,
         ]);
