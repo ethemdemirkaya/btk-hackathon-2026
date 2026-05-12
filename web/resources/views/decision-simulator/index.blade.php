@@ -297,13 +297,19 @@
           </div>
 
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" id="tutPrevBtn" disabled>
-            <i class="icon-base ti tabler-arrow-left me-1"></i>Geri
-          </button>
-          <button type="button" class="btn btn-primary" id="tutNextBtn">
-            İleri<i class="icon-base ti tabler-arrow-right ms-1"></i>
-          </button>
+        <div class="modal-footer justify-content-between">
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="tutDontShow">
+            <label class="form-check-label small text-muted" for="tutDontShow">Bir daha gösterme</label>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="tutPrevBtn" disabled>
+              <i class="icon-base ti tabler-arrow-left me-1"></i>Geri
+            </button>
+            <button type="button" class="btn btn-primary" id="tutNextBtn">
+              İleri<i class="icon-base ti tabler-arrow-right ms-1"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -706,6 +712,12 @@
       }
     }
 
+    const dontShowCheck = document.getElementById('tutDontShow');
+
+    function maybePersist() {
+      if (dontShowCheck?.checked) localStorage.setItem(LS_KEY, '1');
+    }
+
     prevBtn.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
 
     nextBtn.addEventListener('click', () => {
@@ -717,9 +729,23 @@
       }
     });
 
-    // Dismiss button also marks as seen
+    // Dismiss button also marks as seen if checkbox is checked
     document.getElementById('tutCloseBtn').addEventListener('click', () => {
-      localStorage.setItem(LS_KEY, '1');
+      maybePersist();
+    });
+
+    // Sync checkbox state when modal opens from "?" button
+    modal.addEventListener('show.bs.modal', () => {
+      if (dontShowCheck) dontShowCheck.checked = !!localStorage.getItem(LS_KEY);
+    });
+
+    // Live toggle: checking the box immediately persists; unchecking clears it
+    dontShowCheck?.addEventListener('change', () => {
+      if (dontShowCheck.checked) {
+        localStorage.setItem(LS_KEY, '1');
+      } else {
+        localStorage.removeItem(LS_KEY);
+      }
     });
 
     // "?" button always opens the tutorial
