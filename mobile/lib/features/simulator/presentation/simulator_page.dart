@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
@@ -72,9 +73,37 @@ class _SimulatorPageState extends State<SimulatorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Karar Simülatörü')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Karar Simülatörü',
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -121,6 +150,10 @@ class _SimulatorPageState extends State<SimulatorPage> {
               const SizedBox(height: 20),
               _ResultSection(result: _result!),
             ],
+          ],
+        ),
+      ),
+    ),
           ],
         ),
       ),
