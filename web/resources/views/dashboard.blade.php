@@ -1024,7 +1024,7 @@
           }).render();
         } else {
           document.getElementById('cashFlowChart').innerHTML =
-            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-bar icon-48px d-block mb-2"></i><p class="small mb-2">Nakit akışı verisi bulunamadı.</p><a href="{{ route(\'demo-data.index\') }}" class="btn btn-sm btn-outline-primary"><i class="icon-base ti tabler-database-plus me-1"></i>Demo veri oluştur</a></div>';
+            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-bar icon-48px d-block mb-2"></i><p class="small mb-2">Nakit akışı verisi bulunamadı.</p><a href="{{ route("demo-data.index") }}" class="btn btn-sm btn-outline-primary"><i class="icon-base ti tabler-database-plus me-1"></i>Demo veri oluştur</a></div>';
         }
       }
 
