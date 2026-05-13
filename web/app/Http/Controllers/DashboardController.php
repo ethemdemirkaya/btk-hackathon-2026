@@ -61,7 +61,12 @@ class DashboardController extends Controller
                 'weekly' => (float) $s->amount * 4.33,
                 default  => (float) $s->amount,
             });
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Dashboard exception: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user' => $user->id,
+            ]);
             $summary                 = ['total_balance' => 0, 'total_card_debt' => 0, 'total_loan' => 0, 'net_worth' => 0, 'health_score' => null];
             $cashFlow                = [];
             $categorySpend           = [];
