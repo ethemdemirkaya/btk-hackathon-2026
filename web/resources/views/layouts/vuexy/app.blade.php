@@ -170,6 +170,29 @@
               </a>
             </li>
 
+            <!-- Demo & Araçlar -->
+            <li class="menu-header small">
+              <span class="menu-header-text">Araçlar</span>
+            </li>
+            <li class="menu-item {{ request()->routeIs('demo-data.*') ? 'active' : '' }}">
+              <a href="{{ route('demo-data.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-wand"></i>
+                <div>Demo Veri Oluştur</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('report.*') ? 'active' : '' }}">
+              <a href="{{ route('report.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-report-analytics"></i>
+                <div>Raporlar</div>
+              </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('calendar.*') ? 'active' : '' }}">
+              <a href="{{ route('calendar.index') }}" class="menu-link">
+                <i class="menu-icon icon-base ti tabler-calendar"></i>
+                <div>Takvim</div>
+              </a>
+            </li>
+
             <!-- Ayarlar -->
             <li class="menu-header small">
               <span class="menu-header-text">Hesap</span>

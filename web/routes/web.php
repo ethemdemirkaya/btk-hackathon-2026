@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgentChatController;
+use App\Http\Controllers\DemoDataController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\LoanController;
@@ -125,6 +126,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/negotiation/generate', [NegotiationController::class, 'generate'])->name('negotiation.generate');
     Route::patch('/negotiation/{draft}/status', [NegotiationController::class, 'updateStatus'])->name('negotiation.status');
     Route::delete('/negotiation/{draft}', [NegotiationController::class, 'destroy'])->name('negotiation.destroy');
+
+    // Demo Data Generator
+    Route::get('/demo-data', [DemoDataController::class, 'index'])->name('demo-data.index');
+    Route::post('/demo-data/generate', [DemoDataController::class, 'generate'])->name('demo-data.generate');
+    Route::post('/demo-data/clear', [DemoDataController::class, 'clear'])->name('demo-data.clear');
 
     // Bank Connections
     Route::get('/banks', [BankConnectionController::class, 'index'])->name('bank-connections.index');
