@@ -168,6 +168,13 @@
     }
     @@keyframes skShimmer { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
 
+    /* ── Quick-action chips ──────────────────────────────────────────────── */
+    .quick-chip:hover {
+      border-color: #7367F0 !important;
+      box-shadow: 0 4px 14px rgba(115,103,240,.14) !important;
+    }
+    .quick-chip:active { transform: scale(.97); }
+
     /* ── Empty state (hero) ──────────────────────────────────────────────── */
     .hero-empty {
       padding: 2.5rem 2rem 2rem;
@@ -280,15 +287,66 @@
               <div class="ei-glow">
                 <i class="icon-base ti tabler-sparkles icon-40px text-primary"></i>
               </div>
-              <h5 class="fw-semibold mb-2">Ne yapmamı istersin?</h5>
-              <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 1.5rem;">
-                Finansal durumunu analiz edeyim, hedef koyayım, bütçeni optimize edeyim
-                veya herhangi bir işlemi gerçekleştireyim.
+              <h5 class="fw-semibold mb-1">Ne yapmamı istersin?</h5>
+              <p class="text-muted small mb-4" style="max-width:400px;margin:0 auto .75rem;">
+                Bir konuya tıkla veya aşağıya yaz — yapay zeka ajanları hemen analiz etsin.
               </p>
 
+              {{-- Quick-action chips 2x2 grid --}}
+              <div class="row g-3 mb-4" style="max-width:520px;margin:0 auto 1.25rem;">
+                <div class="col-6">
+                  <div class="card border shadow-none quick-chip h-100"
+                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
+                       data-msg="Bu ay nereye harcadım? Kategorilere göre ayrıntılı analiz yap.">
+                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
+                      <span class="avatar avatar-sm flex-shrink-0 bg-label-primary">
+                        <i class="icon-base ti tabler-chart-pie text-primary" style="font-size:16px;"></i>
+                      </span>
+                      <span class="fw-medium small text-heading">Bu ay nereye harcadım?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card border shadow-none quick-chip h-100"
+                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
+                       data-msg="Hedefe ne kadar ayırabilirim? Mevcut gelir ve giderlerime göre tasarruf kapasitemi hesapla.">
+                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
+                      <span class="avatar avatar-sm flex-shrink-0 bg-label-success">
+                        <i class="icon-base ti tabler-target text-success" style="font-size:16px;"></i>
+                      </span>
+                      <span class="fw-medium small text-heading">Hedefe ne kadar ayırabilirim?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card border shadow-none quick-chip h-100"
+                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
+                       data-msg="Son harcamalarımda anormal bir durum var mı? Anomalileri göster ve ayrıntılı analiz yap.">
+                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
+                      <span class="avatar avatar-sm flex-shrink-0 bg-label-danger">
+                        <i class="icon-base ti tabler-radar text-danger" style="font-size:16px;"></i>
+                      </span>
+                      <span class="fw-medium small text-heading">Anomalileri göster</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="card border shadow-none quick-chip h-100"
+                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
+                       data-msg="Bu ayki harcama alışkanlıklarıma göre bana aylık bütçe öner. Kategori bazlı limitler belirle.">
+                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
+                      <span class="avatar avatar-sm flex-shrink-0 bg-label-warning">
+                        <i class="icon-base ti tabler-sparkles text-warning" style="font-size:16px;"></i>
+                      </span>
+                      <span class="fw-medium small text-heading">Bütçe öner</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {{-- Hero command bar --}}
-              <div class="command-bar hero-command-bar d-flex align-items-center mb-4" style="max-width:560px;margin:0 auto 1.5rem;">
-                <input type="text" id="cmd-input-hero" placeholder="Bana ne yaptırayım? (örn: hedef koy, bütçe analizi yap…)" autocomplete="off" style="font-size:.93rem;">
+              <div class="command-bar hero-command-bar d-flex align-items-center mb-4" style="max-width:520px;margin:0 auto 1.25rem;">
+                <input type="text" id="cmd-input-hero" placeholder="Veya buraya yaz… (örn: hedef koy, bütçe analizi yap)" autocomplete="off" style="font-size:.93rem;">
                 <button class="cmd-send" id="cmd-send-hero" type="button">
                   <i class="icon-base ti tabler-arrow-up me-1" style="font-size:14px;"></i>Gönder
                 </button>
@@ -989,6 +1047,14 @@
           ? document.getElementById('cmd-input-top')
           : document.getElementById('cmd-input-hero');
         if (inp) { inp.value = pill.dataset.msg; inp.focus(); }
+      });
+    });
+
+    // ── Quick-action chips (2x2 grid in hero empty state) ────────────────────
+    document.querySelectorAll('.quick-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const msg = chip.dataset.msg;
+        if (msg) sendMessage(msg);
       });
     });
 

@@ -228,7 +228,7 @@
               <div class="mt-4 d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
                 <button type="submit" class="btn btn-primary" id="aiApplyBtn">
-                  <i class="icon-base ti tabler-check me-1"></i>Hepsini Uygula
+                  <i class="icon-base ti tabler-check me-1"></i>Seçilenleri Uygula
                 </button>
               </div>
             </form>
@@ -390,38 +390,57 @@
       });
     });
 
-    // Build hidden inputs on submit
+    // AJAX submit — apply selected AI suggestions without page reload
     aiApplyForm.addEventListener('submit', function (e) {
-      // Remove any previously built hidden inputs
-      aiApplyForm.querySelectorAll('.ai-hidden-input').forEach(function (el) { el.remove(); });
+      e.preventDefault();
 
       const checked = aiApplyForm.querySelectorAll('.ai-row-check:checked');
       if (checked.length === 0) {
-        e.preventDefault();
         Swal.fire({ icon: 'warning', title: 'Seçim yapılmadı', text: 'Lütfen en az bir kategori seçin.', confirmButtonColor: '#7367f0' });
         return;
       }
 
-      checked.forEach(function (cb, i) {
-        const row       = cb.closest('tr');
+      const suggestions = [];
+      checked.forEach(function (cb) {
+        const row         = cb.closest('tr');
         const amountInput = row.querySelector('.ai-amount-input');
-        const categoryId  = amountInput.dataset.categoryId;
-        const amount      = amountInput.value;
+        suggestions.push({
+          category_id: amountInput.dataset.categoryId,
+          amount:      amountInput.value,
+        });
+      });
 
-        const hidCat = document.createElement('input');
-        hidCat.type  = 'hidden';
-        hidCat.name  = 'suggestions[' + i + '][category_id]';
-        hidCat.value = categoryId;
-        hidCat.className = 'ai-hidden-input';
+      aiApplyBtn.disabled = true;
+      aiApplyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" style="width:.85rem;height:.85rem;" role="status"></span>Uygulanıyor…';
 
-        const hidAmt = document.createElement('input');
-        hidAmt.type  = 'hidden';
-        hidAmt.name  = 'suggestions[' + i + '][amount]';
-        hidAmt.value = amount;
-        hidAmt.className = 'ai-hidden-input';
-
-        aiApplyForm.appendChild(hidCat);
-        aiApplyForm.appendChild(hidAmt);
+      fetch('{{ route("budgets.ai-apply") }}', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Content-Type': 'application/json',
+          'Accept':       'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ suggestions: suggestions }),
+      })
+      .then(function (r) {
+        if (!r.ok) return r.json().then(function (e) { throw new Error(e.message || 'Sunucu hatası.'); });
+        return r.json();
+      })
+      .then(function (data) {
+        bootstrap.Modal.getInstance(document.getElementById('aiSuggestModal'))?.hide();
+        Swal.fire({
+          icon: 'success',
+          title: 'Bütçeler Oluşturuldu!',
+          text: data.message || checked.length + ' kategori için bütçe uygulandı.',
+          confirmButtonColor: '#7367f0',
+          confirmButtonText: 'Tamam',
+        }).then(function () { location.reload(); });
+      })
+      .catch(function (err) {
+        aiApplyBtn.disabled = false;
+        aiApplyBtn.innerHTML = '<i class="icon-base ti tabler-check me-1"></i>Seçilenleri Uygula';
+        Swal.fire({ icon: 'error', title: 'Hata', text: err.message || 'Bir hata oluştu.', confirmButtonColor: '#7367f0' });
       });
     });
 
