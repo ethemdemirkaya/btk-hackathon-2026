@@ -100,7 +100,26 @@
       font-weight: 600; white-space: nowrap; display: inline-block;
     }
 
-    .tx-bank { flex-shrink: 0; }
+    .tx-bank {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      width: 64px;
+    }
+    .tx-bank-name {
+      font-size: .6rem;
+      font-weight: 600;
+      color: var(--bs-secondary-color);
+      text-align: center;
+      max-width: 64px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1;
+      letter-spacing: .01em;
+    }
 
     .tx-amount {
       text-align: right; flex-shrink: 0; min-width: 80px;
@@ -488,8 +507,8 @@
           </div>
         </div>
 
-        {{-- Bank logo (40×40 rounded-square avatar) --}}
-        <div class="tx-bank d-none d-sm-block">
+        {{-- Bank logo + name --}}
+        <div class="tx-bank d-none d-sm-flex">
           <div class="bank-logo-avatar" title="{{ $tx->bank_name }}">
             @if($tx->bank_logo)
               <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}">
@@ -505,6 +524,13 @@
               <span class="bank-initials">{{ $initials }}</span>
             @endif
           </div>
+          @php
+            $shortName = $tx->bank_name ?? $tx->bank_slug ?? '';
+            // Shorten "Bankası / A.Ş. / Bank" suffixes
+            $shortName = preg_replace('/\s*(Bankası|A\.Ş\.|Bank|A\.T\.)$/iu', '', $shortName);
+            $shortName = trim($shortName);
+          @endphp
+          <span class="tx-bank-name">{{ $shortName }}</span>
         </div>
 
         {{-- Amount --}}

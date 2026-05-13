@@ -30,15 +30,29 @@ class _Insight {
     required this.createdAt,
   });
 
-  factory _Insight.fromJson(Map<String, dynamic> j) => _Insight(
-        id: (j['id'] as num).toInt(),
-        type: j['type'] as String? ?? 'info',
-        title: j['title'] as String? ?? '',
-        body: j['body'] as String? ?? '',
-        actionLink: j['action_link'] as String?,
-        importance: j['importance'] as String? ?? 'low',
-        createdAt: DateTime.tryParse(j['created_at'] as String? ?? '') ?? DateTime.now(),
-      );
+  factory _Insight.fromJson(Map<String, dynamic> j) {
+    final imp = j['importance'];
+    final String importanceStr;
+    if (imp is String) {
+      importanceStr = imp;
+    } else if (imp is int) {
+      if (imp >= 8) importanceStr = 'critical';
+      else if (imp >= 6) importanceStr = 'high';
+      else if (imp >= 4) importanceStr = 'medium';
+      else importanceStr = 'low';
+    } else {
+      importanceStr = 'low';
+    }
+    return _Insight(
+      id: (j['id'] as num).toInt(),
+      type: j['type']?.toString() ?? 'info',
+      title: j['title']?.toString() ?? '',
+      body: j['body']?.toString() ?? '',
+      actionLink: j['action_link'] as String?,
+      importance: importanceStr,
+      createdAt: DateTime.tryParse(j['created_at'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
 }
 
 final _insightsProvider =

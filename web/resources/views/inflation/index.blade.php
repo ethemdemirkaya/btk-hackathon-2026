@@ -850,16 +850,17 @@
       /* ── 3. TÜİK category bar chart ──────────────────────────────────────── */
       const catEl = document.getElementById('categoryChart');
       @if($categoryRates->isNotEmpty())
-      if (catEl) {
-        const catData = @json(
-          $categoryRates
+      @php
+        $catChartData = $categoryRates
             ->map(fn($r) => [
-              'slug' => ucwords(str_replace('-', ' ', $r->tuik_category_slug)),
-              'rate' => round((float)$r->annual_change_rate, 2),
+                'slug' => ucwords(str_replace('-', ' ', $r->tuik_category_slug)),
+                'rate' => round((float)$r->annual_change_rate, 2),
             ])
             ->sortByDesc('rate')
-            ->values()
-        );
+            ->values();
+      @endphp
+      if (catEl) {
+        const catData = @json($catChartData);
 
         new ApexCharts(catEl, {
           chart: {
