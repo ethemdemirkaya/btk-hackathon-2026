@@ -236,6 +236,10 @@
     </div>
   </div>
   @else
+
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="subscriptions" :autoload="false" title="Abonelik Avcısı" />
+
   @php
     $subIcons = ['tabler-brand-netflix','tabler-brand-spotify','tabler-brand-youtube','tabler-device-tv','tabler-cloud','tabler-package','tabler-star'];
     $subColors = ['danger','success','danger','info','primary','warning','secondary'];

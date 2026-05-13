@@ -389,6 +389,9 @@
 
   </div>
 
+  {{-- ══ AI Insight Panel ═══════════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="loans" :autoload="false" title="Borç Optimizörü" />
+
   {{-- ══ Loan cards ══════════════════════════════════════════════════════════════ --}}
   <div class="row g-5 mb-5">
     @foreach($loans as $loopIndex => $loan)

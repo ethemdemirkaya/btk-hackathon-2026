@@ -269,6 +269,9 @@
     </div>
   </div>
 
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="transactions" :autoload="false" title="İşlem Analizi" />
+
   {{-- ═══ Open Personal Debts ════════════════════════════════════════════════ --}}
   @if($personalDebts->isNotEmpty())
   <div class="card mb-5 shadow-sm" style="border:1px solid rgba(115,103,240,.2);">

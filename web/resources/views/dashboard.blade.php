@@ -743,6 +743,9 @@
 
     {{-- AI Öngörüler --}}
     <div class="col-xl-4">
+      {{-- ── Agentic Real-Time Insights (auto-loads on page open) ── --}}
+      <x-ai-insight-panel page="dashboard" :autoload="true" title="Canlı AI Analizi" />
+
       <div class="card h-100 shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div>

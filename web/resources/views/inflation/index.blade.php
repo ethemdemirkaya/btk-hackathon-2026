@@ -342,6 +342,9 @@
 
   </div>
 
+  {{-- ══ AI Insight Panel ════════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="inflation" :autoload="false" title="Enflasyon Analisti" />
+
   {{-- ══ ROW 2 — Category breakdown + Official category chart ══════════════ --}}
   <div class="row g-5 mb-6">
 

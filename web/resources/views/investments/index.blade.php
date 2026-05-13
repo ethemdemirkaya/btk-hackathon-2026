@@ -128,6 +128,9 @@
 
   </div>
 
+  {{-- ══ AI Insight Panel ════════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="investments" :autoload="false" title="Yatırım Tahmincisi" />
+
   {{-- ══ Main content ════════════════════════════════════════════════════════ --}}
   <div class="row g-5">
 

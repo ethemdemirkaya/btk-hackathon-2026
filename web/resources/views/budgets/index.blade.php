@@ -118,6 +118,10 @@
     </div>
   </div>
   @else
+
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="budgets" :autoload="false" title="Bütçe Danışmanı" />
+
   <div class="row g-4">
     @foreach($budgets as $b)
     @php
