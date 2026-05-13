@@ -193,6 +193,9 @@ $mktIcons = [
   @endforeach
 </div>
 
+{{-- ══════════════════════ AI INSIGHT PANEL ═══════════════════════════ --}}
+<x-ai-insight-panel page="fx_alerts" :autoload="false" title="Kur & Enflasyon Analizi" />
+
 {{-- ══════════════════════ ALERTS TABLE ════════════════════════════════ --}}
 <div class="card mb-3">
   <div class="card-header d-flex align-items-center justify-content-between py-2">

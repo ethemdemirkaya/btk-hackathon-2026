@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -158,7 +158,7 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
                       width: 36,
                       height: 36,
@@ -167,8 +167,8 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
                         color: AppColors.bg2,
                         border: Border.all(color: AppColors.border1Dark),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new,
-                          size: 14, color: AppColors.text2Dark),
+                      child: const Icon(Icons.menu,
+                          size: 16, color: AppColors.text2Dark),
                     ),
                   ),
                   const SizedBox(width: 12),

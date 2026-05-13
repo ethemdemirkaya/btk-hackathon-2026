@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AgentChatController;
+use App\Http\Controllers\Api\PageAnalyzeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankConnectionController;
 use App\Http\Controllers\Api\BillController;
@@ -142,6 +143,9 @@ Route::prefix('v1')->group(function () {
         // Reports
         Route::get('report/summary', [ReportController::class, 'summary']);
         Route::get('report/pdf',     [ReportController::class, 'pdf']);
+
+        // AI Agent — Page Analysis
+        Route::post ('agent/page-analyze',                [PageAnalyzeController::class, 'analyze']);
 
         // AI Agent
         Route::post ('agent/send',                        [AgentChatController::class, 'send']);

@@ -18,6 +18,9 @@
     </div>
   @endif
 
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="goals" :autoload="false" title="Hedef Tahmincisi" />
+
   {{-- Summary stat cards (computed in view) --}}
   @if($goals->isNotEmpty())
   @php
