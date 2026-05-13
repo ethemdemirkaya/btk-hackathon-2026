@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../shared/providers/auth_provider.dart';
@@ -65,7 +66,13 @@ class _GreetingHeaderState extends ConsumerState<_GreetingHeader> {
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 8),
       child: Row(
         children: [
-          // Logo + greeting
+          // Hamburger menu — far left
+          _IconBtn(
+            icon: Icons.menu,
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+          ),
+          const SizedBox(width: 12),
+          // Logo
           Container(
             width: 32,
             height: 32,

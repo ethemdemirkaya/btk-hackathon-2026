@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/api/api_endpoints.dart';
@@ -89,47 +90,75 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     final async = ref.watch(_reportProvider(_monthKey));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Aylık Rapor'),
-        actions: [
-          if (_pdfLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Aylık Rapor',
+                        style: AppTextStyles.headlineMedium
+                            .copyWith(color: AppColors.text1Dark)),
+                  ),
+                  GestureDetector(
+                    onTap: _pdfLoading ? null : _downloadPdf,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: _pdfLoading
+                          ? const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.picture_as_pdf_outlined,
+                              size: 16, color: AppColors.text2Dark),
+                    ),
+                  ),
+                ],
               ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf_outlined),
-              tooltip: 'PDF İndir',
-              onPressed: _downloadPdf,
             ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _MonthSelector(
-            month: _selectedMonth,
-            onPrev: _prevMonth,
-            onNext: _canGoNext ? _nextMonth : null,
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(_reportProvider(_monthKey)),
-              child: async.when(
-                loading: () => const SkeletonListView(),
-                error: (e, __) => ErrorState(
-                  message: e.toString(),
-                  onRetry: () => ref.refresh(_reportProvider(_monthKey)),
+            _MonthSelector(
+              month: _selectedMonth,
+              onPrev: _prevMonth,
+              onNext: _canGoNext ? _nextMonth : null,
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async => ref.invalidate(_reportProvider(_monthKey)),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () => ref.invalidate(_reportProvider(_monthKey)),
+                  ),
+                  data: (data) => _ReportBody(data: data),
                 ),
-                data: (data) => _ReportBody(data: data),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

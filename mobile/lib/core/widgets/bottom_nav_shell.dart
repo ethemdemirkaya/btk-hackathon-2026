@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'app_drawer.dart';
+
+final shellScaffoldKey = GlobalKey<ScaffoldState>();
 
 class BottomNavShell extends StatelessWidget {
   final Widget child;
@@ -29,6 +32,8 @@ class BottomNavShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: shellScaffoldKey,
+      drawer: const AppDrawer(),
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

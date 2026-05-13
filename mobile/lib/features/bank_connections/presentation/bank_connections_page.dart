@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
@@ -13,7 +14,8 @@ import '../../../core/widgets/loading_skeleton.dart';
 final _bankConnectionsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.bankConnections);
-  return res.data as Map<String, dynamic>;
+  final data = res.data;
+  return data is Map<String, dynamic> ? data : <String, dynamic>{};
 });
 
 const _banks = [
@@ -36,19 +38,47 @@ class BankConnectionsPage extends ConsumerWidget {
     final async = ref.watch(_bankConnectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Banka Bağlantıları')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddBankSheet(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('Banka Ekle'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.refresh(_bankConnectionsProvider),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Banka Bağlantıları',
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(_bankConnectionsProvider),
         child: async.when(
           loading: () => const SkeletonListView(),
           error: (e, __) => ErrorState(
             message: e.toString(),
-            onRetry: () => ref.refresh(_bankConnectionsProvider),
+            onRetry: () => ref.invalidate(_bankConnectionsProvider),
           ),
           data: (data) {
             final connections = data['connections'] as List? ?? [];
@@ -72,7 +102,7 @@ class BankConnectionsPage extends ConsumerWidget {
                   try {
                     await DioClient.instance
                         .post(ApiEndpoints.bankConnectionSync(id));
-                    ref.refresh(_bankConnectionsProvider);
+                    ref.invalidate(_bankConnectionsProvider);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Senkronizasyon başlatıldı')),
@@ -85,6 +115,10 @@ class BankConnectionsPage extends ConsumerWidget {
               ),
             );
           },
+        ),
+      ),
+            ),
+          ],
         ),
       ),
     );
@@ -124,7 +158,7 @@ class BankConnectionsPage extends ConsumerWidget {
     if (ok == true) {
       try {
         await DioClient.instance.delete(ApiEndpoints.bankConnection(id));
-        ref.refresh(_bankConnectionsProvider);
+        ref.invalidate(_bankConnectionsProvider);
       } catch (_) {}
     }
   }

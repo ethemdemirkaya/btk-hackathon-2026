@@ -127,9 +127,9 @@ class BudgetController extends Controller
     public function aiApply(Request $request)
     {
         $data = $request->validate([
-            'suggestions'             => 'required|array|min:1',
+            'suggestions'               => 'required|array|min:1',
             'suggestions.*.category_id' => 'required|integer|exists:categories,id',
-            'suggestions.*.amount'    => 'required|numeric|min:1',
+            'suggestions.*.amount'      => 'required|numeric|min:1',
         ]);
 
         $period  = now()->format('Y-m');
@@ -164,6 +164,10 @@ class BudgetController extends Controller
         $message = $created > 0
             ? "AI önerisi ile {$created} bütçe kategorisi oluşturuldu."
             : 'Seçilen kategoriler için bu ay zaten bütçe mevcut.';
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['status' => 'ok', 'message' => $message, 'created' => $created]);
+        }
 
         return redirect()->route('budgets.index')->with('success', $message);
     }

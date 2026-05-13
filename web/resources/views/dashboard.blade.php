@@ -81,6 +81,37 @@
     </style>
   </x-slot>
 
+  {{-- ══ ONBOARDING CARD — sadece banka bağlantısı yoksa göster ══════════ --}}
+  @if($summary['total_balance'] == 0 && $bankConnections->count() == 0)
+  <div class="card mb-5 border-0 shadow-sm" style="background: linear-gradient(135deg, #7367F0 0%, #9E95F5 50%, #CE9FFC 100%);">
+    <div class="card-body p-5">
+      <div class="row align-items-center g-4">
+        <div class="col-auto d-none d-md-flex">
+          <div class="avatar avatar-xl">
+            <span class="avatar-initial rounded-circle" style="background: rgba(255,255,255,.2); font-size: 2rem;">
+              <i class="icon-base ti tabler-rocket icon-40px text-white"></i>
+            </span>
+          </div>
+        </div>
+        <div class="col text-white">
+          <h3 class="fw-bold text-white mb-1">Hoş geldiniz! Paranette'e başlayın</h3>
+          <p class="mb-3 opacity-85" style="font-size: 1rem;">
+            Finansal verilerinizi görmek için bir banka bağlantısı ekleyin ya da demo veri oluşturarak uygulamayı keşfedin.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="{{ route('bank-connections.create') }}" class="btn btn-light fw-semibold">
+              <i class="icon-base ti tabler-building-bank me-2"></i>Banka Bağla
+            </a>
+            <a href="{{ route('demo-data.index') }}" class="btn fw-semibold" style="background: rgba(255,255,255,.18); color: #fff; border: 1.5px solid rgba(255,255,255,.45);">
+              <i class="icon-base ti tabler-wand me-2"></i>Demo Veri Oluştur
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
   {{-- ══ Page Header ═══════════════════════════════════════════════════════ --}}
   <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>

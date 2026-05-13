@@ -76,10 +76,18 @@
         <div class="divider-text">veya</div>
       </div>
 
-      <button type="button" class="btn btn-outline-secondary d-grid w-100"
-              onclick="document.getElementById('email').value='demo@paranette.local';document.getElementById('password').value='password';">
-        <i class="icon-base ti tabler-player-play me-2"></i>Demo Hesabıyla Dene
+      <button type="button" class="btn btn-outline-secondary d-grid w-100" id="demoLoginBtn">
+        <i class="icon-base ti tabler-player-play me-2"></i>Demo Hesabıyla Gir
       </button>
+      <script>
+        document.getElementById('demoLoginBtn').addEventListener('click', function () {
+          document.getElementById('email').value    = 'demo@paranette.local';
+          document.getElementById('password').value = 'password';
+          this.disabled = true;
+          this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Giriş yapılıyor…';
+          document.getElementById('formLogin').submit();
+        });
+      </script>
     </div>
   </div>
 </x-guest-layout>

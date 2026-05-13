@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
@@ -33,19 +34,47 @@ class NegotiationPage extends ConsumerWidget {
     final async = ref.watch(_negotiationProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Müzakere Mektupları')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showGenerateSheet(context, ref),
         icon: const Icon(Icons.auto_awesome),
         label: const Text('Yeni Mektup'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.refresh(_negotiationProvider),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Müzakere Mektupları',
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(_negotiationProvider),
         child: async.when(
           loading: () => const SkeletonListView(),
           error: (e, __) => ErrorState(
             message: e.toString(),
-            onRetry: () => ref.refresh(_negotiationProvider),
+            onRetry: () => ref.invalidate(_negotiationProvider),
           ),
           data: (data) {
             final drafts = data['drafts'] as List? ?? [];
@@ -69,6 +98,10 @@ class NegotiationPage extends ConsumerWidget {
               ),
             );
           },
+        ),
+      ),
+            ),
+          ],
         ),
       ),
     );
@@ -478,24 +511,68 @@ class _DraftDetailPage extends StatelessWidget {
         (t) => t['value'] == typeVal, orElse: () => _letterTypes.last);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(draft['title'] as String? ?? typeInfo['label'] as String),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Markdown(
-        data: content,
-        padding: const EdgeInsets.all(20),
-        styleSheet: MarkdownStyleSheet(
-          p: AppTextStyles.bodyMedium.copyWith(height: 1.6),
-          h1: AppTextStyles.headlineMedium,
-          h2: AppTextStyles.titleMedium,
-          strong:
-              AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      draft['title'] as String? ?? typeInfo['label'] as String,
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.share_outlined,
+                          size: 16, color: AppColors.text2Dark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Markdown(
+                data: content,
+                padding: const EdgeInsets.all(20),
+                styleSheet: MarkdownStyleSheet(
+                  p: AppTextStyles.bodyMedium.copyWith(height: 1.6),
+                  h1: AppTextStyles.headlineMedium,
+                  h2: AppTextStyles.titleMedium,
+                  strong:
+                      AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
