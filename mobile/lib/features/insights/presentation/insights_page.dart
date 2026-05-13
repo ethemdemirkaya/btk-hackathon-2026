@@ -31,13 +31,13 @@ class _Insight {
   });
 
   factory _Insight.fromJson(Map<String, dynamic> j) => _Insight(
-        id: j['id'] as int,
+        id: (j['id'] as num).toInt(),
         type: j['type'] as String? ?? 'info',
-        title: j['title'] as String,
-        body: j['body'] as String,
+        title: j['title'] as String? ?? '',
+        body: j['body'] as String? ?? '',
         actionLink: j['action_link'] as String?,
         importance: j['importance'] as String? ?? 'low',
-        createdAt: DateTime.parse(j['created_at'] as String),
+        createdAt: DateTime.tryParse(j['created_at'] as String? ?? '') ?? DateTime.now(),
       );
 }
 
