@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 class SimulatorPage extends StatefulWidget {
   const SimulatorPage({super.key});
@@ -81,7 +81,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
                       width: 36,
                       height: 36,
@@ -90,8 +90,8 @@ class _SimulatorPageState extends State<SimulatorPage> {
                         color: AppColors.bg2,
                         border: Border.all(color: AppColors.border1Dark),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new,
-                          size: 14, color: AppColors.text2Dark),
+                      child: const Icon(Icons.menu,
+                          size: 16, color: AppColors.text2Dark),
                     ),
                   ),
                   const SizedBox(width: 12),
