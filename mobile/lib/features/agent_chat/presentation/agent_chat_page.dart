@@ -161,6 +161,11 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
+          _IconBtn(
+            icon: Icons.menu,
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+          ),
+          const SizedBox(width: 10),
           Container(
             width: 40,
             height: 40,
@@ -207,11 +212,6 @@ class _Header extends StatelessWidget {
           _IconBtn(icon: Icons.list, onTap: onHistory),
           const SizedBox(width: 8),
           _IconBtn(icon: Icons.add, onTap: onNewChat),
-          const SizedBox(width: 8),
-          _IconBtn(
-            icon: Icons.menu,
-            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
-          ),
         ],
       ),
     );

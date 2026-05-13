@@ -57,6 +57,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
+                  _HeaderBtn(
+                    icon: Icons.menu,
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,11 +85,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   _HeaderBtn(
                     icon: Icons.sync,
                     onTap: () => ref.invalidate(_transactionListProvider),
-                  ),
-                  const SizedBox(width: 8),
-                  _HeaderBtn(
-                    icon: Icons.menu,
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
                   ),
                 ],
               ),

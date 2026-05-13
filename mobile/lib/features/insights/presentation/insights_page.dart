@@ -44,8 +44,15 @@ class _Insight {
 final _insightsProvider =
     FutureProvider.autoDispose<List<_Insight>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.agentInsights);
-  final items = (res.data as Map<String, dynamic>)['insights'] as List;
-  return items.map((e) => _Insight.fromJson(e as Map<String, dynamic>)).toList()
+  final data = res.data;
+  final Map<String, dynamic> body =
+      data is Map<String, dynamic> ? data : <String, dynamic>{};
+  final raw = body['insights'];
+  final items = raw is List ? raw : <dynamic>[];
+  return items
+      .whereType<Map<String, dynamic>>()
+      .map(_Insight.fromJson)
+      .toList()
     ..sort((a, b) {
       const order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3};
       return (order[a.importance] ?? 4).compareTo(order[b.importance] ?? 4);
@@ -92,7 +99,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
                       width: 36,
                       height: 36,
@@ -101,8 +108,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                         color: AppColors.bg2,
                         border: Border.all(color: AppColors.border1Dark),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new,
-                          size: 14, color: AppColors.text2Dark),
+                      child: const Icon(Icons.menu,
+                          size: 16, color: AppColors.text2Dark),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -122,21 +129,6 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                         border: Border.all(color: AppColors.border1Dark),
                       ),
                       child: const Icon(Icons.refresh,
-                          size: 16, color: AppColors.text2Dark),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
-                      ),
-                      child: const Icon(Icons.menu,
                           size: 16, color: AppColors.text2Dark),
                     ),
                   ),

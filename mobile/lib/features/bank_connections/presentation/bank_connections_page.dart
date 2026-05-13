@@ -14,7 +14,8 @@ import '../../../core/widgets/loading_skeleton.dart';
 final _bankConnectionsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.bankConnections);
-  return res.data as Map<String, dynamic>;
+  final data = res.data;
+  return data is Map<String, dynamic> ? data : <String, dynamic>{};
 });
 
 const _banks = [

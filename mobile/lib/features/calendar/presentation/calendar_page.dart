@@ -83,6 +83,21 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
+                  GestureDetector(
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.menu,
+                          size: 16, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,21 +114,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                   _ViewToggle(
                     value: _view,
                     onChange: (v) => setState(() => _view = v),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
-                      ),
-                      child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
-                    ),
                   ),
                 ],
               ),

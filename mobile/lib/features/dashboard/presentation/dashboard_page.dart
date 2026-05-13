@@ -66,7 +66,13 @@ class _GreetingHeaderState extends ConsumerState<_GreetingHeader> {
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 8),
       child: Row(
         children: [
-          // Logo + greeting
+          // Hamburger menu — far left
+          _IconBtn(
+            icon: Icons.menu,
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+          ),
+          const SizedBox(width: 12),
+          // Logo
           Container(
             width: 32,
             height: 32,
@@ -102,12 +108,6 @@ class _GreetingHeaderState extends ConsumerState<_GreetingHeader> {
           _IconBtn(
             icon: Icons.notifications_outlined,
             onTap: () => context.push('/insights'),
-          ),
-          const SizedBox(width: 8),
-          // Hamburger menu
-          _IconBtn(
-            icon: Icons.menu,
-            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
           ),
         ],
       ),

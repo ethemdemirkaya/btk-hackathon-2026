@@ -80,9 +80,9 @@ class TransactionPage {
 
   factory TransactionPage.fromJson(Map<String, dynamic> j) =>
       TransactionPage(
-        data: (j['data'] as List)
-            .map((e) =>
-                TransactionModel.fromJson(e as Map<String, dynamic>))
+        data: ((j['data'] as List?) ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(TransactionModel.fromJson)
             .toList(),
         currentPage:
             (j['pagination']?['current_page'] as num?)?.toInt() ?? 1,
