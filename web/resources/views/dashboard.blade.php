@@ -428,7 +428,10 @@
               <div class="d-flex justify-content-center mb-3">
                 <i class="icon-base ti tabler-chart-donut-3 icon-48px text-muted"></i>
               </div>
-              <p class="text-muted small mb-0">Henüz kategori verisi yok.</p>
+              <p class="text-muted small mb-2">Henüz kategori verisi yok.</p>
+              <a href="{{ route('demo-data.index') }}" class="btn btn-sm btn-outline-primary">
+                <i class="icon-base ti tabler-database-plus me-1"></i>Demo veri oluştur
+              </a>
             </div>
           @endif
         </div>
@@ -569,9 +572,12 @@
           @else
             <div class="d-flex flex-column align-items-center justify-content-center py-5">
               <i class="icon-base ti tabler-chart-bar icon-48px text-muted mb-3"></i>
-              <p class="text-muted small mb-0 text-center">
+              <p class="text-muted small mb-2 text-center">
                 Banka hesapları bağlandıktan sonra kişisel enflasyon hesaplanacak.
               </p>
+              <a href="{{ route('demo-data.index') }}" class="btn btn-sm btn-outline-primary">
+                <i class="icon-base ti tabler-database-plus me-1"></i>Demo veri oluştur
+              </a>
             </div>
           @endif
         </div>
@@ -646,9 +652,14 @@
                 <i class="icon-base ti tabler-building-bank icon-48px text-muted"></i>
               </div>
               <p class="text-muted mb-3">Henüz banka hesabı bağlanmamış.</p>
-              <a href="{{ route('bank-connections.create') }}" class="btn btn-outline-primary">
-                <i class="icon-base ti tabler-plus me-1"></i>Banka Bağla
-              </a>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="{{ route('bank-connections.create') }}" class="btn btn-outline-primary">
+                  <i class="icon-base ti tabler-plus me-1"></i>Banka Bağla
+                </a>
+                <a href="{{ route('demo-data.index') }}" class="btn btn-outline-secondary">
+                  <i class="icon-base ti tabler-database-plus me-1"></i>Demo Veri
+                </a>
+              </div>
             </div>
           @endif
         </div>
@@ -1013,7 +1024,7 @@
           }).render();
         } else {
           document.getElementById('cashFlowChart').innerHTML =
-            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-bar icon-48px d-block mb-2"></i><p class="small mb-0">Nakit akışı verisi bulunamadı.</p></div>';
+            '<div class="d-flex flex-column align-items-center justify-content-center py-6 text-muted"><i class="icon-base ti tabler-chart-bar icon-48px d-block mb-2"></i><p class="small mb-2">Nakit akışı verisi bulunamadı.</p><a href="{{ route("demo-data.index") }}" class="btn btn-sm btn-outline-primary"><i class="icon-base ti tabler-database-plus me-1"></i>Demo veri oluştur</a></div>';
         }
       }
 

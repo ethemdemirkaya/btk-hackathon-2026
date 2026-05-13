@@ -274,6 +274,29 @@ class DemoDataController extends Controller
     {
         $now = Carbon::now();
 
+        // Merchant-category slug → Category ID lookup (cached for this call)
+        $categoryCache = [];
+        $resolveCategoryId = function (string $slug) use (&$categoryCache): ?int {
+            if (! array_key_exists($slug, $categoryCache)) {
+                $cat = \App\Models\Category::where('slug', $slug)->first();
+                $categoryCache[$slug] = $cat ? $cat->id : null;
+            }
+            return $categoryCache[$slug];
+        };
+
+        // Map expense template 'cat' slugs to canonical category slugs in the DB
+        $catSlugMap = [
+            'market'    => 'market',
+            'ulasim'    => 'ulasim',
+            'fatura'    => 'faturalar',
+            'abonelik'  => 'dijital-abonelik',
+            'restoran'  => 'restoran-kafe',
+            'alisveris' => 'elektronik',
+            'saglik'    => 'saglik',
+            'eglence'   => 'eglence',
+            'diger'     => 'diger',
+        ];
+
         for ($m = $monthsBack; $m >= 0; $m--) {
             $monthStart = $now->copy()->subMonths($m)->startOfMonth();
             $monthEnd   = $m === 0 ? $now->copy() : $now->copy()->subMonths($m)->endOfMonth();
@@ -299,8 +322,10 @@ class DemoDataController extends Controller
             // Gider işlemleri
             $count = rand((int)($txPerMonth * 0.7), (int)($txPerMonth * 1.3));
             for ($i = 0; $i < $count; $i++) {
-                $template = self::EXPENSE_TEMPLATES[array_rand(self::EXPENSE_TEMPLATES)];
-                $amount   = -(rand($template['min'] * 100, $template['max'] * 100) / 100);
+                $template   = self::EXPENSE_TEMPLATES[array_rand(self::EXPENSE_TEMPLATES)];
+                $amount     = -(rand($template['min'] * 100, $template['max'] * 100) / 100);
+                $dbSlug     = $catSlugMap[$template['cat']] ?? $template['cat'];
+                $categoryId = $resolveCategoryId($dbSlug);
 
                 $dayOffset = rand(0, (int) $monthStart->copy()->diffInDays($monthEnd));
                 $txDate    = $monthStart->copy()->addDays($dayOffset);
@@ -316,6 +341,7 @@ class DemoDataController extends Controller
                     'description'      => $template['desc'],
                     'merchant_name'    => $template['merchant'],
                     'merchant_category'=> $template['cat'],
+                    'category_id'      => $categoryId,
                     'channel'          => in_array($template['cat'], ['ulasim', 'diger']) ? 'atm' : 'pos',
                     'is_recurring'     => in_array($template['cat'], ['fatura', 'abonelik']),
                 ]);
@@ -350,20 +376,20 @@ class DemoDataController extends Controller
 
     private function ensureDemoBudgets(int $userId): void
     {
-        if (Budget::where('user_id', $userId)->count() > 0) {
-            return;
-        }
+        $period = now()->format('Y-m');
 
         // Yaygın kategori slug'larını dene
         $categoryMap = [
-            'market'    => ['Market', 'Gıda', 'Supermarket'],
-            'restoran'  => ['Yeme & İçme', 'Restoran', 'Lokanta'],
-            'ulasim'    => ['Ulaşım', 'Yakıt', 'Transport'],
-            'eglence'   => ['Eğlence', 'Etkinlik'],
+            'market'       => ['Market', 'Gıda', 'Supermarket'],
+            'restoran-kafe'=> ['Restoran & Kafe', 'Yeme & İçme', 'Restoran', 'Lokanta'],
+            'ulasim'       => ['Ulaşım', 'Yakıt', 'Transport'],
+            'eglence'      => ['Eğlence', 'Etkinlik'],
         ];
 
         foreach ($categoryMap as $slugHint => $names) {
-            $category = Category::whereIn('name', $names)->orWhere('slug', $slugHint)->first();
+            $category = Category::where('slug', $slugHint)
+                ->orWhereIn('name', $names)
+                ->first();
             if (! $category) {
                 continue;
             }
@@ -371,7 +397,7 @@ class DemoDataController extends Controller
             // Unique constraint: user_id + category_id + period
             $exists = Budget::where('user_id', $userId)
                 ->where('category_id', $category->id)
-                ->where('period', 'monthly')
+                ->where('period', $period)
                 ->exists();
 
             if ($exists) {
@@ -381,7 +407,7 @@ class DemoDataController extends Controller
             Budget::create([
                 'user_id'          => $userId,
                 'category_id'      => $category->id,
-                'period'           => 'monthly',
+                'period'           => $period,
                 'amount'           => (float) (rand(15, 60) * 100),
                 'alert_threshold'  => 80,
             ]);
