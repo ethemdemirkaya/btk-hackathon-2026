@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
@@ -42,12 +43,40 @@ class FxAlertsPage extends ConsumerWidget {
     final ratesAsync = ref.watch(_fxRatesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kur & Altın Alarmları')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddAlarm(context, ref),
         child: const Icon(Icons.add),
       ),
-      body: RefreshIndicator(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Kur & Altın Alarmları',
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(_fxAlertsProvider);
           ref.invalidate(_fxRatesProvider);
@@ -56,7 +85,7 @@ class FxAlertsPage extends ConsumerWidget {
           loading: () => const SkeletonListView(),
           error: (e, __) => ErrorState(
             message: e.toString(),
-            onRetry: () => ref.refresh(_fxAlertsProvider),
+            onRetry: () => ref.invalidate(_fxAlertsProvider),
           ),
           data: (data) {
             final alerts = data['alerts'] as List? ?? [];
@@ -65,7 +94,6 @@ class FxAlertsPage extends ConsumerWidget {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Live rates ticker
                 if (rates.isNotEmpty) ...[
                   _RatesTicker(rates: rates),
                   const SizedBox(height: 16),
@@ -91,6 +119,10 @@ class FxAlertsPage extends ConsumerWidget {
           },
         ),
       ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -101,7 +133,7 @@ class FxAlertsPage extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => _AddAlertSheet(
-        onAdded: () => ref.refresh(_fxAlertsProvider),
+        onAdded: () => ref.invalidate(_fxAlertsProvider),
       ),
     );
   }

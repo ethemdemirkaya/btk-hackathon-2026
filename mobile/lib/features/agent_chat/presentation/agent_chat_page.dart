@@ -7,6 +7,7 @@ import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 const _starters = [
   (icon: Icons.pie_chart_outline, text: 'Bu ay nereye harcadım?'),
@@ -206,6 +207,11 @@ class _Header extends StatelessWidget {
           _IconBtn(icon: Icons.list, onTap: onHistory),
           const SizedBox(width: 8),
           _IconBtn(icon: Icons.add, onTap: onNewChat),
+          const SizedBox(width: 8),
+          _IconBtn(
+            icon: Icons.menu,
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+          ),
         ],
       ),
     );

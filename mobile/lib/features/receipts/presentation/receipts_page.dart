@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
@@ -138,7 +139,6 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     final async = ref.watch(_receiptsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fişler')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _uploading ? null : _showPickerOptions,
         icon: _uploading
@@ -150,13 +150,42 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
             : const Icon(Icons.document_scanner),
         label: Text(_uploading ? 'İşleniyor...' : 'Fiş Tara'),
       ),
-      body: RefreshIndicator(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 14, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Fişler',
+                      style: AppTextStyles.headlineMedium
+                          .copyWith(color: AppColors.text1Dark)),
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
         onRefresh: () async => ref.invalidate(_receiptsProvider),
         child: async.when(
           loading: () => const SkeletonListView(),
           error: (e, __) => ErrorState(
             message: e.toString(),
-            onRetry: () => ref.refresh(_receiptsProvider),
+            onRetry: () => ref.invalidate(_receiptsProvider),
           ),
           data: (receipts) {
             if (receipts.isEmpty) {
@@ -179,6 +208,10 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
               ),
             );
           },
+        ),
+      ),
+            ),
+          ],
         ),
       ),
     );

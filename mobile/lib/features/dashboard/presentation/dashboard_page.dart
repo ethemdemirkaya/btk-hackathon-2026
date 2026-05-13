@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../shared/providers/auth_provider.dart';
@@ -101,6 +102,12 @@ class _GreetingHeaderState extends ConsumerState<_GreetingHeader> {
           _IconBtn(
             icon: Icons.notifications_outlined,
             onTap: () => context.push('/insights'),
+          ),
+          const SizedBox(width: 8),
+          // Hamburger menu
+          _IconBtn(
+            icon: Icons.menu,
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
           ),
         ],
       ),

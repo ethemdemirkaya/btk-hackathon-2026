@@ -6,6 +6,7 @@ import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -121,6 +122,21 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                         border: Border.all(color: AppColors.border1Dark),
                       ),
                       child: const Icon(Icons.refresh,
+                          size: 16, color: AppColors.text2Dark),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bg2,
+                        border: Border.all(color: AppColors.border1Dark),
+                      ),
+                      child: const Icon(Icons.menu,
                           size: 16, color: AppColors.text2Dark),
                     ),
                   ),
