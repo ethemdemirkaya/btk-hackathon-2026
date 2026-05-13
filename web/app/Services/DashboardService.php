@@ -169,27 +169,42 @@ class DashboardService
     /** Returns personal vs TÜFE inflation for last 6 months */
     public function getInflationComparison(User $user): array
     {
-        $personal = InflationRate::where('user_id', $user->id)
-            ->where('source', 'personal')
+        // inflation_rates is global (no user_id) — get last 6 months of TÜFE headline rates
+        $tufeRows = InflationRate::where('source', 'tuik')
             ->orderByDesc('period_year')->orderByDesc('period_month')
             ->limit(6)->get();
 
-        if ($personal->isEmpty()) {
-            return [];
+        // Fallback: derive from inflation_category_rates (genel slug = headline)
+        if ($tufeRows->isEmpty()) {
+            $catRows = InflationCategoryRate::where('tuik_category_slug', 'genel')
+                ->orderByDesc('period_year')->orderByDesc('period_month')
+                ->limit(6)->get();
+
+            if ($catRows->isEmpty()) {
+                return [];
+            }
+
+            $tufeRows = $catRows->map(fn ($r) => (object) [
+                'period_year'          => $r->period_year,
+                'period_month'         => $r->period_month,
+                'headline_annual_rate' => $r->annual_change_rate,
+            ]);
         }
 
-        $result = [];
-        foreach ($personal as $row) {
-            $tufeRow = InflationCategoryRate::where('tuik_category_slug', 'genel')
-                ->where('period_year', $row->period_year)
-                ->where('period_month', $row->period_month)
-                ->first();
+        // Compute current personal inflation once and reuse for all months shown
+        $personalRate = null;
+        try {
+            $personalResult = app(PersonalInflationService::class)->calculate($user);
+            $personalRate   = isset($personalResult['personal_rate']) ? (float) $personalResult['personal_rate'] : null;
+        } catch (\Throwable) {}
 
+        $result = [];
+        foreach ($tufeRows as $row) {
             $period   = "{$row->period_year}-" . str_pad($row->period_month, 2, '0', STR_PAD_LEFT);
             $result[] = [
                 'month'    => $period,
-                'personal' => round((float) $row->annual_rate, 2),
-                'tufe'     => $tufeRow ? round((float) $tufeRow->annual_change_rate, 2) : null,
+                'personal' => $personalRate !== null ? round($personalRate, 2) : null,
+                'tufe'     => round((float) $row->headline_annual_rate, 2),
             ];
         }
 
