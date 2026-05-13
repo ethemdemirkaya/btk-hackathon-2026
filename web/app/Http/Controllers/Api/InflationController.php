@@ -22,26 +22,30 @@ class InflationController extends Controller
             $personal = null;
         }
 
+        // inflation_rates columns: period_year, period_month, headline_annual_rate
         $tufeHistory = DB::table('inflation_rates')
-            ->orderByDesc('period')
+            ->orderByDesc('period_year')
+            ->orderByDesc('period_month')
             ->limit(12)
-            ->get(['period', 'annual_rate', 'monthly_rate'])
+            ->get(['period_year', 'period_month', 'headline_annual_rate'])
             ->map(fn ($r) => [
-                'period'       => $r->period,
-                'annual_rate'  => (float) $r->annual_rate,
-                'monthly_rate' => (float) $r->monthly_rate,
+                'period'       => sprintf('%04d-%02d', $r->period_year, $r->period_month),
+                'annual_rate'  => (float) $r->headline_annual_rate,
+                'monthly_rate' => null,
             ]);
 
+        // inflation_category_rates columns: period_year, period_month, tuik_category_slug, annual_change_rate
         $categoryRates = DB::table('inflation_category_rates')
-            ->orderByDesc('period')
-            ->limit(30)
+            ->orderByDesc('period_year')
+            ->orderByDesc('period_month')
+            ->limit(100)
             ->get()
-            ->groupBy('category')
-            ->map(fn ($rows) => $rows->sortByDesc('period')->first())
+            ->groupBy('tuik_category_slug')
+            ->map(fn ($rows) => $rows->sortByDesc('period_year')->sortByDesc('period_month')->first())
             ->map(fn ($r) => [
-                'category' => $r->category,
-                'rate'     => (float) $r->annual_rate,
-                'period'   => $r->period,
+                'category' => $r->tuik_category_slug,
+                'rate'     => (float) $r->annual_change_rate,
+                'period'   => sprintf('%04d-%02d', $r->period_year, $r->period_month),
             ])
             ->values();
 

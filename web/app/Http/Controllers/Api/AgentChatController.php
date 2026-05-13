@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AgentInsight;
 use App\Models\AgentMessage;
 use App\Models\AgentRun;
-use App\Services\OrchestratorAgent;
+use App\Services\Agents\Orchestrator\OrchestratorAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

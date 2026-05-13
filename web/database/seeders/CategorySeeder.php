@@ -66,6 +66,12 @@ class CategorySeeder extends Seeder
         foreach ($categories as $cat) {
             $parentId = $cat['parent_slug'] ? ($slugToId[$cat['parent_slug']] ?? null) : null;
 
+            $existing = DB::table('categories')->where('slug', $cat['slug'])->first();
+            if ($existing) {
+                $slugToId[$cat['slug']] = $existing->id;
+                continue;
+            }
+
             $id = DB::table('categories')->insertGetId([
                 'parent_id'          => $parentId,
                 'name'               => $cat['name'],

@@ -56,6 +56,12 @@ class FakeBankSeeder extends Seeder
         $startDate = $endDate->copy()->subMonths(6);
 
         foreach ($this->banks() as $bank) {
+            // Skip if customer already exists (idempotent re-run)
+            $existing = FakeBankCustomer::where('customer_id', $bank['customer_id'])->first();
+            if ($existing) {
+                continue;
+            }
+
             $customer = $this->createCustomer($bank);
             $accounts = $this->createAccounts($bank, $customer);
             $cards    = $this->createCards($bank, $customer, $accounts[0]);

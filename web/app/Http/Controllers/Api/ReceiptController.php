@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Receipt;
-use App\Services\ReceiptOCRAgent;
+use App\Services\Agents\Specialists\ReceiptOCRAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

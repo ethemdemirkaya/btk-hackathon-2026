@@ -21,13 +21,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Demo kullanıcısı (UserBankConnectionSeeder email ile bu user'ı bulur)
-        User::factory()->create([
-            'name'           => 'Ethem Demirkaya',
-            'email'          => 'demo@paranette.local',
-            'password'       => Hash::make('password'),
-            'monthly_income' => 35000.00,
-            'inflation_aware'=> true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'demo@paranette.local'],
+            [
+                'name'           => 'Ethem Demirkaya',
+                'password'       => Hash::make('password'),
+                'monthly_income' => 35000.00,
+                'inflation_aware'=> true,
+            ]
+        );
 
         $this->call([
             UserBankConnectionSeeder::class,

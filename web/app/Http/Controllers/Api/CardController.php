@@ -13,11 +13,13 @@ class CardController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $connectionIds = DB::table('bank_connections')
-            ->where('user_id', $request->user()->id)
+        $accountIds = DB::table('accounts')
+            ->whereIn('bank_connection_id', DB::table('bank_connections')
+                ->where('user_id', $request->user()->id)
+                ->pluck('id'))
             ->pluck('id');
 
-        $cards = Card::whereIn('bank_connection_id', $connectionIds)
+        $cards = Card::whereIn('account_id', $accountIds)
             ->get();
 
         $totalDebt  = $cards->sum('current_debt');
