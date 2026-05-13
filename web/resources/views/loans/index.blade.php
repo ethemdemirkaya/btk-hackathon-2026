@@ -863,39 +863,40 @@
       const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.04)';
 
       // ── Amortization area charts ────────────────────────────────────────────
-      const charts = @json(
-        $loans->map(function ($loan) {
-          $months   = [];
-          $balances = [];
-          if ($loan->remaining_installments > 0 && $loan->next_payment_amount > 0) {
-            $bal  = (float)$loan->current_balance;
-            $rate = (float)$loan->interest_rate / 100 / 12;
-            $base = $loan->next_payment_date
-              ? \Carbon\Carbon::parse($loan->next_payment_date)
-              : now();
-            $cap = min($loan->remaining_installments, 60);
-            for ($m = 0; $m <= $cap; $m++) {
-              $months[]   = $base->copy()->addMonths($m)->format('M Y');
-              $balances[] = round(max(0, $bal), 0);
-              if ($rate > 0) {
-                $interest  = $bal * $rate;
-                $principal = (float)$loan->next_payment_amount - $interest;
-                $bal      -= max(0, $principal);
-              } else {
-                $bal -= (float)$loan->next_payment_amount;
-              }
+      @php
+        $loanChartData = $loans->map(function ($loan) {
+            $months   = [];
+            $balances = [];
+            if ($loan->remaining_installments > 0 && $loan->next_payment_amount > 0) {
+                $bal  = (float)$loan->current_balance;
+                $rate = (float)$loan->interest_rate / 100 / 12;
+                $base = $loan->next_payment_date
+                    ? \Carbon\Carbon::parse($loan->next_payment_date)
+                    : now();
+                $cap = min($loan->remaining_installments, 60);
+                for ($m = 0; $m <= $cap; $m++) {
+                    $months[]   = $base->copy()->addMonths($m)->format('M Y');
+                    $balances[] = round(max(0, $bal), 0);
+                    if ($rate > 0) {
+                        $interest  = $bal * $rate;
+                        $principal = (float)$loan->next_payment_amount - $interest;
+                        $bal      -= max(0, $principal);
+                    } else {
+                        $bal -= (float)$loan->next_payment_amount;
+                    }
+                }
+                if (count($balances) > 0) {
+                    $balances[count($balances) - 1] = 0;
+                }
             }
-            if (count($balances) > 0) {
-              $balances[count($balances) - 1] = 0;
-            }
-          }
-          return [
-            'id'       => $loan->id,
-            'months'   => $months,
-            'balances' => $balances,
-          ];
-        })->values()
-      );
+            return [
+                'id'       => $loan->id,
+                'months'   => $months,
+                'balances' => $balances,
+            ];
+        })->values();
+      @endphp
+      const charts = @json($loanChartData);
 
       // Colour per accent class
       const accentColors = {

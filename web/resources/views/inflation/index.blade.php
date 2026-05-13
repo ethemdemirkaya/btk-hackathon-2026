@@ -922,13 +922,16 @@
       /* ── 4. TÜFE historical area chart ──────────────────────────────────── */
       const histEl = document.getElementById('historyChart');
       @if($historical->isNotEmpty())
+      @php
+        $histChartData = $historical->map(fn($r) => [
+            'rate'  => round((float)$r->annual_change_rate, 2),
+            'month' => $r->period_month,
+            'year'  => $r->period_year,
+        ])->values();
+      @endphp
       if (histEl) {
         const monthNames = ['', 'Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-        const histRaw    = @json($historical->map(fn($r) => [
-          'rate'  => round((float)$r->annual_change_rate, 2),
-          'month' => $r->period_month,
-          'year'  => $r->period_year,
-        ])->values());
+        const histRaw    = @json($histChartData);
 
         const histLabels = histRaw.map(r => (monthNames[r.month] || r.month) + ' ' + String(r.year).slice(2));
         const histData   = histRaw.map(r => r.rate);
