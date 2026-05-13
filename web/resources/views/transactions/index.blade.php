@@ -3,27 +3,33 @@
 
   <x-slot name="pageCss">
   <style>
-    /* ── Bank logo landscape box ──────────────────────────────────────────── */
-    .bank-logo-box {
-      background: #fff;
-      border-radius: 6px;
-      padding: 3px 7px;
+    /* ── Bank logo avatar (40×40 rounded square) ─────────────────────────── */
+    .bank-logo-avatar {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 52px;
-      height: 28px;
-      border: 1px solid rgba(0,0,0,.09);
       flex-shrink: 0;
+      overflow: hidden;
     }
-    [data-bs-theme="dark"] .bank-logo-box {
-      background: rgba(255,255,255,.1);
-      border-color: rgba(255,255,255,.12);
+    /* Light mode override */
+    [data-bs-theme="light"] .bank-logo-avatar,
+    :root:not([data-bs-theme="dark"]) .bank-logo-avatar {
+      background: rgba(0,0,0,.04);
+      border-color: rgba(0,0,0,.08);
     }
-    .bank-logo-box img { max-height: 18px; width: auto; object-fit: contain; }
-    .bank-slug-badge {
-      font-size: .6rem; font-weight: 700; letter-spacing: .04em;
+    .bank-logo-avatar img {
+      max-width: 26px; max-height: 26px;
+      width: auto; height: auto;
+      object-fit: contain;
+    }
+    .bank-logo-avatar .bank-initials {
+      font-size: .58rem; font-weight: 800; letter-spacing: .04em;
       color: var(--bs-secondary-color);
+      text-align: center; line-height: 1; text-transform: uppercase;
     }
 
     /* ── Stat card accent bar ─────────────────────────────────────────────── */
@@ -79,18 +85,19 @@
     .tx-merchant { font-size: .7rem; color: var(--bs-secondary-color); }
     .tx-time     { font-size: .68rem; color: var(--bs-tertiary-color); }
     .tx-cat-chip {
-      font-size: .6rem; padding: .1rem .45rem; border-radius: 10px;
-      background: var(--bs-secondary-bg);
+      font-size: .6rem; padding: .12rem .5rem; border-radius: 20px;
+      background: rgba(var(--bs-secondary-rgb), .12);
       border: 1px solid var(--bs-border-color);
       color: var(--bs-secondary-color);
       font-weight: 600; letter-spacing: .03em;
-      white-space: nowrap;
+      white-space: nowrap; display: inline-block;
     }
     .tx-channel-chip {
-      font-size: .58rem; padding: .08rem .38rem; border-radius: 8px;
-      background: rgba(var(--bs-info-rgb), .1);
+      font-size: .6rem; padding: .12rem .5rem; border-radius: 20px;
+      background: rgba(var(--bs-info-rgb), .12);
+      border: 1px solid rgba(var(--bs-info-rgb), .2);
       color: var(--bs-info);
-      font-weight: 600;
+      font-weight: 600; white-space: nowrap; display: inline-block;
     }
 
     .tx-bank { flex-shrink: 0; }
@@ -481,13 +488,21 @@
           </div>
         </div>
 
-        {{-- Bank logo (landscape box) --}}
+        {{-- Bank logo (40×40 rounded-square avatar) --}}
         <div class="tx-bank d-none d-sm-block">
-          <div class="bank-logo-box" title="{{ $tx->bank_name }}">
+          <div class="bank-logo-avatar" title="{{ $tx->bank_name }}">
             @if($tx->bank_logo)
               <img src="{{ asset($tx->bank_logo) }}" alt="{{ $tx->bank_name }}">
             @else
-              <span class="bank-slug-badge">{{ strtoupper(substr($tx->bank_slug ?? $tx->bank_name, 0, 6)) }}</span>
+              @php
+                $words = preg_split('/[\s\-]+/', trim($tx->bank_name ?? $tx->bank_slug ?? ''));
+                $initials = strtoupper(
+                  count($words) >= 2
+                    ? substr($words[0], 0, 1) . substr($words[1], 0, 1)
+                    : substr($words[0] ?? 'B', 0, 2)
+                );
+              @endphp
+              <span class="bank-initials">{{ $initials }}</span>
             @endif
           </div>
         </div>

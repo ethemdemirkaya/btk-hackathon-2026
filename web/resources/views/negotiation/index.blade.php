@@ -244,8 +244,8 @@
         </div>
         <div class="card-body p-0">
           @if($drafts->isEmpty())
-            <div class="text-center py-6" id="emptyDrafts">
-              <i class="icon-base ti tabler-mail-off icon-48px text-muted mb-3 d-block"></i>
+            <div class="d-flex flex-column align-items-center text-center py-6" id="emptyDrafts">
+              <i class="icon-base ti tabler-mail-off icon-48px text-muted mb-3"></i>
               <p class="text-muted small mb-0">Henüz mektup oluşturulmadı.</p>
             </div>
           @else

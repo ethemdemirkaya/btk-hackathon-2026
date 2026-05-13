@@ -1,6 +1,11 @@
 <x-app-layout>
   <x-slot name="title">Abonelikler</x-slot>
 
+  <x-slot name="pageCss">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}">
+  </x-slot>
+
   <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
     <div>
       <h4 class="fw-bold mb-0">Abonelikler</h4>
@@ -334,18 +339,22 @@
               </div>
               <div class="col-6">
                 <label class="form-label">Döngü</label>
-                <select name="billing_cycle" class="form-select @error('billing_cycle') is-invalid @enderror">
+                <select id="billingCycleSelect" name="billing_cycle"
+                        class="form-select @error('billing_cycle') is-invalid @enderror">
                   <option value="monthly" {{ old('billing_cycle', 'monthly') === 'monthly' ? 'selected' : '' }}>Aylık</option>
-                  <option value="yearly" {{ old('billing_cycle') === 'yearly' ? 'selected' : '' }}>Yıllık</option>
-                  <option value="weekly" {{ old('billing_cycle') === 'weekly' ? 'selected' : '' }}>Haftalık</option>
+                  <option value="yearly"  {{ old('billing_cycle') === 'yearly'  ? 'selected' : '' }}>Yıllık</option>
+                  <option value="weekly"  {{ old('billing_cycle') === 'weekly'  ? 'selected' : '' }}>Haftalık</option>
                 </select>
                 @error('billing_cycle') <div class="invalid-feedback">{{ $message }}</div> @enderror
               </div>
             </div>
             <div class="mt-4">
               <label class="form-label">Sonraki Ödeme <span class="text-danger">*</span></label>
-              <input type="date" name="next_billing_date" class="form-control @error('next_billing_date') is-invalid @enderror"
-                     value="{{ old('next_billing_date', now()->addMonth()->format('Y-m-d')) }}" required>
+              <input type="text" id="nextBillingDatePicker" name="next_billing_date"
+                     class="form-control @error('next_billing_date') is-invalid @enderror"
+                     placeholder="GG.AA.YYYY"
+                     value="{{ old('next_billing_date') ? \Carbon\Carbon::parse(old('next_billing_date'))->format('d.m.Y') : now()->addMonth()->format('d.m.Y') }}"
+                     autocomplete="off" required readonly>
               @error('next_billing_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
           </div>
@@ -359,13 +368,80 @@
   </div>
 
   <x-slot name="pageJs">
+  <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+  <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script>
-  // Re-open add modal if validation failed
+  // ── Turkish locale for Flatpickr ─────────────────────────────────────────
+  const fpTurkish = {
+    weekdays: {
+      shorthand: ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'],
+      longhand:  ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],
+    },
+    months: {
+      shorthand: ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],
+      longhand:  ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],
+    },
+    firstDayOfWeek: 1,
+    rangeSeparator: ' - ',
+    weekAbbreviation: 'Hf',
+    scrollTitle: 'Kaydırarak artır',
+    toggleTitle: 'AM/PM\'e tıkla',
+    amPM: ['ÖÖ','ÖS'],
+    yearAriaLabel: 'Yıl',
+    monthAriaLabel: 'Ay',
+    hourAriaLabel: 'Saat',
+    minuteAriaLabel: 'Dakika',
+    time_24hr: true,
+  };
+
+  let billingCycleSelect2 = null;
+  let nextBillingFlatpickr = null;
+
+  // ── Initialize Select2 + Flatpickr on modal show ─────────────────────────
+  const addModal = document.getElementById('addModal');
+
+  addModal.addEventListener('shown.bs.modal', function () {
+    // Select2
+    if (!billingCycleSelect2) {
+      billingCycleSelect2 = $('#billingCycleSelect').select2({
+        dropdownParent: $(addModal),
+        minimumResultsForSearch: Infinity,
+        width: '100%',
+      });
+    }
+
+    // Flatpickr
+    if (!nextBillingFlatpickr) {
+      nextBillingFlatpickr = flatpickr('#nextBillingDatePicker', {
+        locale: fpTurkish,
+        dateFormat: 'd.m.Y',
+        allowInput: false,
+        disableMobile: true,
+        defaultDate: document.getElementById('nextBillingDatePicker').value || null,
+        appendTo: addModal,
+      });
+    }
+  });
+
+  addModal.addEventListener('hidden.bs.modal', function () {
+    // Destroy on hide so they re-init cleanly next open (handles DOM reuse)
+    if (billingCycleSelect2) {
+      $('#billingCycleSelect').select2('destroy');
+      billingCycleSelect2 = null;
+    }
+    if (nextBillingFlatpickr) {
+      nextBillingFlatpickr.destroy();
+      nextBillingFlatpickr = null;
+    }
+  });
+
+  // ── Re-open add modal if validation failed ────────────────────────────────
   @if($errors->any())
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  bootstrap.Modal.getOrCreateInstance(addModal).show();
   @endif
 
+  // ── SweetAlert delete confirmation ───────────────────────────────────────
   document.querySelectorAll('.btn-swal-delete').forEach(function (btn) {
     btn.addEventListener('click', function () {
       Swal.fire({
@@ -378,7 +454,7 @@
     });
   });
 
-  const addModal   = document.getElementById('addModal');
+  // ── Auto-fill from candidate cards ───────────────────────────────────────
   const nameInput  = addModal.querySelector('[name="name"]');
   const merchantIn = addModal.querySelector('[name="merchant_name"]');
   const amountIn   = addModal.querySelector('[name="amount"]');
