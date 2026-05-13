@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Fişlerinizi taramak için kamera erişimine ihtiyaç duyulur.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeriden fiş resmi seçmek için fotoğraf kütüphanesi erişimine ihtiyaç duyulur.</string>
 </dict>
 </plist>
