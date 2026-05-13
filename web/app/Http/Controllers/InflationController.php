@@ -53,7 +53,12 @@ class InflationController extends Controller
             ->reverse()->values();
 
         // Calculate personal inflation using PersonalInflationService
-        $personalResult  = app(PersonalInflationService::class)->calculate($user);
+        try {
+            $personalResult = app(PersonalInflationService::class)->calculate($user);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('PersonalInflation calculation failed', ['error' => $e->getMessage()]);
+            $personalResult = ['personal_rate' => null, 'diff' => 0.0, 'total_spending' => 0, 'breakdown' => []];
+        }
         $personalRate    = $personalResult['personal_rate'] ?? $headline;
         $personalDelta   = isset($personalResult['diff']) ? $personalResult['diff'] : 0.0;
         $totalSpend      = $personalResult['total_spending'] ?? 0;

@@ -6,6 +6,8 @@ import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
@@ -42,8 +44,13 @@ class LoansPage extends ConsumerWidget {
     final async = ref.watch(_loansProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.bg1,
       body: SafeArea(
-        child: async.when(
+        child: RefreshIndicator(
+          color: AppColors.accent,
+          backgroundColor: AppColors.bg2,
+          onRefresh: () async => ref.invalidate(_loansProvider),
+          child: async.when(
           loading: () => const SkeletonListView(),
           error: (e, __) => ErrorState(
             message: e.toString(),
@@ -60,6 +67,48 @@ class LoansPage extends ConsumerWidget {
                   s + ((l['next_payment_amount'] as num?)?.toDouble() ?? 0),
             );
 
+            if (loans.isEmpty) {
+              return ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () =>
+                              shellScaffoldKey.currentState?.openDrawer(),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.bg2,
+                              border: Border.all(color: AppColors.border1Dark),
+                            ),
+                            child: const Icon(Icons.menu,
+                                size: 18, color: AppColors.text2Dark),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('Krediler',
+                            style: AppTextStyles.headlineMedium
+                                .copyWith(color: AppColors.text1Dark)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  EmptyState(
+                    icon: Icons.account_balance_outlined,
+                    title: 'Kredi bulunamadı',
+                    subtitle:
+                        'Konut, taşıt veya ihtiyaç kredilerinizi buradan takip edin.',
+                    ctaLabel: '+ Kredi Ekle',
+                    onCta: () {},
+                  ),
+                ],
+              );
+            }
+
             return ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
@@ -69,7 +118,8 @@ class LoansPage extends ConsumerWidget {
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.pop(),
+                        onTap: () =>
+                            shellScaffoldKey.currentState?.openDrawer(),
                         child: Container(
                           width: 36,
                           height: 36,
@@ -78,8 +128,8 @@ class LoansPage extends ConsumerWidget {
                             color: AppColors.bg2,
                             border: Border.all(color: AppColors.border1Dark),
                           ),
-                          child: const Icon(Icons.arrow_back_ios_new,
-                              size: 14, color: AppColors.text2Dark),
+                          child: const Icon(Icons.menu,
+                              size: 18, color: AppColors.text2Dark),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -174,6 +224,7 @@ class LoansPage extends ConsumerWidget {
               ],
             );
           },
+        ),
         ),
       ),
     );

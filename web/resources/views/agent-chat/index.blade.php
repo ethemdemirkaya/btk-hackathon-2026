@@ -3,379 +3,551 @@
 
   <x-slot name="pageCss">
   <style>
-    /* ── Markdown content inside analysis cards ─────────────────────────── */
+    /* ══════════════════════════════════════════════════════════════════════
+       CHAT LAYOUT — full-height, no page scroll
+    ══════════════════════════════════════════════════════════════════════ */
+    html, body { height: 100%; }
+
+    /* Neutralise Vuexy's content-wrapper padding so we can go full-height */
+    .chat-root {
+      display: flex;
+      height: calc(100vh - var(--header-height, 64px));
+      min-height: 500px;
+      margin: -1.5rem -1.5rem 0;   /* cancel page padding */
+      overflow: hidden;
+      border-top: 1px solid var(--bs-border-color);
+    }
+
+    /* ── LEFT SIDEBAR ─────────────────────────────────────────────────── */
+    .chat-left {
+      width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--bs-border-color);
+      background: var(--bs-body-bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: width .25s ease;
+    }
+    .chat-left.collapsed { width: 0; border-right: none; }
+
+    .chat-left-header {
+      padding: .85rem 1rem;
+      border-bottom: 1px solid var(--bs-border-color);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-shrink: 0;
+    }
+    .chat-left-header .brand-icon {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, #7367F0 0%, #CE9FFC 100%);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .chat-left-header .brand-title {
+      font-size: .8rem; font-weight: 700; color: var(--bs-heading-color); line-height: 1.2;
+    }
+    .chat-left-header .brand-sub {
+      font-size: .67rem; color: var(--bs-secondary-color);
+    }
+
+    .chat-left-body { flex: 1; overflow-y: auto; }
+    .chat-left-body::-webkit-scrollbar { width: 3px; }
+    .chat-left-body::-webkit-scrollbar-thumb { background: var(--bs-border-color); border-radius: 3px; }
+
+    /* New chat button */
+    .btn-new-chat {
+      margin: .75rem .85rem;
+      display: flex; align-items: center; gap: .5rem;
+      padding: .5rem .85rem; border-radius: 10px;
+      font-size: .78rem; font-weight: 600;
+      background: rgba(115,103,240,.1);
+      color: #7367F0;
+      border: 1px dashed rgba(115,103,240,.35);
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-new-chat:hover { background: rgba(115,103,240,.18); border-style: solid; }
+
+    /* Section headings inside sidebar */
+    .sidebar-section-title {
+      font-size: .64rem; font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--bs-secondary-color);
+      padding: .6rem 1rem .3rem;
+    }
+
+    /* Agent list items */
+    .agent-li {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .5rem 1rem;
+      border-bottom: 1px solid transparent;
+      transition: background .1s;
+    }
+    .agent-li:hover { background: var(--bs-secondary-bg); }
+    .agent-li .agent-avatar {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .agent-li .agent-name { font-size: .76rem; font-weight: 500; color: var(--bs-heading-color); line-height: 1.2; flex: 1; min-width: 0; }
+    .agent-status-badge {
+      font-size: .6rem; font-weight: 700; border-radius: 8px;
+      padding: .12rem .45rem; white-space: nowrap; flex-shrink: 0;
+    }
+    .agent-pulse {
+      width: 6px; height: 6px; border-radius: 50%; background: #ff9f43; flex-shrink: 0;
+      animation: agentPulse 1.1s ease-in-out infinite;
+    }
+    @@keyframes agentPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.65); } }
+
+    /* ── CENTER: CHAT AREA ───────────────────────────────────────────── */
+    .chat-center {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+      background: var(--bs-body-bg);
+    }
+
+    /* Top bar */
+    .chat-topbar {
+      padding: .7rem 1.25rem;
+      border-bottom: 1px solid var(--bs-border-color);
+      display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
+      background: var(--bs-body-bg);
+    }
+    .chat-topbar .topbar-toggle {
+      width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--bs-secondary-color);
+      border: none; background: transparent; transition: background .1s;
+    }
+    .chat-topbar .topbar-toggle:hover { background: var(--bs-secondary-bg); }
+    .chat-topbar .topbar-title {
+      font-size: .92rem; font-weight: 700; color: var(--bs-heading-color); flex: 1;
+      display: flex; align-items: center; gap: .45rem;
+    }
+    .chat-topbar .topbar-title .live-badge {
+      font-size: .58rem; font-weight: 700; letter-spacing: .05em;
+      background: rgba(40,199,111,.12); color: #28c76f;
+      border-radius: 8px; padding: .12rem .4rem;
+      display: inline-flex; align-items: center; gap: .25rem;
+    }
+    .chat-topbar .topbar-title .live-dot {
+      width: 5px; height: 5px; border-radius: 50%; background: #28c76f;
+      animation: ldot 1.5s ease-in-out infinite;
+    }
+    @@keyframes ldot { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .chat-topbar .agent-global-status {
+      font-size: .62rem; font-weight: 700;
+    }
+
+    /* Messages scroll area */
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 1.25rem 1.25rem 0;
+      display: flex; flex-direction: column; gap: .85rem;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--bs-border-color); border-radius: 4px; }
+
+    /* ── EMPTY / HERO STATE ─────────────────────────────────────────── */
+    .hero-center {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem 1.5rem;
+    }
+    .hero-glow {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(115,103,240,.22) 0%, rgba(115,103,240,.04) 70%);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 1.1rem;
+    }
+    .hero-chips {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .65rem;
+      max-width: 480px; width: 100%; margin: 1rem auto;
+    }
+    .quick-chip {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .7rem .9rem; border-radius: 12px;
+      border: 1px solid var(--bs-border-color);
+      background: var(--bs-body-bg); cursor: pointer;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      text-align: left;
+    }
+    .quick-chip:hover {
+      border-color: #7367F0;
+      box-shadow: 0 4px 18px rgba(115,103,240,.12);
+      background: rgba(115,103,240,.03);
+    }
+    .quick-chip:active { transform: scale(.975); }
+    .quick-chip .chip-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .quick-chip .chip-text { font-size: .78rem; font-weight: 500; color: var(--bs-heading-color); line-height: 1.3; }
+
+    /* ── MESSAGE BUBBLES ─────────────────────────────────────────────── */
+    .msg-row { display: flex; gap: .65rem; }
+    .msg-row.msg-user { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .msg-avatar.ai-avatar {
+      background: linear-gradient(135deg, #7367F0 0%, #CE9FFC 100%);
+    }
+    .msg-avatar.user-avatar {
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+    }
+
+    .msg-bubble {
+      max-width: min(560px, 76%); display: flex; flex-direction: column; gap: .3rem;
+    }
+    .msg-row.msg-user .msg-bubble { align-items: flex-end; }
+
+    .msg-content {
+      padding: .7rem 1rem;
+      border-radius: 14px;
+      line-height: 1.6;
+      font-size: .875rem;
+    }
+    /* AI message */
+    .msg-ai .msg-content {
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+      border-top-left-radius: 4px;
+      color: var(--bs-body-color);
+    }
+    /* User message */
+    .msg-user .msg-content {
+      background: linear-gradient(135deg, #7367F0 0%, #9180f4 100%);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-meta {
+      font-size: .64rem; color: var(--bs-secondary-color);
+      display: flex; align-items: center; gap: .35rem;
+      padding: 0 .25rem;
+    }
+
+    /* Agent badges inside AI message footer */
+    .msg-agent-badges { display: flex; gap: .25rem; flex-wrap: wrap; }
+    .msg-agent-badge {
+      font-size: .58rem; font-weight: 700; border-radius: 8px;
+      padding: .1rem .4rem;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex; align-items: center; gap: 5px;
+      padding: .75rem 1rem;
+      background: var(--bs-secondary-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: 14px; border-top-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #7367F0; opacity: .6;
+      animation: typingBounce .9s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+    @@keyframes typingBounce {
+      0%,60%,100% { transform: translateY(0); opacity: .6; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── Markdown inside AI messages ────────────────────────────────── */
     .markdown-body {
-      font-size: .86rem !important;
-      line-height: 1.7 !important;
-      background: transparent !important;
-      color: var(--bs-body-color) !important;
+      font-size: .86rem !important; line-height: 1.7 !important;
+      background: transparent !important; color: var(--bs-body-color) !important;
     }
     .markdown-body h1,.markdown-body h2,.markdown-body h3 {
       font-size: 1rem !important; font-weight: 700 !important;
       margin: .9rem 0 .4rem !important; color: var(--bs-heading-color) !important;
-      border-bottom: 1px solid var(--bs-border-color) !important;
-      padding-bottom: .25rem !important;
+      border-bottom: 1px solid var(--bs-border-color) !important; padding-bottom: .25rem !important;
     }
     .markdown-body h4,.markdown-body h5 { font-size: .9rem !important; font-weight: 700 !important; margin: .7rem 0 .3rem !important; }
     .markdown-body ul,.markdown-body ol { padding-left: 1.3rem !important; margin: .4rem 0 !important; }
     .markdown-body li { margin-bottom: .2rem !important; }
     .markdown-body strong { color: var(--bs-heading-color) !important; }
     .markdown-body code {
-      font-size: .8rem !important; padding: .1rem .35rem !important;
-      border-radius: 4px !important;
-      background: var(--bs-secondary-bg) !important;
-      color: #e95d5d !important; border: none !important;
+      font-size: .8rem !important; padding: .1rem .35rem !important; border-radius: 4px !important;
+      background: rgba(0,0,0,.12) !important; color: #e95d5d !important; border: none !important;
     }
     .markdown-body pre {
-      background: var(--bs-secondary-bg) !important;
-      border-radius: 8px !important; padding: .75rem 1rem !important;
-      border: 1px solid var(--bs-border-color) !important;
+      background: rgba(0,0,0,.15) !important; border-radius: 8px !important;
+      padding: .75rem 1rem !important; border: 1px solid var(--bs-border-color) !important;
     }
     .markdown-body pre code { color: var(--bs-body-color) !important; background: transparent !important; }
     .markdown-body blockquote {
-      border-left: 3px solid #7367F0 !important;
-      padding-left: .75rem !important; margin: .5rem 0 !important;
-      color: var(--bs-secondary-color) !important;
+      border-left: 3px solid #7367F0 !important; padding-left: .75rem !important;
+      margin: .5rem 0 !important; color: var(--bs-secondary-color) !important;
     }
     .markdown-body table { font-size: .8rem !important; width: 100% !important; }
     .markdown-body table th { background: var(--bs-secondary-bg) !important; }
     .markdown-body table th, .markdown-body table td {
-      padding: .3rem .6rem !important;
-      border: 1px solid var(--bs-border-color) !important;
+      padding: .3rem .6rem !important; border: 1px solid var(--bs-border-color) !important;
     }
     .markdown-body hr { border-color: var(--bs-border-color) !important; }
     .markdown-body p { margin-bottom: .5rem !important; }
 
-    /* ── Action proposal forms ───────────────────────────────────────────── */
+    /* ── Action proposal forms ──────────────────────────────────────── */
     .action-proposal-form { width: 100%; }
     .agent-action-form {
       padding: .6rem .75rem; border-radius: 8px; margin-top: .5rem;
-      background: var(--bs-secondary-bg); border: 1px solid var(--bs-border-color);
+      background: var(--bs-body-bg); border: 1px solid var(--bs-border-color);
     }
     .agent-action-form .form-label-sm { font-size: .72rem; font-weight: 600; color: var(--bs-secondary-color); }
     .action-result .alert { border-radius: 8px; font-size: .78rem; }
 
-    /* ── Command bar ──────────────────────────────────────────────────────── */
-    .command-bar {
+    /* Action bar below AI message */
+    .msg-actions {
+      padding: .45rem .75rem;
+      background: var(--bs-tertiary-bg);
+      border: 1px solid var(--bs-border-color);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      display: flex; gap: .4rem; flex-wrap: wrap; align-items: center;
+    }
+    .msg-actions .action-label {
+      font-size: .67rem; color: var(--bs-secondary-color); font-weight: 600; margin-right: .2rem;
+      display: flex; align-items: center; gap: .2rem;
+    }
+
+    /* ── COMMAND BAR (bottom) ───────────────────────────────────────── */
+    .chat-bottom {
+      padding: .85rem 1.25rem 1rem;
       background: var(--bs-body-bg);
+      border-top: 1px solid var(--bs-border-color);
+      flex-shrink: 0;
+    }
+
+    /* Quick trigger pills */
+    .trigger-pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .65rem; }
+    .trigger-pill {
+      cursor: pointer; border-radius: 18px; padding: .28rem .75rem;
+      font-size: .72rem; font-weight: 500;
+      border: 1px solid var(--bs-border-color);
+      color: var(--bs-secondary-color); background: var(--bs-body-bg);
+      transition: all .15s; user-select: none; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: .25rem;
+    }
+    .trigger-pill:hover { border-color: #7367F0; color: #7367F0; background: rgba(115,103,240,.06); }
+    .trigger-pill i { font-size: 12px; }
+
+    .command-bar {
+      display: flex; align-items: flex-end;
+      background: var(--bs-secondary-bg);
       border: 2px solid var(--bs-border-color);
-      border-radius: 14px;
+      border-radius: 16px; overflow: hidden;
       transition: border-color .18s, box-shadow .18s;
-      overflow: hidden;
     }
     .command-bar:focus-within {
       border-color: #7367F0;
       box-shadow: 0 0 0 3px rgba(115,103,240,.12);
     }
-    .command-bar input {
-      border: none !important; box-shadow: none !important;
-      background: transparent !important;
-      font-size: .95rem; padding: .85rem 1rem .85rem 1.1rem;
+    .command-bar textarea {
+      flex: 1; border: none !important; box-shadow: none !important;
+      background: transparent !important; resize: none; overflow-y: auto;
+      font-size: .92rem; padding: .8rem 1rem .8rem 1.1rem; line-height: 1.5;
+      max-height: 130px; min-height: 46px; color: var(--bs-body-color);
     }
-    .command-bar .cmd-send {
-      border-radius: 0 12px 12px 0; padding: .75rem 1.25rem;
-      border: none; background: #7367F0; color: #fff;
-      font-size: .85rem; font-weight: 600; transition: background .14s; flex-shrink: 0;
+    .command-bar textarea::placeholder { color: var(--bs-secondary-color); }
+    .command-bar textarea:focus { outline: none; }
+    .cmd-send {
+      border-radius: 0 14px 14px 0; padding: .6rem 1.1rem;
+      border: none; cursor: pointer; flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
+      background: linear-gradient(135deg, #7367F0 0%, #9180f4 100%);
+      color: #fff; font-size: .82rem; font-weight: 600;
+      transition: opacity .14s, transform .1s;
+      display: flex; align-items: center; gap: .3rem;
     }
-    .command-bar .cmd-send:hover    { background: #5f53e5; }
-    .command-bar .cmd-send:disabled { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); cursor: not-allowed; }
+    .cmd-send:hover:not(:disabled) { opacity: .88; transform: scale(1.03); }
+    .cmd-send:disabled { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); cursor: not-allowed; transform: none; }
 
-    /* ── Hero command bar (in empty state) ───────────────────────────────── */
-    .hero-command-bar {
-      border: 2px solid rgba(115,103,240,.3) !important;
-    }
-    .hero-command-bar:focus-within {
-      border-color: #7367F0 !important;
-      box-shadow: 0 0 0 4px rgba(115,103,240,.15) !important;
-    }
-
-    /* ── Quick trigger pills ─────────────────────────────────────────────── */
-    .trigger-pills { display: flex; gap: .5rem; flex-wrap: wrap; }
-    .trigger-pill {
-      cursor: pointer; border-radius: 20px; padding: .3rem .8rem;
-      font-size: .75rem; font-weight: 500;
-      border: 1px solid var(--bs-border-color);
-      color: var(--bs-secondary-color); background: var(--bs-body-bg);
-      transition: all .15s; user-select: none;
-    }
-    .trigger-pill:hover {
-      border-color: #7367F0; color: #7367F0;
-      background: rgba(115,103,240,.06);
-    }
-    .trigger-pill i { font-size: 13px; vertical-align: middle; margin-right: 3px; }
-
-    /* ── Analysis result card ───────────────────────────────────────────── */
-    .analysis-card {
-      border: 1px solid var(--bs-border-color); border-radius: 12px;
-      overflow: hidden; transition: box-shadow .18s; background: var(--bs-body-bg);
-    }
-    .analysis-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); }
-    .analysis-card .ac-header {
-      background: var(--bs-tertiary-bg); border-bottom: 1px solid var(--bs-border-color);
-      padding: .6rem 1rem;
-      display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap;
-    }
-    .query-label {
-      font-size: .7rem; font-weight: 600; color: var(--bs-secondary-color);
-      background: var(--bs-secondary-bg); border: 1px solid var(--bs-border-color);
-      border-radius: 10px; padding: .15rem .55rem;
-      max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .ac-agents { display: flex; gap: .3rem; flex-wrap: wrap; }
-    .ac-agent-badge {
-      font-size: .62rem; font-weight: 700; letter-spacing: .02em;
-      padding: .15rem .5rem; border-radius: 10px;
-    }
-    .ac-time { font-size: .68rem; color: var(--bs-tertiary-color); flex-shrink: 0; margin-left: auto; }
-    .ac-body { padding: .9rem 1rem; }
-
-    /* ── Action suggestion buttons in card footer ─────────────────────── */
-    .ac-actions {
-      padding: .6rem 1rem;
-      border-top: 1px solid var(--bs-border-color);
-      background: var(--bs-tertiary-bg);
-      display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
-    }
-    .ac-actions .action-label {
-      font-size: .7rem; color: var(--bs-secondary-color); font-weight: 600; margin-right: .25rem;
+    .chat-bottom-hint {
+      font-size: .65rem; color: var(--bs-secondary-color);
+      text-align: center; margin-top: .45rem;
     }
 
-    /* ── Skeleton loading card ───────────────────────────────────────────── */
-    .skeleton-card {
-      border: 1px solid var(--bs-border-color); border-radius: 12px;
-      overflow: hidden; background: var(--bs-body-bg);
+    /* ── RIGHT SIDEBAR ──────────────────────────────────────────────── */
+    .chat-right {
+      width: 240px; flex-shrink: 0;
+      border-left: 1px solid var(--bs-border-color);
+      background: var(--bs-body-bg);
+      display: flex; flex-direction: column; overflow: hidden;
     }
-    .skeleton-card .sk-header {
-      background: var(--bs-tertiary-bg); border-bottom: 1px solid var(--bs-border-color);
-      padding: .65rem 1rem; display: flex; align-items: center; gap: .75rem;
+    .chat-right-header {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--bs-border-color);
+      font-size: .75rem; font-weight: 700; color: var(--bs-heading-color);
+      display: flex; align-items: center; gap: .4rem; flex-shrink: 0;
     }
-    .sk-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #7367F0; flex-shrink: 0;
-      animation: skPulse 1.2s ease-in-out infinite;
-    }
-    .sk-dot:nth-child(2) { animation-delay: .2s; }
-    .sk-dot:nth-child(3) { animation-delay: .4s; }
-    @@keyframes skPulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .3; transform: scale(.6); }
-    }
-    .sk-label { font-size: .75rem; color: var(--bs-secondary-color); font-weight: 600; }
-    .sk-body { padding: .9rem 1rem; }
-    .sk-line {
-      height: 9px; border-radius: 5px; background: var(--bs-secondary-bg);
-      margin-bottom: .55rem; animation: skShimmer 1.6s ease-in-out infinite;
-    }
-    @@keyframes skShimmer { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+    .chat-right-body { flex: 1; overflow-y: auto; }
+    .chat-right-body::-webkit-scrollbar { width: 3px; }
+    .chat-right-body::-webkit-scrollbar-thumb { background: var(--bs-border-color); border-radius: 3px; }
 
-    /* ── Quick-action chips ──────────────────────────────────────────────── */
-    .quick-chip:hover {
-      border-color: #7367F0 !important;
-      box-shadow: 0 4px 14px rgba(115,103,240,.14) !important;
-    }
-    .quick-chip:active { transform: scale(.97); }
-
-    /* ── Empty state (hero) ──────────────────────────────────────────────── */
-    .hero-empty {
-      padding: 2.5rem 2rem 2rem;
-      text-align: center;
-    }
-    .ei-glow {
-      width: 90px; height: 90px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(115,103,240,.18) 0%, rgba(115,103,240,.04) 70%);
-      display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;
-    }
-
-    /* ── Agent status sidebar ────────────────────────────────────────────── */
-    .agent-li {
-      display: flex; align-items: center; gap: .65rem;
-      padding: .6rem .9rem; border-bottom: 1px solid var(--bs-border-color);
-      transition: background .1s;
-    }
-    .agent-li:last-child { border-bottom: none; }
-    .agent-li:hover { background: var(--bs-secondary-bg); }
-    .agent-name { font-size: .78rem; font-weight: 500; color: var(--bs-heading-color); line-height: 1.2; }
-    .agent-status-badge {
-      font-size: .62rem; font-weight: 700; border-radius: 10px;
-      padding: .15rem .5rem; white-space: nowrap; flex-shrink: 0;
-    }
-    .agent-pulse {
-      width: 7px; height: 7px; border-radius: 50%; background: #ff9f43; flex-shrink: 0;
-      animation: agentPulse 1.1s ease-in-out infinite;
-    }
-    @@keyframes agentPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(.65); } }
-
-    /* ── Run timeline ────────────────────────────────────────────────────── */
+    /* Recent runs in right sidebar */
     .run-item {
-      padding: .55rem .9rem; border-bottom: 1px solid var(--bs-border-color);
-      display: flex; align-items: flex-start; gap: .6rem;
+      padding: .5rem .9rem; border-bottom: 1px solid var(--bs-border-color);
+      display: flex; align-items: flex-start; gap: .55rem;
     }
     .run-item:last-child { border-bottom: none; }
-    .run-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
-    .run-name { font-size: .76rem; font-weight: 500; line-height: 1.2; }
-    .run-meta { font-size: .67rem; color: var(--bs-secondary-color); margin-top: 1px; }
+    .run-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .run-name { font-size: .72rem; font-weight: 500; line-height: 1.2; }
+    .run-meta { font-size: .63rem; color: var(--bs-secondary-color); margin-top: 1px; }
 
-    /* ── Insight cards ───────────────────────────────────────────────────── */
-    .insight-li { padding: .65rem .9rem; border-bottom: 1px solid var(--bs-border-color); }
+    /* Insight cards in right sidebar */
+    .insight-li { padding: .6rem .9rem; border-bottom: 1px solid var(--bs-border-color); }
     .insight-li:last-child { border-bottom: none; }
-    .insight-title { font-size: .78rem; font-weight: 600; color: var(--bs-heading-color); }
-    .insight-body  { font-size: .72rem; color: var(--bs-secondary-color); margin-top: 2px; }
+    .insight-title { font-size: .74rem; font-weight: 600; color: var(--bs-heading-color); }
+    .insight-body  { font-size: .68rem; color: var(--bs-secondary-color); margin-top: 2px; }
 
-    /* ── Compact top bar (visible only when results exist) ───────────────── */
-    #compact-bar { display: none; }
-    #compact-bar.visible { display: flex; }
+    /* ── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 991px) {
+      .chat-left { position: absolute; z-index: 200; height: 100%; top: 0; left: 0; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+      .chat-left.collapsed { width: 0; box-shadow: none; }
+      .chat-right { display: none; }
+    }
+    @media (max-width: 575px) {
+      .hero-chips { grid-template-columns: 1fr; }
+      .chat-root { margin: -1rem -1rem 0; }
+      .chat-messages { padding: .85rem .85rem 0; }
+      .chat-bottom { padding: .65rem .85rem .85rem; }
+    }
   </style>
   </x-slot>
 
-  {{-- ══ Page Header ════════════════════════════════════════════════════════════ --}}
-  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
-    <div>
-      <h4 class="fw-bold mb-0">
-        <i class="icon-base ti tabler-brain text-primary me-2"></i>Finansal Zeka Merkezi
-      </h4>
-      <p class="text-muted mb-0 small">Yapay zeka ajanları finansal durumunuzu analiz ediyor &amp; yönetiyor</p>
-    </div>
-    <div class="d-flex gap-2 flex-wrap">
-      <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-session">
-        <i class="icon-base ti tabler-refresh me-1"></i>Yeni Analiz
-      </button>
-    </div>
-  </div>
-
-  {{-- ══ Compact command bar (shown when results exist) ══════════════════════════ --}}
-  <div id="compact-bar" class="command-bar mb-3 shadow-sm align-items-center">
-    <input type="text" id="cmd-input-top" placeholder="Yeni sorgu veya eylem…" autocomplete="off">
-    <button class="cmd-send" id="cmd-send-top" type="button">
-      <i class="icon-base ti tabler-arrow-up me-1" style="font-size:14px;"></i>Gönder
-    </button>
-  </div>
-
-  {{-- ══ Quick triggers (always visible) ══════════════════════════════════════════ --}}
-  <div class="trigger-pills mb-4" id="trigger-pills-area">
-    <span class="trigger-pill" data-msg="Son harcamalarımda anormal bir durum var mı? Ayrıntılı analiz yap.">
-      <i class="icon-base ti tabler-radar"></i>Anomali Tara
-    </span>
-    <span class="trigger-pill" data-msg="Bu ayki bütçe durumumu analiz et ve nerede tasarruf yapabileceğimi göster.">
-      <i class="icon-base ti tabler-chart-pie"></i>Bütçe Analizi
-    </span>
-    <span class="trigger-pill" data-msg="Önümüzdeki 6 ay için nakit akışımı ve birikimimi tahmin et.">
-      <i class="icon-base ti tabler-chart-line"></i>6 Aylık Tahmin
-    </span>
-    <span class="trigger-pill" data-msg="Kredi kartı borçlarımı en hızlı şekilde kapatmak için strateji öner ve bana yardım et.">
-      <i class="icon-base ti tabler-credit-card"></i>Borç Stratejisi
-    </span>
-    <span class="trigger-pill" data-msg="Gereksiz veya pahalı aboneliklerim var mı? Tespit et ve optimize et.">
-      <i class="icon-base ti tabler-repeat"></i>Abonelik Tara
-    </span>
-    <span class="trigger-pill" data-msg="Enflasyon birikimimi ve satın alma gücümü nasıl etkiliyor? Ne yapmalıyım?">
-      <i class="icon-base ti tabler-flame"></i>Enflasyon Etkisi
-    </span>
-  </div>
-
+  {{-- ══════════════════════════════════════════════════════════════════════
+       HIDDEN DATA
+  ══════════════════════════════════════════════════════════════════════ --}}
   <input type="hidden" id="session-id" value="{{ $sessionId }}">
 
-  <div class="row g-5">
+  {{-- ══════════════════════════════════════════════════════════════════════
+       CHAT ROOT
+  ══════════════════════════════════════════════════════════════════════ --}}
+  <div class="chat-root">
 
-    {{-- ══ MAIN FEED ══════════════════════════════════════════════════════════════ --}}
-    <div class="col-xl-8">
-      <div id="results-feed">
+    {{-- ── LEFT SIDEBAR ──────────────────────────────────────────────────── --}}
+    <div class="chat-left" id="chat-left">
+      <div class="chat-left-header">
+        <div class="brand-icon">
+          <i class="ti tabler-sparkles" style="color:#fff;font-size:15px;"></i>
+        </div>
+        <div>
+          <div class="brand-title">Finansal Zeka</div>
+          <div class="brand-sub">9 uzman ajan</div>
+        </div>
+      </div>
+
+      <div class="chat-left-body">
+        <button class="btn-new-chat" id="btn-clear-session" type="button">
+          <i class="ti tabler-plus" style="font-size:14px;"></i>Yeni Analiz
+        </button>
+
+        <div class="sidebar-section-title">Uzman Ajanlar</div>
+
+        <div id="agent-status-list">
+          @foreach([
+            'purchase_planner'       => ['Satın Alma Planlayıcı',  'tabler-shopping-cart', 'primary'],
+            'budget_advisor'         => ['Bütçe Danışmanı',         'tabler-chart-pie',     'success'],
+            'inflation_aware'        => ['Enflasyon Analisti',      'tabler-flame',         'warning'],
+            'anomaly_detector'       => ['Anomali Dedektörü',       'tabler-radar',         'danger'],
+            'transaction_classifier' => ['İşlem Sınıflandırıcı',   'tabler-tag',           'info'],
+            'forecaster'             => ['Tahmin & Projeksiyon',    'tabler-chart-line',    'info'],
+            'debt_optimizer'         => ['Borç Optimizasyonu',      'tabler-credit-card',   'danger'],
+            'subscription_hunter'    => ['Abonelik Avcısı',         'tabler-repeat',        'secondary'],
+            'receipt_ocr'            => ['Fiş & OCR Analizi',       'tabler-receipt',       'primary'],
+          ] as $key => [$label, $icon, $color])
+          <div class="agent-li" id="agent-{{ $key }}">
+            <div class="agent-avatar bg-label-{{ $color }}">
+              <i class="ti {{ $icon }} text-{{ $color }}" style="font-size:12px;"></i>
+            </div>
+            <div class="agent-name">{{ $label }}</div>
+            <span class="agent-status-badge bg-label-secondary agent-state">Beklemede</span>
+          </div>
+          @endforeach
+        </div>
+      </div>
+    </div>
+
+    {{-- ── CENTER ────────────────────────────────────────────────────────── --}}
+    <div class="chat-center">
+
+      {{-- Top bar --}}
+      <div class="chat-topbar">
+        <button class="topbar-toggle" id="btn-toggle-sidebar" title="Kenar çubuğu">
+          <i class="ti tabler-layout-sidebar" style="font-size:16px;"></i>
+        </button>
+        <div class="topbar-title">
+          <i class="ti tabler-brain text-primary" style="font-size:17px;"></i>
+          Finansal Zeka Merkezi
+          <span class="live-badge">
+            <span class="live-dot"></span>Canlı
+          </span>
+        </div>
+        <span class="badge bg-label-success agent-global-status" style="font-size:.62rem;">Hazır</span>
+      </div>
+
+      {{-- Messages area --}}
+      <div class="chat-messages" id="chat-messages">
 
         {{-- Empty / hero state --}}
-        <div id="empty-state" class="{{ $history->where('role','assistant')->isNotEmpty() ? 'd-none' : '' }}">
-          <div class="card shadow-sm">
-            <div class="hero-empty">
-              <div class="ei-glow">
-                <i class="icon-base ti tabler-sparkles icon-40px text-primary"></i>
-              </div>
-              <h5 class="fw-semibold mb-1">Ne yapmamı istersin?</h5>
-              <p class="text-muted small mb-4" style="max-width:400px;margin:0 auto .75rem;">
-                Bir konuya tıkla veya aşağıya yaz — yapay zeka ajanları hemen analiz etsin.
-              </p>
-
-              {{-- Quick-action chips 2x2 grid --}}
-              <div class="row g-3 mb-4" style="max-width:520px;margin:0 auto 1.25rem;">
-                <div class="col-6">
-                  <div class="card border shadow-none quick-chip h-100"
-                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
-                       data-msg="Bu ay nereye harcadım? Kategorilere göre ayrıntılı analiz yap.">
-                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
-                      <span class="avatar avatar-sm flex-shrink-0 bg-label-primary">
-                        <i class="icon-base ti tabler-chart-pie text-primary" style="font-size:16px;"></i>
-                      </span>
-                      <span class="fw-medium small text-heading">Bu ay nereye harcadım?</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="card border shadow-none quick-chip h-100"
-                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
-                       data-msg="Hedefe ne kadar ayırabilirim? Mevcut gelir ve giderlerime göre tasarruf kapasitemi hesapla.">
-                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
-                      <span class="avatar avatar-sm flex-shrink-0 bg-label-success">
-                        <i class="icon-base ti tabler-target text-success" style="font-size:16px;"></i>
-                      </span>
-                      <span class="fw-medium small text-heading">Hedefe ne kadar ayırabilirim?</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="card border shadow-none quick-chip h-100"
-                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
-                       data-msg="Son harcamalarımda anormal bir durum var mı? Anomalileri göster ve ayrıntılı analiz yap.">
-                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
-                      <span class="avatar avatar-sm flex-shrink-0 bg-label-danger">
-                        <i class="icon-base ti tabler-radar text-danger" style="font-size:16px;"></i>
-                      </span>
-                      <span class="fw-medium small text-heading">Anomalileri göster</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-6">
-                  <div class="card border shadow-none quick-chip h-100"
-                       style="cursor:pointer;transition:box-shadow .15s,border-color .15s;"
-                       data-msg="Bu ayki harcama alışkanlıklarıma göre bana aylık bütçe öner. Kategori bazlı limitler belirle.">
-                    <div class="card-body py-3 px-3 d-flex align-items-center gap-2">
-                      <span class="avatar avatar-sm flex-shrink-0 bg-label-warning">
-                        <i class="icon-base ti tabler-sparkles text-warning" style="font-size:16px;"></i>
-                      </span>
-                      <span class="fw-medium small text-heading">Bütçe öner</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {{-- Hero command bar --}}
-              <div class="command-bar hero-command-bar d-flex align-items-center mb-4" style="max-width:520px;margin:0 auto 1.25rem;">
-                <input type="text" id="cmd-input-hero" placeholder="Veya buraya yaz… (örn: hedef koy, bütçe analizi yap)" autocomplete="off" style="font-size:.93rem;">
-                <button class="cmd-send" id="cmd-send-hero" type="button">
-                  <i class="icon-base ti tabler-arrow-up me-1" style="font-size:14px;"></i>Gönder
-                </button>
-              </div>
-
-              {{-- Trust badges --}}
-              <div class="d-flex gap-4 justify-content-center flex-wrap">
-                <div class="d-flex align-items-center gap-2 text-muted small">
-                  <span class="avatar avatar-xs bg-label-success"><i class="icon-base ti tabler-shield-check text-success" style="font-size:10px"></i></span>
-                  Verileriniz güvende
-                </div>
-                <div class="d-flex align-items-center gap-2 text-muted small">
-                  <span class="avatar avatar-xs bg-label-primary"><i class="icon-base ti tabler-cpu text-primary" style="font-size:10px"></i></span>
-                  9 uzman ajan
-                </div>
-                <div class="d-flex align-items-center gap-2 text-muted small">
-                  <span class="avatar avatar-xs bg-label-info"><i class="icon-base ti tabler-bolt text-info" style="font-size:10px"></i></span>
-                  Arka planda asenkron
-                </div>
-              </div>
+        <div id="empty-state" class="{{ $history->where('role','assistant')->isNotEmpty() ? 'd-none' : 'hero-center' }}">
+          <div class="hero-glow">
+            <i class="ti tabler-sparkles text-primary" style="font-size:34px;"></i>
+          </div>
+          <h5 class="fw-bold mb-1">Ne yapmamı istersin?</h5>
+          <p class="text-muted small mb-0" style="max-width:360px;">
+            Bir konuya tıkla veya aşağıya yaz — yapay zeka ajanları hemen analiz etsin.
+          </p>
+          <div class="hero-chips">
+            <div class="quick-chip" data-msg="Bu ay nereye harcadım? Kategorilere göre ayrıntılı analiz yap.">
+              <span class="chip-icon bg-label-primary"><i class="ti tabler-chart-pie text-primary" style="font-size:15px;"></i></span>
+              <span class="chip-text">Bu ay nereye harcadım?</span>
+            </div>
+            <div class="quick-chip" data-msg="Hedefe ne kadar ayırabilirim? Mevcut gelir ve giderlerime göre tasarruf kapasitemi hesapla.">
+              <span class="chip-icon bg-label-success"><i class="ti tabler-target text-success" style="font-size:15px;"></i></span>
+              <span class="chip-text">Hedefe ne kadar ayırabilirim?</span>
+            </div>
+            <div class="quick-chip" data-msg="Son harcamalarımda anormal bir durum var mı? Anomalileri göster ve ayrıntılı analiz yap.">
+              <span class="chip-icon bg-label-danger"><i class="ti tabler-radar text-danger" style="font-size:15px;"></i></span>
+              <span class="chip-text">Anomalileri göster</span>
+            </div>
+            <div class="quick-chip" data-msg="Bu ayki harcama alışkanlıklarıma göre bana aylık bütçe öner. Kategori bazlı limitler belirle.">
+              <span class="chip-icon bg-label-warning"><i class="ti tabler-sparkles text-warning" style="font-size:15px;"></i></span>
+              <span class="chip-text">Bütçe öner</span>
+            </div>
+          </div>
+          <div class="d-flex gap-4 justify-content-center flex-wrap mt-1">
+            <div class="d-flex align-items-center gap-1 text-muted" style="font-size:.7rem;">
+              <i class="ti tabler-shield-check text-success" style="font-size:12px;"></i>Verileriniz güvende
+            </div>
+            <div class="d-flex align-items-center gap-1 text-muted" style="font-size:.7rem;">
+              <i class="ti tabler-cpu text-primary" style="font-size:12px;"></i>9 uzman ajan
+            </div>
+            <div class="d-flex align-items-center gap-1 text-muted" style="font-size:.7rem;">
+              <i class="ti tabler-bolt text-info" style="font-size:12px;"></i>Asenkron
             </div>
           </div>
         </div>
 
-        {{-- Historical results --}}
+        {{-- ── Historical messages ──────────────────────────────────────── --}}
         @php $prevQuery = null; @endphp
         @foreach($history as $msg)
           @if($msg->role === 'user')
             @php $prevQuery = $msg->content; @endphp
+            {{-- User message bubble --}}
+            <div class="msg-row msg-user">
+              <div class="msg-avatar user-avatar">
+                <i class="ti tabler-user" style="font-size:14px;color:var(--bs-secondary-color);"></i>
+              </div>
+              <div class="msg-bubble">
+                <div class="msg-content">{{ $msg->content }}</div>
+                <div class="msg-meta">
+                  {{ \Carbon\Carbon::parse($msg->created_at)->format('d.m H:i') }}
+                </div>
+              </div>
+            </div>
           @elseif($msg->role === 'assistant')
             @php
               $isPending  = ($msg->metadata['status'] ?? '') === 'pending';
@@ -396,36 +568,43 @@
               ];
             @endphp
             @if($isPending)
-              <div class="skeleton-card mb-4" id="skeleton-{{ $msg->id }}" data-message-id="{{ $msg->id }}">
-                <div class="sk-header">
-                  <div class="sk-dot"></div><div class="sk-dot"></div><div class="sk-dot"></div>
-                  <span class="sk-label ms-1">{{ $prevQuery ? \Illuminate\Support\Str::limit($prevQuery, 55) . '…' : 'Analiz yapılıyor…' }}</span>
+              {{-- Skeleton/typing row --}}
+              <div class="msg-row msg-ai skeleton-card" id="skeleton-{{ $msg->id }}" data-message-id="{{ $msg->id }}">
+                <div class="msg-avatar ai-avatar">
+                  <i class="ti tabler-sparkles" style="font-size:14px;color:#fff;"></i>
                 </div>
-                <div class="sk-body">
-                  <div class="sk-line" style="width:82%;"></div>
-                  <div class="sk-line" style="width:61%;"></div>
-                  <div class="sk-line" style="width:73%;"></div>
-                  <div class="sk-line" style="width:48%;margin-bottom:0;"></div>
+                <div class="msg-bubble" style="max-width:min(480px,76%);">
+                  <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <span style="font-size:.75rem;color:var(--bs-secondary-color);margin-left:.4rem;">
+                      {{ $prevQuery ? \Illuminate\Support\Str::limit($prevQuery, 40).'…' : 'Analiz yapılıyor…' }}
+                    </span>
+                  </div>
                 </div>
               </div>
             @else
-              <div class="analysis-card mb-4">
-                <div class="ac-header">
-                  @if($prevQuery)
-                    <span class="query-label" title="{{ $prevQuery }}">
-                      <i class="icon-base ti tabler-message-2 icon-12px me-1"></i>{{ \Illuminate\Support\Str::limit($prevQuery, 60) }}
-                    </span>
-                  @endif
-                  <div class="ac-agents">
-                    @foreach($agentsUsed as $a)
-                      @php $c=$agentColorMap[$a]??'secondary'; $lbl=$agentLabelMap[$a]??$a; @endphp
-                      <span class="ac-agent-badge bg-label-{{ $c }} text-{{ $c }}">{{ $lbl }}</span>
-                    @endforeach
-                  </div>
-                  <span class="ac-time">{{ \Carbon\Carbon::parse($msg->created_at)->format('d.m H:i') }}</span>
+              {{-- AI message bubble --}}
+              <div class="msg-row msg-ai">
+                <div class="msg-avatar ai-avatar">
+                  <i class="ti tabler-sparkles" style="font-size:14px;color:#fff;"></i>
                 </div>
-                <div class="ac-body">
-                  <div class="markdown-body" data-raw="{{ e($msg->content) }}"></div>
+                <div class="msg-bubble" style="max-width:min(640px,84%);">
+                  <div class="msg-content">
+                    <div class="markdown-body" data-raw="{{ e($msg->content) }}"></div>
+                  </div>
+                  <div class="msg-meta">
+                    <span>{{ \Carbon\Carbon::parse($msg->created_at)->format('d.m H:i') }}</span>
+                    @if(count($agentsUsed))
+                    <div class="msg-agent-badges">
+                      @foreach($agentsUsed as $a)
+                        @php $c=$agentColorMap[$a]??'secondary'; $lbl=$agentLabelMap[$a]??$a; @endphp
+                        <span class="msg-agent-badge bg-label-{{ $c }} text-{{ $c }}">{{ $lbl }}</span>
+                      @endforeach
+                    </div>
+                    @endif
+                  </div>
                 </div>
               </div>
             @endif
@@ -433,147 +612,138 @@
           @endif
         @endforeach
 
-      </div>
-    </div>
+      </div>{{-- /chat-messages --}}
 
-    {{-- ══ SIDEBAR ══════════════════════════════════════════════════════════════ --}}
-    <div class="col-xl-4">
-
-      {{-- Agent Status --}}
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header py-3 d-flex align-items-center justify-content-between">
-          <h6 class="card-title mb-0 fw-semibold">
-            <i class="icon-base ti tabler-cpu me-2 text-primary"></i>Uzman Ajanlar
-          </h6>
-          <span class="badge bg-label-success agent-global-status" style="font-size:.68rem;">Hazır</span>
+      {{-- Bottom command bar --}}
+      <div class="chat-bottom">
+        <div class="trigger-pills" id="trigger-pills-area">
+          <span class="trigger-pill" data-msg="Son harcamalarımda anormal bir durum var mı? Ayrıntılı analiz yap.">
+            <i class="ti tabler-radar"></i>Anomali Tara
+          </span>
+          <span class="trigger-pill" data-msg="Bu ayki bütçe durumumu analiz et ve nerede tasarruf yapabileceğimi göster.">
+            <i class="ti tabler-chart-pie"></i>Bütçe Analizi
+          </span>
+          <span class="trigger-pill" data-msg="Önümüzdeki 6 ay için nakit akışımı ve birikimimi tahmin et.">
+            <i class="ti tabler-chart-line"></i>6 Aylık Tahmin
+          </span>
+          <span class="trigger-pill" data-msg="Kredi kartı borçlarımı en hızlı şekilde kapatmak için strateji öner ve bana yardım et.">
+            <i class="ti tabler-credit-card"></i>Borç Stratejisi
+          </span>
+          <span class="trigger-pill" data-msg="Gereksiz veya pahalı aboneliklerim var mı? Tespit et ve optimize et.">
+            <i class="ti tabler-repeat"></i>Abonelik Tara
+          </span>
+          <span class="trigger-pill" data-msg="Enflasyon birikimimi ve satın alma gücümü nasıl etkiliyor? Ne yapmalıyım?">
+            <i class="ti tabler-flame"></i>Enflasyon Etkisi
+          </span>
         </div>
-        <div id="agent-status-list">
-          @foreach([
-            'purchase_planner'       => ['Satın Alma Planlayıcı',  'tabler-shopping-cart',  'primary'],
-            'budget_advisor'         => ['Bütçe Danışmanı',         'tabler-chart-pie',      'success'],
-            'inflation_aware'        => ['Enflasyon Analisti',      'tabler-flame',          'warning'],
-            'anomaly_detector'       => ['Anomali Dedektörü',       'tabler-radar',          'danger'],
-            'transaction_classifier' => ['İşlem Sınıflandırıcı',   'tabler-tag',            'info'],
-            'forecaster'             => ['Tahmin & Projeksiyon',    'tabler-chart-line',     'info'],
-            'debt_optimizer'         => ['Borç Optimizasyonu',      'tabler-credit-card',    'danger'],
-            'subscription_hunter'    => ['Abonelik Avcısı',         'tabler-repeat',         'secondary'],
-            'receipt_ocr'            => ['Fiş & OCR Analizi',       'tabler-receipt',        'primary'],
-          ] as $key => [$label, $icon, $color])
-          <div class="agent-li" id="agent-{{ $key }}">
-            <div class="avatar avatar-sm flex-shrink-0">
-              <span class="avatar-initial rounded bg-label-{{ $color }}">
-                <i class="icon-base ti {{ $icon }} text-{{ $color }}" style="font-size:13px;"></i>
-              </span>
-            </div>
-            <div class="flex-grow-1"><div class="agent-name">{{ $label }}</div></div>
-            <span class="agent-status-badge bg-label-secondary agent-state">Beklemede</span>
-          </div>
-          @endforeach
+
+        <div class="command-bar">
+          <textarea id="cmd-input" rows="1"
+            placeholder="Bir şeyler sor… (örn: hedef koy, bütçe analizi yap)"
+            autocomplete="off"></textarea>
+          <button class="cmd-send" id="cmd-send" type="button">
+            <i class="ti tabler-arrow-up" style="font-size:15px;"></i>Gönder
+          </button>
+        </div>
+        <div class="chat-bottom-hint">
+          Enter ile gönder &nbsp;·&nbsp; Shift+Enter yeni satır
         </div>
       </div>
+
+    </div>{{-- /chat-center --}}
+
+    {{-- ── RIGHT SIDEBAR ─────────────────────────────────────────────────── --}}
+    <div class="chat-right">
 
       {{-- Recent Runs --}}
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header py-3">
-          <h6 class="card-title mb-0 fw-semibold">
-            <i class="icon-base ti tabler-history me-2 text-muted"></i>Son Çalışmalar
-          </h6>
-        </div>
+      <div class="chat-right-header">
+        <i class="ti tabler-history" style="font-size:14px;color:var(--bs-secondary-color);"></i>Son Çalışmalar
+      </div>
+      <div class="chat-right-body">
         <div id="runs-list">
           @forelse($recentRuns as $run)
           <div class="run-item">
             <div class="run-dot {{ $run->status === 'completed' ? 'bg-success' : ($run->status === 'failed' ? 'bg-danger' : 'bg-warning') }}"></div>
             <div class="flex-grow-1">
-              <div class="run-name text-truncate" style="max-width:160px;">{{ $run->agent_name }}</div>
+              <div class="run-name text-truncate" style="max-width:140px;">{{ $run->agent_name }}</div>
               <div class="run-meta">
                 {{ $run->model_used ?? '—' }}
                 @if($run->duration_ms) · {{ $run->duration_ms }}ms @endif
                 · {{ ($run->tokens_in ?? 0) + ($run->tokens_out ?? 0) }} tok
               </div>
             </div>
-            <span class="badge {{ $run->status === 'completed' ? 'bg-label-success' : ($run->status === 'failed' ? 'bg-label-danger' : 'bg-label-warning') }}" style="font-size:.62rem;">{{ $run->status }}</span>
+            <span class="badge {{ $run->status === 'completed' ? 'bg-label-success' : ($run->status === 'failed' ? 'bg-label-danger' : 'bg-label-warning') }}" style="font-size:.58rem;">{{ $run->status }}</span>
           </div>
           @empty
           <div class="text-muted small text-center py-4">Henüz çalışma yok</div>
           @endforelse
         </div>
-      </div>
 
-      {{-- Active Insights --}}
-      @if($insights->isNotEmpty())
-      <div class="card shadow-sm">
-        <div class="card-header py-3 d-flex align-items-center justify-content-between">
-          <h6 class="card-title mb-0 fw-semibold">
-            <i class="icon-base ti tabler-bulb me-2 text-warning"></i>Proaktif Öngörüler
-          </h6>
-          <span class="badge bg-label-warning" style="font-size:.68rem;">{{ $insights->count() }}</span>
+        {{-- Active Insights --}}
+        @if($insights->isNotEmpty())
+        <div class="chat-right-header border-top" style="margin-top:.5rem;">
+          <i class="ti tabler-bulb" style="font-size:14px;color:#ff9f43;"></i>Öngörüler
+          <span class="badge bg-label-warning ms-auto" style="font-size:.6rem;">{{ $insights->count() }}</span>
         </div>
         @foreach($insights as $insight)
         @php $ic = ['warning'=>'warning','opportunity'=>'success','tip'=>'info','anomaly'=>'danger'][$insight->type] ?? 'secondary'; @endphp
         <div class="insight-li" id="insight-{{ $insight->id }}">
           <div class="d-flex align-items-start gap-2">
             <span class="avatar avatar-xs bg-label-{{ $ic }} flex-shrink-0 mt-1">
-              <i class="icon-base ti tabler-bulb text-{{ $ic }}" style="font-size:10px;"></i>
+              <i class="ti tabler-bulb text-{{ $ic }}" style="font-size:10px;"></i>
             </span>
             <div class="flex-grow-1">
               <div class="insight-title">{{ $insight->title }}</div>
-              <div class="insight-body">{{ \Illuminate\Support\Str::limit($insight->body, 90) }}</div>
+              <div class="insight-body">{{ \Illuminate\Support\Str::limit($insight->body, 80) }}</div>
             </div>
             <button type="button"
                     class="btn btn-icon btn-text-secondary btn-sm flex-shrink-0 btn-dismiss-insight"
                     data-id="{{ $insight->id }}"
                     data-url="{{ route('agent-chat.insight-dismiss', $insight->id) }}"
-                    style="width:20px;height:20px;margin-top:-2px;">
-              <i class="icon-base ti tabler-x icon-12px"></i>
+                    style="width:18px;height:18px;margin-top:-2px;">
+              <i class="ti tabler-x icon-10px"></i>
             </button>
           </div>
         </div>
         @endforeach
-      </div>
-      @endif
+        @endif
 
-    </div>
-  </div>
+      </div>
+    </div>{{-- /chat-right --}}
+
+  </div>{{-- /chat-root --}}
 
   <x-slot name="pageJs">
   <script>
   (function () {
     'use strict';
 
-    // ── Inline markdown parser (no CDN) ──────────────────────────────────────
+    // ── Inline markdown parser ──────────────────────────────────────────
     function hesc(s) {
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     function parseMarkdown(raw) {
       if (!raw) return '';
-      // Protect fenced code blocks
       const blocks = [];
       let t = raw.replace(/```([\w]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-        blocks.push(`<pre><code>${hesc(code.trim())}</code></pre>`);
+        blocks.push('<pre><code>' + hesc(code.trim()) + '</code></pre>');
         return '\x02B' + (blocks.length - 1) + '\x03';
       });
-      // Escape HTML in non-code parts
       t = t.split(/(\x02B\d+\x03)/).map(p =>
         /^\x02B\d+\x03$/.test(p) ? p : hesc(p)
       ).join('');
-      // Headers
       t = t.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
       t = t.replace(/^##\s+(.+)$/gm,  '<h2>$1</h2>');
       t = t.replace(/^#\s+(.+)$/gm,   '<h1>$1</h1>');
-      // Horizontal rule
       t = t.replace(/^[-*]{3,}$/gm, '<hr>');
-      // Bold + italic
       t = t.replace(/\*\*\*([^*\n]+)\*\*\*/g, '<strong><em>$1</em></strong>');
       t = t.replace(/\*\*([^*\n]+)\*\*/g,     '<strong>$1</strong>');
       t = t.replace(/__([^_\n]+)__/g,          '<strong>$1</strong>');
       t = t.replace(/\*([^*\n]+)\*/g,          '<em>$1</em>');
       t = t.replace(/_([^_\n]+)_/g,            '<em>$1</em>');
-      // Inline code
       t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-      // Blockquotes (&gt; because HTML is already escaped)
       t = t.replace(/^&gt;\s*(.+)$/gm, '<blockquote>$1</blockquote>');
-      // Lists
       const lines = t.split('\n'), out = [];
       let inUl = false, inOl = false;
       for (const ln of lines) {
@@ -582,11 +752,11 @@
         if (ul) {
           if (inOl) { out.push('</ol>'); inOl = false; }
           if (!inUl) { out.push('<ul>'); inUl = true; }
-          out.push(`<li>${ul[1]}</li>`);
+          out.push('<li>' + ul[1] + '</li>');
         } else if (ol) {
           if (inUl) { out.push('</ul>'); inUl = false; }
           if (!inOl) { out.push('<ol>'); inOl = true; }
-          out.push(`<li>${ol[1]}</li>`);
+          out.push('<li>' + ol[1] + '</li>');
         } else {
           if (inUl) { out.push('</ul>'); inUl = false; }
           if (inOl) { out.push('</ol>'); inOl = false; }
@@ -596,32 +766,26 @@
       if (inUl) out.push('</ul>');
       if (inOl) out.push('</ol>');
       t = out.join('\n');
-      // Paragraphs
       t = t.split(/\n{2,}/).map(para => {
         const p = para.trim();
         if (!p) return '';
         if (/^<(h[1-6]|ul|ol|blockquote|hr|pre|\x02)/.test(p)) return p;
-        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+        return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
       }).filter(Boolean).join('\n');
-      // Restore code blocks
       t = t.replace(/\x02B(\d+)\x03/g, (_, i) => blocks[+i]);
       return t;
     }
 
-    function renderMarkdown(el) {
+    document.querySelectorAll('.markdown-body[data-raw]').forEach(el => {
       const raw = el.getAttribute('data-raw');
-      if (!raw) return;
-      el.innerHTML = parseMarkdown(raw);
-    }
+      if (raw) el.innerHTML = parseMarkdown(raw);
+    });
 
-    document.querySelectorAll('.markdown-body[data-raw]').forEach(renderMarkdown);
-
-    // ── Constants ────────────────────────────────────────────────────────────
+    // ── Constants ────────────────────────────────────────────────────────
     const sessionId  = document.getElementById('session-id').value;
     const csrf       = document.querySelector('meta[name=csrf-token]').content;
-    const feed       = document.getElementById('results-feed');
+    const messages   = document.getElementById('chat-messages');
     const emptyState = document.getElementById('empty-state');
-    const compactBar = document.getElementById('compact-bar');
 
     const POLL_URL   = '/chat/poll/';
     const RUNS_URL   = '{{ route("agent-chat.runs") }}';
@@ -642,18 +806,45 @@
       receipt_ocr:'primary', critic:'secondary',
     };
 
-    // ── Action detection ─────────────────────────────────────────────────────
-    // Returns typed actions: { type:'create_goal'|'create_budget'|'link', ... }
+    // ── Sidebar toggle ────────────────────────────────────────────────────
+    const chatLeft = document.getElementById('chat-left');
+    document.getElementById('btn-toggle-sidebar')?.addEventListener('click', () => {
+      chatLeft?.classList.toggle('collapsed');
+    });
+
+    // ── Auto-resize textarea ──────────────────────────────────────────────
+    const cmdInput = document.getElementById('cmd-input');
+    if (cmdInput) {
+      cmdInput.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+      });
+    }
+
+    // ── Scroll to bottom of chat ──────────────────────────────────────────
+    function scrollBottom() {
+      if (messages) messages.scrollTop = messages.scrollHeight;
+    }
+    scrollBottom();
+
+    // ── Show results mode (hide hero) ─────────────────────────────────────
+    function showResultsMode() {
+      if (emptyState) {
+        emptyState.classList.remove('hero-center');
+        emptyState.classList.add('d-none');
+      }
+    }
+    if (!emptyState || emptyState.classList.contains('d-none')) showResultsMode();
+
+    // ── Action detection ──────────────────────────────────────────────────
     function detectActions(text) {
       const actions = [];
-
       function extractAmount() {
         const m = text.match(/([\d]{1,3}(?:[.]\d{3})*(?:[,]\d{1,2})?|\d+)\s*TL/);
         if (!m) return null;
         const n = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
         return isNaN(n) ? null : n;
       }
-
       if (/hedef\s*(oluştur|koy|ekle|belirle|oluşturay|kuray)/i.test(text)
           || /tasarruf\s*hedef/i.test(text) || /birikim\s*hedef/i.test(text)) {
         actions.push({ type:'create_goal', label:'Hedef Oluştur',
@@ -671,63 +862,40 @@
         actions.push({ type:'link', label:'Simülatörü Aç', icon:'tabler-calculator', color:'info', href:'/simulator' });
       if (/yatırım|portföy/i.test(text))
         actions.push({ type:'link', label:'Yatırımlar', icon:'tabler-trending-up', color:'success', href:'/investments' });
-
       return actions;
     }
 
-    // ── Action form HTML builders ─────────────────────────────────────────────
+    // ── Action form HTML builders ─────────────────────────────────────────
     let _cardIdx = 0;
 
     function buildActionForm(action) {
       if (action.type === 'create_goal') {
-        return `<div class="agent-action-form" data-action="create_goal">
-          <div class="d-flex gap-2 flex-wrap align-items-end">
-            <div>
-              <label class="form-label-sm mb-1 d-block">Hedef adı</label>
-              <input type="text" class="form-control form-control-sm action-field" name="name"
-                placeholder="Örn: Tatil Fonu" style="min-width:130px;max-width:180px;">
-            </div>
-            <div>
-              <label class="form-label-sm mb-1 d-block">Tutar (TL)</label>
-              <input type="number" class="form-control form-control-sm action-field" name="target_amount"
-                value="${action.suggestedAmount||''}" placeholder="15000" min="1" style="min-width:90px;max-width:130px;">
-            </div>
-            <div>
-              <label class="form-label-sm mb-1 d-block">Aylık katkı</label>
-              <input type="number" class="form-control form-control-sm action-field" name="monthly_contribution"
-                placeholder="1000" min="0" style="min-width:90px;max-width:130px;">
-            </div>
-            <button type="button" class="btn btn-sm btn-success execute-action-btn" style="font-size:.75rem;">
-              <i class="icon-base ti tabler-check me-1"></i>Oluştur
-            </button>
-            <button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>
-          </div>
-          <div class="action-result mt-2" style="display:none;"></div>
-        </div>`;
+        return '<div class="agent-action-form" data-action="create_goal">'
+          + '<div class="d-flex gap-2 flex-wrap align-items-end">'
+          + '<div><label class="form-label-sm mb-1 d-block">Hedef adı</label>'
+          + '<input type="text" class="form-control form-control-sm action-field" name="name" placeholder="Örn: Tatil Fonu" style="min-width:130px;max-width:180px;"></div>'
+          + '<div><label class="form-label-sm mb-1 d-block">Tutar (TL)</label>'
+          + '<input type="number" class="form-control form-control-sm action-field" name="target_amount" value="' + (action.suggestedAmount || '') + '" placeholder="15000" min="1" style="min-width:90px;max-width:130px;"></div>'
+          + '<div><label class="form-label-sm mb-1 d-block">Aylık katkı</label>'
+          + '<input type="number" class="form-control form-control-sm action-field" name="monthly_contribution" placeholder="1000" min="0" style="min-width:90px;max-width:130px;"></div>'
+          + '<button type="button" class="btn btn-sm btn-success execute-action-btn" style="font-size:.75rem;"><i class="ti tabler-check me-1"></i>Oluştur</button>'
+          + '<button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>'
+          + '</div><div class="action-result mt-2" style="display:none;"></div></div>';
       }
       if (action.type === 'create_budget') {
         const cats = ['Market','Restoran & Kafe','Online Yemek','Ulaşım','Yakıt','Faturalar',
           'Sağlık','Eğitim','Eğlence','Giyim & Aksesuar','Ev & Yaşam','Elektronik',
           'Dijital Abonelik','Spor','Diğer'];
-        const opts = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-        return `<div class="agent-action-form" data-action="create_budget">
-          <div class="d-flex gap-2 flex-wrap align-items-end">
-            <div>
-              <label class="form-label-sm mb-1 d-block">Kategori</label>
-              <select class="form-select form-select-sm action-field" name="category_name" style="min-width:150px;">${opts}</select>
-            </div>
-            <div>
-              <label class="form-label-sm mb-1 d-block">Aylık limit (TL)</label>
-              <input type="number" class="form-control form-control-sm action-field" name="amount"
-                value="${action.suggestedAmount||''}" placeholder="2000" min="1" style="min-width:90px;max-width:130px;">
-            </div>
-            <button type="button" class="btn btn-sm btn-primary execute-action-btn" style="font-size:.75rem;">
-              <i class="icon-base ti tabler-check me-1"></i>Bütçe Kur
-            </button>
-            <button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>
-          </div>
-          <div class="action-result mt-2" style="display:none;"></div>
-        </div>`;
+        const opts = cats.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+        return '<div class="agent-action-form" data-action="create_budget">'
+          + '<div class="d-flex gap-2 flex-wrap align-items-end">'
+          + '<div><label class="form-label-sm mb-1 d-block">Kategori</label>'
+          + '<select class="form-select form-select-sm action-field" name="category_name" style="min-width:150px;">' + opts + '</select></div>'
+          + '<div><label class="form-label-sm mb-1 d-block">Aylık limit (TL)</label>'
+          + '<input type="number" class="form-control form-control-sm action-field" name="amount" value="' + (action.suggestedAmount || '') + '" placeholder="2000" min="1" style="min-width:90px;max-width:130px;"></div>'
+          + '<button type="button" class="btn btn-sm btn-primary execute-action-btn" style="font-size:.75rem;"><i class="ti tabler-check me-1"></i>Bütçe Kur</button>'
+          + '<button type="button" class="btn btn-sm btn-text-secondary cancel-action-btn" style="font-size:.75rem;">İptal</button>'
+          + '</div><div class="action-result mt-2" style="display:none;"></div></div>';
       }
       return '';
     }
@@ -737,68 +905,82 @@
       const id = 'ac-' + (++_cardIdx);
       const btns = actions.map((a, i) => {
         if (a.type === 'link') {
-          return `<a href="${a.href}" class="btn btn-sm btn-outline-${a.color}" style="font-size:.72rem;padding:.2rem .6rem;">
-            <i class="icon-base ti ${a.icon} me-1"></i>${a.label}</a>`;
+          return '<a href="' + a.href + '" class="btn btn-sm btn-outline-' + a.color + '" style="font-size:.72rem;padding:.2rem .6rem;">'
+            + '<i class="ti ' + a.icon + ' me-1"></i>' + a.label + '</a>';
         }
-        const fId = `${id}-f${i}`;
-        return `<button type="button"
-            class="btn btn-sm btn-outline-${a.color} action-toggle-btn"
-            style="font-size:.72rem;padding:.2rem .6rem;" data-form="${fId}">
-            <i class="icon-base ti ${a.icon} me-1"></i>${a.label}
-          </button>
-          <div id="${fId}" class="action-proposal-form" style="display:none;">${buildActionForm(a)}</div>`;
+        const fId = id + '-f' + i;
+        return '<button type="button" class="btn btn-sm btn-outline-' + a.color + ' action-toggle-btn" style="font-size:.72rem;padding:.2rem .6rem;" data-form="' + fId + '">'
+          + '<i class="ti ' + a.icon + ' me-1"></i>' + a.label + '</button>'
+          + '<div id="' + fId + '" class="action-proposal-form" style="display:none;">' + buildActionForm(a) + '</div>';
       }).join('');
-      return `<div class="ac-actions">
-        <span class="action-label"><i class="icon-base ti tabler-sparkles icon-12px me-1"></i>Ajan önerisi:</span>
-        <div class="d-flex flex-wrap gap-2 align-items-start flex-grow-1">${btns}</div>
-      </div>`;
+      return '<div class="msg-actions">'
+        + '<span class="action-label"><i class="ti tabler-sparkles icon-12px"></i>Ajan önerisi:</span>'
+        + '<div class="d-flex flex-wrap gap-2 align-items-start flex-grow-1">' + btns + '</div>'
+        + '</div>';
     }
 
-    // ── Build analysis card ───────────────────────────────────────────────────
-    function buildAnalysisCard(query, content, agentsUsed, timestamp) {
+    // ── Build AI message row ──────────────────────────────────────────────
+    function buildAiRow(query, content, agentsUsed, timestamp) {
       const now = timestamp || new Date().toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
       const badges = (agentsUsed || []).map(a => {
         const c   = agentColorMap[a] || 'secondary';
         const lbl = agentLabelMap[a] || a;
-        return `<span class="ac-agent-badge bg-label-${c} text-${c}">${lbl}</span>`;
+        return '<span class="msg-agent-badge bg-label-' + c + ' text-' + c + '">' + lbl + '</span>';
       }).join('');
-      const qLabel = query
-        ? `<span class="query-label" title="${escAttr(query)}">
-             <i class="icon-base ti tabler-message-2 icon-12px me-1"></i>${escHtml(query.length > 60 ? query.slice(0,60)+'…' : query)}
-           </span>`
-        : '';
       const el = document.createElement('div');
-      el.className = 'analysis-card mb-4';
-      el.innerHTML = `
-        <div class="ac-header">
-          ${qLabel}
-          <div class="ac-agents">${badges}</div>
-          <span class="ac-time">${now}</span>
-        </div>
-        <div class="ac-body">
-          <div class="markdown-body"></div>
-        </div>
-        ${buildActionsHtml(detectActions(content))}`;
+      el.className = 'msg-row msg-ai';
+      const actionsHtml = buildActionsHtml(detectActions(content));
+      // Wrap content + actions together for border-radius
+      const hasActions = actionsHtml !== '';
+      el.innerHTML = '<div class="msg-avatar ai-avatar">'
+        + '<i class="ti tabler-sparkles" style="font-size:14px;color:#fff;"></i>'
+        + '</div>'
+        + '<div class="msg-bubble" style="max-width:min(640px,84%);">'
+        + '<div class="msg-content" style="' + (hasActions ? 'border-radius:14px 14px 0 0;' : '') + '">'
+        + '<div class="markdown-body"></div>'
+        + '</div>'
+        + actionsHtml
+        + '<div class="msg-meta">'
+        + '<span>' + now + '</span>'
+        + (badges ? '<div class="msg-agent-badges">' + badges + '</div>' : '')
+        + '</div>'
+        + '</div>';
       el.querySelector('.markdown-body').innerHTML = parseMarkdown(content);
       return el;
     }
 
+    // Build user message row
+    function buildUserRow(query) {
+      const el = document.createElement('div');
+      el.className = 'msg-row msg-user';
+      el.innerHTML = '<div class="msg-avatar user-avatar">'
+        + '<i class="ti tabler-user" style="font-size:14px;color:var(--bs-secondary-color);"></i>'
+        + '</div>'
+        + '<div class="msg-bubble">'
+        + '<div class="msg-content">' + escHtml(query) + '</div>'
+        + '<div class="msg-meta">' + new Date().toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) + '</div>'
+        + '</div>';
+      return el;
+    }
+
+    // Build typing/skeleton row
     function buildSkeleton(query, messageId) {
       const el = document.createElement('div');
-      el.className = 'skeleton-card mb-4';
-      el.id = messageId ? `skeleton-${messageId}` : 'skeleton-loading';
+      el.className = 'msg-row msg-ai skeleton-card';
+      el.id = messageId ? 'skeleton-' + messageId : 'skeleton-loading';
       if (messageId) el.setAttribute('data-message-id', messageId);
-      el.innerHTML = `
-        <div class="sk-header">
-          <div class="sk-dot"></div><div class="sk-dot"></div><div class="sk-dot"></div>
-          <span class="sk-label ms-1">${escHtml(query.length > 55 ? query.slice(0,55)+'…' : query)} analiz ediliyor…</span>
-        </div>
-        <div class="sk-body">
-          <div class="sk-line" style="width:82%;"></div>
-          <div class="sk-line" style="width:60%;"></div>
-          <div class="sk-line" style="width:73%;"></div>
-          <div class="sk-line" style="width:47%;margin-bottom:0;"></div>
-        </div>`;
+      const label = query && query.length > 40 ? query.slice(0, 40) + '…' : (query || 'Analiz yapılıyor…');
+      el.innerHTML = '<div class="msg-avatar ai-avatar">'
+        + '<i class="ti tabler-sparkles" style="font-size:14px;color:#fff;"></i>'
+        + '</div>'
+        + '<div class="msg-bubble" style="max-width:min(480px,76%);">'
+        + '<div class="typing-indicator">'
+        + '<div class="typing-dot"></div>'
+        + '<div class="typing-dot"></div>'
+        + '<div class="typing-dot"></div>'
+        + '<span style="font-size:.75rem;color:var(--bs-secondary-color);margin-left:.4rem;">' + escHtml(label) + '</span>'
+        + '</div>'
+        + '</div>';
       return el;
     }
 
@@ -807,35 +989,29 @@
       d.appendChild(document.createTextNode(str));
       return d.innerHTML;
     }
-    function escAttr(str) {
-      return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
 
-    // ── Show / hide UI elements ───────────────────────────────────────────────
-    function showResultsMode() {
-      emptyState?.classList.add('d-none');
-      compactBar.classList.add('visible');
-    }
-    if (!emptyState || emptyState.classList.contains('d-none')) showResultsMode();
-
-    // ── Post-load: inject action proposals into Blade-rendered history cards ──
-    document.querySelectorAll('.analysis-card .markdown-body[data-raw]').forEach(mdEl => {
+    // ── Post-load: inject action proposals into server-rendered messages ──
+    document.querySelectorAll('.msg-ai .markdown-body[data-raw]').forEach(mdEl => {
       const raw = mdEl.getAttribute('data-raw');
       if (!raw) return;
       const actions = detectActions(raw);
       if (!actions.length) return;
-      const card = mdEl.closest('.analysis-card');
-      if (!card || card.querySelector('.ac-actions')) return;
-      card.insertAdjacentHTML('beforeend', buildActionsHtml(actions));
+      const bubble = mdEl.closest('.msg-bubble');
+      if (!bubble || bubble.querySelector('.msg-actions')) return;
+      const msgContent = bubble.querySelector('.msg-content');
+      if (msgContent) {
+        msgContent.style.borderRadius = '14px 14px 0 0';
+        msgContent.insertAdjacentHTML('afterend', buildActionsHtml(actions));
+      }
     });
 
-    // ── Polling running skeletons on page load ────────────────────────────────
+    // ── Poll running skeletons on page load ───────────────────────────────
     document.querySelectorAll('.skeleton-card[data-message-id]').forEach(sk => {
       const mid = sk.getAttribute('data-message-id');
       if (mid) startPolling(mid, sk, null);
     });
 
-    // ── Poll for a specific message ───────────────────────────────────────────
+    // ── Poll a specific message ───────────────────────────────────────────
     function startPolling(messageId, skeletonEl, query) {
       const timer = setInterval(async () => {
         try {
@@ -845,18 +1021,19 @@
           const d = await r.json();
           if (d.status === 'completed' || d.status === 'error') {
             clearInterval(timer);
-            const card = buildAnalysisCard(query, d.reply || '(Yanıt alınamadı)', d.agents_used || []);
-            if (skeletonEl.parentNode) skeletonEl.replaceWith(card);
-            if (d.agents_used?.length) d.agents_used.forEach(a => setAgentState(a, 'done'));
+            const row = buildAiRow(query, d.reply || '(Yanıt alınamadı)', d.agents_used || []);
+            if (skeletonEl.parentNode) skeletonEl.replaceWith(row);
+            if (d.agents_used && d.agents_used.length) d.agents_used.forEach(a => setAgentState(a, 'done'));
             resetAgentsAfter(3000);
+            scrollBottom();
           }
         } catch (_) {}
       }, 2500);
     }
 
-    // ── Agent badge helpers ───────────────────────────────────────────────────
+    // ── Agent badge helpers ───────────────────────────────────────────────
     function setAgentState(agentKey, state) {
-      const el = document.getElementById(`agent-${agentKey}`);
+      const el = document.getElementById('agent-' + agentKey);
       if (!el) return;
       const badge = el.querySelector('.agent-state');
       if (!badge) return;
@@ -885,7 +1062,7 @@
       if (gs) { gs.className = 'badge bg-label-warning agent-global-status'; gs.textContent = 'Çalışıyor'; }
     }
 
-    // ── Agent run polling sidebar ─────────────────────────────────────────────
+    // ── Runs polling sidebar ──────────────────────────────────────────────
     let runsTimer = null;
     function startRunsPolling() {
       runsTimer = setInterval(async () => {
@@ -908,19 +1085,19 @@
         const dotColor   = r.status === 'completed' ? 'bg-success' : r.status === 'failed' ? 'bg-danger' : 'bg-warning';
         const badgeColor = r.status === 'completed' ? 'bg-label-success' : r.status === 'failed' ? 'bg-label-danger' : 'bg-label-warning';
         const toks = (r.tokens_in || 0) + (r.tokens_out || 0);
-        const dur  = r.duration_ms ? `· ${r.duration_ms}ms` : '';
-        return `<div class="run-item">
-          <div class="run-dot ${dotColor}"></div>
-          <div class="flex-grow-1">
-            <div class="run-name text-truncate" style="max-width:160px;">${escHtml(r.agent_name)}</div>
-            <div class="run-meta">${escHtml(r.model_used||'—')} ${dur} · ${toks} tok</div>
-          </div>
-          <span class="badge ${badgeColor}" style="font-size:.62rem;">${r.status}</span>
-        </div>`;
+        const dur  = r.duration_ms ? '· ' + r.duration_ms + 'ms' : '';
+        return '<div class="run-item">'
+          + '<div class="run-dot ' + dotColor + '"></div>'
+          + '<div class="flex-grow-1">'
+          + '<div class="run-name text-truncate" style="max-width:140px;">' + escHtml(r.agent_name) + '</div>'
+          + '<div class="run-meta">' + escHtml(r.model_used || '—') + ' ' + dur + ' · ' + toks + ' tok</div>'
+          + '</div>'
+          + '<span class="badge ' + badgeColor + '" style="font-size:.58rem;">' + r.status + '</span>'
+          + '</div>';
       }).join('');
     }
 
-    // ── Execute agent action via AJAX ─────────────────────────────────────────
+    // ── Execute agent action ──────────────────────────────────────────────
     async function executeAgentAction(action, data, formEl) {
       const resultEl = formEl.querySelector('.action-result');
       const btn      = formEl.querySelector('.execute-action-btn');
@@ -935,26 +1112,26 @@
         if (resp.ok && d.status === 'ok') {
           if (resultEl) {
             resultEl.style.display = 'block';
-            resultEl.innerHTML = `<div class="alert alert-success py-2 px-3 mb-0">
-              <i class="icon-base ti tabler-circle-check me-1"></i>${escHtml(d.message || 'Başarıyla oluşturuldu!')}
-              ${d.redirect ? `&nbsp;<a href="${d.redirect}" class="alert-link fw-semibold">Görüntüle →</a>` : ''}
-            </div>`;
+            resultEl.innerHTML = '<div class="alert alert-success py-2 px-3 mb-0">'
+              + '<i class="ti tabler-circle-check me-1"></i>' + escHtml(d.message || 'Başarıyla oluşturuldu!')
+              + (d.redirect ? '&nbsp;<a href="' + d.redirect + '" class="alert-link fw-semibold">Görüntüle →</a>' : '')
+              + '</div>';
           }
           if (btn) btn.style.display = 'none';
         } else {
           if (resultEl) {
             resultEl.style.display = 'block';
-            resultEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0">${escHtml(d.message || 'Bir hata oluştu.')}</div>`;
+            resultEl.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-0">' + escHtml(d.message || 'Bir hata oluştu.') + '</div>';
           }
-          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="icon-base ti tabler-refresh me-1"></i>Tekrar Dene'; }
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti tabler-refresh me-1"></i>Tekrar Dene'; }
         }
       } catch (_) {
-        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0">Bağlantı hatası.</div>`; }
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-0">Bağlantı hatası.</div>'; }
         if (btn) { btn.disabled = false; }
       }
     }
 
-    // ── Event delegation for action forms ────────────────────────────────────
+    // ── Event delegation for action forms ────────────────────────────────
     document.addEventListener('click', function (e) {
       const toggleBtn = e.target.closest('.action-toggle-btn');
       if (toggleBtn) {
@@ -977,18 +1154,24 @@
       }
     });
 
-    // ── Send message ──────────────────────────────────────────────────────────
+    // ── Send message ──────────────────────────────────────────────────────
     async function sendMessage(query) {
       if (!query.trim()) return;
-      ['cmd-input-hero','cmd-input-top'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.value = '';
-      });
-      disableSendButtons(true);
+      if (cmdInput) { cmdInput.value = ''; cmdInput.style.height = 'auto'; }
+      disableSend(true);
       showResultsMode();
       resetAllAgents();
       setGlobalRunning();
+
+      // Append user bubble
+      const userRow = buildUserRow(query);
+      messages.appendChild(userRow);
+
+      // Append typing skeleton
       const skeleton = buildSkeleton(query);
-      feed.insertBefore(skeleton, feed.firstChild);
+      messages.appendChild(skeleton);
+      scrollBottom();
+
       startRunsPolling();
       try {
         const resp = await fetch('{{ route("agent-chat.send") }}', {
@@ -999,58 +1182,54 @@
         const data = await resp.json();
         stopRunsPolling();
         if (data.status === 'pending' && data.message_id) {
-          skeleton.id = `skeleton-${data.message_id}`;
+          skeleton.id = 'skeleton-' + data.message_id;
           skeleton.setAttribute('data-message-id', data.message_id);
           startPolling(data.message_id, skeleton, query);
-          disableSendButtons(false);
+          disableSend(false);
           return;
         }
         skeleton.remove();
-        const card = buildAnalysisCard(query, data.reply || '(Yanıt alınamadı)', data.agents_used || []);
-        feed.insertBefore(card, feed.firstChild);
-        if (data.agents_used?.length) data.agents_used.forEach(a => setAgentState(a, 'done'));
+        const aiRow = buildAiRow(query, data.reply || '(Yanıt alınamadı)', data.agents_used || []);
+        messages.appendChild(aiRow);
+        scrollBottom();
+        if (data.agents_used && data.agents_used.length) data.agents_used.forEach(a => setAgentState(a, 'done'));
         resetAgentsAfter(3000);
       } catch (_) {
         stopRunsPolling();
         skeleton.remove();
-        feed.insertBefore(buildAnalysisCard(query, 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.', []), feed.firstChild);
+        const aiRow = buildAiRow(query, 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.', []);
+        messages.appendChild(aiRow);
+        scrollBottom();
       } finally {
-        disableSendButtons(false);
+        disableSend(false);
       }
     }
 
-    function disableSendButtons(disabled) {
-      ['cmd-send-hero','cmd-send-top'].forEach(id => {
-        const btn = document.getElementById(id); if (btn) btn.disabled = disabled;
+    function disableSend(disabled) {
+      const btn = document.getElementById('cmd-send');
+      if (btn) btn.disabled = disabled;
+    }
+
+    // ── Wire up send button / input ───────────────────────────────────────
+    const cmdSend = document.getElementById('cmd-send');
+    if (cmdSend) cmdSend.addEventListener('click', () => sendMessage(cmdInput ? cmdInput.value.trim() : ''));
+    if (cmdInput) {
+      cmdInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage(cmdInput.value.trim());
+        }
       });
     }
 
-    // ── Wire up send buttons / inputs ─────────────────────────────────────────
-    ['hero','top'].forEach(suffix => {
-      const input = document.getElementById(`cmd-input-${suffix}`);
-      const btn   = document.getElementById(`cmd-send-${suffix}`);
-      if (btn)   btn.addEventListener('click',  () => sendMessage(getActiveInput()));
-      if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input.value.trim()); } });
-    });
-    function getActiveInput() {
-      const hero = document.getElementById('cmd-input-hero');
-      const top  = document.getElementById('cmd-input-top');
-      if (hero && hero.value.trim()) return hero.value.trim();
-      if (top  && top.value.trim())  return top.value.trim();
-      return '';
-    }
-
-    // ── Quick trigger pills ───────────────────────────────────────────────────
+    // ── Quick trigger pills ───────────────────────────────────────────────
     document.querySelectorAll('.trigger-pill').forEach(pill => {
       pill.addEventListener('click', () => {
-        const inp = emptyState?.classList.contains('d-none')
-          ? document.getElementById('cmd-input-top')
-          : document.getElementById('cmd-input-hero');
-        if (inp) { inp.value = pill.dataset.msg; inp.focus(); }
+        if (cmdInput) { cmdInput.value = pill.dataset.msg; cmdInput.focus(); }
       });
     });
 
-    // ── Quick-action chips (2x2 grid in hero empty state) ────────────────────
+    // ── Quick-action chips (hero) ─────────────────────────────────────────
     document.querySelectorAll('.quick-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const msg = chip.dataset.msg;
@@ -1058,12 +1237,12 @@
       });
     });
 
-    // ── New session ───────────────────────────────────────────────────────────
+    // ── New session ───────────────────────────────────────────────────────
     document.getElementById('btn-clear-session')?.addEventListener('click', () => {
       window.location.href = '{{ route("agent-chat.index") }}';
     });
 
-    // ── Dismiss insights ──────────────────────────────────────────────────────
+    // ── Dismiss insights ──────────────────────────────────────────────────
     document.querySelectorAll('.btn-dismiss-insight').forEach(btn => {
       btn.addEventListener('click', function () {
         const url = this.dataset.url, id = this.dataset.id;
@@ -1073,6 +1252,7 @@
         });
       });
     });
+
   })();
   </script>
   </x-slot>

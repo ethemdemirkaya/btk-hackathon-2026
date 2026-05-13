@@ -48,17 +48,18 @@ class TransactionModel {
 
   factory TransactionModel.fromJson(Map<String, dynamic> j) =>
       TransactionModel(
-        id: j['id'] as String,
-        postedAt: DateTime.parse(j['posted_at'] as String),
-        amount: (j['amount'] as num).toDouble(),
-        tryAmount: (j['try_amount'] as num).toDouble(),
-        description: j['description'] as String,
+        id: j['id'] as String? ?? '',
+        postedAt: DateTime.tryParse(j['posted_at'] as String? ?? '') ?? DateTime.now(),
+        amount: (j['amount'] as num?)?.toDouble() ?? 0.0,
+        tryAmount: (j['try_amount'] as num?)?.toDouble() ?? 0.0,
+        description: j['description'] as String? ?? '',
         merchantName: j['merchant_name'] as String?,
-        category: TransactionCategory.fromJson(
-            j['category'] as Map<String, dynamic>),
+        category: j['category'] is Map<String, dynamic>
+            ? TransactionCategory.fromJson(j['category'] as Map<String, dynamic>)
+            : const TransactionCategory(id: 0, name: 'Diğer', icon: 'tabler-tag'),
         channel: j['channel'] as String? ?? 'other',
-        installmentNo: j['installment_no'] as int?,
-        installmentTotal: j['installment_total'] as int?,
+        installmentNo: (j['installment_no'] as num?)?.toInt(),
+        installmentTotal: (j['installment_total'] as num?)?.toInt(),
         anomalyScore: (j['anomaly_score'] as num?)?.toDouble(),
       );
 }

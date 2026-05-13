@@ -196,7 +196,7 @@ $mktIcons = [
 {{-- ══════════════════════ ALERTS TABLE ════════════════════════════════ --}}
 <div class="card mb-3">
   <div class="card-header d-flex align-items-center justify-content-between py-2">
-    <h6 class="mb-0 fw-semibold small">
+    <h6 class="mb-0 fw-semibold small d-flex align-items-center">
       <i class="ti tabler-bell me-2 text-primary"></i>Alarmlarım
     </h6>
     <div class="d-flex align-items-center gap-2">
@@ -207,8 +207,8 @@ $mktIcons = [
   </div>
 
   @if($alerts->isEmpty())
-  <div class="card-body text-center py-5">
-    <i class="ti tabler-bell-off icon-48px text-muted mb-3 d-block"></i>
+  <div class="card-body d-flex flex-column align-items-center text-center py-5">
+    <i class="ti tabler-bell-off icon-48px text-muted mb-3"></i>
     <p class="fw-semibold mb-1">Henüz alarm yok</p>
     <p class="text-muted small mb-3">Kur kartlarındaki <i class="ti tabler-bell-plus"></i> ikonuna tıkla.</p>
     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAlarmModal">

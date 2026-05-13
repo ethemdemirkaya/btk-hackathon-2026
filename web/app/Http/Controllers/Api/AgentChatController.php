@@ -101,15 +101,25 @@ class AgentChatController extends Controller
     {
         $insights = AgentInsight::where('user_id', $request->user()->id)
             ->where('is_dismissed', false)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->orderByDesc('importance')
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
             ->map(fn ($i) => [
                 'id'          => $i->id,
-                'title'       => $i->title,
-                'body'        => $i->body,
+                'type'        => $i->type ?? 'info',
+                'title'       => $i->title ?? '',
+                'body'        => $i->body ?? '',
                 'action_link' => $i->action_link,
-                'importance'  => $i->importance,
+                'importance'  => match(true) {
+                    $i->importance >= 8 => 'critical',
+                    $i->importance >= 6 => 'high',
+                    $i->importance >= 4 => 'medium',
+                    default             => 'low',
+                },
                 'created_at'  => $i->created_at?->toIso8601String(),
             ]);
 
