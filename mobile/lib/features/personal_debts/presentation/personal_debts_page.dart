@@ -128,7 +128,7 @@ class PersonalDebtsPage extends ConsumerWidget {
       try {
         await DioClient.instance
             .post(ApiEndpoints.personalDebtSettle(id));
-        ref.refresh(_personalDebtsProvider);
+        ref.invalidate(_personalDebtsProvider);
       } catch (_) {}
     }
   }

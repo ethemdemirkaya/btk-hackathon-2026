@@ -423,6 +423,7 @@ class SettingsPage extends ConsumerWidget {
   }
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final router = GoRouter.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -454,7 +455,7 @@ class SettingsPage extends ConsumerWidget {
       } catch (_) {}
       if (context.mounted) {
         await ref.read(authProvider.notifier).logout();
-        context.go('/login');
+        router.go('/login');
       }
     }
   }

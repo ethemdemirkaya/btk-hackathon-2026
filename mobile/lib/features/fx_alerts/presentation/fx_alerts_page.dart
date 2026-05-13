@@ -6,7 +6,6 @@ import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -50,8 +49,8 @@ class FxAlertsPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.refresh(_fxAlertsProvider);
-          ref.refresh(_fxRatesProvider);
+          ref.invalidate(_fxAlertsProvider);
+          ref.invalidate(_fxRatesProvider);
         },
         child: alertsAsync.when(
           loading: () => const SkeletonListView(),
@@ -111,7 +110,7 @@ class FxAlertsPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, int id) async {
     try {
       await DioClient.instance.delete(ApiEndpoints.fxAlert(id));
-      ref.refresh(_fxAlertsProvider);
+      ref.invalidate(_fxAlertsProvider);
     } catch (_) {}
   }
 }

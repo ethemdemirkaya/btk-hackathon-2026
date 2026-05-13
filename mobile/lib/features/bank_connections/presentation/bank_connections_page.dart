@@ -72,7 +72,7 @@ class BankConnectionsPage extends ConsumerWidget {
                   try {
                     await DioClient.instance
                         .post(ApiEndpoints.bankConnectionSync(id));
-                    ref.refresh(_bankConnectionsProvider);
+                    ref.invalidate(_bankConnectionsProvider);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Senkronizasyon başlatıldı')),
@@ -124,7 +124,7 @@ class BankConnectionsPage extends ConsumerWidget {
     if (ok == true) {
       try {
         await DioClient.instance.delete(ApiEndpoints.bankConnection(id));
-        ref.refresh(_bankConnectionsProvider);
+        ref.invalidate(_bankConnectionsProvider);
       } catch (_) {}
     }
   }

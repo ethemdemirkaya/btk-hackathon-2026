@@ -276,6 +276,20 @@ class _CardVisual extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(holder.isNotEmpty ? holder.toUpperCase() : '',
+                        style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            letterSpacing: 0.5)),
+                    Text(expiry,
+                        style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white70, fontSize: 10)),
+                  ],
+                ),
+                const SizedBox(height: 6),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(

@@ -164,7 +164,7 @@ class DashboardData {
           .map((e) => CategorySpend.fromJson(e as Map<String, dynamic>))
           .toList(),
       personalInflation: hasInflation
-          ? PersonalInflation.fromJson(inflationJson!)
+          ? PersonalInflation.fromJson(inflationJson)
           : null,
       smartAlerts: (j['smart_alerts'] as List? ?? [])
           .map((e) => SmartAlert.fromJson(e as Map<String, dynamic>))
