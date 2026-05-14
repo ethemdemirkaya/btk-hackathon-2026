@@ -100,12 +100,61 @@ class GoalController extends Controller
         $affordable = $avgSavings > 0 ? min($suggested, $avgSavings * 0.4) : $suggested;
         $affordable = max(1, round($affordable, -2));
 
+        // ── AI strategy advice ─────────────────────────────────────────────
+        $aiAdvice    = null;
+        $aiStrategy  = null;
+        $aiRisks     = [];
+        $aiQuickWins = [];
+        try {
+            $gemini  = app(\App\Services\Gemini\GeminiClient::class);
+            $prompt  = <<<PROMPT
+            Kullanıcının finansal hedefi:
+            - Hedef adı: {$goal->name}
+            - Hedef tutar: ₺{$goal->target_amount}
+            - Mevcut birikim: ₺{$goal->current_amount}
+            - Kalan tutar: ₺{$remaining}
+            - Kalan ay sayısı: {$monthsLeft}
+            - Ortalama aylık tasarruf: ₺{$avgSavings}
+            - Önerilen aylık katkı: ₺{$suggested}
+            - Karşılanabilir aylık katkı: ₺{$affordable}
+
+            Bu hedefe ulaşmak için kişiselleştirilmiş strateji, riskler ve hızlı kazanımlar sun.
+            PROMPT;
+
+            $schema = [
+                'type'       => 'object',
+                'properties' => [
+                    'advice'     => ['type' => 'string'],
+                    'strategy'   => ['type' => 'string'],
+                    'risks'      => ['type' => 'array', 'items' => ['type' => 'string']],
+                    'quick_wins' => ['type' => 'array', 'items' => ['type' => 'string']],
+                ],
+                'required' => ['advice', 'strategy'],
+            ];
+
+            $result      = $gemini->generate(
+                \App\Services\Gemini\GeminiModelEnum::FLASH,
+                [['role' => 'user', 'parts' => [['text' => $prompt]]]],
+                'Sen bir kişisel finans danışmanısın. Türkçe, somut ve uygulanabilir hedef stratejileri sun. Sadece JSON döndür.',
+                $schema,
+                0.7,
+            );
+            $aiAdvice    = $result['content']['advice']      ?? null;
+            $aiStrategy  = $result['content']['strategy']    ?? null;
+            $aiRisks     = $result['content']['risks']       ?? [];
+            $aiQuickWins = $result['content']['quick_wins']  ?? [];
+        } catch (\Throwable) {}
+
         return response()->json([
-            'suggested'   => $suggested,
-            'affordable'  => $affordable,
-            'avg_savings' => round($avgSavings, 0),
-            'months_left' => $monthsLeft,
-            'remaining'   => $remaining,
+            'suggested'      => $suggested,
+            'affordable'     => $affordable,
+            'avg_savings'    => round($avgSavings, 0),
+            'months_left'    => $monthsLeft,
+            'remaining'      => $remaining,
+            'ai_advice'      => $aiAdvice,
+            'ai_strategy'    => $aiStrategy,
+            'ai_risks'       => $aiRisks,
+            'ai_quick_wins'  => $aiQuickWins,
         ]);
     }
 }

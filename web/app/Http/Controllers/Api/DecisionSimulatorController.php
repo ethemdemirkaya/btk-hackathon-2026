@@ -113,6 +113,56 @@ class DecisionSimulatorController extends Controller
         $finalBalance = $projections[count($projections) - 1]['balance'] ?? $balance;
         $realFinal    = $projections[count($projections) - 1]['real_balance'] ?? $balance;
 
+        // ── AI scenario interpretation ─────────────────────────────────────
+        $aiCommentary      = null;
+        $aiVerdict         = null;
+        $aiRisks           = [];
+        $aiRecommendations = [];
+        try {
+            $gemini      = app(\App\Services\Gemini\GeminiClient::class);
+            $inflationLoss = round($finalBalance - $realFinal, 0);
+            $prompt      = <<<PROMPT
+            Finansal senaryo simülasyonu sonuçları:
+            - Gelir değişimi: %{$request->income_change_pct}
+            - Gider değişimi: %{$request->expense_change_pct}
+            - Yıllık enflasyon: %{$request->inflation_rate}
+            - Süre: {$months} ay
+            - Yeni aylık gelir: ₺{$newIncome}
+            - Yeni aylık gider: ₺{$newExpense}
+            - Yeni aylık tasarruf: ₺{$newSavings}
+            - Tasarruf oranı: %{$request->income_change_pct}
+            - Tahmini finansal sağlık skoru: {$estimatedScore}/100
+            - {$months} ay sonra tahmini nominal bakiye: ₺{$finalBalance}
+            - Reel bakiye (enflasyon sonrası): ₺{$realFinal}
+            - Enflasyon kaybı: ₺{$inflationLoss}
+
+            Bu senaryonun genel değerlendirmesini, risklerini ve kullanıcının alması gereken somut önlemleri listele.
+            PROMPT;
+
+            $schema = [
+                'type'       => 'object',
+                'properties' => [
+                    'commentary'      => ['type' => 'string'],
+                    'verdict'         => ['type' => 'string'],
+                    'risks'           => ['type' => 'array', 'items' => ['type' => 'string']],
+                    'recommendations' => ['type' => 'array', 'items' => ['type' => 'string']],
+                ],
+                'required' => ['commentary', 'verdict'],
+            ];
+
+            $result            = $gemini->generate(
+                \App\Services\Gemini\GeminiModelEnum::FLASH,
+                [['role' => 'user', 'parts' => [['text' => $prompt]]]],
+                'Sen bir finans analisti ve danışmanısın. Finansal senaryoları analiz et, Türkçe konuş, sadece JSON döndür.',
+                $schema,
+                0.65,
+            );
+            $aiCommentary      = $result['content']['commentary']      ?? null;
+            $aiVerdict         = $result['content']['verdict']         ?? null;
+            $aiRisks           = $result['content']['risks']           ?? [];
+            $aiRecommendations = $result['content']['recommendations'] ?? [];
+        } catch (\Throwable) {}
+
         return response()->json([
             'projections'        => $projections,
             'new_income'         => round($newIncome, 2),
@@ -124,6 +174,10 @@ class DecisionSimulatorController extends Controller
             'real_final_balance' => $realFinal,
             'inflation_loss'     => round($finalBalance - $realFinal, 0),
             'months_emergency'   => $newExpense > 0 ? round($finalBalance / $newExpense, 1) : 0,
+            'ai_commentary'      => $aiCommentary,
+            'ai_verdict'         => $aiVerdict,
+            'ai_risks'           => $aiRisks,
+            'ai_recommendations' => $aiRecommendations,
         ]);
     }
 
