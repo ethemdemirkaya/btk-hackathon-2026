@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../theme/text_styles.dart';
 import '../../shared/providers/auth_provider.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -36,7 +46,7 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 border: Border(
                     bottom: BorderSide(
-                        color: Color(0xFF1A2940), width: 1)),
+                        color: _cardBorder, width: 1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,17 +86,15 @@ class AppDrawer extends ConsumerWidget {
                               CrossAxisAlignment.start,
                           children: [
                             Text(name,
-                                style: AppTextStyles.bodyMedium
-                                    .copyWith(
-                                        color:
-                                            const Color(0xFFE8F4FF),
-                                        fontWeight:
-                                            FontWeight.w600)),
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _text1)),
                             Text(email.isEmpty ? 'Paranette' : email,
-                                style: AppTextStyles.labelSmall
-                                    .copyWith(
-                                        color: const Color(
-                                            0xFF4A6478))),
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: _text3)),
                           ],
                         ),
                       ),
@@ -98,17 +106,15 @@ class AppDrawer extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00D4FF)
-                          .withValues(alpha: 0.10),
+                      color: _accent.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: const Color(0xFF00D4FF)
-                              .withValues(alpha: 0.25)),
+                          color: _accent.withValues(alpha: 0.25)),
                     ),
                     child: const Text(
                       'BTK Akademi Hackathon 2026',
                       style: TextStyle(
-                          color: Color(0xFF00D4FF),
+                          color: _accent,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3),
@@ -234,7 +240,7 @@ class AppDrawer extends ConsumerWidget {
               decoration: const BoxDecoration(
                 border: Border(
                     top: BorderSide(
-                        color: Color(0xFF1A2940), width: 1)),
+                        color: _cardBorder, width: 1)),
               ),
               child: Column(
                 children: [
@@ -281,7 +287,7 @@ class _DrawerSection extends StatelessWidget {
           child: Text(
             title.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFF4A6478),
+              color: _text3,
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.8,
@@ -293,7 +299,7 @@ class _DrawerSection extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 12),
           child: Divider(
-              color: const Color(0xFF1A2940),
+              color: _cardBorder,
               height: 8,
               thickness: 1),
         ),
@@ -334,13 +340,13 @@ class _DrawerItem extends StatelessWidget {
                 horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isActive
-              ? const Color(0xFF00D4FF).withValues(alpha: 0.10)
+              ? _accent.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isActive
               ? const Border(
                   left: BorderSide(
-                      color: Color(0xFF00D4FF), width: 3))
+                      color: _accent, width: 3))
               : null,
         ),
         child: Row(
@@ -351,30 +357,30 @@ class _DrawerItem extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: isActive
-                    ? const Color(0xFF00D4FF).withValues(alpha: 0.12)
-                    : const Color(0xFF1A2940)
-                        .withValues(alpha: 0.5),
+                    ? _accent.withValues(alpha: 0.12)
+                    : _cardBorder.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
                 size: 16,
                 color: isActive
-                    ? const Color(0xFF00D4FF)
-                    : const Color(0xFF8BA4BC),
+                    ? _accent
+                    : _text2,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: isActive
-                      ? const Color(0xFF00D4FF)
-                      : const Color(0xFFE8F4FF),
+                style: TextStyle(
+                  fontSize: 14,
                   fontWeight: isActive
                       ? FontWeight.w600
                       : FontWeight.w400,
+                  color: isActive
+                      ? _accent
+                      : _text1,
                 ),
               ),
             ),

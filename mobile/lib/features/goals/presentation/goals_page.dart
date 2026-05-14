@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -39,14 +37,15 @@ IconData _iconForGoal(String name) {
 
 // ── Design tokens ────────────────────────────────────────────────────
 const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
+const _cardBg     = Color(0xFF0D1B2A);
 const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _positive = Color(0xFF0DD9A0);
-const _warning = Color(0xFFF59E0B);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 class GoalsPage extends ConsumerStatefulWidget {
   const GoalsPage({super.key});
@@ -67,7 +66,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showGoalForm(context, null),
         backgroundColor: _accent,
-        foregroundColor: AppColors.accentText,
+        foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
@@ -161,8 +160,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                 vertical: 32),
                             child: Text(
                               'Bu kategoride hedef yok.',
-                              style: AppTextStyles.bodyMedium
-                                  .copyWith(color: _text3),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -266,11 +264,9 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge.copyWith(
-                      color: _text1, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text1)),
               Text(subtitle,
-                  style:
-                      AppTextStyles.bodySmall.copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
             ],
           ),
         ],
@@ -316,22 +312,16 @@ class _HeroCard extends StatelessWidget {
               children: [
                 Text(
                   '$activeCount aktif hedef · ${AppFormatters.currencyCompact(totalSaved)} ₺ biriktirildi',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: _text2),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${AppFormatters.currencyCompact(totalSaved)} ₺',
-                  style: AppTextStyles.amountHero.copyWith(
-                      fontSize: 28,
-                      color: _text1,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.02 * 28),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.56),
                 ),
                 const SizedBox(height: 4),
                 Text('Toplam birikim',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: _text3)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
               ],
             ),
           ),
@@ -368,8 +358,7 @@ class _DashedAddButton extends StatelessWidget {
             const Icon(Icons.add, size: 18, color: _text3),
             const SizedBox(width: 8),
             Text(label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: _text3, fontWeight: FontWeight.w500)),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
           ],
         ),
       ),
@@ -424,11 +413,10 @@ class _SegmentedToggle extends StatelessWidget {
                 child: Text(
                   o.label,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.labelSmall.copyWith(
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                     color: active ? _accent : _text3,
-                    fontWeight: active
-                        ? FontWeight.w600
-                        : FontWeight.w400,
                   ),
                 ),
               ),
@@ -515,20 +503,16 @@ class _GoalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                              color: _text1,
-                              fontWeight: FontWeight.w600)),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
                       const SizedBox(height: 2),
                       Text(
                         '${AppFormatters.currencyCompact(target)} ₺ hedef',
-                        style: AppTextStyles.labelSmall
-                            .copyWith(color: _text3),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                       ),
                       if (deadlineText.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(deadlineText,
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: _text3)),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
                       ],
                     ],
                   ),
@@ -582,8 +566,7 @@ class _GoalCard extends StatelessWidget {
               children: [
                 Text(
                   '${AppFormatters.currencyCompact(current)} ₺ / ${AppFormatters.currencyCompact(target)} ₺',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: _text3),
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                 ),
                 if (monthsLeft != null)
                   Container(
@@ -595,8 +578,7 @@ class _GoalCard extends StatelessWidget {
                     ),
                     child: Text(
                       '$monthsLeft ay kaldı',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          color: _text2, fontSize: 10),
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text2),
                     ),
                   ),
               ],
@@ -744,7 +726,7 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
               onPressed: _loading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _accent,
-                foregroundColor: AppColors.accentText,
+                foregroundColor: const Color(0xFF051929),
                 padding:
                     const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -756,7 +738,7 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
                       height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.accentText))
+                          color: const Color(0xFF051929)))
                   : const Text('Ekle'),
             ),
           ),
@@ -954,7 +936,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _accent,
-                    foregroundColor: AppColors.accentText,
+                    foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(
                         vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -967,7 +949,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                           height: 20,
                           child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.accentText))
+                              color: const Color(0xFF051929)))
                       : Text(_isEdit
                           ? 'Güncelle'
                           : 'Hedef Oluştur'),

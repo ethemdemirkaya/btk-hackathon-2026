@@ -531,8 +531,8 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
               angle: _ctrl.value * 2 * math.pi,
               child: child,
             ),
-            child: const Icon(
-              Icons.loop,
+            child: Icon(
+              _stageIcon(widget.stage),
               size: 16,
               color: _accent,
             ),

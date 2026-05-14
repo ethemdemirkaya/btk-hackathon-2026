@@ -927,8 +927,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Bütçe Düzenle' : 'Bütçe Ekle',
-                  style: AppTextStyles.headlineMedium
-                      .copyWith(color: _text1)),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
               const SizedBox(height: 20),
               _loadingCats
                   ? const LinearProgressIndicator(color: _accent)
@@ -938,8 +937,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                       decoration:
                           const InputDecoration(labelText: 'Kategori'),
                       hint: Text(_categoryName,
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(color: _text3)),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3)),
                       items: _categories
                           .map((c) => DropdownMenuItem<int>(
                                 value: (c['id'] as num).toInt(),
