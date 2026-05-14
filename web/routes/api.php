@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DecisionSimulatorController;
 use App\Http\Controllers\Api\FxAlertController;
 use App\Http\Controllers\Api\GoalController;
+use App\Http\Controllers\Api\HealthScoreController;
 use App\Http\Controllers\Api\InflationController;
 use App\Http\Controllers\Api\InvestmentController;
 use App\Http\Controllers\Api\LoanController;
@@ -109,6 +110,9 @@ Route::prefix('v1')->group(function () {
 
         // Inflation
         Route::get('inflation', [InflationController::class, 'index']);
+
+        // Financial Health Score (live)
+        Route::get('health-score', [HealthScoreController::class, 'show']);
 
         // Personal Debts
         Route::get   ('personal-debts',              [PersonalDebtController::class, 'index']);

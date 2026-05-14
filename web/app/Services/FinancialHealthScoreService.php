@@ -93,15 +93,22 @@ class FinancialHealthScoreService
         return $record;
     }
 
-    /** Returns existing score if fresher than $maxAgeHours, otherwise recomputes */
-    public function getOrCompute(User $user, int $maxAgeHours = 24): FinancialHealthScore
+    /**
+     * Recompute on every call so the score is always live.
+     * $maxAgeMinutes acts as a short read-through cache only — keeps the cost
+     * predictable when the dashboard loads several derived figures in a row.
+     */
+    public function getOrCompute(User $user, int $maxAgeMinutes = 0): FinancialHealthScore
     {
-        $existing = FinancialHealthScore::where('user_id', $user->id)
-            ->where('calculated_at', '>=', now()->subHours($maxAgeHours))
-            ->latest('calculated_at')
-            ->first();
+        if ($maxAgeMinutes > 0) {
+            $existing = FinancialHealthScore::where('user_id', $user->id)
+                ->where('calculated_at', '>=', now()->subMinutes($maxAgeMinutes))
+                ->latest('calculated_at')
+                ->first();
+            if ($existing) return $existing;
+        }
 
-        return $existing ?? $this->computeAndStore($user);
+        return $this->computeAndStore($user);
     }
 
     private function scoreDebtRatio(float $ratio): int
