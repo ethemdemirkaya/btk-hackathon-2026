@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\FinancialHealthScoreService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    public function __construct(
+        private readonly FinancialHealthScoreService $healthScoreService,
+    ) {}
+
     public function summary(Request $request): JsonResponse
     {
         $request->validate(['month' => 'nullable|date_format:Y-m']);
@@ -81,10 +86,7 @@ class ReportController extends Controller
             ->limit(5)
             ->get();
 
-        $healthScore = DB::table('financial_health_scores')
-            ->where('user_id', $user->id)
-            ->orderByDesc('calculated_at')
-            ->first();
+        $healthScoreRecord = $this->healthScoreService->getOrCompute($user, 60);
 
         return response()->json([
             'period'           => $month->format('Y-m'),
@@ -95,7 +97,7 @@ class ReportController extends Controller
             'cash_flow'        => $cashFlow->values(),
             'categories'       => $categories->values(),
             'top_merchants'    => $topMerchants->values(),
-            'health_score'     => $healthScore?->score ?? 0,
+            'health_score'     => (int) $healthScoreRecord->score,
         ]);
     }
 
@@ -147,10 +149,7 @@ class ReportController extends Controller
             ->limit(8)
             ->get();
 
-        $healthScore = DB::table('financial_health_scores')
-            ->where('user_id', $user->id)
-            ->orderByDesc('calculated_at')
-            ->first();
+        $healthScore = $this->healthScoreService->getOrCompute($user, 60);
 
         $personalInflation = (float) (DB::table('inflation_category_rates')
             ->where('tuik_category_slug', 'genel')

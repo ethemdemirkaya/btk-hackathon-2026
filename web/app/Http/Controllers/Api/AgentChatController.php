@@ -19,6 +19,8 @@ class AgentChatController extends Controller
 
     public function send(Request $request): JsonResponse
     {
+        set_time_limit(300); // AI pipeline can take up to 5 minutes
+
         $data = $request->validate([
             'message'    => 'required|string|max:2000',
             'session_id' => 'nullable|string|max:100',
@@ -143,7 +145,19 @@ class AgentChatController extends Controller
      */
     public function refreshInsights(Request $request): JsonResponse
     {
-        $user    = $request->user();
+        $user  = $request->user();
+        $force = $request->boolean('force', false);
+
+        // 1-day cache: skip regeneration unless forced or no fresh insights exist
+        $freshExists = AgentInsight::where('user_id', $user->id)
+            ->where('is_dismissed', false)
+            ->where('created_at', '>=', now()->subDay())
+            ->exists();
+
+        if ($freshExists && ! $force) {
+            return $this->insights($request);
+        }
+
         $context = 'Finansal verilerimi analiz et, bütçe durumumu ve olağandışı harcamaları değerlendir.';
         $input   = ['context' => $context];
 

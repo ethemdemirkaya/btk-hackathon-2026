@@ -42,7 +42,7 @@ class OrchestratorAgent
 
         // ── 1. Route intent ────────────────────────────────────────────
         $routing = $this->router->route($message);
-        $agents  = $routing['agents'];
+        $agents  = array_slice($routing['agents'], 0, 2); // cap at 2 to prevent timeouts
         $context = $routing['context'];
         $extracted = $routing['extracted'] ?? [];
 
@@ -91,7 +91,11 @@ class OrchestratorAgent
         $final = $this->synthesize($user, $message, $specialistResults);
 
         // ── 4. Persist insight if there are budget/anomaly recommendations ────
-        $this->maybeStoreInsight($user, $final, $specialistResults);
+        try {
+            $this->maybeStoreInsight($user, $final, $specialistResults);
+        } catch (\Throwable) {
+            // Non-critical: insight storage failure must not kill the response
+        }
 
         return [
             'session_id'         => $sessionId,
