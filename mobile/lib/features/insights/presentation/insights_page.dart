@@ -177,13 +177,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     if (_generating) return;
     setState(() => _generating = true);
     try {
-      await DioClient.instance.post(ApiEndpoints.agentSend, data: {
-        'message':
-            'Finansal verilerimi analiz edip güncel öngörüler ve tavsiyeler üret. '
-            'Harcama alışkanlıklarım, bütçe durumum ve yatırımlarım hakkında '
-            'pratik önerilerde bulun.',
-        'session_id': 'insights-refresh',
-      });
+      await DioClient.instance.post(ApiEndpoints.agentInsightsRefresh);
       if (mounted) {
         ref.invalidate(_insightsProvider);
         setState(() {
@@ -192,7 +186,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
         });
       }
     } catch (_) {
-      // silently fail — user can retry
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('AI analizi şu an tamamlanamadı. Lütfen tekrar deneyin.'),
+            backgroundColor: Color(0xFFFF4D6D),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _generating = false);
     }

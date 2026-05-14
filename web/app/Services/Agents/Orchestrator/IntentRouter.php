@@ -79,8 +79,17 @@ class IntentRouter
         ];
 
         $contents = [['role' => 'user', 'parts' => [['text' => $prompt]]]];
-        $result   = $this->gemini->generate(GeminiModelEnum::FLASH, $contents, $systemPrompt, $schema, 0.2);
 
-        return array_merge(['agents' => [], 'context' => $userMessage, 'extracted' => []], $result['content']);
+        try {
+            $result = $this->gemini->generate(GeminiModelEnum::FLASH, $contents, $systemPrompt, $schema, 0.2);
+            return array_merge(['agents' => [], 'context' => $userMessage, 'extracted' => []], $result['content']);
+        } catch (\Throwable) {
+            // Gemini unavailable — fall back to general financial analysis routing
+            return [
+                'agents'    => ['budget_advisor', 'anomaly_detector'],
+                'context'   => $userMessage,
+                'extracted' => [],
+            ];
+        }
     }
 }

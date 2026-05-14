@@ -152,6 +152,7 @@ Route::prefix('v1')->group(function () {
         Route::post ('agent/send',                        [AgentChatController::class, 'send']);
         Route::get  ('agent/history',                     [AgentChatController::class, 'history']);
         Route::get  ('agent/insights',                    [AgentChatController::class, 'insights']);
+        Route::post ('agent/insights/refresh',            [AgentChatController::class, 'refreshInsights']);
         Route::patch('agent/insights/{insight}/dismiss',  [AgentChatController::class, 'dismissInsight']);
 
         // Receipts (OCR)

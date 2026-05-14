@@ -7,8 +7,11 @@ use App\Models\AgentInsight;
 use App\Models\AgentMessage;
 use App\Models\AgentRun;
 use App\Services\Agents\Orchestrator\OrchestratorAgent;
+use App\Services\Agents\Specialists\AnomalyDetectorAgent;
+use App\Services\Agents\Specialists\BudgetAdvisorAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AgentChatController extends Controller
 {
@@ -132,5 +135,76 @@ class AgentChatController extends Controller
         $insight->update(['is_dismissed' => true]);
 
         return response()->json(['message' => 'Öngörü kapatıldı.']);
+    }
+
+    /**
+     * Directly run BudgetAdvisor + AnomalyDetector without Gemini intent routing,
+     * persist results as AgentInsight records, and return the refreshed list.
+     */
+    public function refreshInsights(Request $request): JsonResponse
+    {
+        $user    = $request->user();
+        $context = 'Finansal verilerimi analiz et, bütçe durumumu ve olağandışı harcamaları değerlendir.';
+        $input   = ['context' => $context];
+
+        // Budget advisor
+        try {
+            $budget = (new BudgetAdvisorAgent($user))->run($input);
+            $summary = $budget['summary'] ?? null;
+            if ($summary) {
+                AgentInsight::create([
+                    'user_id'    => $user->id,
+                    'agent_name' => 'budget_advisor',
+                    'type'       => 'tip',
+                    'title'      => 'Bütçe Analizi',
+                    'body'       => Str::limit($summary, 300),
+                    'importance' => 7,
+                    'expires_at' => now()->addDays(7),
+                ]);
+            }
+            foreach (($budget['recommendations'] ?? []) as $rec) {
+                $suggestion = $rec['suggestion'] ?? null;
+                if (! $suggestion) continue;
+                $priority = match (strtolower($rec['priority'] ?? 'medium')) {
+                    'high', 'yüksek'     => 8,
+                    'medium', 'orta'     => 6,
+                    'low', 'düşük'       => 4,
+                    default              => 5,
+                };
+                AgentInsight::create([
+                    'user_id'    => $user->id,
+                    'agent_name' => 'budget_advisor',
+                    'type'       => 'tip',
+                    'title'      => ($rec['category'] ?? 'Bütçe') . ' Önerisi',
+                    'body'       => Str::limit($suggestion, 300),
+                    'importance' => $priority,
+                    'expires_at' => now()->addDays(7),
+                ]);
+            }
+        } catch (\Throwable) {
+            // agent failed — skip silently
+        }
+
+        // Anomaly detector
+        try {
+            $anomaly = (new AnomalyDetectorAgent($user))->run($input);
+            $summary = $anomaly['summary'] ?? null;
+            if ($summary) {
+                AgentInsight::create([
+                    'user_id'    => $user->id,
+                    'agent_name' => 'anomaly_detector',
+                    'type'       => 'warning',
+                    'title'      => 'Harcama Anomalisi',
+                    'body'       => Str::limit($summary, 300),
+                    'importance' => 9,
+                    'expires_at' => now()->addDays(3),
+                ]);
+            }
+        } catch (\Throwable) {
+            // agent failed — skip silently
+        }
+
+        // Return the refreshed insight list
+        return $this->insights($request);
     }
 }
