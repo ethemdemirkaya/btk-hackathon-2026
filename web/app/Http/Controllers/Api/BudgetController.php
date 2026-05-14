@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BudgetResource;
 use App\Models\Budget;
+use App\Services\Agents\Specialists\BudgetAdvisorAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -128,7 +129,38 @@ class BudgetController extends Controller
                 ];
             });
 
-        return response()->json(['suggestions' => $suggestions->values()]);
+        // ── AI enrichment ──────────────────────────────────────────────────
+        $aiSummary = null;
+        try {
+            $agent    = new BudgetAdvisorAgent($request->user());
+            $aiResult = $agent->run([
+                'context'    => 'Kullanıcı bütçe önerileri istiyor. Her kategori için somut TL limit ve gerekçe sun.',
+                'session_id' => 'budget-suggest-' . $userId,
+            ]);
+            $aiSummary = $aiResult['summary'] ?? null;
+            $aiRecs    = collect($aiResult['recommendations'] ?? [])
+                ->keyBy(fn ($r) => mb_strtolower(trim($r['category'] ?? ''), 'UTF-8'));
+
+            $suggestions = $suggestions->map(function ($s) use ($aiRecs) {
+                $key = mb_strtolower(trim($s['category_name']), 'UTF-8');
+                $ai  = $aiRecs->get($key)
+                    ?? $aiRecs->first(fn ($r) =>
+                        str_contains(mb_strtolower($r['category'] ?? '', 'UTF-8'), $key) ||
+                        str_contains($key, mb_strtolower($r['category'] ?? '', 'UTF-8'))
+                    );
+                return array_merge((array) $s, [
+                    'rationale' => $ai['suggestion'] ?? null,
+                    'priority'  => $ai['priority']   ?? 'medium',
+                ]);
+            });
+        } catch (\Throwable) {
+            // Silent fallback – serve math-only suggestions
+        }
+
+        return response()->json([
+            'suggestions' => $suggestions->values(),
+            'ai_summary'  => $aiSummary,
+        ]);
     }
 
     public function aiApply(Request $request): JsonResponse
