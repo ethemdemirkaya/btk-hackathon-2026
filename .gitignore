@@ -1,10 +1,18 @@
 *.exe
+*.dll
 docs/api-keys.md
 docs/secrets/
 **/node_modules
 **/vendor
 **/.env
+**/.env.local
+**/.env.production
 docs/html/
 docs/PARANETTE_WEB.md
 docs/PARANETTE_MOBIL.md
 docs/tasarım/
+
+# Claude Code local files
+.claude/settings.local.json
+.claude/worktrees/
+.claude/scheduled_tasks.lock
