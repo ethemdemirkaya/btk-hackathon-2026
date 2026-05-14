@@ -109,24 +109,14 @@ class _SplashPageState extends ConsumerState<SplashPage>
         notifier.setAuthenticated(user);
         context.go('/dashboard');
       } else {
-        bool stillHas = false;
-        try {
-          stillHas = await AuthStorage.hasToken()
-              .timeout(const Duration(seconds: 3));
-        } catch (_) {
-          stillHas = false;
-        }
+        // Token expired/invalid — repo.me() already cleared storage
+        notifier.setUnauthenticated();
         if (!mounted) return;
-        if (!stillHas) {
-          context.go('/login');
-        } else {
-          await notifier.initialize();
-          if (!mounted) return;
-          context.go('/dashboard');
-        }
+        context.go('/login');
       }
     } else {
-      await notifier.initialize();
+      // No token: navigate to onboarding on first launch, login otherwise
+      notifier.setUnauthenticated();
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       final onboarded = prefs.getBool('onboarding_completed') ?? false;

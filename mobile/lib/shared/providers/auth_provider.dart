@@ -37,6 +37,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isAuthenticated: true, user: user, isLoading: false);
   }
 
+  void setUnauthenticated() {
+    state = const AuthState(isAuthenticated: false, isLoading: false);
+  }
+
   Future<void> logout() async {
     await AuthStorage.clear();
     state = const AuthState(isAuthenticated: false, isLoading: false);
