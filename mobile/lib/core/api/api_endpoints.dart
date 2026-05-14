@@ -68,6 +68,7 @@ class ApiEndpoints {
   static const agentSend = '/agent/send';
   static const agentHistory = '/agent/history';
   static const agentInsights = '/agent/insights';
+  static const agentPageAnalyze = '/agent/page-analyze';
   static String agentInsightDismiss(int id) => '/agent/insights/$id/dismiss';
 
   // Negotiation

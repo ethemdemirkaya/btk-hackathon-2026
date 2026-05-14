@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -117,11 +118,8 @@ class _GreetingHeader extends ConsumerWidget {
             ],
           ),
           const Spacer(),
-          // Notification bell
-          _HeaderIconBtn(
-            icon: Icons.notifications_outlined,
-            onTap: () => context.push('/insights'),
-          ),
+          // AI Insights button
+          AiInsightsButton(page: 'dashboard'),
         ],
       ),
     );
