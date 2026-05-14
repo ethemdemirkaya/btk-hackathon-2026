@@ -55,6 +55,7 @@ class HealthScorePage extends ConsumerWidget {
     final async = ref.watch(_healthProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF060D18),
       body: SafeArea(
         child: async.when(
           loading: () => const SkeletonListView(),
@@ -69,86 +70,120 @@ class HealthScorePage extends ConsumerWidget {
                 (data['score_change'] as num?)?.toInt() ?? 2;
 
             return ListView(
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: 32),
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                        onTap: () =>
+                            shellScaffoldKey.currentState?.openDrawer(),
                         child: Container(
-                          width: 36,
-                          height: 36,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.bg2,
-                            border:
-                                Border.all(color: AppColors.border1Dark),
+                            color: const Color(0xFF0D1B2A),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: const Color(0xFF1A2940)),
                           ),
                           child: const Icon(Icons.menu,
-                              size: 16, color: AppColors.text2Dark),
+                              size: 18, color: Color(0xFF8BA4BC)),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text('Finansal Sağlık',
-                          style: AppTextStyles.headlineMedium
-                              .copyWith(color: AppColors.text1Dark)),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Finansal Sağlık Skoru',
+                                style: AppTextStyles.headlineMedium
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFFE8F4FF))),
+                            Text('Durumunuzu görün',
+                                style: AppTextStyles.bodySmall
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478))),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
 
-                // Hero ring
+                // Hero gauge card
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: Column(
-                    children: [
-                      _ScoreRing(value: healthScore.toDouble()),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.positive
-                                  .withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D1B2A),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: const Color(0xFF1A2940)),
+                    ),
+                    child: Column(
+                      children: [
+                        _ScoreGauge(value: healthScore.toDouble()),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0DD9A0)
+                                    .withValues(alpha: 0.12),
+                                borderRadius:
+                                    BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.arrow_upward,
+                                      size: 12,
+                                      color: Color(0xFF0DD9A0)),
+                                  const SizedBox(width: 3),
+                                  Text('+$scoreChange',
+                                      style: AppTextStyles
+                                          .labelSmall
+                                          .copyWith(
+                                              color: const Color(
+                                                  0xFF0DD9A0),
+                                              fontWeight:
+                                                  FontWeight.w600)),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.arrow_upward,
-                                    size: 11, color: AppColors.positive),
-                                const SizedBox(width: 2),
-                                Text('+$scoreChange',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                        color: AppColors.positive,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text('son 30 gün',
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(color: AppColors.text3Dark)),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 8),
+                            Text('son 30 gün',
+                                style: AppTextStyles.labelSmall
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478))),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
                 // Trend sparkline
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.bg1,
+                      color: const Color(0xFF0D1B2A),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border1Dark),
+                      border: Border.all(
+                          color: const Color(0xFF1A2940)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,16 +194,21 @@ class HealthScorePage extends ConsumerWidget {
                           children: [
                             Text('Son 12 ay',
                                 style: AppTextStyles.labelSmall
-                                    .copyWith(color: AppColors.text3Dark)),
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478))),
                             Text('aralık 58 → mayıs 72',
                                 style: AppTextStyles.labelSmall
-                                    .copyWith(color: AppColors.text3Dark)),
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478))),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         _Sparkline(
                           data: const [
-                            58, 62, 64, 66, 64, 67, 68, 70, 68, 71, 70, 72
+                            58, 62, 64, 66, 64, 67, 68, 70, 68,
+                            71, 70, 72
                           ],
                           height: 50,
                         ),
@@ -179,15 +219,18 @@ class HealthScorePage extends ConsumerWidget {
 
                 // Components
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 10),
+                        padding:
+                            const EdgeInsets.only(left: 4, bottom: 10),
                         child: Text('Bileşenler',
                             style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.text3Dark)),
+                                .copyWith(
+                                    color: const Color(0xFF4A6478),
+                                    letterSpacing: 0.5)),
                       ),
                       ..._components.map((c) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
@@ -204,28 +247,55 @@ class HealthScorePage extends ConsumerWidget {
                   ),
                 ),
 
-                // CTAs
+                // CTA buttons
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
                   child: Column(
                     children: [
                       SizedBox(
                         width: double.infinity,
+                        height: 50,
                         child: ElevatedButton.icon(
                           onPressed: () => context.push('/chat'),
-                          icon: const Icon(Icons.auto_awesome, size: 16),
-                          label:
-                              const Text('Skorumu nasıl yükseltirim?'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00D4FF),
+                            foregroundColor: const Color(0xFF051929),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          icon: const Icon(Icons.auto_awesome,
+                              size: 16),
+                          label: const Text('Sohbet Et',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14)),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       SizedBox(
                         width: double.infinity,
+                        height: 50,
                         child: OutlinedButton.icon(
-                          onPressed: () => context.push('/simulator'),
-                          icon: const Icon(Icons.science_outlined,
+                          onPressed: () =>
+                              context.push('/simulator'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor:
+                                const Color(0xFF00D4FF),
+                            side: const BorderSide(
+                                color: Color(0xFF1A2940)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(14)),
+                          ),
+                          icon: const Icon(
+                              Icons.science_outlined,
                               size: 16),
-                          label: const Text('Simülatörde projeksiyon yap'),
+                          label: const Text('Simülatör',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14)),
                         ),
                       ),
                     ],
@@ -238,12 +308,13 @@ class HealthScorePage extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.refresh,
-                          size: 12, color: AppColors.text3Dark),
+                          size: 11, color: Color(0xFF4A6478)),
                       const SizedBox(width: 4),
                       Text(
                         'Skor 24 saatte bir otomatik yeniden hesaplanır',
                         style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.text3Dark, fontSize: 10),
+                            color: const Color(0xFF4A6478),
+                            fontSize: 10),
                       ),
                     ],
                   ),
@@ -272,61 +343,81 @@ class HealthScorePage extends ConsumerWidget {
   }
 }
 
-// ── Score Ring ───────────────────────────────────────────────────────
-class _ScoreRing extends StatelessWidget {
+// ── Score Gauge (180px custom paint arc) ─────────────────────────────
+class _ScoreGauge extends StatelessWidget {
   final double value;
-  const _ScoreRing({required this.value});
+  const _ScoreGauge({required this.value});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 160,
-      height: 160,
+      width: 180,
+      height: 180,
       child: CustomPaint(
-        painter: _RingPainter(value: value, stroke: 14),
+        painter: _GaugePainter(value: value),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${value.toStringAsFixed(0)}',
-                style: AppTextStyles.amountHero.copyWith(
-                    fontSize: 44,
-                    color: AppColors.text1Dark,
-                    letterSpacing: -0.03 * 44),
+                value.toStringAsFixed(0),
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFFE8F4FF),
+                  height: 1.0,
+                ),
               ),
-              Text('skor',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.text3Dark)),
+              const SizedBox(height: 4),
+              Text(
+                _label(value),
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF8BA4BC),
+                    fontWeight: FontWeight.w500),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
+  String _label(double v) {
+    if (v >= 80) return 'Mükemmel';
+    if (v >= 60) return 'İyi';
+    if (v >= 40) return 'Orta';
+    return 'Zayıf';
+  }
 }
 
-class _RingPainter extends CustomPainter {
+class _GaugePainter extends CustomPainter {
   final double value;
-  final double stroke;
-  const _RingPainter({required this.value, required this.stroke});
+  const _GaugePainter({required this.value});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
+    const stroke = 14.0;
     final radius = (size.width - stroke) / 2;
-    canvas.drawCircle(center, radius,
+
+    // Track
+    canvas.drawCircle(
+        center,
+        radius,
         Paint()
-          ..color = AppColors.bg3
+          ..color = const Color(0xFF1A2940)
           ..style = PaintingStyle.stroke
           ..strokeWidth = stroke
           ..strokeCap = StrokeCap.round);
 
-    final fillColor = value < 50
-        ? AppColors.negative
+    // Gradient arc: red → yellow → green based on value
+    final fillColor = value < 40
+        ? const Color(0xFFFF4D6D)
         : value < 70
-            ? AppColors.warning
-            : AppColors.accent;
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF0DD9A0);
+
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -math.pi / 2,
@@ -341,7 +432,7 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.value != value;
+  bool shouldRepaint(_GaugePainter old) => old.value != value;
 }
 
 // ── Sparkline ────────────────────────────────────────────────────────
@@ -378,7 +469,8 @@ class _SparklinePainter extends CustomPainter {
     for (int i = 0; i < data.length; i++) {
       final x = i / (data.length - 1) * size.width;
       final y = range > 0
-          ? size.height - (data[i].toDouble() - minV) / range * size.height
+          ? size.height -
+              (data[i].toDouble() - minV) / range * size.height
           : size.height / 2;
       if (i == 0) {
         path.moveTo(x, y);
@@ -392,18 +484,17 @@ class _SparklinePainter extends CustomPainter {
     fillPath.lineTo(size.width, size.height);
     fillPath.close();
 
-    // Fill
     canvas.drawPath(
         fillPath,
         Paint()
-          ..color = AppColors.accent.withValues(alpha: 0.08)
+          ..color =
+              const Color(0xFF00D4FF).withValues(alpha: 0.08)
           ..style = PaintingStyle.fill);
 
-    // Line
     canvas.drawPath(
         path,
         Paint()
-          ..color = AppColors.accent
+          ..color = const Color(0xFF00D4FF)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..strokeCap = StrokeCap.round
@@ -432,11 +523,11 @@ class _ComponentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
+        color: const Color(0xFF0D1B2A),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border1Dark),
+        border: Border.all(color: const Color(0xFF1A2940)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,39 +542,52 @@ class _ComponentCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(label,
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 6),
-                        Text('%$weight ağırlık',
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.text3Dark)),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                                color: const Color(0xFFE8F4FF),
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A2940),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('%$weight',
+                              style: AppTextStyles.labelSmall
+                                  .copyWith(
+                                      color: const Color(0xFF4A6478),
+                                      fontSize: 10)),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(hint,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.text2Dark, height: 1.5)),
+                        style: AppTextStyles.bodySmall.copyWith(
+                            color: const Color(0xFF8BA4BC),
+                            height: 1.5)),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Text(
-                '${value.toStringAsFixed(0)}',
-                style: AppTextStyles.amountHero.copyWith(
+                value.toStringAsFixed(0),
+                style: TextStyle(
                     fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: color,
-                    letterSpacing: -0.02 * 22),
+                    height: 1.0),
               ),
             ],
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: (value / 100).clamp(0, 1),
-              backgroundColor: color.withValues(alpha: 0.1),
+              backgroundColor: color.withValues(alpha: 0.10),
               valueColor: AlwaysStoppedAnimation(color),
-              minHeight: 4,
+              minHeight: 5,
             ),
           ),
         ],

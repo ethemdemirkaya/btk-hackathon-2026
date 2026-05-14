@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -41,7 +40,8 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     setState(() => _uploading = true);
     try {
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(picked.path, filename: 'receipt.jpg'),
+        'image': await MultipartFile.fromFile(picked.path,
+            filename: 'receipt.jpg'),
       });
       final res = await DioClient.instance.post(
         ApiEndpoints.receipts,
@@ -52,7 +52,8 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
           receiveTimeout: const Duration(seconds: 90),
         ),
       );
-      final receipt = (res.data as Map<String, dynamic>)['receipt'] as Map<String, dynamic>?;
+      final receipt = (res.data as Map<String, dynamic>)['receipt']
+          as Map<String, dynamic>?;
       ref.invalidate(_receiptsProvider);
       if (receipt != null && mounted) {
         _showResult(receipt);
@@ -72,6 +73,7 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => _ReceiptResultSheet(receipt: receipt),
     );
   }
@@ -79,26 +81,39 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
   void _showPickerOptions() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFF0D1B2A),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Kamera ile Çek'),
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A2940),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            _PickerOption(
+              icon: Icons.camera_alt_outlined,
+              label: 'Kamera ile Çek',
               onTap: () {
                 Navigator.pop(ctx);
                 _pickAndUpload(ImageSource.camera);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galeriden Seç'),
+            _PickerOption(
+              icon: Icons.photo_library_outlined,
+              label: 'Galeriden Seç',
               onTap: () {
                 Navigator.pop(ctx);
                 _pickAndUpload(ImageSource.gallery);
               },
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -109,14 +124,29 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Fişi sil'),
-        content: const Text('Bu fiş kaydı silinecek.'),
+        backgroundColor: const Color(0xFF0D1B2A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Fişi Sil',
+            style: AppTextStyles.headlineMedium
+                .copyWith(color: const Color(0xFFE8F4FF))),
+        content: Text('Bu fiş kaydı silinecek.',
+            style: AppTextStyles.bodyMedium
+                .copyWith(color: const Color(0xFF8BA4BC))),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('İptal',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: const Color(0xFF8BA4BC)))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-            child: const Text('Sil', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4D6D),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            child: const Text('Sil',
+                style: TextStyle(color: Colors.white,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -139,78 +169,206 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     final async = ref.watch(_receiptsProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      backgroundColor: const Color(0xFF060D18),
+      floatingActionButton: FloatingActionButton(
         onPressed: _uploading ? null : _showPickerOptions,
-        icon: _uploading
+        backgroundColor: const Color(0xFF00D4FF),
+        foregroundColor: const Color(0xFF051929),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: _uploading
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Color(0xFF051929)),
               )
-            : const Icon(Icons.document_scanner),
-        label: Text(_uploading ? 'İşleniyor...' : 'Fiş Tara'),
+            : const Icon(Icons.camera_alt, size: 22),
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
+                        color: const Color(0xFF0D1B2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF1A2940)),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
+                          size: 18, color: Color(0xFF8BA4BC)),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text('Fişler',
-                      style: AppTextStyles.headlineMedium
-                          .copyWith(color: AppColors.text1Dark)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Fişler & Makbuzlar',
+                            style: AppTextStyles.headlineMedium
+                                .copyWith(color: const Color(0xFFE8F4FF))),
+                        Text('OCR ile tara',
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: const Color(0xFF4A6478))),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
             Expanded(
               child: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(_receiptsProvider),
-        child: async.when(
-          loading: () => const SkeletonListView(),
-          error: (e, __) => ErrorState(
-            message: e.toString(),
-            onRetry: () => ref.invalidate(_receiptsProvider),
-          ),
-          data: (receipts) {
-            if (receipts.isEmpty) {
-              return EmptyState(
-                icon: Icons.document_scanner,
-                title: 'Henüz fiş yok',
-                subtitle: 'Kameranızla fiş çekerek işlemlerinizi otomatik kaydedin.',
-                ctaLabel: 'Fiş Tara',
-                onCta: _showPickerOptions,
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              itemCount: receipts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => _ReceiptCard(
-                receipt: receipts[i],
-                onTap: () => _showResult(receipts[i]),
-                onDelete: () => _deleteReceipt(receipts[i]['id'] as int),
+                color: const Color(0xFF00D4FF),
+                backgroundColor: const Color(0xFF0D1B2A),
+                onRefresh: () async => ref.invalidate(_receiptsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () => ref.invalidate(_receiptsProvider),
+                  ),
+                  data: (receipts) {
+                    if (receipts.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.document_scanner,
+                        title: 'Henüz fiş yok',
+                        subtitle:
+                            'Kameranızla fiş çekerek işlemlerinizi otomatik kaydedin.',
+                        ctaLabel: 'Fiş Tara',
+                        onCta: _showPickerOptions,
+                      );
+                    }
+                    // Hero summary card
+                    final totalAmount = receipts.fold(
+                        0.0,
+                        (sum, r) =>
+                            sum +
+                            ((r['total_amount'] as num?)?.toDouble() ?? 0));
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 96),
+                      children: [
+                        _HeroSummaryCard(
+                          count: receipts.length,
+                          total: totalAmount,
+                        ),
+                        const SizedBox(height: 16),
+                        ...receipts.asMap().entries.map((e) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _ReceiptCard(
+                                receipt: e.value,
+                                onTap: () => _showResult(e.value),
+                                onDelete: () =>
+                                    _deleteReceipt(e.value['id'] as int),
+                              ),
+                            )),
+                      ],
+                    );
+                  },
+                ),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _HeroSummaryCard extends StatelessWidget {
+  final int count;
+  final double total;
+  const _HeroSummaryCard({required this.count, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D1B2A),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF1A2940)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: const Icon(Icons.receipt_long,
+                size: 24, color: Color(0xFF00D4FF)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$count fiş kaydedildi',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                      color: const Color(0xFFE8F4FF),
+                      fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '₺${AppFormatters.currencyCompact(total)} toplam',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: const Color(0xFF4A6478)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickerOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _PickerOption(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF060D18),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF1A2940)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: const Color(0xFF00D4FF)),
+            ),
+            const SizedBox(width: 14),
+            Text(label,
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: const Color(0xFFE8F4FF),
+                        fontWeight: FontWeight.w500)),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios,
+                size: 14, color: Color(0xFF4A6478)),
           ],
         ),
       ),
@@ -236,28 +394,60 @@ class _ReceiptCard extends StatelessWidget {
     final category = receipt['category'] as String?;
     final itemsCount = (receipt['items_count'] as num?)?.toInt() ?? 0;
 
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        onLongPress: onDelete,
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          child: Icon(Icons.receipt_long, color: AppColors.primary, size: 20),
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onDelete,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF1A2940)),
         ),
-        title: Text(merchant, style: AppTextStyles.bodyMedium),
-        subtitle: Text(
-          [
-            if (dateStr != null) AppFormatters.dateFromIso(dateStr),
-            if (category != null) category,
-            if (itemsCount > 0) '$itemsCount ürün',
-          ].join(' · '),
-          style: AppTextStyles.bodySmall,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Text(
-          AppFormatters.currency(total),
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF00D4FF).withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.receipt_long,
+                  color: Color(0xFF00D4FF), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(merchant,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                          color: const Color(0xFFE8F4FF),
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 3),
+                  Text(
+                    [
+                      if (dateStr != null)
+                        AppFormatters.dateFromIso(dateStr),
+                      if (category != null) category,
+                      if (itemsCount > 0) '$itemsCount ürün',
+                    ].join(' · '),
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: const Color(0xFF4A6478)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              AppFormatters.currency(total),
+              style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFFE8F4FF),
+                  fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
       ),
     );
@@ -277,80 +467,142 @@ class _ReceiptResultSheet extends StatelessWidget {
     final dateStr = receipt['purchased_at'] as String?;
     final items = receipt['items'] as List? ?? [];
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      maxChildSize: 0.9,
-      minChildSize: 0.4,
-      expand: false,
-      builder: (_, ctrl) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0D1B2A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (_, ctrl) => ListView(
           controller: ctrl,
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
           children: [
             Center(
               child: Container(
-                width: 40,
+                width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: const Color(0xFF1A2940),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppColors.success.withValues(alpha: 0.15),
-                  child: Icon(Icons.check, color: AppColors.success),
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0DD9A0).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(Icons.check_circle,
+                      color: Color(0xFF0DD9A0), size: 22),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Fiş Tarandı', style: AppTextStyles.titleMedium),
-                      Text(merchant, style: AppTextStyles.bodySmall),
+                      Text('Fiş Tarandı',
+                          style: AppTextStyles.titleMedium.copyWith(
+                              color: const Color(0xFFE8F4FF))),
+                      Text(merchant,
+                          style: AppTextStyles.bodySmall
+                              .copyWith(color: const Color(0xFF4A6478))),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            _InfoRow('Toplam', '$currency ${AppFormatters.currency(total)}'),
-            if (category != null) _InfoRow('Kategori', category),
-            if (dateStr != null) _InfoRow('Tarih', AppFormatters.dateFromIso(dateStr)),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF060D18),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF1A2940)),
+              ),
+              child: Column(
+                children: [
+                  _InfoRow('Toplam',
+                      '$currency ${AppFormatters.currency(total)}'),
+                  if (category != null)
+                    _InfoRow('Kategori', category),
+                  if (dateStr != null)
+                    _InfoRow('Tarih', AppFormatters.dateFromIso(dateStr)),
+                ],
+              ),
+            ),
             if (items.isNotEmpty) ...[
-              const Divider(height: 24),
-              Text('Ürünler (${items.length})', style: AppTextStyles.labelMedium),
-              const SizedBox(height: 8),
-              ...items.map((item) {
-                final i = item as Map<String, dynamic>;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          i['name'] as String? ?? '',
-                          style: AppTextStyles.bodySmall,
-                        ),
+              const SizedBox(height: 16),
+              Text('Ürünler (${items.length})',
+                  style: AppTextStyles.labelSmall.copyWith(
+                      color: const Color(0xFF4A6478), letterSpacing: 0.5)),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF060D18),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF1A2940)),
+                ),
+                child: Column(
+                  children: items.asMap().entries.map((entry) {
+                    final i = entry.value as Map<String, dynamic>;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        border: entry.key > 0
+                            ? const Border(
+                                top: BorderSide(
+                                    color: Color(0xFF1A2940)))
+                            : null,
                       ),
-                      Text(
-                        AppFormatters.currency(
-                            (i['total'] as num?)?.toDouble() ?? 0),
-                        style: AppTextStyles.bodySmall,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              i['name'] as String? ?? '',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                  color: const Color(0xFFE8F4FF)),
+                            ),
+                          ),
+                          Text(
+                            AppFormatters.currency(
+                                (i['total'] as num?)?.toDouble() ?? 0),
+                            style: AppTextStyles.bodySmall.copyWith(
+                                color: const Color(0xFF8BA4BC),
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              }),
+                    );
+                  }).toList(),
+                ),
+              ),
             ],
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00D4FF),
+                  foregroundColor: const Color(0xFF051929),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: const Text('Tamam',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
             ),
           ],
         ),
@@ -367,13 +619,17 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall),
+          Text(label,
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: const Color(0xFF8BA4BC))),
           Text(value,
-              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+              style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFFE8F4FF),
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );

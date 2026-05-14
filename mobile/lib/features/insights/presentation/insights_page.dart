@@ -36,10 +36,10 @@ class _Insight {
     if (imp is String) {
       importanceStr = imp;
     } else if (imp is int) {
-      if (imp >= 8) importanceStr = 'critical';
-      else if (imp >= 6) importanceStr = 'high';
-      else if (imp >= 4) importanceStr = 'medium';
-      else importanceStr = 'low';
+      if (imp >= 8) { importanceStr = 'critical'; }
+      else if (imp >= 6) { importanceStr = 'high'; }
+      else if (imp >= 4) { importanceStr = 'medium'; }
+      else { importanceStr = 'low'; }
     } else {
       importanceStr = 'low';
     }
@@ -50,14 +50,17 @@ class _Insight {
       body: j['body']?.toString() ?? '',
       actionLink: j['action_link'] as String?,
       importance: importanceStr,
-      createdAt: DateTime.tryParse(j['created_at'] as String? ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(
+              j['created_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 }
 
 final _insightsProvider =
     FutureProvider.autoDispose<List<_Insight>>((ref) async {
-  final res = await DioClient.instance.get(ApiEndpoints.agentInsights);
+  final res =
+      await DioClient.instance.get(ApiEndpoints.agentInsights);
   final data = res.data;
   final Map<String, dynamic> body =
       data is Map<String, dynamic> ? data : <String, dynamic>{};
@@ -69,15 +72,23 @@ final _insightsProvider =
       .toList()
     ..sort((a, b) {
       const order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3};
-      return (order[a.importance] ?? 4).compareTo(order[b.importance] ?? 4);
+      return (order[a.importance] ?? 4)
+          .compareTo(order[b.importance] ?? 4);
     });
 });
 
 const _importanceLabels = {
-  'critical': 'Kritik',
-  'high': 'Yüksek',
-  'medium': 'Orta',
-  'low': 'Düşük',
+  'critical': 'KRİTİK',
+  'high': 'YÜKSEK',
+  'medium': 'ORTA',
+  'low': 'DÜŞÜK',
+};
+
+const _importanceColors = {
+  'critical': Color(0xFFFF4D6D),
+  'high': Color(0xFFF59E0B),
+  'medium': Color(0xFF00D4FF),
+  'low': Color(0xFF0DD9A0),
 };
 
 class InsightsPage extends ConsumerStatefulWidget {
@@ -93,7 +104,8 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   Future<void> _dismiss(int id) async {
     setState(() => _dismissed.add(id));
     try {
-      await DioClient.instance.patch(ApiEndpoints.agentInsightDismiss(id));
+      await DioClient.instance
+          .patch(ApiEndpoints.agentInsightDismiss(id));
     } catch (_) {
       if (mounted) setState(() => _dismissed.remove(id));
     }
@@ -104,46 +116,73 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     final async = ref.watch(_insightsProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF060D18),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              padding:
+                  const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                    onTap: () =>
+                        shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
+                        color: const Color(0xFF0D1B2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFF1A2940)),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
+                          size: 18, color: Color(0xFF8BA4BC)),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text('AI Öngörüleri',
-                        style: AppTextStyles.headlineMedium
-                            .copyWith(color: AppColors.text1Dark)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('AI Öngörüleri',
+                            style: AppTextStyles.headlineMedium
+                                .copyWith(
+                                    color: const Color(0xFFE8F4FF))),
+                        async.when(
+                          data: (items) {
+                            final visible = items
+                                .where((i) =>
+                                    !_dismissed.contains(i.id))
+                                .length;
+                            return Text('$visible aktif öngörü',
+                                style: AppTextStyles.bodySmall
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478)));
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
                   ),
                   GestureDetector(
-                    onTap: () => ref.invalidate(_insightsProvider),
+                    onTap: () =>
+                        ref.invalidate(_insightsProvider),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
+                        color: const Color(0xFF0D1B2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFF1A2940)),
                       ),
                       child: const Icon(Icons.refresh,
-                          size: 16, color: AppColors.text2Dark),
+                          size: 17, color: Color(0xFF8BA4BC)),
                     ),
                   ),
                 ],
@@ -156,11 +195,13 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                 loading: () => const SkeletonListView(),
                 error: (e, __) => ErrorState(
                   message: e.toString(),
-                  onRetry: () => ref.invalidate(_insightsProvider),
+                  onRetry: () =>
+                      ref.invalidate(_insightsProvider),
                 ),
                 data: (items) {
-                  final visible =
-                      items.where((i) => !_dismissed.contains(i.id)).toList();
+                  final visible = items
+                      .where((i) => !_dismissed.contains(i.id))
+                      .toList();
                   if (visible.isEmpty) {
                     return const EmptyState(
                       icon: Icons.check_circle_outline,
@@ -169,13 +210,15 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                     );
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(
+                        20, 0, 20, 24),
                     itemCount: visible.length,
                     itemBuilder: (_, i) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _InsightCard(
                         insight: visible[i],
-                        onDismiss: () => _dismiss(visible[i].id),
+                        onDismiss: () =>
+                            _dismiss(visible[i].id),
                       ),
                     ),
                   );
@@ -192,101 +235,131 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
 class _InsightCard extends StatelessWidget {
   final _Insight insight;
   final VoidCallback onDismiss;
-  const _InsightCard({required this.insight, required this.onDismiss});
+  const _InsightCard(
+      {required this.insight, required this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
-    final color = AppColors.fromHint(insight.type);
+    final typeColor = AppColors.fromHint(insight.type);
+    final impColor =
+        _importanceColors[insight.importance] ?? typeColor;
 
     return Container(
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        color: const Color(0xFF0D1B2A),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: impColor.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+          // Top row with importance badge and dismiss
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 0),
+            child: Row(
+              children: [
+                // Importance badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: impColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _importanceLabels[insight.importance] ??
+                        insight.importance.toUpperCase(),
+                    style: TextStyle(
+                        color: impColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5),
+                  ),
                 ),
-                child: Icon(_iconForType(insight.type), color: color, size: 18),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(insight.title,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            _importanceLabels[insight.importance] ??
-                                insight.importance,
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: color,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
+                const SizedBox(width: 8),
+                Text(
+                  AppFormatters.dateShort(insight.createdAt),
+                  style: AppTextStyles.labelSmall.copyWith(
+                      color: const Color(0xFF4A6478),
+                      fontSize: 10),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onDismiss,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF060D18),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: const Color(0xFF1A2940)),
+                    ),
+                    child: const Icon(Icons.close,
+                        size: 14, color: Color(0xFF4A6478)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: typeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(_iconForType(insight.type),
+                      color: typeColor, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(insight.title,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                              color: const Color(0xFFE8F4FF),
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      Text(insight.body,
+                          style: AppTextStyles.bodySmall.copyWith(
+                              color: const Color(0xFF8BA4BC),
+                              height: 1.5)),
+                      if (insight.actionLink != null) ...[
+                        const SizedBox(height: 10),
                         GestureDetector(
-                          onTap: onDismiss,
-                          child: Icon(Icons.close,
-                              size: 16, color: AppColors.text3Dark),
+                          onTap: () =>
+                              context.push(insight.actionLink!),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Detaylı İncele',
+                                  style:
+                                      AppTextStyles.labelSmall
+                                          .copyWith(
+                                              color: typeColor,
+                                              fontWeight:
+                                                  FontWeight.w600)),
+                              const SizedBox(width: 4),
+                              Icon(Icons.arrow_forward,
+                                  size: 12, color: typeColor),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      AppFormatters.dateShort(insight.createdAt),
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: AppColors.text3Dark, fontSize: 10),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(insight.body,
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.text2Dark, height: 1.5)),
-          if (insight.actionLink != null) ...[
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () => context.push(insight.actionLink!),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Detaylı İncele',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          color: color, fontWeight: FontWeight.w600)),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 12, color: color),
-                ],
-              ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );

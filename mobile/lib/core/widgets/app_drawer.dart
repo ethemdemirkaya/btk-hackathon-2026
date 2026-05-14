@@ -1,51 +1,118 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../theme/colors.dart';
 import '../theme/text_styles.dart';
+import '../../shared/providers/auth_provider.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final loc = GoRouterState.of(context).matchedLocation;
+    final user = ref.watch(authProvider).user;
+    final name = user?.name ?? 'Kullanıcı';
+    final email = user?.email ?? '';
+    final initials = name
+        .split(' ')
+        .take(2)
+        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+        .join();
 
     return Drawer(
-      backgroundColor: AppColors.bg1,
+      backgroundColor: const Color(0xFF0A1929),
       child: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header with gradient
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-              decoration: BoxDecoration(
-                color: AppColors.bg0,
+              padding:
+                  const EdgeInsets.fromLTRB(20, 20, 20, 18),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF0A1929), Color(0xFF0D2240)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 border: Border(
-                    bottom: BorderSide(color: AppColors.border2Dark, width: 1)),
+                    bottom: BorderSide(
+                        color: Color(0xFF1A2940), width: 1)),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.account_balance_wallet,
-                        size: 20, color: AppColors.accentText),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text('Paranette',
-                          style: AppTextStyles.headlineSmall
-                              .copyWith(color: AppColors.text1Dark)),
-                      Text('Finansal Yönetim',
-                          style: AppTextStyles.labelSmall
-                              .copyWith(color: AppColors.text3Dark)),
+                      // Initials avatar
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFF00D4FF),
+                              Color(0xFFC99B5B)
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            initials.isEmpty ? 'U' : initials,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF051929),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(name,
+                                style: AppTextStyles.bodyMedium
+                                    .copyWith(
+                                        color:
+                                            const Color(0xFFE8F4FF),
+                                        fontWeight:
+                                            FontWeight.w600)),
+                            Text(email.isEmpty ? 'Paranette' : email,
+                                style: AppTextStyles.labelSmall
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFF4A6478))),
+                          ],
+                        ),
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  // BTK Hackathon badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00D4FF)
+                          .withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: const Color(0xFF00D4FF)
+                              .withValues(alpha: 0.25)),
+                    ),
+                    child: const Text(
+                      'BTK Akademi Hackathon 2026',
+                      style: TextStyle(
+                          color: Color(0xFF00D4FF),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3),
+                    ),
                   ),
                 ],
               ),
@@ -53,34 +120,38 @@ class AppDrawer extends StatelessWidget {
             // Menu items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _DrawerSection(title: 'Hesaplar & Varlıklar', items: [
-                    _DrawerItem(
-                      icon: Icons.account_balance_outlined,
-                      label: 'Banka Bağlantıları',
-                      route: '/bank-connections',
-                      current: loc,
-                    ),
-                    _DrawerItem(
-                      icon: Icons.credit_card_outlined,
-                      label: 'Kartlarım',
-                      route: '/cards',
-                      current: loc,
-                    ),
-                    _DrawerItem(
-                      icon: Icons.home_outlined,
-                      label: 'Krediler',
-                      route: '/loans',
-                      current: loc,
-                    ),
-                    _DrawerItem(
-                      icon: Icons.show_chart,
-                      label: 'Yatırımlar',
-                      route: '/investments',
-                      current: loc,
-                    ),
-                  ]),
+                  _DrawerSection(
+                      title: 'Hesaplar & Varlıklar',
+                      items: [
+                        _DrawerItem(
+                          icon:
+                              Icons.account_balance_outlined,
+                          label: 'Banka Bağlantıları',
+                          route: '/bank-connections',
+                          current: loc,
+                        ),
+                        _DrawerItem(
+                          icon: Icons.credit_card_outlined,
+                          label: 'Kartlarım',
+                          route: '/cards',
+                          current: loc,
+                        ),
+                        _DrawerItem(
+                          icon: Icons.home_outlined,
+                          label: 'Krediler',
+                          route: '/loans',
+                          current: loc,
+                        ),
+                        _DrawerItem(
+                          icon: Icons.show_chart,
+                          label: 'Yatırımlar',
+                          route: '/investments',
+                          current: loc,
+                        ),
+                      ]),
                   _DrawerSection(title: 'Ödemeler', items: [
                     _DrawerItem(
                       icon: Icons.receipt_outlined,
@@ -130,7 +201,7 @@ class AppDrawer extends StatelessWidget {
                     ),
                     _DrawerItem(
                       icon: Icons.calculate_outlined,
-                      label: 'Karar Simülatörü',
+                      label: 'Kadar Simülatörü',
                       route: '/simulator',
                       current: loc,
                     ),
@@ -160,9 +231,10 @@ class AppDrawer extends StatelessWidget {
             ),
             // Bottom: settings + profile
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
-                    top: BorderSide(color: AppColors.border2Dark, width: 1)),
+                    top: BorderSide(
+                        color: Color(0xFF1A2940), width: 1)),
               ),
               child: Column(
                 children: [
@@ -196,7 +268,8 @@ class AppDrawer extends StatelessWidget {
 class _DrawerSection extends StatelessWidget {
   final String title;
   final List<Widget> items;
-  const _DrawerSection({required this.title, required this.items});
+  const _DrawerSection(
+      {required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -204,17 +277,26 @@ class _DrawerSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
           child: Text(
             title.toUpperCase(),
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.text4Dark,
-              letterSpacing: 0.8,
+            style: const TextStyle(
+              color: Color(0xFF4A6478),
               fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
             ),
           ),
         ),
         ...items,
+        Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12),
+          child: Divider(
+              color: const Color(0xFF1A2940),
+              height: 8,
+              thickness: 1),
+        ),
       ],
     );
   }
@@ -243,29 +325,57 @@ class _DrawerItem extends StatelessWidget {
         Navigator.of(context).pop();
         context.push(route);
       },
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+        margin: const EdgeInsets.symmetric(
+            horizontal: 8, vertical: 1),
         padding: padding ??
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.accentDim : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: isActive
+              ? const Color(0xFF00D4FF).withValues(alpha: 0.10)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: isActive
+              ? const Border(
+                  left: BorderSide(
+                      color: Color(0xFF00D4FF), width: 3))
+              : null,
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isActive ? AppColors.accent : AppColors.text2Dark,
+            // Icon in 32px container
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFF00D4FF).withValues(alpha: 0.12)
+                    : const Color(0xFF1A2940)
+                        .withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 16,
+                color: isActive
+                    ? const Color(0xFF00D4FF)
+                    : const Color(0xFF8BA4BC),
+              ),
             ),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: isActive ? AppColors.accent : AppColors.text1Dark,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isActive
+                      ? const Color(0xFF00D4FF)
+                      : const Color(0xFFE8F4FF),
+                  fontWeight: isActive
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                ),
               ),
             ),
           ],

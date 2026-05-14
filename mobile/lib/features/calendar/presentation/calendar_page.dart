@@ -18,14 +18,14 @@ final _calendarProvider = FutureProvider.autoDispose
 
 const _eventColors = {
   'fatura': Color(0xFFC084FC),
-  'kredi': AppColors.negative,
+  'kredi': Color(0xFFFF4D6D),
   'kart': AppColors.info,
   'abonelik': Color(0xFFA78BFA),
-  'danger': AppColors.negative,
+  'danger': Color(0xFFFF4D6D),
   'warning': AppColors.warning,
   'info': AppColors.info,
-  'success': AppColors.positive,
-  'primary': AppColors.accent,
+  'success': Color(0xFF0DD9A0),
+  'primary': Color(0xFF00D4FF),
 };
 
 Color _eventColor(Map<String, dynamic> ev) {
@@ -33,7 +33,7 @@ Color _eventColor(Map<String, dynamic> ev) {
   final color = ev['color'] as String?;
   return _eventColors[type] ??
       _eventColors[color] ??
-      AppColors.text2Dark;
+      const Color(0xFF8BA4BC);
 }
 
 const _filterOptions = ['all', 'fatura', 'kredi', 'kart', 'abonelik'];
@@ -49,7 +49,7 @@ class CalendarPage extends ConsumerStatefulWidget {
 
 class _CalendarPageState extends ConsumerState<CalendarPage> {
   late DateTime _month;
-  String _view = 'month'; // 'month' | 'agenda'
+  String _view = 'month';
   String _filter = 'all';
   String? _selectedDate;
 
@@ -75,39 +75,44 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final async = ref.watch(_calendarProvider(_monthKey));
 
     return Scaffold(
+      backgroundColor: const Color(0xFF060D18),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                    onTap: () =>
+                        shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
+                        color: const Color(0xFF0D1B2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: const Color(0xFF1A2940)),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
+                          size: 18, color: Color(0xFF8BA4BC)),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Takvim',
-                            style: AppTextStyles.headlineLarge
-                                .copyWith(color: AppColors.text1Dark)),
+                        Text('Finansal Takvim',
+                            style: AppTextStyles.headlineMedium
+                                .copyWith(
+                                    color: const Color(0xFFE8F4FF))),
                         Text('Tüm ödeme ve vadeler',
                             style: AppTextStyles.bodySmall
-                                .copyWith(color: AppColors.text3Dark)),
+                                .copyWith(
+                                    color: const Color(0xFF4A6478))),
                       ],
                     ),
                   ),
@@ -120,38 +125,42 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             ),
             // Filter chips
             SizedBox(
-              height: 44,
+              height: 48,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 6),
+                    horizontal: 20, vertical: 8),
                 itemCount: _filterOptions.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: 8),
                 itemBuilder: (_, i) {
                   final opt = _filterOptions[i];
                   final active = _filter == opt;
                   return GestureDetector(
-                    onTap: () => setState(() => _filter = opt),
+                    onTap: () =>
+                        setState(() => _filter = opt),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: active ? AppColors.accent : AppColors.bg2,
+                        color: active
+                            ? const Color(0xFF00D4FF)
+                            : const Color(0xFF0D1B2A),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                             color: active
-                                ? AppColors.accent
-                                : AppColors.border2Dark),
+                                ? const Color(0xFF00D4FF)
+                                : const Color(0xFF1A2940)),
                       ),
                       child: Text(
                         _filterLabels[i],
                         style: AppTextStyles.labelSmall.copyWith(
                             color: active
-                                ? AppColors.accentText
-                                : AppColors.text2Dark,
+                                ? const Color(0xFF051929)
+                                : const Color(0xFF8BA4BC),
                             fontWeight: active
-                                ? FontWeight.w600
+                                ? FontWeight.w700
                                 : FontWeight.w400),
                       ),
                     ),
@@ -161,8 +170,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: AppColors.accent,
-                backgroundColor: AppColors.bg2,
+                color: const Color(0xFF00D4FF),
+                backgroundColor: const Color(0xFF0D1B2A),
                 onRefresh: () async =>
                     ref.invalidate(_calendarProvider(_monthKey)),
                 child: async.when(
@@ -173,17 +182,16 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                         ref.invalidate(_calendarProvider(_monthKey)),
                   ),
                   data: (data) {
-                    // API returns events keyed by day number
                     final rawEvents =
-                        data['events'] as Map<String, dynamic>? ?? {};
+                        data['events'] as Map<String, dynamic>? ??
+                            {};
                     final totalMonthly =
                         (data['total_monthly_payments'] as num?)
                                 ?.toDouble() ??
                             0;
 
-                    // Convert day-keyed map → date-keyed map
-                    final Map<String, List<Map<String, dynamic>>>
-                        eventsByDate = {};
+                    final Map<String,
+                        List<Map<String, dynamic>>> eventsByDate = {};
                     rawEvents.forEach((dayKey, dayEvents) {
                       final day = int.tryParse(dayKey);
                       if (day == null) return;
@@ -194,8 +202,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       final filtered = _filter == 'all'
                           ? list
                           : list.where((e) {
-                              return (e['type'] as String?) == _filter ||
-                                  (e['color'] as String?) == _filter;
+                              return (e['type'] as String?) ==
+                                      _filter ||
+                                  (e['color'] as String?) ==
+                                      _filter;
                             }).toList();
                       if (filtered.isNotEmpty) {
                         eventsByDate[dateStr] = filtered;
@@ -221,11 +231,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                           _SelectedDayEvents(
                             date: _selectedDate,
                             events: _selectedDate != null
-                                ? (eventsByDate[_selectedDate!] ?? [])
+                                ? (eventsByDate[_selectedDate!] ??
+                                    [])
                                 : [],
                           ),
                         ] else ...[
-                          _AgendaList(eventsByDate: eventsByDate),
+                          _AgendaList(
+                              eventsByDate: eventsByDate),
                         ],
                         _WeekSummaryCard(
                             eventsByDate: eventsByDate,
@@ -254,13 +266,20 @@ class _ViewToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-          color: AppColors.bg2, borderRadius: BorderRadius.circular(10)),
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: const Color(0xFF1A2940))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ToggleBtn(label: 'Ay', active: value == 'month',
+          _ToggleBtn(
+              label: 'Ay',
+              active: value == 'month',
               onTap: () => onChange('month')),
-          _ToggleBtn(label: 'Liste', active: value == 'agenda',
+          _ToggleBtn(
+              label: 'Liste',
+              active: value == 'agenda',
               onTap: () => onChange('agenda')),
         ],
       ),
@@ -273,7 +292,9 @@ class _ToggleBtn extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
   const _ToggleBtn(
-      {required this.label, required this.active, required this.onTap});
+      {required this.label,
+      required this.active,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -281,15 +302,22 @@ class _ToggleBtn extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? AppColors.bg3 : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: active
+              ? const Color(0xFF00D4FF).withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Text(label,
             style: AppTextStyles.labelSmall.copyWith(
-                color: active ? AppColors.text1Dark : AppColors.text3Dark,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400)),
+                color: active
+                    ? const Color(0xFF00D4FF)
+                    : const Color(0xFF4A6478),
+                fontWeight: active
+                    ? FontWeight.w600
+                    : FontWeight.w400)),
       ),
     );
   }
@@ -301,22 +329,27 @@ class _MonthNav extends StatelessWidget {
   final VoidCallback onPrev;
   final VoidCallback onNext;
   const _MonthNav(
-      {required this.month, required this.onPrev, required this.onNext});
+      {required this.month,
+      required this.onPrev,
+      required this.onNext});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _NavCircleBtn(icon: Icons.chevron_left, onTap: onPrev),
+          _NavCircleBtn(
+              icon: Icons.chevron_left, onTap: onPrev),
           Text(
             AppFormatters.dateMonth(month),
             style: AppTextStyles.headlineSmall.copyWith(
+                color: const Color(0xFFE8F4FF),
                 fontWeight: FontWeight.w600),
           ),
-          _NavCircleBtn(icon: Icons.chevron_right, onTap: onNext),
+          _NavCircleBtn(
+              icon: Icons.chevron_right, onTap: onNext),
         ],
       ),
     );
@@ -326,7 +359,8 @@ class _MonthNav extends StatelessWidget {
 class _NavCircleBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _NavCircleBtn({required this.icon, required this.onTap});
+  const _NavCircleBtn(
+      {required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -336,11 +370,12 @@ class _NavCircleBtn extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.bg2,
-          border: Border.all(color: AppColors.border1Dark),
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF1A2940)),
         ),
-        child: Icon(icon, size: 16, color: AppColors.text2Dark),
+        child: Icon(icon,
+            size: 18, color: const Color(0xFF8BA4BC)),
       ),
     );
   }
@@ -361,15 +396,13 @@ class _CalendarGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firstWeekday =
-        DateTime(month.year, month.month, 1).weekday; // 1=Mon
+        DateTime(month.year, month.month, 1).weekday;
     final daysInMonth =
         DateTime(month.year, month.month + 1, 0).day;
-    // Build cells: (firstWeekday-1) nulls + days 1..daysInMonth
     final cells = <int?>[
       ...List.filled(firstWeekday - 1, null),
       ...List.generate(daysInMonth, (i) => i + 1),
     ];
-    // Pad to multiple of 7
     while (cells.length % 7 != 0) {
       cells.add(null);
     }
@@ -379,13 +412,13 @@ class _CalendarGrid extends StatelessWidget {
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.bg1,
+          color: const Color(0xFF0D1B2A),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: const Color(0xFF1A2940)),
         ),
         child: Column(
           children: [
@@ -395,11 +428,11 @@ class _CalendarGrid extends StatelessWidget {
                   .map((d) => Expanded(
                         child: Text(d,
                             textAlign: TextAlign.center,
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.text3Dark,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.06 * 10)),
+                            style: AppTextStyles.labelSmall
+                                .copyWith(
+                                    color: const Color(0xFF4A6478),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600)),
                       ))
                   .toList(),
             ),
@@ -409,10 +442,13 @@ class _CalendarGrid extends StatelessWidget {
               Row(
                 children: List.generate(7, (col) {
                   final d = cells[row * 7 + col];
-                  if (d == null) return const Expanded(child: SizedBox());
+                  if (d == null) {
+                    return const Expanded(child: SizedBox());
+                  }
                   final dateStr =
                       '${month.year}-${month.month.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}';
-                  final dayEvents = eventsByDate[dateStr] ?? [];
+                  final dayEvents =
+                      eventsByDate[dateStr] ?? [];
                   final isToday = dateStr == todayStr;
                   final isSelected = dateStr == selectedDate;
                   return Expanded(
@@ -424,11 +460,18 @@ class _CalendarGrid extends StatelessWidget {
                           margin: const EdgeInsets.all(1),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.accent
+                                ? const Color(0xFF00D4FF)
                                 : isToday
-                                    ? AppColors.bg3
+                                    ? const Color(0xFF00D4FF)
+                                        .withValues(alpha: 0.10)
                                     : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(10),
+                            border: isSelected
+                                ? Border.all(
+                                    color:
+                                        const Color(0xFF00D4FF))
+                                : null,
                           ),
                           child: Column(
                             mainAxisAlignment:
@@ -436,22 +479,26 @@ class _CalendarGrid extends StatelessWidget {
                             children: [
                               Text(
                                 '$d',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                    color: isSelected
-                                        ? AppColors.accentText
-                                        : isToday
-                                            ? AppColors.accent
-                                            : AppColors.text1Dark,
-                                    fontWeight:
-                                        isToday || isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                    fontSize: 13),
+                                style: AppTextStyles.labelSmall
+                                    .copyWith(
+                                        color: isSelected
+                                            ? const Color(
+                                                0xFF051929)
+                                            : isToday
+                                                ? const Color(
+                                                    0xFF00D4FF)
+                                                : const Color(
+                                                    0xFFE8F4FF),
+                                        fontWeight:
+                                            isToday || isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                        fontSize: 12),
                               ),
                               if (dayEvents.isNotEmpty)
                                 Padding(
-                                  padding:
-                                      const EdgeInsets.only(top: 2),
+                                  padding: const EdgeInsets.only(
+                                      top: 2),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.center,
@@ -460,14 +507,18 @@ class _CalendarGrid extends StatelessWidget {
                                         .map((e) => Container(
                                               width: 4,
                                               height: 4,
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 1),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
+                                              margin: const EdgeInsets
+                                                  .symmetric(
+                                                  horizontal: 1),
+                                              decoration:
+                                                  BoxDecoration(
+                                                shape:
+                                                    BoxShape.circle,
                                                 color: isSelected
-                                                    ? AppColors.accentText
-                                                    : _eventColor(e),
+                                                    ? const Color(
+                                                        0xFF051929)
+                                                    : _eventColor(
+                                                        e),
                                               ),
                                             ))
                                         .toList(),
@@ -492,7 +543,8 @@ class _CalendarGrid extends StatelessWidget {
 class _SelectedDayEvents extends StatelessWidget {
   final String? date;
   final List<Map<String, dynamic>> events;
-  const _SelectedDayEvents({required this.date, required this.events});
+  const _SelectedDayEvents(
+      {required this.date, required this.events});
 
   @override
   Widget build(BuildContext context) {
@@ -512,50 +564,42 @@ class _SelectedDayEvents extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.only(left: 2, bottom: 10),
             child: Row(
               children: [
                 Expanded(
                   child: Text(dayLabel,
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(fontWeight: FontWeight.w600)),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                          color: const Color(0xFFE8F4FF),
+                          fontWeight: FontWeight.w600)),
                 ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add,
-                          size: 14, color: AppColors.text3Dark),
-                      const SizedBox(width: 4),
-                      Text('Hatırlatıcı',
-                          style: AppTextStyles.labelSmall
-                              .copyWith(color: AppColors.text3Dark)),
-                    ],
-                  ),
-                ),
+                Text('Seçili Gün Etkinlikleri',
+                    style: AppTextStyles.labelSmall.copyWith(
+                        color: const Color(0xFF4A6478))),
               ],
             ),
           ),
-          const SizedBox(height: 12),
           events.isEmpty
               ? Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.bg1,
+                    color: const Color(0xFF0D1B2A),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border1Dark),
+                    border:
+                        Border.all(color: const Color(0xFF1A2940)),
                   ),
                   child: Center(
                     child: Text('Bu gün için olay yok',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.text3Dark)),
+                        style: AppTextStyles.bodySmall.copyWith(
+                            color: const Color(0xFF4A6478))),
                   ),
                 )
               : Container(
                   decoration: BoxDecoration(
-                    color: AppColors.bg1,
+                    color: const Color(0xFF0D1B2A),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border1Dark),
+                    border:
+                        Border.all(color: const Color(0xFF1A2940)),
                   ),
                   child: Column(
                     children: events.asMap().entries.map((entry) {
@@ -574,37 +618,44 @@ class _SelectedDayEvents extends StatelessWidget {
 class _EventRow extends StatelessWidget {
   final Map<String, dynamic> event;
   final bool showBorder;
-  const _EventRow({required this.event, required this.showBorder});
+  const _EventRow(
+      {required this.event, required this.showBorder});
 
   @override
   Widget build(BuildContext context) {
     final color = _eventColor(event);
     final title = event['title'] as String? ?? '';
-    final amount =
-        (event['amount'] as num?)?.toDouble() ?? 0;
+    final amount = (event['amount'] as num?)?.toDouble() ?? 0;
     final type = event['type'] as String? ?? '';
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         border: showBorder
-            ? const Border(top: BorderSide(color: AppColors.border1Dark))
+            ? const Border(
+                top: BorderSide(color: Color(0xFF1A2940)))
             : null,
       ),
       child: Row(
         children: [
+          // Colored left accent bar
           Container(
-            width: 40,
+            width: 3,
             height: 40,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Container(
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              _iconForType(type),
-              size: 18,
-              color: color,
-            ),
+            child: Icon(_iconForType(type), size: 17, color: color),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -612,11 +663,12 @@ class _EventRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600)),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                        color: const Color(0xFFE8F4FF),
+                        fontWeight: FontWeight.w600)),
                 if (type.isNotEmpty)
                   Container(
-                    margin: const EdgeInsets.only(top: 2),
+                    margin: const EdgeInsets.only(top: 3),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -624,8 +676,8 @@ class _EventRow extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(type,
-                        style: AppTextStyles.labelSmall.copyWith(
-                            color: color, fontSize: 10)),
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: color, fontSize: 10)),
                   ),
               ],
             ),
@@ -633,8 +685,8 @@ class _EventRow extends StatelessWidget {
           Text(
             '-${AppFormatters.currencyCompact(amount)} ₺',
             style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.negative),
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFFFF4D6D)),
           ),
         ],
       ),
@@ -673,13 +725,13 @@ class _AgendaList extends StatelessWidget {
         child: Center(
           child: Text('Bu ay için etkinlik yok.',
               style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.text3Dark)),
+                  .copyWith(color: const Color(0xFF4A6478))),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: sorted.map((entry) {
           DateTime? dt;
@@ -694,22 +746,24 @@ class _AgendaList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 48,
+                      width: 44,
                       child: Column(
                         children: [
                           Text(
                             dt != null ? '${dt.day}' : entry.key,
-                            style: AppTextStyles.amountHero.copyWith(
+                            style: const TextStyle(
                                 fontSize: 18,
-                                color: AppColors.text1Dark),
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE8F4FF)),
                           ),
                           if (dt != null)
                             Text(
                               _weekdayShort(dt.weekday),
-                              style: AppTextStyles.labelSmall.copyWith(
-                                  color: AppColors.text3Dark,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600),
+                              style: AppTextStyles.labelSmall
+                                  .copyWith(
+                                      color: const Color(0xFF4A6478),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600),
                             ),
                         ],
                       ),
@@ -719,10 +773,10 @@ class _AgendaList extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.bg1,
+                          color: const Color(0xFF0D1B2A),
                           borderRadius: BorderRadius.circular(16),
-                          border:
-                              Border.all(color: AppColors.border1Dark),
+                          border: Border.all(
+                              color: const Color(0xFF1A2940)),
                         ),
                         child: Row(
                           children: [
@@ -731,7 +785,8 @@ class _AgendaList extends StatelessWidget {
                               height: 28,
                               decoration: BoxDecoration(
                                 color: _eventColor(e),
-                                borderRadius: BorderRadius.circular(2),
+                                borderRadius:
+                                    BorderRadius.circular(2),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -740,9 +795,13 @@ class _AgendaList extends StatelessWidget {
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                 children: [
-                                  Text(e['title'] as String? ?? '',
-                                      style: AppTextStyles.bodyMedium
+                                  Text(
+                                      e['title'] as String? ?? '',
+                                      style: AppTextStyles
+                                          .bodyMedium
                                           .copyWith(
+                                              color: const Color(
+                                                  0xFFE8F4FF),
                                               fontWeight:
                                                   FontWeight.w600)),
                                   if ((e['type'] as String?)
@@ -750,7 +809,8 @@ class _AgendaList extends StatelessWidget {
                                       true)
                                     Container(
                                       margin:
-                                          const EdgeInsets.only(top: 2),
+                                          const EdgeInsets.only(
+                                              top: 3),
                                       padding:
                                           const EdgeInsets.symmetric(
                                               horizontal: 6,
@@ -763,9 +823,11 @@ class _AgendaList extends StatelessWidget {
                                       ),
                                       child: Text(
                                           e['type'] as String? ?? '',
-                                          style: AppTextStyles.labelSmall
+                                          style: AppTextStyles
+                                              .labelSmall
                                               .copyWith(
-                                                  color: _eventColor(e),
+                                                  color:
+                                                      _eventColor(e),
                                                   fontSize: 10)),
                                     ),
                                 ],
@@ -774,8 +836,8 @@ class _AgendaList extends StatelessWidget {
                             Text(
                               '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)} ₺',
                               style: AppTextStyles.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.negative),
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFFF4D6D)),
                             ),
                           ],
                         ),
@@ -792,7 +854,16 @@ class _AgendaList extends StatelessWidget {
   }
 
   String _weekdayShort(int weekday) {
-    const days = ['', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    const days = [
+      '',
+      'Pzt',
+      'Sal',
+      'Çar',
+      'Per',
+      'Cum',
+      'Cmt',
+      'Paz'
+    ];
     return days[weekday];
   }
 }
@@ -817,7 +888,8 @@ class _WeekSummaryCard extends StatelessWidget {
         final dt = DateTime.parse(entry.key);
         if (!dt.isBefore(now) && !dt.isAfter(weekEnd)) {
           for (final e in entry.value) {
-            weekTotal += (e['amount'] as num?)?.toDouble() ?? 0;
+            weekTotal +=
+                (e['amount'] as num?)?.toDouble() ?? 0;
             weekCount++;
             firstLabel ??= e['title'] as String?;
           }
@@ -826,17 +898,13 @@ class _WeekSummaryCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.bg1, AppColors.bg2],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: const Color(0xFF0D1B2A),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: const Color(0xFF1A2940)),
         ),
         child: Row(
           children: [
@@ -845,21 +913,21 @@ class _WeekSummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Önümüzdeki 7 gün',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: AppColors.text3Dark)),
-                  const SizedBox(height: 4),
+                      style: AppTextStyles.labelSmall.copyWith(
+                          color: const Color(0xFF4A6478))),
+                  const SizedBox(height: 6),
                   Text(
                     AppFormatters.currencyCompact(weekTotal),
-                    style: AppTextStyles.amountHero.copyWith(
+                    style: const TextStyle(
                         fontSize: 22,
-                        color: AppColors.text1Dark,
-                        letterSpacing: -0.02 * 22),
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFE8F4FF)),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '$weekCount ödeme${firstLabel != null ? ' · İlk: $firstLabel' : ''}',
                     style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.text3Dark),
+                        .copyWith(color: const Color(0xFF4A6478)),
                   ),
                 ],
               ),
@@ -868,11 +936,12 @@ class _WeekSummaryCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.accentDim,
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF00D4FF)
+                    .withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.calendar_today_outlined,
-                  size: 22, color: AppColors.accent),
+                  size: 22, color: Color(0xFF00D4FF)),
             ),
           ],
         ),

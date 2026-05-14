@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 
@@ -23,27 +22,28 @@ const _starters = [
 
 // ── Agent names → display labels ─────────────────────────────────────
 const _agentLabels = <String, String>{
-  'budget_advisor':       'Bütçe Danışmanı',
-  'anomaly_detector':     'Anomali Dedektörü',
-  'debt_optimizer':       'Borç Optimizasyonu',
-  'forecaster':           'Tahmin Ajanı',
-  'inflation_aware':      'Enflasyon Ajanı',
-  'purchase_planner':     'Satın Alma Planlayıcı',
-  'receipt_ocr':          'Fiş Okuyucu',
-  'subscription_hunter':  'Abonelik Avcısı',
+  'budget_advisor':         'Bütçe Danışmanı',
+  'anomaly_detector':       'Anomali Dedektörü',
+  'debt_optimizer':         'Borç Optimizasyonu',
+  'forecaster':             'Tahmin Ajanı',
+  'inflation_aware':        'Enflasyon Ajanı',
+  'purchase_planner':       'Satın Alma Planlayıcı',
+  'receipt_ocr':            'Fiş Okuyucu',
+  'subscription_hunter':    'Abonelik Avcısı',
   'transaction_classifier': 'İşlem Sınıflandırıcı',
-  'orchestrator':         'Orkestratör',
-  'critic':               'Eleştirmen',
+  'orchestrator':           'Orkestratör',
+  'critic':                 'Eleştirmen',
 };
 
 // ── Agent → quick action destination ─────────────────────────────────
-const _agentRoutes = <String, (String label, IconData icon, String path)>{
-  'budget_advisor':      ('Bütçe oluştur',     Icons.account_balance_wallet_outlined, '/budgets'),
-  'anomaly_detector':    ('İşlemleri incele',   Icons.receipt_long_outlined,           '/transactions'),
-  'debt_optimizer':      ('Borçları görüntüle', Icons.account_balance_outlined,        '/loans'),
-  'forecaster':          ('Hedef ekle',         Icons.flag_outlined,                   '/goals'),
-  'inflation_aware':     ('Enflasyon analizi',  Icons.trending_up_outlined,            '/inflation'),
-  'subscription_hunter': ('Abonelikler',        Icons.subscriptions_outlined,          '/subscriptions'),
+const _agentRoutes =
+    <String, (String label, IconData icon, String path)>{
+  'budget_advisor':      ('Bütçe oluştur',      Icons.account_balance_wallet_outlined, '/budgets'),
+  'anomaly_detector':    ('İşlemleri incele',    Icons.receipt_long_outlined,           '/transactions'),
+  'debt_optimizer':      ('Borçları görüntüle',  Icons.account_balance_outlined,        '/loans'),
+  'forecaster':          ('Hedef ekle',          Icons.flag_outlined,                   '/goals'),
+  'inflation_aware':     ('Enflasyon analizi',   Icons.trending_up_outlined,            '/inflation'),
+  'subscription_hunter': ('Abonelikler',         Icons.subscriptions_outlined,          '/subscriptions'),
 };
 
 // ── Processing stages ─────────────────────────────────────────────────
@@ -58,7 +58,7 @@ const _stageLabels = <_Stage, String>{
 
 // ── Message model ─────────────────────────────────────────────────────
 class _Msg {
-  final String role; // 'user' | 'assistant'
+  final String role;
   final String content;
   final DateTime at;
   final List<String>? agentsUsed;
@@ -92,19 +92,26 @@ class _HistoryRun {
   String get preview {
     final last = messages.lastWhere(
       (m) => m.role == 'assistant',
-      orElse: () => messages.isNotEmpty ? messages.last : _Msg(role: '', content: '', at: _epoch),
+      orElse: () => messages.isNotEmpty
+          ? messages.last
+          : _Msg(role: '', content: '', at: _epoch),
     );
     if (last.content.isEmpty) return '—';
-    return last.content.length > 60 ? '${last.content.substring(0, 60)}...' : last.content;
+    return last.content.length > 60
+        ? '${last.content.substring(0, 60)}...'
+        : last.content;
   }
 
   String get title {
     final user = messages.firstWhere(
       (m) => m.role == 'user',
-      orElse: () => _Msg(role: '', content: 'Sohbet', at: _epoch),
+      orElse: () =>
+          _Msg(role: '', content: 'Sohbet', at: _epoch),
     );
     if (user.content.isEmpty) return 'Sohbet';
-    return user.content.length > 40 ? '${user.content.substring(0, 40)}...' : user.content;
+    return user.content.length > 40
+        ? '${user.content.substring(0, 40)}...'
+        : user.content;
   }
 
   factory _HistoryRun.fromJson(Map<String, dynamic> j) {
@@ -113,15 +120,17 @@ class _HistoryRun {
         .map((m) => _Msg(
               role: m['role'] as String? ?? 'user',
               content: m['content'] as String? ?? '',
-              at: DateTime.tryParse(m['at'] as String? ?? '') ?? DateTime.now(),
+              at: DateTime.tryParse(m['at'] as String? ?? '') ??
+                  DateTime.now(),
             ))
         .toList();
     return _HistoryRun(
-      runId:     (j['run_id'] as num).toInt(),
+      runId: (j['run_id'] as num).toInt(),
       sessionId: j['session_id'] as String? ?? '',
-      status:    j['status'] as String? ?? 'completed',
-      startedAt: DateTime.tryParse(j['started_at'] as String? ?? ''),
-      messages:  msgs,
+      status: j['status'] as String? ?? 'completed',
+      startedAt:
+          DateTime.tryParse(j['started_at'] as String? ?? ''),
+      messages: msgs,
     );
   }
 }
@@ -137,13 +146,13 @@ class AgentChatPage extends StatefulWidget {
 }
 
 class _AgentChatPageState extends State<AgentChatPage> {
-  final _inputCtrl  = TextEditingController();
+  final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-  final _sessionId  = const Uuid().v4();
+  final _sessionId = const Uuid().v4();
 
   final List<_Msg> _messages = [];
-  _Stage _stage     = _Stage.idle;
-  bool   _showHistory = false;
+  _Stage _stage = _Stage.idle;
+  bool _showHistory = false;
   Timer? _stageTimer;
 
   @override
@@ -157,13 +166,18 @@ class _AgentChatPageState extends State<AgentChatPage> {
   bool get _thinking => _stage != _Stage.idle;
 
   void _startStageCycle() {
-    final stages = [_Stage.analyzing, _Stage.planning, _Stage.executing, _Stage.generating];
+    final stages = [
+      _Stage.analyzing,
+      _Stage.planning,
+      _Stage.executing,
+      _Stage.generating
+    ];
     int idx = 0;
     if (mounted) setState(() => _stage = stages[idx]);
-    _stageTimer = Timer.periodic(const Duration(seconds: 3), (t) {
+    _stageTimer =
+        Timer.periodic(const Duration(seconds: 3), (t) {
       idx++;
       if (idx >= stages.length) {
-        // Stick at generating forever until response arrives
         if (mounted) setState(() => _stage = _Stage.generating);
         t.cancel();
         return;
@@ -182,7 +196,10 @@ class _AgentChatPageState extends State<AgentChatPage> {
     if (text.trim().isEmpty || _thinking) return;
     _inputCtrl.clear();
     setState(() {
-      _messages.add(_Msg(role: 'user', content: text.trim(), at: DateTime.now()));
+      _messages.add(_Msg(
+          role: 'user',
+          content: text.trim(),
+          at: DateTime.now()));
     });
     _scrollToBottom();
     _startStageCycle();
@@ -191,12 +208,14 @@ class _AgentChatPageState extends State<AgentChatPage> {
       final res = await DioClient.instance.post(
         ApiEndpoints.agentSend,
         data: {'message': text.trim(), 'session_id': _sessionId},
-        options: Options(receiveTimeout: const Duration(seconds: 300)),
+        options:
+            Options(receiveTimeout: const Duration(seconds: 300)),
       );
-      final body       = res.data as Map<String, dynamic>;
-      final reply      = body['reply'] as String? ?? 'Yanıt alınamadı.';
-      final agentsUsed = ((body['agents_used'] as List?) ?? []).cast<String>();
-      final runId      = (body['run_id'] as num?)?.toInt();
+      final body = res.data as Map<String, dynamic>;
+      final reply = body['reply'] as String? ?? 'Yanıt alınamadı.';
+      final agentsUsed =
+          ((body['agents_used'] as List?) ?? []).cast<String>();
+      final runId = (body['run_id'] as num?)?.toInt();
 
       if (mounted) {
         _stopStageCycle();
@@ -214,7 +233,8 @@ class _AgentChatPageState extends State<AgentChatPage> {
     } on DioException catch (e) {
       if (!mounted) return;
       _stopStageCycle();
-      final msg = e.response?.data?['error'] ?? 'Ajan yanıt veremedi.';
+      final msg =
+          e.response?.data?['error'] ?? 'Ajan yanıt veremedi.';
       setState(() {
         _messages.add(_Msg(
           role: 'assistant',
@@ -240,52 +260,66 @@ class _AgentChatPageState extends State<AgentChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF060D18),
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
                 _Header(
-                  onHistory: () => setState(() => _showHistory = true),
+                  onHistory: () =>
+                      setState(() => _showHistory = true),
                   onNewChat: () {
                     _stopStageCycle();
                     setState(() => _messages.clear());
                   },
                 ),
-                // Agent status bar (visible while thinking)
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: _thinking
-                      ? _AgentStatusBar(stage: _stage, key: const ValueKey('bar'))
-                      : const SizedBox.shrink(key: ValueKey('nobar')),
+                      ? _AgentStatusBar(
+                          stage: _stage,
+                          key: const ValueKey('bar'))
+                      : const SizedBox.shrink(
+                          key: ValueKey('nobar')),
                 ),
                 Expanded(
                   child: _messages.isEmpty && !_thinking
                       ? _EmptyChat(onPick: _send)
                       : ListView.builder(
                           controller: _scrollCtrl,
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          itemCount: _messages.length + (_thinking ? 1 : 0),
+                          padding: const EdgeInsets.fromLTRB(
+                              16, 16, 16, 8),
+                          itemCount: _messages.length +
+                              (_thinking ? 1 : 0),
                           itemBuilder: (_, i) {
                             if (i == _messages.length) {
                               return const _TypingIndicator();
                             }
                             final msg = _messages[i];
-                            final isLast = i == _messages.length - 1;
+                            final isLast =
+                                i == _messages.length - 1;
                             return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 _MessageBubble(msg: msg),
                                 if (msg.role == 'assistant' &&
                                     msg.agentsUsed != null &&
                                     msg.agentsUsed!.isNotEmpty) ...[
-                                  _AgentMetaBadge(agentsUsed: msg.agentsUsed!),
+                                  _AgentMetaBadge(
+                                      agentsUsed:
+                                          msg.agentsUsed!),
                                   const SizedBox(height: 8),
                                 ],
-                                if (msg.role == 'assistant' && isLast && !_thinking)
+                                if (msg.role == 'assistant' &&
+                                    isLast &&
+                                    !_thinking)
                                   _QuickActionRow(
-                                    agentsUsed: msg.agentsUsed ?? [],
-                                    onTap: (path) => context.push(path),
+                                    agentsUsed:
+                                        msg.agentsUsed ?? [],
+                                    onTap: (path) =>
+                                        context.push(path),
                                   ),
                               ],
                             );
@@ -302,7 +336,8 @@ class _AgentChatPageState extends State<AgentChatPage> {
             if (_showHistory)
               _HistorySheet(
                 currentSessionId: _sessionId,
-                onClose: () => setState(() => _showHistory = false),
+                onClose: () =>
+                    setState(() => _showHistory = false),
                 onLoadSession: (msgs) {
                   setState(() {
                     _messages.clear();
@@ -323,44 +358,50 @@ class _AgentChatPageState extends State<AgentChatPage> {
 class _Header extends StatelessWidget {
   final VoidCallback onHistory;
   final VoidCallback onNewChat;
-  const _Header({required this.onHistory, required this.onNewChat});
+  const _Header(
+      {required this.onHistory, required this.onNewChat});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: AppColors.bg0,
-        border: Border(bottom: BorderSide(color: AppColors.border1Dark)),
+        color: Color(0xFF060D18),
+        border: Border(
+            bottom: BorderSide(color: Color(0xFF1A2940))),
       ),
       child: Row(
         children: [
           _IconBtn(
             icon: Icons.menu,
-            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            onTap: () =>
+                shellScaffoldKey.currentState?.openDrawer(),
           ),
           const SizedBox(width: 10),
+          // AI avatar — 32px
           Container(
-            width: 40,
-            height: 40,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [AppColors.accent, Color(0xFF0A7DA8)],
+                colors: [Color(0xFF00D4FF), Color(0xFF0A7DA8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.accentDim,
-                    blurRadius: 20,
-                    spreadRadius: 2),
+                    color: const Color(0xFF00D4FF)
+                        .withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    spreadRadius: 1),
               ],
             ),
             child: const Icon(Icons.auto_awesome,
-                size: 20, color: AppColors.accentText),
+                size: 16, color: Color(0xFF051929)),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,8 +409,8 @@ class _Header extends StatelessWidget {
                 Text('Paranette AI',
                     style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text1Dark)),
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFE8F4FF))),
                 SizedBox(height: 2),
                 Row(
                   children: [
@@ -377,7 +418,8 @@ class _Header extends StatelessWidget {
                     SizedBox(width: 4),
                     Text('Çok-ajanlı sistem',
                         style: TextStyle(
-                            fontSize: 11, color: AppColors.accent)),
+                            fontSize: 11,
+                            color: Color(0xFF00D4FF))),
                   ],
                 ),
               ],
@@ -399,7 +441,8 @@ class _OnlineDot extends StatelessWidget {
         width: 6,
         height: 6,
         decoration: const BoxDecoration(
-            shape: BoxShape.circle, color: AppColors.accent),
+            shape: BoxShape.circle,
+            color: Color(0xFF0DD9A0)),
       );
 }
 
@@ -416,11 +459,13 @@ class _IconBtn extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.bg2,
-          border: Border.all(color: AppColors.border1Dark),
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: const Color(0xFF1A2940)),
         ),
-        child: Icon(icon, size: 16, color: AppColors.text2Dark),
+        child: Icon(icon,
+            size: 16, color: const Color(0xFF8BA4BC)),
       ),
     );
   }
@@ -429,10 +474,12 @@ class _IconBtn extends StatelessWidget {
 // ── Agent Status Bar ──────────────────────────────────────────────────
 class _AgentStatusBar extends StatefulWidget {
   final _Stage stage;
-  const _AgentStatusBar({super.key, required this.stage});
+  const _AgentStatusBar(
+      {super.key, required this.stage});
 
   @override
-  State<_AgentStatusBar> createState() => _AgentStatusBarState();
+  State<_AgentStatusBar> createState() =>
+      _AgentStatusBarState();
 }
 
 class _AgentStatusBarState extends State<_AgentStatusBar>
@@ -459,11 +506,14 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
     final label = _stageLabels[widget.stage] ?? '';
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.accentDim,
+        color: const Color(0xFF00D4FF).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+        border: Border.all(
+            color: const Color(0xFF00D4FF)
+                .withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -476,7 +526,7 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
             child: Icon(
               _stageIcon(widget.stage),
               size: 16,
-              color: AppColors.accent,
+              color: const Color(0xFF00D4FF),
             ),
           ),
           const SizedBox(width: 10),
@@ -484,7 +534,7 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
             child: Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.accent,
+                color: const Color(0xFF00D4FF),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -499,8 +549,9 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active
-                      ? AppColors.accent
-                      : AppColors.accent.withValues(alpha: 0.2),
+                      ? const Color(0xFF00D4FF)
+                      : const Color(0xFF00D4FF)
+                          .withValues(alpha: 0.2),
                 ),
               );
             }),
@@ -542,7 +593,8 @@ class _AgentMetaBadge extends StatelessWidget {
         .map((a) => _agentLabels[a] ?? a)
         .take(3)
         .toList();
-    final extra = agentsUsed.length > 3 ? agentsUsed.length - 3 : 0;
+    final extra =
+        agentsUsed.length > 3 ? agentsUsed.length - 3 : 0;
 
     return Padding(
       padding: const EdgeInsets.only(left: 36),
@@ -550,10 +602,11 @@ class _AgentMetaBadge extends StatelessWidget {
         spacing: 6,
         runSpacing: 4,
         children: [
-          ...labels.map((l) => _SmallChip(
-                label: l,
-                icon: Icons.smart_toy_outlined,
-              )),
+          ...labels
+              .map((l) => _SmallChip(
+                    label: l,
+                    icon: Icons.smart_toy_outlined,
+                  )),
           if (extra > 0)
             _SmallChip(label: '+$extra ajan', icon: Icons.more_horiz),
         ],
@@ -570,20 +623,23 @@ class _SmallChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.accentDim,
+        color: const Color(0xFF00D4FF).withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(
+            color: const Color(0xFF00D4FF)
+                .withValues(alpha: 0.20)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: AppColors.accent),
+          Icon(icon, size: 10, color: const Color(0xFF00D4FF)),
           const SizedBox(width: 4),
           Text(label,
               style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.accent,
+                  color: const Color(0xFF00D4FF),
                   fontSize: 10,
                   fontWeight: FontWeight.w500)),
         ],
@@ -596,7 +652,8 @@ class _SmallChip extends StatelessWidget {
 class _QuickActionRow extends StatelessWidget {
   final List<String> agentsUsed;
   final void Function(String path) onTap;
-  const _QuickActionRow({required this.agentsUsed, required this.onTap});
+  const _QuickActionRow(
+      {required this.agentsUsed, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -621,24 +678,30 @@ class _QuickActionRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: AppColors.bg2,
-                          borderRadius: BorderRadius.circular(20),
-                          border:
-                              Border.all(color: AppColors.border2Dark),
+                          color: const Color(0xFF0D1B2A),
+                          borderRadius:
+                              BorderRadius.circular(20),
+                          border: Border.all(
+                              color: const Color(0xFF1A2940)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(action.$2,
-                                size: 13, color: AppColors.accent),
+                                size: 13,
+                                color: const Color(0xFF00D4FF)),
                             const SizedBox(width: 6),
                             Text(action.$1,
-                                style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.text1Dark,
-                                    fontWeight: FontWeight.w500)),
+                                style: AppTextStyles.labelSmall
+                                    .copyWith(
+                                        color: const Color(
+                                            0xFFE8F4FF),
+                                        fontWeight:
+                                            FontWeight.w500)),
                             const SizedBox(width: 4),
                             const Icon(Icons.arrow_forward_ios,
-                                size: 10, color: AppColors.text3Dark),
+                                size: 10,
+                                color: Color(0xFF4A6478)),
                           ],
                         ),
                       ),
@@ -666,41 +729,57 @@ class _EmptyChat extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [AppColors.accent, Color(0xFF0A7DA8)],
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00D4FF), Color(0xFF0A7DA8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                      color: const Color(0xFF00D4FF)
+                          .withValues(alpha: 0.25),
+                      blurRadius: 24,
+                      spreadRadius: 2),
+                ],
               ),
               child: const Icon(Icons.auto_awesome,
-                  size: 34, color: AppColors.accentText),
+                  size: 34, color: Color(0xFF051929)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             Text('Merhaba',
                 style: AppTextStyles.headlineLarge.copyWith(
-                    color: AppColors.text1Dark,
-                    letterSpacing: -0.02 * 22)),
-            const SizedBox(height: 6),
+                    color: const Color(0xFFE8F4FF),
+                    letterSpacing: -0.5)),
+            const SizedBox(height: 8),
             Text(
               'Finansal verilerine bakıp aksiyonlar önerebilirim.\nUzman ajanlarım ile birlikte çalışıyorum.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.text3Dark, height: 1.5),
+              style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFF4A6478), height: 1.5),
             ),
             const SizedBox(height: 16),
-            // Agent pills
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 6,
               children: [
-                _SmallChip(label: 'Bütçe Danışmanı',    icon: Icons.account_balance_wallet_outlined),
-                _SmallChip(label: 'Anomali Dedektörü',  icon: Icons.warning_amber_outlined),
-                _SmallChip(label: 'Tahmin Ajanı',       icon: Icons.trending_up_outlined),
-                _SmallChip(label: 'Borç Optimizasyonu', icon: Icons.account_balance_outlined),
-                _SmallChip(label: 'Enflasyon Ajanı',    icon: Icons.show_chart),
+                _SmallChip(
+                    label: 'Bütçe Danışmanı',
+                    icon: Icons.account_balance_wallet_outlined),
+                _SmallChip(
+                    label: 'Anomali Dedektörü',
+                    icon: Icons.warning_amber_outlined),
+                _SmallChip(
+                    label: 'Tahmin Ajanı',
+                    icon: Icons.trending_up_outlined),
+                _SmallChip(
+                    label: 'Borç Optimizasyonu',
+                    icon: Icons.account_balance_outlined),
+                _SmallChip(
+                    label: 'Enflasyon Ajanı',
+                    icon: Icons.show_chart),
               ],
             ),
           ],
@@ -708,7 +787,7 @@ class _EmptyChat extends StatelessWidget {
         const SizedBox(height: 28),
         Text('Hızlı başlangıç',
             style: AppTextStyles.labelSmall
-                .copyWith(color: AppColors.text3Dark)),
+                .copyWith(color: const Color(0xFF4A6478))),
         const SizedBox(height: 10),
         ..._starters.map((s) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -717,9 +796,10 @@ class _EmptyChat extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.bg1,
+                    color: const Color(0xFF0D1B2A),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border1Dark),
+                    border: Border.all(
+                        color: const Color(0xFF1A2940)),
                   ),
                   child: Row(
                     children: [
@@ -727,20 +807,26 @@ class _EmptyChat extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: AppColors.accentDim,
-                          borderRadius: BorderRadius.circular(10),
+                          color: const Color(0xFF00D4FF)
+                              .withValues(alpha: 0.10),
+                          borderRadius:
+                              BorderRadius.circular(10),
                         ),
                         child: Icon(s.icon,
-                            size: 18, color: AppColors.accent),
+                            size: 18,
+                            color: const Color(0xFF00D4FF)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(s.text,
                             style: AppTextStyles.bodyMedium
-                                .copyWith(fontWeight: FontWeight.w500)),
+                                .copyWith(
+                                    color: const Color(0xFFE8F4FF),
+                                    fontWeight: FontWeight.w500)),
                       ),
                       const Icon(Icons.arrow_forward_ios,
-                          size: 14, color: AppColors.text3Dark),
+                          size: 14,
+                          color: Color(0xFF4A6478)),
                     ],
                   ),
                 ),
@@ -767,22 +853,26 @@ class _MessageBubble extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.78),
+                    maxWidth:
+                        MediaQuery.of(context).size.width * 0.78),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 10),
-                  decoration: const BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      topRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A2E44),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(4),
                     ),
+                    border: Border.all(
+                        color: const Color(0xFF00D4FF)
+                            .withValues(alpha: 0.2)),
                   ),
                   child: Text(msg.content,
                       style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.accentText,
+                          color: const Color(0xFFE8F4FF),
                           fontWeight: FontWeight.w500,
                           height: 1.45)),
                 ),
@@ -796,32 +886,35 @@ class _MessageBubble extends StatelessWidget {
                 Flexible(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                        maxWidth:
-                            MediaQuery.of(context).size.width * 0.85),
+                        maxWidth: MediaQuery.of(context).size.width *
+                            0.85),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: AppColors.bg2,
+                        color: const Color(0xFF0D1B2A),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(4),
-                          topRight: Radius.circular(18),
-                          bottomLeft: Radius.circular(18),
-                          bottomRight: Radius.circular(18),
+                          topRight: Radius.circular(20),
+                          bottomLeft: Radius.circular(20),
+                          bottomRight: Radius.circular(20),
                         ),
-                        border: Border.all(color: AppColors.border1Dark),
+                        border: Border.all(
+                            color: const Color(0xFF1A2940)),
                       ),
                       child: MarkdownBody(
                         data: msg.content,
                         styleSheet: MarkdownStyleSheet(
                           p: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.text1Dark, height: 1.5),
+                              color: const Color(0xFFE8F4FF),
+                              height: 1.5),
                           strong: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.accent,
+                              color: const Color(0xFF00D4FF),
                               fontWeight: FontWeight.w600),
                           code: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.accent,
-                              backgroundColor: AppColors.accentDim),
+                              color: const Color(0xFF00D4FF),
+                              backgroundColor: const Color(0xFF00D4FF)
+                                  .withValues(alpha: 0.10)),
                         ),
                       ),
                     ),
@@ -844,13 +937,13 @@ class _AvatarBubble extends StatelessWidget {
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [AppColors.accent, Color(0xFF0A7DA8)],
+          colors: [Color(0xFF00D4FF), Color(0xFF0A7DA8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: const Icon(Icons.auto_awesome,
-          size: 14, color: AppColors.accentText),
+          size: 14, color: Color(0xFF051929)),
     );
   }
 }
@@ -860,7 +953,8 @@ class _TypingIndicator extends StatefulWidget {
   const _TypingIndicator();
 
   @override
-  State<_TypingIndicator> createState() => _TypingIndicatorState();
+  State<_TypingIndicator> createState() =>
+      _TypingIndicatorState();
 }
 
 class _TypingIndicatorState extends State<_TypingIndicator>
@@ -871,7 +965,8 @@ class _TypingIndicatorState extends State<_TypingIndicator>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200))
+        vsync: this,
+        duration: const Duration(milliseconds: 1200))
       ..repeat();
   }
 
@@ -891,17 +986,18 @@ class _TypingIndicatorState extends State<_TypingIndicator>
           const _AvatarBubble(),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.bg2,
+              color: const Color(0xFF0D1B2A),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
+                topRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
-              border: Border.all(color: AppColors.border1Dark),
+              border: Border.all(
+                  color: const Color(0xFF1A2940)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -915,16 +1011,19 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                         0.7 *
                             (0.5 -
                                     0.5 *
-                                        math.cos(phase * 2 * math.pi))
+                                        math.cos(
+                                            phase * 2 * math.pi))
                                 .clamp(0.0, 1.0);
                     final scale = 0.8 +
                         0.2 *
                             (0.5 -
                                     0.5 *
-                                        math.cos(phase * 2 * math.pi))
+                                        math.cos(
+                                            phase * 2 * math.pi))
                                 .clamp(0.0, 1.0);
                     return Padding(
-                      padding: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                      padding:
+                          EdgeInsets.only(right: i < 2 ? 4 : 0),
                       child: Transform.scale(
                         scale: scale,
                         child: Opacity(
@@ -934,7 +1033,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                             height: 6,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.text2Dark,
+                              color: Color(0xFF8BA4BC),
                             ),
                           ),
                         ),
@@ -991,16 +1090,19 @@ class _InputAreaState extends State<_InputArea> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(12, 8, 12, 12 + bottom),
+      padding:
+          EdgeInsets.fromLTRB(16, 10, 16, 10 + bottom),
       decoration: const BoxDecoration(
-        color: AppColors.bg0,
-        border: Border(top: BorderSide(color: AppColors.border1Dark)),
+        color: Color(0xFF060D18),
+        border: Border(
+            top: BorderSide(color: Color(0xFF1A2940))),
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg2,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppColors.border1Dark),
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: const Color(0xFF1A2940)),
         ),
         padding: const EdgeInsets.all(6),
         child: Row(
@@ -1013,15 +1115,18 @@ class _InputAreaState extends State<_InputArea> {
                   enabled: widget.enabled,
                   maxLines: null,
                   textInputAction: TextInputAction.send,
-                  onSubmitted: widget.enabled ? widget.onSend : null,
+                  onSubmitted:
+                      widget.enabled ? widget.onSend : null,
                   style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.text1Dark),
+                      .copyWith(
+                          color: const Color(0xFFE8F4FF)),
                   decoration: InputDecoration(
                     hintText: widget.enabled
                         ? 'Paranette\'ye bir şey sor...'
                         : 'Ajanlar çalışıyor...',
                     hintStyle: const TextStyle(
-                        color: AppColors.text3Dark, fontSize: 14),
+                        color: Color(0xFF4A6478),
+                        fontSize: 14),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -1037,16 +1142,17 @@ class _InputAreaState extends State<_InputArea> {
               child: _hasText && widget.enabled
                   ? GestureDetector(
                       key: const ValueKey('send'),
-                      onTap: () => widget.onSend(widget.controller.text),
+                      onTap: () =>
+                          widget.onSend(widget.controller.text),
                       child: Container(
                         width: 38,
                         height: 38,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.accent,
+                          color: Color(0xFF00D4FF),
                         ),
                         child: const Icon(Icons.send_rounded,
-                            size: 16, color: AppColors.accentText),
+                            size: 16, color: Color(0xFF051929)),
                       ),
                     )
                   : Container(
@@ -1060,7 +1166,7 @@ class _InputAreaState extends State<_InputArea> {
                             ? Icons.mic_outlined
                             : Icons.hourglass_top_rounded,
                         size: 18,
-                        color: AppColors.text3Dark,
+                        color: const Color(0xFF4A6478),
                       ),
                     ),
             ),
@@ -1084,7 +1190,8 @@ class _HistorySheet extends StatefulWidget {
   });
 
   @override
-  State<_HistorySheet> createState() => _HistorySheetState();
+  State<_HistorySheet> createState() =>
+      _HistorySheetState();
 }
 
 class _HistorySheetState extends State<_HistorySheet> {
@@ -1097,8 +1204,11 @@ class _HistorySheetState extends State<_HistorySheet> {
   }
 
   Future<List<_HistoryRun>> _loadHistory() async {
-    final res = await DioClient.instance.get(ApiEndpoints.agentHistory);
-    final runs = ((res.data as Map<String, dynamic>)['runs'] as List?) ?? [];
+    final res =
+        await DioClient.instance.get(ApiEndpoints.agentHistory);
+    final runs =
+        ((res.data as Map<String, dynamic>)['runs'] as List?) ??
+            [];
     return runs
         .whereType<Map<String, dynamic>>()
         .map(_HistoryRun.fromJson)
@@ -1117,38 +1227,45 @@ class _HistorySheetState extends State<_HistorySheet> {
             onTap: () {},
             child: Container(
               constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.72),
+                  maxHeight:
+                      MediaQuery.of(context).size.height * 0.72),
               decoration: const BoxDecoration(
-                color: AppColors.bg1,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
+                color: Color(0xFF0D1B2A),
+                borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    width: 40,
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 12),
+                    width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.bg3,
+                      color: const Color(0xFF1A2940),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                    padding: const EdgeInsets.fromLTRB(
+                        20, 0, 20, 16),
                     child: Row(
                       children: [
                         Expanded(
                           child: Text('Geçmiş sohbetler',
-                              style: AppTextStyles.headlineSmall),
+                              style: AppTextStyles.headlineSmall
+                                  .copyWith(
+                                      color: const Color(
+                                          0xFFE8F4FF))),
                         ),
                         GestureDetector(
                           onTap: () => setState(() {
                             _future = _loadHistory();
                           }),
                           child: const Icon(Icons.refresh,
-                              size: 18, color: AppColors.text3Dark),
+                              size: 18,
+                              color: Color(0xFF4A6478)),
                         ),
                       ],
                     ),
@@ -1161,15 +1278,18 @@ class _HistorySheetState extends State<_HistorySheet> {
                             ConnectionState.waiting) {
                           return const Center(
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2));
+                                  strokeWidth: 2,
+                                  color: Color(0xFF00D4FF)));
                         }
                         if (snap.hasError || !snap.hasData) {
                           return Padding(
                             padding: const EdgeInsets.all(24),
-                            child: Text('Geçmiş yüklenemedi.',
+                            child: Text(
+                                'Geçmiş yüklenemedi.',
                                 style: AppTextStyles.bodySmall
                                     .copyWith(
-                                        color: AppColors.text3Dark)),
+                                        color: const Color(
+                                            0xFF4A6478))),
                           );
                         }
                         final runs = snap.data!;
@@ -1179,7 +1299,8 @@ class _HistorySheetState extends State<_HistorySheet> {
                             child: Text('Henüz sohbet yok.',
                                 style: AppTextStyles.bodySmall
                                     .copyWith(
-                                        color: AppColors.text3Dark)),
+                                        color: const Color(
+                                            0xFF4A6478))),
                           );
                         }
                         return ListView.builder(
@@ -1187,32 +1308,36 @@ class _HistorySheetState extends State<_HistorySheet> {
                           itemCount: runs.length,
                           itemBuilder: (_, i) {
                             final run = runs[i];
-                            final isActive =
-                                run.sessionId == widget.currentSessionId;
+                            final isActive = run.sessionId ==
+                                widget.currentSessionId;
                             return Container(
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? AppColors.accentDim
+                                    ? const Color(0xFF00D4FF)
+                                        .withValues(alpha: 0.08)
                                     : Colors.transparent,
                                 border: i > 0
                                     ? const Border(
                                         top: BorderSide(
-                                            color:
-                                                AppColors.border1Dark))
+                                            color: Color(
+                                                0xFF1A2940)))
                                     : null,
                               ),
                               child: InkWell(
                                 onTap: () => widget
                                     .onLoadSession(run.messages),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12),
+                                  padding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 12),
                                   child: Row(
                                     children: [
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                              CrossAxisAlignment
+                                                  .start,
                                           children: [
                                             Row(
                                               children: [
@@ -1221,43 +1346,51 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                     width: 6,
                                                     height: 6,
                                                     margin: const EdgeInsets
-                                                        .only(right: 6),
-                                                    decoration: const BoxDecoration(
-                                                      shape:
-                                                          BoxShape.circle,
-                                                      color:
-                                                          AppColors.accent,
+                                                        .only(
+                                                        right: 6),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      shape: BoxShape
+                                                          .circle,
+                                                      color: Color(
+                                                          0xFF00D4FF),
                                                     ),
                                                   ),
                                                 Expanded(
-                                                  child: Text(run.title,
+                                                  child: Text(
+                                                      run.title,
                                                       maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
+                                                      overflow:
+                                                          TextOverflow
+                                                              .ellipsis,
                                                       style: AppTextStyles
                                                           .bodyMedium
                                                           .copyWith(
+                                                              color: const Color(
+                                                                  0xFFE8F4FF),
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w600)),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 3),
+                                            const SizedBox(
+                                                height: 3),
                                             Text(run.preview,
                                                 maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
+                                                overflow: TextOverflow
+                                                    .ellipsis,
                                                 style: AppTextStyles
                                                     .bodySmall
                                                     .copyWith(
-                                                        color: AppColors
-                                                            .text3Dark)),
+                                                        color: const Color(
+                                                            0xFF4A6478))),
                                           ],
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                                      _StatusDot(status: run.status),
+                                      _StatusDot(
+                                          status: run.status),
                                     ],
                                   ),
                                 ),
@@ -1287,14 +1420,15 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case 'completed': color = const Color(0xFF22C55E); break;
-      case 'failed':    color = const Color(0xFFEF4444); break;
-      default:          color = AppColors.accent;
+      case 'completed': color = const Color(0xFF0DD9A0); break;
+      case 'failed':    color = const Color(0xFFFF4D6D); break;
+      default:          color = const Color(0xFF00D4FF);
     }
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      decoration:
+          BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 }
