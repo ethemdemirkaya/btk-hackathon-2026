@@ -466,6 +466,9 @@
   </div>
 </div>
 
+{{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+<x-ai-insight-panel page="personal_debts" :autoload="false" title="Borç Optimizörü" />
+
 <x-slot name="pageJs">
 <script>
 // Re-open modal if validation failed

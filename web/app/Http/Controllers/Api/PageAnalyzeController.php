@@ -22,7 +22,7 @@ class PageAnalyzeController extends Controller
     public function analyze(Request $request): JsonResponse
     {
         $request->validate([
-            'page'  => ['required', 'string', 'in:budgets,transactions,loans,goals,investments,subscriptions,inflation,fx_alerts,dashboard'],
+            'page'  => ['required', 'string', 'in:budgets,transactions,loans,goals,investments,subscriptions,inflation,fx_alerts,dashboard,personal_debts,bills,cards,calendar'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
         ]);
 
@@ -70,6 +70,22 @@ class PageAnalyzeController extends Controller
                 'dashboard' => [
                     $insights  = $this->runDashboard($user),
                     $agentName = 'orchestrator',
+                ],
+                'personal_debts' => [
+                    $insights  = $this->runDebtOptimizer($user),
+                    $agentName = 'debt_optimizer',
+                ],
+                'bills' => [
+                    $insights  = $this->runBudgetAdvisor($user),
+                    $agentName = 'budget_advisor',
+                ],
+                'cards' => [
+                    $insights  = $this->runAnomalyDetector($user),
+                    $agentName = 'anomaly_detector',
+                ],
+                'calendar' => [
+                    $insights  = $this->runForecaster($user, 'goals'),
+                    $agentName = 'forecaster',
                 ],
             };
 

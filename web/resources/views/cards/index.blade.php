@@ -281,4 +281,8 @@
     </div>
   </div>
   @endif
+
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="cards" :autoload="false" title="Kart Harcama Analizi" />
+
 </x-app-layout>

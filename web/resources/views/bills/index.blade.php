@@ -314,6 +314,9 @@
     </div>
   </div>
 
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="bills" :autoload="false" title="Fatura & Harcama Analizi" />
+
   <x-slot name="pageJs">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

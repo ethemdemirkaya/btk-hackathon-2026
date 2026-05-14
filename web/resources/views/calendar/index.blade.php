@@ -322,4 +322,8 @@
       @endif
     </div>
   </div>
+
+  {{-- ═══ AI Insight Panel ══════════════════════════════════════════════════ --}}
+  <x-ai-insight-panel page="calendar" :autoload="false" title="Finansal Takvim Tahmini" />
+
 </x-app-layout>
