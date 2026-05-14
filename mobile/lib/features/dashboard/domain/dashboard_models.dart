@@ -37,7 +37,7 @@ class CashFlowPoint {
   });
 
   factory CashFlowPoint.fromJson(Map<String, dynamic> j) => CashFlowPoint(
-        period: (j['period'] ?? j['month'] ?? '') as String,
+        period: j['period']?.toString() ?? j['month']?.toString() ?? '',
         income: (j['income'] as num? ?? 0).toDouble(),
         expenses: ((j['expenses'] ?? j['expense']) as num? ?? 0).toDouble(),
         net: (j['net'] as num? ?? 0).toDouble(),

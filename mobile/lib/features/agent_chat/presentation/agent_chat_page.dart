@@ -1080,13 +1080,29 @@ class _InputArea extends StatefulWidget {
   State<_InputArea> createState() => _InputAreaState();
 }
 
-class _InputAreaState extends State<_InputArea> {
+class _InputAreaState extends State<_InputArea>
+    with SingleTickerProviderStateMixin {
   bool _hasText = false;
+  bool _focused = false;
+  late AnimationController _glowCtrl;
+  late Animation<double> _glowAnim;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_onTextChanged);
+    _glowCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _glowAnim = CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOut);
+    _focusNode.addListener(() {
+      setState(() => _focused = _focusNode.hasFocus);
+      if (_focusNode.hasFocus) {
+        _glowCtrl.forward();
+      } else {
+        _glowCtrl.reverse();
+      }
+    });
   }
 
   void _onTextChanged() {
@@ -1097,93 +1113,158 @@ class _InputAreaState extends State<_InputArea> {
   @override
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
+    _focusNode.dispose();
+    _glowCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Container(
-      padding:
-          EdgeInsets.fromLTRB(16, 10, 16, 10 + bottom),
-      decoration: const BoxDecoration(
-        color: _scaffoldBg,
-        border: Border(
-            top: BorderSide(color: _cardBorder)),
+    return AnimatedBuilder(
+      animation: _glowAnim,
+      builder: (_, child) => Container(
+        padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + bottom),
+        decoration: BoxDecoration(
+          color: _scaffoldBg,
+          border: const Border(top: BorderSide(color: _cardBorder)),
+        ),
+        child: child,
       ),
       child: Container(
         decoration: BoxDecoration(
           color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: _cardBorder),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _focused
+                ? _accent.withValues(alpha: 0.5)
+                : _cardBorder,
+            width: 1.5,
+          ),
+          boxShadow: _focused
+              ? [
+                  BoxShadow(
+                    color: _accent.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    spreadRadius: 0,
+                  )
+                ]
+              : null,
         ),
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: TextField(
-                  controller: widget.controller,
-                  enabled: widget.enabled,
-                  maxLines: null,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted:
-                      widget.enabled ? widget.onSend : null,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: _text1),
-                  decoration: InputDecoration(
-                    hintText: widget.enabled
-                        ? 'Paranette\'ye bir şey sor...'
-                        : 'Ajanlar çalışıyor...',
-                    hintStyle: const TextStyle(
-                        color: _text3,
-                        fontSize: 14),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
+            // AI sparkle avatar
+            Padding(
+              padding: const EdgeInsets.only(left: 8, bottom: 6),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      _accent.withValues(alpha: 0.9),
+                      const Color(0xFF0A7DA8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    size: 14, color: Color(0xFF051929)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Text field
+            Expanded(
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                enabled: widget.enabled,
+                maxLines: 5,
+                minLines: 1,
+                textInputAction: TextInputAction.send,
+                onSubmitted: widget.enabled ? widget.onSend : null,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: _text1,
+                    height: 1.4),
+                decoration: InputDecoration(
+                  hintText: widget.enabled
+                      ? 'Paranette AI\'ye bir şey sor…'
+                      : 'Ajanlar çalışıyor…',
+                  hintStyle: TextStyle(
+                      color: _text3.withValues(alpha: 0.8),
+                      fontSize: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 8),
+                  isDense: true,
                 ),
               ),
             ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _hasText && widget.enabled
-                  ? GestureDetector(
-                      key: const ValueKey('send'),
-                      onTap: () =>
-                          widget.onSend(widget.controller.text),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _accent,
+            const SizedBox(width: 4),
+            // Send / loading button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: widget.enabled
+                    ? GestureDetector(
+                        key: ValueKey(_hasText ? 'send' : 'mic'),
+                        onTap: _hasText
+                            ? () => widget.onSend(widget.controller.text)
+                            : null,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: _hasText
+                                ? const LinearGradient(
+                                    colors: [
+                                      Color(0xFF00D4FF),
+                                      Color(0xFF0066FF)
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : null,
+                            color:
+                                _hasText ? null : Colors.transparent,
+                          ),
+                          child: Icon(
+                            _hasText
+                                ? Icons.arrow_upward_rounded
+                                : Icons.mic_none_rounded,
+                            size: 18,
+                            color: _hasText ? const Color(0xFF051929) : _text3,
+                          ),
                         ),
-                        child: const Icon(Icons.send_rounded,
-                            size: 16, color: Color(0xFF051929)),
+                      )
+                    : Container(
+                        key: const ValueKey('loading'),
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle),
+                        child: const Padding(
+                          padding: EdgeInsets.all(11),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _accent,
+                          ),
+                        ),
                       ),
-                    )
-                  : Container(
-                      key: const ValueKey('idle'),
-                      width: 38,
-                      height: 38,
-                      decoration: const BoxDecoration(
-                          shape: BoxShape.circle),
-                      child: Icon(
-                        widget.enabled
-                            ? Icons.mic_outlined
-                            : Icons.hourglass_top_rounded,
-                        size: 18,
-                        color: _text3,
-                      ),
-                    ),
+              ),
             ),
           ],
         ),

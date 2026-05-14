@@ -518,8 +518,8 @@ class _ResultSection extends StatelessWidget {
     final projections  = (result['projections']        as List?)            ?? [];
     final aiCommentary = result['ai_commentary'] as String?;
     final aiVerdict    = result['ai_verdict']    as String?;
-    final aiRisks      = (result['ai_risks']           as List?)?.cast<String>() ?? [];
-    final aiRecs       = (result['ai_recommendations'] as List?)?.cast<String>() ?? [];
+    final aiRisks      = (result['ai_risks']           as List?)?.map((e) => e.toString()).toList() ?? [];
+    final aiRecs       = (result['ai_recommendations'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
     final scoreColor = score >= 75 ? _positive : score >= 50 ? _warning : _negative;
 

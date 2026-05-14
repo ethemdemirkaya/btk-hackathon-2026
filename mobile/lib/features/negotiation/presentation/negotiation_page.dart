@@ -243,7 +243,7 @@ class _DraftCard extends StatelessWidget {
     };
 
     // Use target_label from API if available, else fall back to local label
-    final targetLabel = draft['target_label'] as String? ?? typeInfo['label'] as String;
+    final targetLabel = draft['target_label'] as String? ?? typeInfo['label'] as String? ?? '';
     final subject     = draft['subject'] as String? ?? targetLabel;
     final body        = draft['body'] as String? ?? '';
 

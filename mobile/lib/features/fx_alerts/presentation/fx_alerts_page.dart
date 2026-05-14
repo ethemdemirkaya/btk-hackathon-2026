@@ -56,87 +56,106 @@ const _liveRateLabels = {
 };
 
 // ── Page ──────────────────────────────────────────────────────────────
-class FxAlertsPage extends ConsumerWidget {
+class FxAlertsPage extends ConsumerStatefulWidget {
   const FxAlertsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FxAlertsPage> createState() => _FxAlertsPageState();
+}
+
+class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
+  bool _refreshing = false;
+
+  void _refresh() {
+    setState(() => _refreshing = true);
+    ref.invalidate(_fxAlertsProvider);
+    ref.invalidate(_fxRatesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final alertsAsync = ref.watch(_fxAlertsProvider);
     final ratesAsync = ref.watch(_fxRatesProvider);
 
-    return Scaffold(
-      backgroundColor: _scaffoldBg,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddAlarm(context, ref),
-        backgroundColor: _accent,
-        foregroundColor: const Color(0xFF051929),
-        elevation: 0,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 26),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Header ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () =>
-                        shellScaffoldKey.currentState?.openDrawer(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _cardBg,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+    // Auto-dismiss overlay once both providers finish loading
+    if (_refreshing && !alertsAsync.isLoading && !ratesAsync.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _refreshing = false);
+      });
+    }
+
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: _scaffoldBg,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showAddAlarm(context),
+            backgroundColor: _accent,
+            foregroundColor: const Color(0xFF051929),
+            elevation: 0,
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add, size: 26),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // ── Header ──────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () =>
+                            shellScaffoldKey.currentState?.openDrawer(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _cardBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _cardBorder),
+                          ),
+                          child: const Icon(Icons.menu,
+                              size: 18, color: _text2),
+                        ),
                       ),
-                      child: const Icon(Icons.menu,
-                          size: 18, color: _text2),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Kur Alarmları',
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: _text1)),
-                        Text('Güncel kurlar',
-                            style: TextStyle(
-                                fontSize: 12, color: _text3)),
-                      ],
-                    ),
-                  ),
-                  // AI insights button
-                  const AiInsightsButton(page: 'fx_alerts'),
-                  const SizedBox(width: 8),
-                  // Refresh button
-                  GestureDetector(
-                    onTap: () {
-                      ref.invalidate(_fxAlertsProvider);
-                      ref.invalidate(_fxRatesProvider);
-                    },
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _cardBg,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Kur Alarmları',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: _text1)),
+                            Text('Güncel kurlar',
+                                style: TextStyle(
+                                    fontSize: 12, color: _text3)),
+                          ],
+                        ),
                       ),
-                      child: const Icon(Icons.refresh,
-                          size: 18, color: _text2),
-                    ),
+                      // AI insights button
+                      const AiInsightsButton(page: 'fx_alerts'),
+                      const SizedBox(width: 8),
+                      // Refresh button
+                      GestureDetector(
+                        onTap: _refresh,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _cardBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _cardBorder),
+                          ),
+                          child: const Icon(Icons.refresh,
+                              size: 18, color: _text2),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
             // ── Live rates strip ─────────────────────────────────
             ratesAsync.when(
               loading: () => const SizedBox.shrink(),
@@ -273,7 +292,7 @@ class FxAlertsPage extends ConsumerWidget {
                             'Döviz ve altın için fiyat alarmı oluşturun.',
                         ctaLabel: '+ Alarm Ekle',
                         onCta: () =>
-                            _showAddAlarm(context, ref),
+                            _showAddAlarm(context),
                       );
                     }
 
@@ -298,7 +317,6 @@ class FxAlertsPage extends ConsumerWidget {
                           currentRate: currentRate,
                           onDelete: () => _deleteAlert(
                               context,
-                              ref,
                               (a['id'] as num).toInt()),
                         );
                       },
@@ -310,10 +328,54 @@ class FxAlertsPage extends ConsumerWidget {
           ],
         ),
       ),
+    ),
+        // ── Refresh overlay ─────────────────────────────────────────
+        if (_refreshing)
+          Container(
+            color: Colors.black.withValues(alpha: 0.55),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 32, vertical: 24),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _cardBorder),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 24,
+                    )
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: CircularProgressIndicator(
+                        color: _accent, strokeWidth: 2.5),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Yenileniyor...',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: _text1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
-  void _showAddAlarm(BuildContext context, WidgetRef ref) {
+  void _showAddAlarm(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -327,8 +389,7 @@ class FxAlertsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _deleteAlert(
-      BuildContext context, WidgetRef ref, int id) async {
+  Future<void> _deleteAlert(BuildContext context, int id) async {
     try {
       await DioClient.instance.delete(ApiEndpoints.fxAlert(id));
       ref.invalidate(_fxAlertsProvider);

@@ -305,12 +305,12 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$activeCount aktif hedef · ${AppFormatters.currencyCompact(totalSaved)} ₺ biriktirildi',
+                  '$activeCount aktif hedef · ${AppFormatters.currencyCompact(totalSaved)} biriktirildi',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${AppFormatters.currencyCompact(totalSaved)} ₺',
+                  AppFormatters.currencyCompact(totalSaved),
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.56),
                 ),
                 const SizedBox(height: 4),
@@ -500,7 +500,7 @@ class _GoalCard extends StatelessWidget {
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
                       const SizedBox(height: 2),
                       Text(
-                        '${AppFormatters.currencyCompact(target)} ₺ hedef',
+                        '${AppFormatters.currencyCompact(target)} hedef',
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                       ),
                       if (deadlineText.isNotEmpty) ...[
@@ -559,7 +559,7 @@ class _GoalCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${AppFormatters.currencyCompact(current)} ₺ / ${AppFormatters.currencyCompact(target)} ₺',
+                  '${AppFormatters.currencyCompact(current)} / ${AppFormatters.currencyCompact(target)}',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                 ),
                 if (monthsLeft != null)
@@ -596,7 +596,7 @@ class _GoalCard extends StatelessWidget {
                     child: Text(
                       onTrack
                           ? 'Hedefe ulaşma yolundasın'
-                          : '${AppFormatters.currencyCompact(monthlyNeeded)} ₺/ay gerekli',
+                          : '${AppFormatters.currencyCompact(monthlyNeeded)}/ay gerekli',
                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2),
                     ),
                   ),
@@ -668,8 +668,10 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
         ApiEndpoints.goalAddFunds(widget.goalId),
         data: {'amount': amount},
       );
-      widget.onAdded();
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        widget.onAdded();
+        Navigator.pop(context);
+      }
     } on DioException catch (e) {
       final msg =
           e.response?.data?['message'] ?? 'Para eklenemedi.';

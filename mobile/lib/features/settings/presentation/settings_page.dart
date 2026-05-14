@@ -145,7 +145,7 @@ class SettingsPage extends ConsumerWidget {
                               children: [
                                 const TextSpan(text: 'Aylık gelir: '),
                                 TextSpan(
-                                  text: '${AppFormatters.currencyCompact(income)} ₺',
+                                  text: AppFormatters.currencyCompact(income),
                                   style: const TextStyle(
                                       color: _text1,
                                       fontWeight: FontWeight.w600),

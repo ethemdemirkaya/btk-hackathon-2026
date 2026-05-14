@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/utils/formatters.dart';
@@ -46,6 +47,15 @@ String _initials(String name) {
   if (words.length >= 2) return '${words[0][0]}${words[1][0]}'.toUpperCase();
   if (name.length >= 2) return name.substring(0, 2).toUpperCase();
   return name.toUpperCase();
+}
+
+// Maps bank ID → SVG asset filename (some IDs differ from file names)
+const _bankSvgSlug = {
+  'ykb': 'yapikredi',
+};
+String _svgPath(String bankId) {
+  final slug = _bankSvgSlug[bankId] ?? bankId;
+  return 'assets/banks/$slug.svg';
 }
 
 // ── Page ─────────────────────────────────────────────────────────────
@@ -264,7 +274,7 @@ class _ConnectionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Bank initials circle
+                // Bank logo circle
                 Container(
                   width: 44,
                   height: 44,
@@ -275,14 +285,19 @@ class _ConnectionCard extends StatelessWidget {
                         color: bankColor.withValues(alpha: 0.35)),
                   ),
                   child: Center(
-                    child: Text(
-                      _initials(bankName),
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: bankColor == _text3
-                              ? _text2
-                              : Color.lerp(bankColor, Colors.white, 0.6)!),
+                    child: SvgPicture.asset(
+                      _svgPath(bankInfo['id'] as String? ?? ''),
+                      width: 26,
+                      height: 26,
+                      placeholderBuilder: (_) => Text(
+                        _initials(bankName),
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: bankColor == _text3
+                                ? _text2
+                                : Color.lerp(bankColor, Colors.white, 0.6)!),
+                      ),
                     ),
                   ),
                 ),
@@ -365,7 +380,7 @@ class _ConnectionCard extends StatelessWidget {
                             fontSize: 12, color: _text3)),
                     const Spacer(),
                     Text(
-                      '₺ ${AppFormatters.currencyCompact(balance)}',
+                      AppFormatters.currencyCompact(balance),
                       style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,

@@ -223,7 +223,7 @@ class _HeroCard extends StatelessWidget {
                   TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 6),
           Text(
-            '${AppFormatters.currencyCompact(totalBalance)} ₺',
+            AppFormatters.currencyCompact(totalBalance),
             style: const TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.w700,
@@ -253,7 +253,7 @@ class _HeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                '30 günde ${AppFormatters.currencyCompact(monthlyTotal)} ₺ taksit',
+                '30 günde ${AppFormatters.currencyCompact(monthlyTotal)} taksit',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
               ),
             ],
@@ -376,7 +376,7 @@ class _LoanCard extends StatelessWidget {
 
           // Outstanding amount (large, bold)
           Text(
-            '${AppFormatters.currencyCompact(balance)} ₺',
+            AppFormatters.currencyCompact(balance),
             style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
@@ -385,7 +385,7 @@ class _LoanCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '$remaining taksit kaldı · Aylık ${AppFormatters.currencyCompact(nextAmount)} ₺',
+            '$remaining taksit kaldı · Aylık ${AppFormatters.currencyCompact(nextAmount)}',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
           const SizedBox(height: 14),

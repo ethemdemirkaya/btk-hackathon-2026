@@ -13,6 +13,10 @@ import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// Safe num parser — handles both num and String values from the API
+double _toNum(dynamic v) =>
+    v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0.0;
+
 const _scaffoldBg = Color(0xFF060D18);
 const _cardBg     = Color(0xFF0D1B2A);
 const _cardBorder = Color(0xFF1A2940);
@@ -256,9 +260,9 @@ class _ReportBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final income = (data['income'] as num?)?.toDouble() ?? 0;
-    final expense = (data['expense'] as num?)?.toDouble() ?? 0;
-    final net = (data['net_flow'] as num?)?.toDouble() ?? 0;
+    final income  = _toNum(data['income']);
+    final expense = _toNum(data['expense']);
+    final net     = _toNum(data['net_flow']);
     final savingsRate = income > 0
         ? ((income - expense) / income * 100).clamp(0, 100)
         : 0.0;
@@ -271,8 +275,7 @@ class _ReportBody extends StatelessWidget {
     final topMerchants = ((data['top_merchants'] as List?) ?? [])
         .whereType<Map<String, dynamic>>()
         .toList();
-    final healthScore =
-        (data['health_score'] as num?)?.toInt() ?? 0;
+    final healthScore = _toNum(data['health_score']).toInt();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -342,8 +345,7 @@ class _ReportBody extends StatelessWidget {
             child: Column(
               children: categories.asMap().entries.map((entry) {
                 final cat = entry.value;
-                final total =
-                    (cat['total'] as num?)?.toDouble() ?? 0;
+                final total = _toNum(cat['total']);
                 return Padding(
                   padding: EdgeInsets.only(
                       top: entry.key > 0 ? 10 : 0),
@@ -351,8 +353,7 @@ class _ReportBody extends StatelessWidget {
                     name: cat['merchant_category'] as String? ??
                         'Diğer',
                     total: total,
-                    maxTotal:
-                        categories.first['total'] as num? ?? 1,
+                    maxTotal: _toNum(categories.first['total']).clamp(1.0, double.infinity),
                   ),
                 );
               }).toList(),
@@ -441,10 +442,7 @@ class _ReportBody extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        AppFormatters.currency(
-                            (merch['total'] as num?)
-                                    ?.toDouble() ??
-                                0),
+                        AppFormatters.currency(_toNum(merch['total'])),
                         style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -600,8 +598,8 @@ class _CashFlowChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxVal = cashFlow.fold(0.0, (prev, row) {
-      final inc = (row['income'] as num?)?.toDouble() ?? 0;
-      final exp = (row['expense'] as num?)?.toDouble() ?? 0;
+      final inc = _toNum(row['income']);
+      final exp = _toNum(row['expense']);
       return [prev, inc, exp].reduce((a, b) => a > b ? a : b);
     });
 
@@ -633,7 +631,7 @@ class _CashFlowChart extends StatelessWidget {
                     return const SizedBox();
                   }
                   final month =
-                      cashFlow[idx]['month'] as String? ?? '';
+                      cashFlow[idx]['month']?.toString() ?? '';
                   final parts = month.split('-');
                   return Text(
                     parts.length == 2 ? parts[1] : month,
@@ -651,9 +649,8 @@ class _CashFlowChart extends StatelessWidget {
           barGroups: cashFlow.asMap().entries.map((e) {
             final i = e.key;
             final row = e.value;
-            final inc = (row['income'] as num?)?.toDouble() ?? 0;
-            final exp =
-                (row['expense'] as num?)?.toDouble() ?? 0;
+            final inc = _toNum(row['income']);
+            final exp = _toNum(row['expense']);
             return BarChartGroupData(
               x: i,
               barRods: [

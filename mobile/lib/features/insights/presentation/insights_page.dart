@@ -130,9 +130,9 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
   final _dismissed = <int>{};
   Timer? _autoRefreshTimer;
   DateTime _lastFetched = DateTime.now();
-  // Drives the "X minutes ago" display without rebuilding the whole tree
   Timer? _tickTimer;
   int _minutesSinceRefresh = 0;
+  bool _generating = false;
 
   @override
   void initState() {
@@ -171,6 +171,31 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
       _lastFetched = DateTime.now();
       _minutesSinceRefresh = 0;
     });
+  }
+
+  Future<void> _generateWithAI() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      await DioClient.instance.post(ApiEndpoints.agentSend, data: {
+        'message':
+            'Finansal verilerimi analiz edip güncel öngörüler ve tavsiyeler üret. '
+            'Harcama alışkanlıklarım, bütçe durumum ve yatırımlarım hakkında '
+            'pratik önerilerde bulun.',
+        'session_id': 'insights-refresh',
+      });
+      if (mounted) {
+        ref.invalidate(_insightsProvider);
+        setState(() {
+          _lastFetched = DateTime.now();
+          _minutesSinceRefresh = 0;
+        });
+      }
+    } catch (_) {
+      // silently fail — user can retry
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
   }
 
   Future<void> _dismiss(int id) async {
@@ -265,6 +290,61 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                       ),
                       child: const Icon(Icons.refresh,
                           size: 17, color: _text2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _generating ? null : _generateWithAI,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12),
+                      decoration: BoxDecoration(
+                        gradient: _generating
+                            ? null
+                            : const LinearGradient(
+                                colors: [
+                                  Color(0xFF00D4FF),
+                                  Color(0xFF0066FF)
+                                ],
+                              ),
+                        color: _generating ? _cardBg : null,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _generating
+                              ? _cardBorder
+                              : Colors.transparent,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_generating)
+                            const SizedBox(
+                              width: 13,
+                              height: 13,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: _accent),
+                            )
+                          else
+                            const Icon(Icons.auto_awesome,
+                                size: 13,
+                                color: Color(0xFF051929)),
+                          const SizedBox(width: 5),
+                          Text(
+                            _generating ? 'Üretiyor...' : 'AI ile Yenile',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _generating
+                                  ? _text3
+                                  : const Color(0xFF051929),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

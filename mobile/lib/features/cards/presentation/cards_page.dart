@@ -184,7 +184,7 @@ class _SummaryCard extends StatelessWidget {
                   TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 6),
           Text(
-            '${AppFormatters.currencyCompact(debt)} ₺',
+            AppFormatters.currencyCompact(debt),
             style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
@@ -193,7 +193,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${used.toStringAsFixed(0)}% limit kullanımı · ${AppFormatters.currencyCompact(available)} ₺ kullanılabilir',
+            '${used.toStringAsFixed(0)}% limit kullanımı · ${AppFormatters.currencyCompact(available)} kullanılabilir',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
         ],
@@ -345,7 +345,7 @@ class _PhysicalCard extends StatelessWidget {
           ),
           // Decorative circle bottom-left
           Positioned(
-            bottom: -60, left: '20%'.isEmpty ? 60 : 60,
+            bottom: -60, left: 60,
             child: Container(
               width: 200, height: 200,
               decoration: BoxDecoration(

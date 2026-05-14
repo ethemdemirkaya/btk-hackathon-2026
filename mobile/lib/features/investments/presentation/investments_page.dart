@@ -27,6 +27,13 @@ final _investmentsProvider =
   return res.data as Map<String, dynamic>;
 });
 
+final _liveRatesProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  final res = await DioClient.instance
+      .get(ApiEndpoints.investmentsLiveRates);
+  return res.data as Map<String, dynamic>;
+});
+
 const _assetTypes = [
   ('gold_gram', 'Gram Altın'),
   ('gold_quarter', 'Çeyrek Altın'),
@@ -41,6 +48,27 @@ const _assetTypes = [
   ('mevduat', 'Vadeli Mevduat'),
   ('other', 'Diğer'),
 ];
+
+String? _liveRateKey(String assetType) {
+  switch (assetType) {
+    case 'gold_gram':
+    case 'gold_quarter':
+    case 'gold_republic':
+      return 'XAU';
+    case 'usd':
+      return 'USD';
+    case 'eur':
+      return 'EUR';
+    case 'gbp':
+      return 'GBP';
+    case 'btc':
+      return 'BTC';
+    case 'eth':
+      return 'ETH';
+    default:
+      return null;
+  }
+}
 
 String _category(String assetType) {
   if (assetType.startsWith('gold')) return 'altın';
@@ -96,6 +124,9 @@ class _InvestmentsPageState
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(_investmentsProvider);
+    final liveRatesAsync = ref.watch(_liveRatesProvider);
+    final liveRatesMap = liveRatesAsync.valueOrNull?['rates']
+        as Map<String, dynamic>?;
 
     return Scaffold(
       backgroundColor: _scaffoldBg,
@@ -114,6 +145,9 @@ class _InvestmentsPageState
               title: 'Yatırım',
               subtitle: 'Portföy takibi',
             ),
+            // ── Live rates strip ─────────────────────────────────
+            if (liveRatesMap != null && liveRatesMap.isNotEmpty)
+              _LiveRatesStrip(rates: liveRatesMap),
             Expanded(
               child: RefreshIndicator(
                 color: _accent,
@@ -254,15 +288,26 @@ class _InvestmentsPageState
                         const SizedBox(height: 12),
 
                         // Holdings list
-                        ...filtered.map((a) => Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: 8),
-                              child: _AssetCard(
-                                asset: a,
-                                onDelete: () =>
-                                    _deleteAsset(context, a),
-                              ),
-                            )),
+                        ...filtered.map((a) {
+                          final rateKey = _liveRateKey(
+                              a['asset_type'] as String? ?? 'other');
+                          final liveRateObj = rateKey != null
+                              ? (liveRatesMap?[rateKey]
+                                  as Map<String, dynamic>?)
+                              : null;
+                          final liveRate = (liveRateObj?['rate']
+                                  as num?)?.toDouble();
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: 8),
+                            child: _AssetCard(
+                              asset: a,
+                              liveRate: liveRate,
+                              onDelete: () =>
+                                  _deleteAsset(context, a),
+                            ),
+                          );
+                        }),
 
                         // Dashed add button
                         _DashedAddButton(
@@ -338,6 +383,78 @@ class _InvestmentsPageState
         );
       }
     }
+  }
+}
+
+// ── Live Rates Strip ─────────────────────────────────────────────────
+class _LiveRatesStrip extends StatelessWidget {
+  final Map<String, dynamic> rates;
+  const _LiveRatesStrip({required this.rates});
+
+  static const _shown = ['USD', 'EUR', 'XAU'];
+  static const _labels = {'USD': 'USD/TRY', 'EUR': 'EUR/TRY', 'XAU': 'ALTIN/g'};
+
+  @override
+  Widget build(BuildContext context) {
+    final items = _shown.where((s) => rates.containsKey(s)).toList();
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+      child: Row(
+        children: items.map((sym) {
+          final obj = rates[sym] as Map<String, dynamic>?;
+          final rate = (obj?['rate'] as num?)?.toDouble();
+          if (rate == null) return const Expanded(child: SizedBox.shrink());
+          return Expanded(
+            child: Container(
+              margin: EdgeInsets.only(
+                  right: sym != items.last ? 8 : 0),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: _positive,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _labels[sym] ?? sym,
+                        style: const TextStyle(
+                            fontSize: 9, color: _text3),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    sym == 'XAU'
+                        ? '₺${rate.toStringAsFixed(0)}'
+                        : '₺${rate.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _text1),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
 
@@ -419,7 +536,7 @@ class _HeroCard extends StatelessWidget {
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.w500).copyWith(color: _text3)),
           const SizedBox(height: 6),
           Text(
-            '${AppFormatters.currencyCompact(totalVal)} ₺',
+            AppFormatters.currencyCompact(totalVal),
             style: const TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.w700,
@@ -448,7 +565,7 @@ class _HeroCard extends StatelessWidget {
                         color: gainColor),
                     const SizedBox(width: 4),
                     Text(
-                      '${isPositive ? '+' : ''}${AppFormatters.currencyCompact(totalGain)} ₺',
+                      '${isPositive ? '+' : ''}${AppFormatters.currencyCompact(totalGain)}',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -655,9 +772,10 @@ class _AlarmsShortcut extends StatelessWidget {
 // ── Asset Card ───────────────────────────────────────────────────────
 class _AssetCard extends StatelessWidget {
   final Map<String, dynamic> asset;
+  final double? liveRate;
   final VoidCallback onDelete;
   const _AssetCard(
-      {required this.asset, required this.onDelete});
+      {required this.asset, this.liveRate, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -740,12 +858,50 @@ class _AssetCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: _text1)),
                   const SizedBox(height: 3),
-                  Text(
-                    '${quantity.toStringAsFixed(quantity % 1 == 0 ? 0 : 4)} × ${AppFormatters.currencyCompact(currentPrice)} ₺',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: _text3),
+                  Row(
+                    children: [
+                      Text(
+                        '${quantity.toStringAsFixed(quantity % 1 == 0 ? 0 : 4)} × ${AppFormatters.currencyCompact(currentPrice)}',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _text3),
+                      ),
+                      if (liveRate != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _positive.withValues(alpha: 0.1),
+                            borderRadius:
+                                BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  color: _positive,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                AppFormatters.currencyCompact(
+                                    liveRate!),
+                                style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: _positive),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -754,7 +910,7 @@ class _AssetCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${AppFormatters.currencyCompact(currentVal)} ₺',
+                  AppFormatters.currencyCompact(currentVal),
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

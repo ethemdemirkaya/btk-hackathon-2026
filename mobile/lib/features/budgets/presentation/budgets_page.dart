@@ -286,12 +286,12 @@ class _HeroCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
                 const SizedBox(height: 6),
                 Text(
-                  '${AppFormatters.currencyCompact(totalSpent)} ₺',
+                  AppFormatters.currencyCompact(totalSpent),
                   style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.52),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$budgetCount kategoride ${AppFormatters.currencyCompact(totalLimit)} ₺ harcandı',
+                  '$budgetCount kategoride ${AppFormatters.currencyCompact(totalLimit)} harcandı',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                 ),
                 if (overCount > 0) ...[
@@ -543,11 +543,11 @@ class _BudgetCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       over
                           ? Text(
-                              '${AppFormatters.currencyCompact(spent - limit)} ₺ aşıldı',
+                              '${AppFormatters.currencyCompact(spent - limit)} aşıldı',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _negative),
                             )
                           : Text(
-                              'Kalan ${AppFormatters.currencyCompact(remaining)} ₺',
+                              'Kalan ${AppFormatters.currencyCompact(remaining)}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                             ),
                     ],
@@ -586,9 +586,9 @@ class _BudgetCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${AppFormatters.currencyCompact(spent)} ₺',
+                Text(AppFormatters.currencyCompact(spent),
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
-                Text('${AppFormatters.currencyCompact(limit)} ₺',
+                Text(AppFormatters.currencyCompact(limit),
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
               ],
             ),
@@ -957,10 +957,11 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                       onChanged: (v) {
                         setState(() {
                           _categoryId = v;
-                          _categoryName = _categories.firstWhere(
+                          _categoryName = (_categories.firstWhere(
                                   (c) =>
                                       (c['id'] as num).toInt() ==
-                                      v)['name'] as String;
+                                      v,
+                                  orElse: () => {'name': ''})['name'] as String?) ?? '';
                         });
                       },
                     ),

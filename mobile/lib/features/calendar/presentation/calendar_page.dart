@@ -223,8 +223,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       if (day == null) return;
                       final dateStr =
                           '${_month.year}-${_month.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
-                      final rawList = (dayEvents as List)
-                          .cast<Map<String, dynamic>>();
+                      if (dayEvents is! List) return;
+                      final rawList = dayEvents
+                          .whereType<Map<String, dynamic>>().toList();
                       // Normalize API types ('bill','subscription','loan') to display types
                       final list = rawList.map((e) {
                         final normalized = Map<String, dynamic>.from(e);
@@ -732,7 +733,7 @@ class _EventRow extends StatelessWidget {
             ),
           ),
           Text(
-            '-${AppFormatters.currencyCompact(amount)} ₺',
+            '-${AppFormatters.currencyCompact(amount)}',
             style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -887,7 +888,7 @@ class _AgendaList extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)} ₺',
+                              '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)}',
                               style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
@@ -1042,7 +1043,7 @@ class _UpcomingEventsList extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)} ₺',
+                          '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)}',
                           style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
