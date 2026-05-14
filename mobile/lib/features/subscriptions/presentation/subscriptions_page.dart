@@ -10,6 +10,146 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+Future<void> _showAddSubscriptionSheet(
+    BuildContext context, WidgetRef ref) async {
+  final nameCtrl = TextEditingController();
+  final amountCtrl = TextEditingController();
+  String billingCycle = 'monthly';
+  bool saving = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.bg1,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => Padding(
+        padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Expanded(
+                  child: Text('Abonelik Ekle',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.text1Dark))),
+              IconButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: const Icon(Icons.close, color: AppColors.text2Dark)),
+            ]),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: AppColors.text1Dark),
+              decoration: InputDecoration(
+                labelText: 'Abonelik Adı',
+                labelStyle: const TextStyle(color: AppColors.text3Dark),
+                filled: true,
+                fillColor: AppColors.bg2,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(color: AppColors.text1Dark),
+              decoration: InputDecoration(
+                labelText: 'Tutar (₺/ay)',
+                labelStyle: const TextStyle(color: AppColors.text3Dark),
+                prefixText: '₺ ',
+                prefixStyle: const TextStyle(color: AppColors.text2Dark),
+                filled: true,
+                fillColor: AppColors.bg2,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: billingCycle,
+              dropdownColor: AppColors.bg2,
+              style: const TextStyle(color: AppColors.text1Dark),
+              decoration: InputDecoration(
+                labelText: 'Fatura Döngüsü',
+                labelStyle: const TextStyle(color: AppColors.text3Dark),
+                filled: true,
+                fillColor: AppColors.bg2,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'weekly', child: Text('Haftalık')),
+                DropdownMenuItem(value: 'monthly', child: Text('Aylık')),
+                DropdownMenuItem(value: 'quarterly', child: Text('3 Aylık')),
+                DropdownMenuItem(value: 'yearly', child: Text('Yıllık')),
+              ],
+              onChanged: (v) => setState(() => billingCycle = v!),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        final name = nameCtrl.text.trim();
+                        final amount =
+                            double.tryParse(amountCtrl.text.trim()) ?? 0;
+                        if (name.isEmpty || amount <= 0) return;
+                        setState(() => saving = true);
+                        try {
+                          await DioClient.instance.post(
+                            ApiEndpoints.subscriptions,
+                            data: {
+                              'name': name,
+                              'amount': amount,
+                              'billing_cycle': billingCycle,
+                            },
+                          );
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          ref.invalidate(_subscriptionsProvider);
+                        } catch (_) {
+                          setState(() => saving = false);
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: AppColors.accentText,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('Kaydet',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 final _subscriptionsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.subscriptions);
@@ -44,7 +184,7 @@ class SubscriptionsPage extends ConsumerWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => _showAddSubscriptionSheet(context, ref),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.accentText,
         elevation: 0,
