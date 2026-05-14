@@ -3,19 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
+
+// ── Provider ─────────────────────────────────────────────────────────
 final _inflationProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.inflation);
   return res.data as Map<String, dynamic>;
 });
 
+// ── Helpers ───────────────────────────────────────────────────────────
 const _categoryNames = {
   'gida': 'Gıda & İçecek',
   'ulasim': 'Ulaşım',
@@ -48,15 +60,16 @@ const _categoryIcons = {
 
 IconData _iconForSlug(String slug) =>
     _categoryIcons[slug] ?? Icons.category_outlined;
-
-String _nameForSlug(String slug) => _categoryNames[slug] ?? slug;
+String _nameForSlug(String slug) =>
+    _categoryNames[slug] ?? slug;
 
 Color _rateColor(double rate) {
-  if (rate > 50) return AppColors.negative;
-  if (rate > 35) return AppColors.warning;
-  return AppColors.positive;
+  if (rate > 50) return _negative;
+  if (rate > 35) return _warning;
+  return _positive;
 }
 
+// ── Page ──────────────────────────────────────────────────────────────
 class InflationPage extends ConsumerWidget {
   const InflationPage({super.key});
 
@@ -65,29 +78,36 @@ class InflationPage extends ConsumerWidget {
     final async = ref.watch(_inflationProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg0,
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: async.when(
-          loading: () => const _LoadingSkeleton(),
+          loading: () => _LoadingSkeleton(),
           error: (e, __) => ErrorState(
             message: e.toString(),
             onRetry: () => ref.invalidate(_inflationProvider),
           ),
           data: (data) {
-            final personal = (data['personal_rate'] as num?)?.toDouble();
-            final tufe = (data['tufe_rate'] as num?)?.toDouble() ?? 0;
-            final diff = (data['diff'] as num?)?.toDouble() ?? 0;
+            final personal =
+                (data['personal_rate'] as num?)?.toDouble();
+            final tufe =
+                (data['tufe_rate'] as num?)?.toDouble() ?? 0;
+            final diff =
+                (data['diff'] as num?)?.toDouble() ?? 0;
             final totalSpending =
-                (data['total_spending'] as num?)?.toDouble() ?? 0;
-            final period = data['period'] as String? ?? '';
+                (data['total_spending'] as num?)?.toDouble() ??
+                    0;
+            final period =
+                data['period'] as String? ?? '';
             final breakdown =
-                (data['breakdown'] as List?)?.cast<Map<String, dynamic>>() ??
+                (data['breakdown'] as List?)
+                    ?.cast<Map<String, dynamic>>() ??
                     [];
 
             return RefreshIndicator(
-              color: AppColors.accent,
-              backgroundColor: AppColors.bg2,
-              onRefresh: () async => ref.invalidate(_inflationProvider),
+              color: _accent,
+              backgroundColor: _cardBg,
+              onRefresh: () async =>
+                  ref.invalidate(_inflationProvider),
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 32),
                 children: [
@@ -103,16 +123,25 @@ class InflationPage extends ConsumerWidget {
                       ),
                     )
                   else ...[
-                    _HeroCard(personal: personal, tufe: tufe, diff: diff),
-                    if (period.isNotEmpty) _PeriodChip(period: period),
-                    _ComparisonRow(personal: personal, tufe: tufe, diff: diff),
+                    _HeroCard(
+                        personal: personal,
+                        tufe: tufe,
+                        diff: diff),
+                    if (period.isNotEmpty)
+                      _PeriodChip(period: period),
+                    _ComparisonRow(
+                        personal: personal,
+                        tufe: tufe,
+                        diff: diff),
                     if (breakdown.isNotEmpty) ...[
-                      _SectionLabel(label: 'Harcama Kategorileri'),
+                      _SectionLabel(
+                          label: 'Harcama Kategorileri'),
                       _BreakdownList(
-                          items: breakdown, totalSpending: totalSpending),
+                          items: breakdown,
+                          totalSpending: totalSpending),
                       _TopImpactCard(items: breakdown),
                     ],
-                    _AiInsightCard(),
+                    const _AiInsightCard(),
                   ],
                 ],
               ),
@@ -124,9 +153,8 @@ class InflationPage extends ConsumerWidget {
   }
 }
 
+// ── Loading skeleton ──────────────────────────────────────────────────
 class _LoadingSkeleton extends StatelessWidget {
-  const _LoadingSkeleton();
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -142,6 +170,7 @@ class _LoadingSkeleton extends StatelessWidget {
   }
 }
 
+// ── Header ────────────────────────────────────────────────────────────
 class _Header extends StatelessWidget {
   final String period;
   const _Header({required this.period});
@@ -149,27 +178,39 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            onTap: () =>
+                shellScaffoldKey.currentState?.openDrawer(),
             child: Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.bg2,
-                border: Border.all(color: AppColors.border2Dark),
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
               ),
-              child: const Icon(Icons.menu, size: 18, color: AppColors.text2Dark),
+              child: const Icon(Icons.menu,
+                  size: 18, color: _text2),
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Kişisel Enflasyon',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: AppColors.text1Dark),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Enflasyon Analizi',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _text1)),
+                Text('Kişisel TÜFE',
+                    style: TextStyle(
+                        fontSize: 12, color: _text3)),
+              ],
+            ),
           ),
         ],
       ),
@@ -177,73 +218,82 @@ class _Header extends StatelessWidget {
   }
 }
 
+// ── Hero card ─────────────────────────────────────────────────────────
 class _HeroCard extends StatelessWidget {
   final double personal;
   final double tufe;
   final double diff;
   const _HeroCard(
-      {required this.personal, required this.tufe, required this.diff});
+      {required this.personal,
+      required this.tufe,
+      required this.diff});
 
   @override
   Widget build(BuildContext context) {
     final isAbove = diff > 0;
-    final badgeColor = isAbove ? AppColors.negative : AppColors.positive;
-    final badgeBg = badgeColor.withValues(alpha: 0.12);
+    final badgeColor =
+        isAbove ? _negative : _positive;
     final absStr = diff.abs().toStringAsFixed(1);
-    final badgeText =
-        isAbove ? 'TÜFEden $absStr puan üstte' : 'TÜFEden $absStr puan altta';
+    final badgeText = isAbove
+        ? 'TÜFEden $absStr puan üstte'
+        : 'TÜFEden $absStr puan altta';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.bg1, AppColors.bg2],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border2Dark),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Kişisel Enflasyon Oranınız',
-              style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.text3Dark, letterSpacing: 0.8),
+            const Text(
+              'KİŞİSEL ENFLASYON ORANINIZ',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _text3,
+                  letterSpacing: 0.8),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               '%${personal.toStringAsFixed(1)}',
-              style: AppTextStyles.amountHero.copyWith(
-                color: _rateColor(personal),
-                fontSize: 48,
-              ),
+              style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w800,
+                  color: _rateColor(personal),
+                  letterSpacing: -1),
             ),
             const SizedBox(height: 12),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: badgeBg,
+                color: badgeColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: badgeColor.withValues(alpha: 0.25)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isAbove ? Icons.trending_up : Icons.trending_down,
+                    isAbove
+                        ? Icons.trending_up
+                        : Icons.trending_down,
                     size: 14,
                     color: badgeColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     badgeText,
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: badgeColor, letterSpacing: 0),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: badgeColor),
                   ),
                 ],
               ),
@@ -255,6 +305,7 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+// ── Period chip ───────────────────────────────────────────────────────
 class _PeriodChip extends StatelessWidget {
   final String period;
   const _PeriodChip({required this.period});
@@ -262,28 +313,30 @@ class _PeriodChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         children: [
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.accentDim,
+              color: _accent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.2)),
+                  color: _accent.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.calendar_today_outlined,
-                    size: 12, color: AppColors.accent),
+                    size: 11, color: _accent),
                 const SizedBox(width: 5),
                 Text(
                   period,
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.accent, letterSpacing: 0),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _accent),
                 ),
               ],
             ),
@@ -294,17 +347,20 @@ class _PeriodChip extends StatelessWidget {
   }
 }
 
+// ── Comparison row ────────────────────────────────────────────────────
 class _ComparisonRow extends StatelessWidget {
   final double personal;
   final double tufe;
   final double diff;
   const _ComparisonRow(
-      {required this.personal, required this.tufe, required this.diff});
+      {required this.personal,
+      required this.tufe,
+      required this.diff});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
         children: [
           Expanded(
@@ -320,7 +376,7 @@ class _ComparisonRow extends StatelessWidget {
             child: _RateCard(
               label: 'TÜFE',
               rate: tufe,
-              color: AppColors.info,
+              color: const Color(0xFF6FB1FC),
               icon: Icons.bar_chart_outlined,
             ),
           ),
@@ -344,33 +400,41 @@ class _RateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      padding: const EdgeInsets.symmetric(
+          vertical: 16, horizontal: 14),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
+        color: _cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(
+            color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: color),
+              Icon(icon, size: 13, color: color),
               const SizedBox(width: 5),
               Text(label,
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.text3Dark, letterSpacing: 0)),
+                  style: const TextStyle(
+                      fontSize: 11, color: _text3)),
             ],
           ),
           const SizedBox(height: 8),
-          Text('%${rate.toStringAsFixed(1)}',
-              style: AppTextStyles.amountLarge.copyWith(color: color)),
+          Text(
+            '%${rate.toStringAsFixed(1)}',
+            style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: color),
+          ),
         ],
       ),
     );
   }
 }
 
+// ── Section label ─────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
@@ -381,13 +445,17 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.labelSmall
-            .copyWith(color: AppColors.text3Dark, letterSpacing: 1.2),
+        style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: _text3,
+            letterSpacing: 1.2),
       ),
     );
   }
 }
 
+// ── Breakdown list ────────────────────────────────────────────────────
 class _BreakdownList extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   final double totalSpending;
@@ -397,82 +465,99 @@ class _BreakdownList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxContrib = items
-        .map((e) => (e['contribution'] as num?)?.toDouble() ?? 0)
+        .map((e) =>
+            (e['contribution'] as num?)?.toDouble() ?? 0)
         .fold<double>(0, (a, b) => a > b ? a : b);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg1,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border1Dark),
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           children: items.asMap().entries.map((entry) {
             final i = entry.key;
             final cat = entry.value;
-            final slug = cat['tuik_slug'] as String? ?? 'genel';
-            final weight = (cat['weight_pct'] as num?)?.toDouble() ?? 0;
-            final rate = (cat['tuik_rate'] as num?)?.toDouble() ?? 0;
+            final slug =
+                cat['tuik_slug'] as String? ?? 'genel';
+            final weight =
+                (cat['weight_pct'] as num?)?.toDouble() ??
+                    0;
+            final rate =
+                (cat['tuik_rate'] as num?)?.toDouble() ?? 0;
             final contribution =
-                (cat['contribution'] as num?)?.toDouble() ?? 0;
-            final fillRatio =
-                maxContrib > 0 ? (contribution / maxContrib) : 0.0;
+                (cat['contribution'] as num?)?.toDouble() ??
+                    0;
+            final fillRatio = maxContrib > 0
+                ? (contribution / maxContrib)
+                : 0.0;
 
             return Container(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              padding: const EdgeInsets.fromLTRB(
+                  14, 12, 14, 12),
               decoration: BoxDecoration(
                 border: i > 0
                     ? const Border(
-                        top: BorderSide(color: AppColors.border1Dark))
+                        top: BorderSide(
+                            color: Color(0xFF1A2940)))
                     : null,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 34,
+                        height: 34,
                         decoration: BoxDecoration(
-                          color: _rateColor(rate).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: _rateColor(rate)
+                              .withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(9),
                         ),
-                        child: Icon(_iconForSlug(slug),
-                            size: 16, color: _rateColor(rate)),
+                        child: Icon(
+                            _iconForSlug(slug),
+                            size: 16,
+                            color: _rateColor(rate)),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _nameForSlug(slug),
-                          style: AppTextStyles.bodySmall.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.text1Dark,
-                          ),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: _text1),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 3),
+                        padding:
+                            const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.bg3,
-                          borderRadius: BorderRadius.circular(6),
+                          color: _scaffoldBg,
+                          borderRadius:
+                              BorderRadius.circular(6),
                         ),
                         child: Text(
                           '%${weight.toStringAsFixed(1)}',
-                          style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.text3Dark, letterSpacing: 0),
+                          style: const TextStyle(
+                              fontSize: 10,
+                              color: _text3),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '%${rate.toStringAsFixed(1)}',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: _rateColor(rate),
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _rateColor(rate)),
                       ),
                     ],
                   ),
@@ -483,17 +568,18 @@ class _BreakdownList extends StatelessWidget {
                       value: fillRatio.toDouble(),
                       minHeight: 4,
                       backgroundColor:
-                          AppColors.border1Dark.withValues(alpha: 0.6),
+                          _cardBorder.withValues(alpha: 0.6),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        _rateColor(rate).withValues(alpha: 0.7),
+                        _rateColor(rate)
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Katkı: ${contribution.toStringAsFixed(2)} puan',
-                    style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.text3Dark, letterSpacing: 0),
+                    style: const TextStyle(
+                        fontSize: 11, color: _text3),
                   ),
                 ],
               ),
@@ -505,6 +591,7 @@ class _BreakdownList extends StatelessWidget {
   }
 }
 
+// ── Top impact card ───────────────────────────────────────────────────
 class _TopImpactCard extends StatelessWidget {
   final List<Map<String, dynamic>> items;
   const _TopImpactCard({required this.items});
@@ -512,8 +599,10 @@ class _TopImpactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sorted = [...items]..sort((a, b) {
-        final ca = (a['contribution'] as num?)?.toDouble() ?? 0;
-        final cb = (b['contribution'] as num?)?.toDouble() ?? 0;
+        final ca =
+            (a['contribution'] as num?)?.toDouble() ?? 0;
+        final cb =
+            (b['contribution'] as num?)?.toDouble() ?? 0;
         return cb.compareTo(ca);
       });
 
@@ -523,52 +612,53 @@ class _TopImpactCard extends StatelessWidget {
     final slug = top['tuik_slug'] as String? ?? 'genel';
     final contribution =
         (top['contribution'] as num?)?.toDouble() ?? 0;
-    final rate = (top['tuik_rate'] as num?)?.toDouble() ?? 0;
+    final rate =
+        (top['tuik_rate'] as num?)?.toDouble() ?? 0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(16),
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: AppColors.warning.withValues(alpha: 0.25)),
+              color: _warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+                color: _warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_iconForSlug(slug),
-                  size: 20, color: AppColors.warning),
+                  size: 20, color: _warning),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Bütçende en çok etkilenen',
-                    style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.text3Dark, letterSpacing: 0),
+                    style: TextStyle(
+                        fontSize: 11, color: _text3),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     _nameForSlug(slug),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.text1Dark,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _text1),
                   ),
                   Text(
                     '%${rate.toStringAsFixed(1)} · ${contribution.toStringAsFixed(2)} puan katkı',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.warning, letterSpacing: 0),
+                    style: const TextStyle(
+                        fontSize: 11, color: _warning),
                   ),
                 ],
               ),
@@ -580,64 +670,58 @@ class _TopImpactCard extends StatelessWidget {
   }
 }
 
+// ── AI insight card ───────────────────────────────────────────────────
 class _AiInsightCard extends StatelessWidget {
   const _AiInsightCard();
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: GestureDetector(
         onTap: () => context.go('/chat'),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.accent.withValues(alpha: 0.1),
-                AppColors.bg2,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
+            color: _cardBg,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.25)),
+                color: _accent.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.accentDim,
-                  shape: BoxShape.circle,
+                  color: _accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.auto_awesome,
-                    size: 18, color: AppColors.accent),
+                    size: 20, color: _accent),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'AI analizi için Paranette AI\'ya sor',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.text1Dark,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _text1),
                     ),
                     Text(
                       'Enflasyonunuzu nasıl düşürebilirsiniz?',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: AppColors.text3Dark, letterSpacing: 0),
+                      style: TextStyle(
+                          fontSize: 11, color: _text3),
                     ),
                   ],
                 ),
               ),
               const Icon(Icons.arrow_forward_ios,
-                  size: 14, color: AppColors.accent),
+                  size: 13, color: _accent),
             ],
           ),
         ),

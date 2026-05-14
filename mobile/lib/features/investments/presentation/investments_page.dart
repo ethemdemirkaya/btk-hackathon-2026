@@ -2,13 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B); // ignore: unused_element
 
 final _investmentsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -46,12 +55,12 @@ String _category(String assetType) {
 }
 
 const _typeStyles = {
-  'altın': (color: AppColors.gold, label: 'Altın'),
-  'döviz': (color: AppColors.info, label: 'Döviz'),
+  'altın': (color: Color(0xFFC99B5B), label: 'Altın'),
+  'döviz': (color: Color(0xFF6FB1FC), label: 'Döviz'),
   'kripto': (color: Color(0xFFF472B6), label: 'Kripto'),
   'hisse': (color: Color(0xFF00D4FF), label: 'Hisse'),
   'fon': (color: Color(0xFFA78BFA), label: 'Fon'),
-  'diğer': (color: AppColors.text2Dark, label: 'Diğer'),
+  'diğer': (color: Color(0xFF8BA4BC), label: 'Diğer'),
 };
 
 const _filterOptions = [
@@ -70,17 +79,6 @@ const _filterLabels = [
   'Kripto',
   'Fon'
 ];
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _positive = Color(0xFF0DD9A0);
-const _negative = Color(0xFFFF4D6D);
 
 class InvestmentsPage extends ConsumerStatefulWidget {
   const InvestmentsPage({super.key});
@@ -103,7 +101,7 @@ class _InvestmentsPageState
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
         backgroundColor: _accent,
-        foregroundColor: AppColors.accentText,
+        foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
@@ -237,11 +235,11 @@ class _InvestmentsPageState
                                   ),
                                   child: Text(
                                     _filterLabels[i],
-                                    style: AppTextStyles.labelSmall
-                                        .copyWith(
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w400).copyWith(
                                             color: active
-                                                ? AppColors
-                                                    .accentText
+                                                ? const Color(0xFF051929)
                                                 : _text2,
                                             fontWeight: active
                                                 ? FontWeight.w600
@@ -308,18 +306,15 @@ class _InvestmentsPageState
       builder: (ctx) => AlertDialog(
         backgroundColor: _cardBg,
         title: Text('Varlığı sil',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: _text1)),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600).copyWith(color: _text1)),
         content: Text(
             'Bu yatırım kaydı silinecek. Devam edilsin mi?',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: _text2)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: _text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text('İptal',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: _text2))),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: _text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
@@ -377,12 +372,11 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge.copyWith(
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
                       color: _text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
             ],
           ),
         ],
@@ -419,15 +413,15 @@ class _HeroCard extends StatelessWidget {
         children: [
           Text('Toplam portföy değeri',
               style:
-                  AppTextStyles.labelSmall.copyWith(color: _text3)),
+                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w500).copyWith(color: _text3)),
           const SizedBox(height: 6),
           Text(
             '${AppFormatters.currencyCompact(totalVal)} ₺',
-            style: AppTextStyles.amountHero.copyWith(
+            style: const TextStyle(
                 fontSize: 34,
-                color: _text1,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.03 * 34),
+                letterSpacing: -0.03 * 34,
+                color: _text1),
           ),
           const SizedBox(height: 12),
           Row(
@@ -452,9 +446,10 @@ class _HeroCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '${isPositive ? '+' : ''}${AppFormatters.currencyCompact(totalGain)} ₺',
-                      style: AppTextStyles.labelSmall.copyWith(
-                          color: gainColor,
-                          fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: gainColor),
                     ),
                   ],
                 ),
@@ -469,15 +464,16 @@ class _HeroCard extends StatelessWidget {
                 ),
                 child: Text(
                   '${isPositive ? '+' : ''}%${totalGainPct.toStringAsFixed(1)}',
-                  style: AppTextStyles.labelSmall.copyWith(
-                      color: gainColor,
-                      fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: gainColor),
                 ),
               ),
               const SizedBox(width: 8),
-              Text('toplam K/Z',
+              const Text('toplam K/Z',
                   style:
-                      AppTextStyles.labelSmall.copyWith(color: _text3)),
+                      TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
             ],
           ),
         ],
@@ -508,9 +504,9 @@ class _AllocationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Varlık dağılımı',
+          const Text('Varlık dağılımı',
               style:
-                  AppTextStyles.labelSmall.copyWith(color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 12),
           // Horizontal stacked bar
           ClipRRect(
@@ -555,12 +551,10 @@ class _AllocationCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(style.label,
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: _text2)),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2)),
                   const SizedBox(width: 4),
                   Text('%${pct.toStringAsFixed(0)}',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: _text3)),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
                 ],
               );
             }).toList(),
@@ -598,8 +592,7 @@ class _DashedAddButton extends StatelessWidget {
             const Icon(Icons.add, size: 18, color: _text3),
             const SizedBox(width: 8),
             Text(label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: _text3, fontWeight: FontWeight.w500)),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
           ],
         ),
       ),
@@ -625,11 +618,11 @@ class _AlarmsShortcut extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color:
-                  AppColors.gold.withValues(alpha: 0.12),
+                  const Color(0xFFC99B5B).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(11),
             ),
             child: const Icon(Icons.notifications_outlined,
-                size: 20, color: AppColors.gold),
+                size: 20, color: Color(0xFFC99B5B)),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -739,14 +732,17 @@ class _AssetCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: _text1,
-                          fontWeight: FontWeight.w600)),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _text1)),
                   const SizedBox(height: 3),
                   Text(
                     '${quantity.toStringAsFixed(quantity % 1 == 0 ? 0 : 4)} × ${AppFormatters.currencyCompact(currentPrice)} ₺',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: _text3),
+                    style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: _text3),
                   ),
                 ],
               ),
@@ -756,9 +752,10 @@ class _AssetCard extends StatelessWidget {
               children: [
                 Text(
                   '${AppFormatters.currencyCompact(currentVal)} ₺',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                      color: _text1,
-                      fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _text1),
                 ),
                 const SizedBox(height: 3),
                 Container(
@@ -771,10 +768,10 @@ class _AssetCard extends StatelessWidget {
                   ),
                   child: Text(
                     '${isPositive ? '+' : ''}%${gainPct.toStringAsFixed(1)}',
-                    style: AppTextStyles.labelSmall.copyWith(
-                        color: changeColor,
+                    style: TextStyle(
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        fontSize: 10),
+                        color: changeColor),
                   ),
                 ),
               ],
@@ -870,9 +867,8 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Yeni Varlık Ekle',
-                  style: AppTextStyles.headlineMedium
-                      .copyWith(color: _text1)),
+              const Text('Yeni Varlık Ekle',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _assetType,
@@ -947,8 +943,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
                   decoration: const InputDecoration(
                       labelText: 'Alış Tarihi'),
                   child: Text(AppFormatters.dateShort(_buyDate),
-                      style: AppTextStyles.bodyMedium
-                          .copyWith(color: _text1)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text1)),
                 ),
               ),
               const SizedBox(height: 12),
@@ -963,7 +958,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accent,
-                  foregroundColor: AppColors.accentText,
+                  foregroundColor: const Color(0xFF051929),
                   padding:
                       const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -976,7 +971,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
                         width: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.accentText))
+                            color: Color(0xFF051929)))
                     : const Text('Kaydet'),
               ),
               const SizedBox(height: 16),

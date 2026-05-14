@@ -8,11 +8,21 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 final _reportProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
@@ -94,7 +104,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     final async = ref.watch(_reportProvider(_monthKey));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -110,12 +120,12 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1A2940)),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 18, color: Color(0xFF8BA4BC)),
+                          size: 18, color: _text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -123,14 +133,10 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Raporlar',
-                            style: AppTextStyles.headlineMedium
-                                .copyWith(
-                                    color: const Color(0xFFE8F4FF))),
-                        Text('Aylık ve yıllık özet',
-                            style: AppTextStyles.bodySmall
-                                .copyWith(
-                                    color: const Color(0xFF4A6478))),
+                        const Text('Raporlar',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                        const Text('Aylık ve yıllık özet',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                       ],
                     ),
                   ),
@@ -145,8 +151,8 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: const Color(0xFF00D4FF),
-                backgroundColor: const Color(0xFF0D1B2A),
+                color: _accent,
+                backgroundColor: _cardBg,
                 onRefresh: () async =>
                     ref.invalidate(_reportProvider(_monthKey)),
                 child: async.when(
@@ -185,18 +191,19 @@ class _MonthSelector extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF1A2940)),
+          border: Border.all(color: _cardBorder),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _NavBtn(icon: Icons.chevron_left, onTap: onPrev),
             Text(AppFormatters.dateMonth(month),
-                style: AppTextStyles.titleMedium.copyWith(
-                    color: const Color(0xFFE8F4FF),
-                    fontWeight: FontWeight.w600)),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _text1)),
             _NavBtn(
                 icon: Icons.chevron_right,
                 onTap: onNext,
@@ -223,15 +230,15 @@ class _NavBtn extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFF060D18),
+          color: _scaffoldBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF1A2940)),
+          border: Border.all(color: _cardBorder),
         ),
         child: Icon(icon,
             size: 18,
             color: disabled
-                ? const Color(0xFF4A6478)
-                : const Color(0xFF8BA4BC)),
+                ? _text3
+                : _text2),
       ),
     );
   }
@@ -275,27 +282,27 @@ class _ReportBody extends StatelessWidget {
                 child: _SummaryCard(
                     'Gelir',
                     income,
-                    const Color(0xFF0DD9A0))),
+                    _positive)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Gider',
                     expense,
-                    const Color(0xFFFF4D6D))),
+                    _negative)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Net',
                     net,
                     net >= 0
-                        ? const Color(0xFF0DD9A0)
-                        : const Color(0xFFFF4D6D))),
+                        ? _positive
+                        : _negative)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Tasarruf',
                     savingsRate.toDouble(),
-                    const Color(0xFF00D4FF),
+                    _accent,
                     isPercent: true)),
           ],
         ),
@@ -305,26 +312,30 @@ class _ReportBody extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (cashFlow.isNotEmpty) ...[
-          Text('6 Aylık Nakit Akışı',
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: const Color(0xFF4A6478),
-                      letterSpacing: 0.5)),
+          const Text('6 Aylık Nakit Akışı',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _text3,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 12),
           _CashFlowChart(cashFlow: cashFlow),
           const SizedBox(height: 16),
         ],
         if (categories.isNotEmpty) ...[
-          Text('Harcama Kategorileri',
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: const Color(0xFF4A6478),
-                      letterSpacing: 0.5)),
+          const Text('Harcama Kategorileri',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _text3,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1B2A),
+              color: _cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF1A2940)),
+              border: Border.all(color: _cardBorder),
             ),
             child: Column(
               children: categories.asMap().entries.map((entry) {
@@ -352,17 +363,19 @@ class _ReportBody extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (topMerchants.isNotEmpty) ...[
-          Text('En Çok Harcanan Yerler',
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: const Color(0xFF4A6478),
-                      letterSpacing: 0.5)),
+          const Text('En Çok Harcanan Yerler',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _text3,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1B2A),
+              color: _cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF1A2940)),
+              border: Border.all(color: _cardBorder),
             ),
             child: Column(
               children: topMerchants
@@ -380,7 +393,7 @@ class _ReportBody extends StatelessWidget {
                     border: entry.key > 0
                         ? const Border(
                             top: BorderSide(
-                                color: Color(0xFF1A2940)))
+                                color: _cardBorder))
                         : null,
                   ),
                   child: Row(
@@ -389,7 +402,7 @@ class _ReportBody extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00D4FF)
+                          color: _accent
                               .withValues(alpha: 0.10),
                           borderRadius:
                               BorderRadius.circular(10),
@@ -400,11 +413,10 @@ class _ReportBody extends StatelessWidget {
                                         as String? ??
                                     '?')[0]
                                 .toUpperCase(),
-                            style:
-                                AppTextStyles.bodySmall.copyWith(
-                              color:
-                                  const Color(0xFF00D4FF),
+                            style: const TextStyle(
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
+                              color: _accent,
                             ),
                           ),
                         ),
@@ -419,20 +431,15 @@ class _ReportBody extends StatelessWidget {
                                 merch['merchant_name']
                                         as String? ??
                                     '',
-                                style:
-                                    AppTextStyles.bodyMedium
-                                        .copyWith(
-                                            color: const Color(
-                                                0xFFE8F4FF),
-                                            fontWeight:
-                                                FontWeight
-                                                    .w500)),
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: _text1)),
                             Text('${merch['cnt']} işlem',
-                                style:
-                                    AppTextStyles.bodySmall
-                                        .copyWith(
-                                            color: const Color(
-                                                0xFF4A6478))),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: _text3)),
                           ],
                         ),
                       ),
@@ -441,9 +448,10 @@ class _ReportBody extends StatelessWidget {
                             (merch['total'] as num?)
                                     ?.toDouble() ??
                                 0),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                            color: const Color(0xFFE8F4FF),
-                            fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _text1),
                       ),
                     ],
                   ),
@@ -459,8 +467,8 @@ class _ReportBody extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onDownloadPdf,
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF00D4FF),
-              side: const BorderSide(color: Color(0xFF00D4FF)),
+              foregroundColor: _accent,
+              side: const BorderSide(color: _accent),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
@@ -470,7 +478,7 @@ class _ReportBody extends StatelessWidget {
                     height: 16,
                     child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFF00D4FF)))
+                        color: _accent))
                 : const Icon(Icons.download_outlined, size: 18),
             label: Text(
                 pdfLoading ? 'İndiriliyor...' : 'PDF İndir',
@@ -496,26 +504,27 @@ class _SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1A2940)),
+        border: Border.all(color: _cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: const Color(0xFF4A6478),
-                      fontSize: 10)),
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: _text3)),
           const SizedBox(height: 6),
           Text(
             isPercent
                 ? '%${amount.toStringAsFixed(0)}'
                 : AppFormatters.currencyCompact(amount.abs()),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
+            style: TextStyle(
               fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
@@ -529,9 +538,9 @@ class _HealthScoreCard extends StatelessWidget {
   const _HealthScoreCard({required this.score});
 
   Color get _color {
-    if (score >= 80) return const Color(0xFF0DD9A0);
-    if (score >= 60) return const Color(0xFFF59E0B);
-    return const Color(0xFFFF4D6D);
+    if (score >= 80) return _positive;
+    if (score >= 60) return _warning;
+    return _negative;
   }
 
   @override
@@ -539,7 +548,7 @@ class _HealthScoreCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _color.withValues(alpha: 0.3)),
       ),
@@ -555,8 +564,10 @@ class _HealthScoreCard extends StatelessWidget {
             child: Center(
               child: Text(
                 '$score',
-                style: AppTextStyles.titleMedium.copyWith(
-                    color: _color, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _color),
               ),
             ),
           ),
@@ -564,17 +575,18 @@ class _HealthScoreCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Finansal Sağlık Skoru',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: const Color(0xFF8BA4BC))),
+              const Text('Finansal Sağlık Skoru',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2)),
               Text(
                 score >= 80
                     ? 'Mükemmel'
                     : score >= 60
                         ? 'İyi'
                         : 'Geliştirilmeli',
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: _color, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _color),
               ),
             ],
           ),
@@ -600,9 +612,9 @@ class _CashFlowChart extends StatelessWidget {
       height: 180,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1A2940)),
+        border: Border.all(color: _cardBorder),
       ),
       child: BarChart(
         BarChartData(
@@ -628,9 +640,10 @@ class _CashFlowChart extends StatelessWidget {
                   final parts = month.split('-');
                   return Text(
                     parts.length == 2 ? parts[1] : month,
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: const TextStyle(
                         fontSize: 10,
-                        color: const Color(0xFF4A6478)),
+                        fontWeight: FontWeight.w400,
+                        color: _text3),
                   );
                 },
               ),
@@ -649,14 +662,14 @@ class _CashFlowChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: inc,
-                  color: const Color(0xFF0DD9A0)
+                  color: _positive
                       .withValues(alpha: 0.8),
                   width: 10,
                   borderRadius: BorderRadius.circular(3),
                 ),
                 BarChartRodData(
                   toY: exp,
-                  color: const Color(0xFFFF4D6D)
+                  color: _negative
                       .withValues(alpha: 0.8),
                   width: 10,
                   borderRadius: BorderRadius.circular(3),
@@ -694,16 +707,17 @@ class _CategoryRow extends StatelessWidget {
             Expanded(
               child: Text(
                 name.isEmpty ? 'Diğer' : name,
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: const Color(0xFF8BA4BC)),
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w400, color: _text2),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
               AppFormatters.currencyCompact(total),
-              style: AppTextStyles.bodySmall.copyWith(
-                  color: const Color(0xFFE8F4FF),
-                  fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _text1),
             ),
           ],
         ),
@@ -712,9 +726,9 @@ class _CategoryRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: fraction,
-            backgroundColor: const Color(0xFF1A2940),
+            backgroundColor: _cardBorder,
             valueColor: const AlwaysStoppedAnimation(
-                Color(0xFF00D4FF)),
+                _accent),
             minHeight: 5,
           ),
         ),

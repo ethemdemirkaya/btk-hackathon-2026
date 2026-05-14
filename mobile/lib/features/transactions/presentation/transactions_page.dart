@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
@@ -10,6 +8,17 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../../../shared/providers/dio_provider.dart';
 import '../data/transactions_api.dart';
 import '../domain/transaction_model.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 final _transactionsApiProvider = Provider<TransactionsApi>((ref) {
   return TransactionsApi(ref.watch(dioProvider));
@@ -70,13 +79,13 @@ Color _colorForCategory(String name) {
     if (lower.contains(key)) return _categoryColors[key]!;
   }
   final palette = [
-    AppColors.accent,
+    _accent,
     const Color(0xFFA78BFA),
-    AppColors.positive,
-    AppColors.warning,
+    _positive,
+    _warning,
     const Color(0xFF6FB1FC),
-    AppColors.negative,
-    AppColors.gold,
+    _negative,
+    const Color(0xFFC99B5B),
   ];
   return palette[name.codeUnitAt(0) % palette.length];
 }
@@ -106,7 +115,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final query = ref.watch(_searchQueryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bg0,
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,8 +162,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             const SizedBox(height: 10),
             Expanded(
               child: RefreshIndicator(
-                color: AppColors.accent,
-                backgroundColor: AppColors.bg2,
+                color: _accent,
+                backgroundColor: _cardBg,
                 onRefresh: () async =>
                     ref.invalidate(_transactionListProvider),
                 child: asyncData.when(
@@ -193,8 +202,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             duration: Duration(seconds: 2),
           ),
         ),
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.accentText,
+        backgroundColor: _accent,
+        foregroundColor: const Color(0xFF051929),
         elevation: 4,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 22),
@@ -228,7 +237,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -297,13 +306,11 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'İşlemler',
-                      style: AppTextStyles.headlineLarge
-                          .copyWith(color: AppColors.text1Dark),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: _text1),
                     ),
                     Text(
                       _subtitle(asyncData),
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.text3Dark),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                     ),
                   ],
                 ),
@@ -343,11 +350,11 @@ class _IconBtn extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.bg2,
+          color: _cardBg,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: _cardBorder),
         ),
-        child: Icon(icon, size: 18, color: AppColors.text2Dark),
+        child: Icon(icon, size: 18, color: _text2),
       ),
     );
   }
@@ -368,26 +375,24 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.bg2,
+        color: _cardBg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.border2Dark),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
         children: [
           const SizedBox(width: 14),
-          const Icon(Icons.search, size: 18, color: AppColors.text3Dark),
+          const Icon(Icons.search, size: 18, color: _text3),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
               autofocus: true,
               onChanged: onChanged,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.text1Dark),
-              decoration: InputDecoration(
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text1),
+              decoration: const InputDecoration(
                 hintText: 'Merchant, açıklama ara…',
-                hintStyle: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.text3Dark),
+                hintStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -401,7 +406,7 @@ class _SearchBar extends StatelessWidget {
               onTap: onClear,
               child: const Padding(
                 padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.close, size: 16, color: AppColors.text3Dark),
+                child: Icon(Icons.close, size: 16, color: _text3),
               ),
             ),
         ],
@@ -440,9 +445,9 @@ class _SummaryBarState extends State<_SummaryBar> {
           curve: Curves.easeInOut,
           padding: EdgeInsets.all(_expanded ? 16 : 14),
           decoration: BoxDecoration(
-            color: AppColors.bg1,
+            color: _cardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border2Dark),
+            border: Border.all(color: _cardBorder),
           ),
           child: Column(
             children: [
@@ -451,20 +456,20 @@ class _SummaryBarState extends State<_SummaryBar> {
                   _SummaryCell(
                     label: 'Gelir',
                     value: '+${AppFormatters.currencyCompact(income)}',
-                    valueColor: AppColors.positive,
+                    valueColor: _positive,
                   ),
                   _VertDivider(),
                   _SummaryCell(
                     label: 'Gider',
                     value: '−${AppFormatters.currencyCompact(expense)}',
-                    valueColor: AppColors.negative,
+                    valueColor: _negative,
                   ),
                   _VertDivider(),
                   _SummaryCell(
                     label: 'Net',
                     value:
                         '${net >= 0 ? '+' : ''}${AppFormatters.currencyCompact(net)}',
-                    valueColor: AppColors.accent,
+                    valueColor: _accent,
                   ),
                   const SizedBox(width: 4),
                   Icon(
@@ -472,7 +477,7 @@ class _SummaryBarState extends State<_SummaryBar> {
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
                     size: 16,
-                    color: AppColors.text3Dark,
+                    color: _text3,
                   ),
                 ],
               ),
@@ -498,9 +503,9 @@ class _SummaryBarSkeleton extends StatelessWidget {
       child: Container(
         height: 58,
         decoration: BoxDecoration(
-          color: AppColors.bg1,
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: _cardBorder),
         ),
       ),
     );
@@ -525,15 +530,15 @@ class _SummaryCell extends StatelessWidget {
         children: [
           Text(
             label,
-            style:
-                AppTextStyles.labelSmall.copyWith(color: AppColors.text3Dark),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
           ),
           const SizedBox(height: 2),
           Text(
             value,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: valueColor,
+            style: TextStyle(
+              fontSize: 14,
               fontWeight: FontWeight.w700,
+              color: valueColor,
             ),
           ),
         ],
@@ -548,7 +553,7 @@ class _VertDivider extends StatelessWidget {
     return Container(
       width: 1,
       height: 30,
-      color: AppColors.border1Dark,
+      color: _cardBorder,
       margin: const EdgeInsets.symmetric(horizontal: 10),
     );
   }
@@ -596,17 +601,18 @@ class _MiniBarChart extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
                   color: ratio > 0.7
-                      ? AppColors.negative.withValues(alpha: 0.7)
-                      : AppColors.accent.withValues(alpha: 0.4),
+                      ? _negative.withValues(alpha: 0.7)
+                      : _accent.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 dayLabels[dayOfWeek],
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.text3Dark,
+                style: const TextStyle(
                   fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  color: _text3,
                 ),
               ),
             ],
@@ -702,10 +708,10 @@ class _PillChip extends StatelessWidget {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accentDim : AppColors.bg2,
+          color: selected ? _accent.withValues(alpha: 0.18) : _cardBg,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? AppColors.accent : AppColors.border1Dark,
+            color: selected ? _accent : _cardBorder,
           ),
         ),
         child: Row(
@@ -714,14 +720,15 @@ class _PillChip extends StatelessWidget {
             Icon(
               icon,
               size: 12,
-              color: selected ? AppColors.accent : AppColors.text3Dark,
+              color: selected ? _accent : _text3,
             ),
             const SizedBox(width: 5),
             Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: selected ? AppColors.accent : AppColors.text1Dark,
+              style: TextStyle(
+                fontSize: 11,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? _accent : _text1,
               ),
             ),
           ],
@@ -748,9 +755,9 @@ class _TransactionSkeleton extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.bg1,
+              color: _cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border1Dark),
+              border: Border.all(color: _cardBorder),
             ),
             child: Column(
               children: List.generate(
@@ -805,27 +812,25 @@ class _EmptyState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.bg2,
+              color: _cardBg,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border2Dark),
+              border: Border.all(color: _cardBorder),
             ),
             child: const Icon(
               Icons.receipt_long_outlined,
               size: 30,
-              color: AppColors.text3Dark,
+              color: _text3,
             ),
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'İşlem bulunamadı',
-            style: AppTextStyles.headlineSmall
-                .copyWith(color: AppColors.text1Dark),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
           ),
           const SizedBox(height: 6),
-          Text(
+          const Text(
             'Filtreni değiştirip tekrar dene',
-            style:
-                AppTextStyles.bodySmall.copyWith(color: AppColors.text3Dark),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
           const SizedBox(height: 20),
           GestureDetector(
@@ -834,14 +839,13 @@ class _EmptyState extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
               decoration: BoxDecoration(
-                color: AppColors.bg2,
+                color: _cardBg,
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: AppColors.border2Dark),
+                border: Border.all(color: _cardBorder),
               ),
-              child: Text(
+              child: const Text(
                 'Filtreleri temizle',
-                style: AppTextStyles.labelSmall
-                    .copyWith(color: AppColors.text1Dark),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text1),
               ),
             ),
           ),
@@ -888,20 +892,20 @@ class _GroupedList extends StatelessWidget {
                   Expanded(
                     child: Text(
                       key.toUpperCase(),
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.text3Dark,
-                        letterSpacing: 0.9,
+                      style: const TextStyle(
+                        fontSize: 11,
                         fontWeight: FontWeight.w600,
+                        color: _text3,
+                        letterSpacing: 0.9,
                       ),
                     ),
                   ),
                   Text(
                     '${dailyNet >= 0 ? '+' : ''}${AppFormatters.currencyCompact(dailyNet)}',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: dailyNet >= 0
-                          ? AppColors.positive
-                          : AppColors.text3Dark,
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
+                      color: dailyNet >= 0 ? _positive : _text3,
                     ),
                   ),
                 ],
@@ -909,9 +913,9 @@ class _GroupedList extends StatelessWidget {
             ),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bg1,
+                color: _cardBg,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border1Dark),
+                border: Border.all(color: _cardBorder),
               ),
               child: Column(
                 children: txns.asMap().entries.map((e) {
@@ -949,13 +953,13 @@ class _TransactionRow extends StatelessWidget {
       key: ValueKey(t.id),
       background: _SwipeBg(
         alignment: Alignment.centerLeft,
-        color: AppColors.negative,
+        color: _negative,
         icon: Icons.delete_outline_rounded,
         label: 'Sil?',
       ),
       secondaryBackground: _SwipeBg(
         alignment: Alignment.centerRight,
-        color: AppColors.info,
+        color: const Color(0xFF6FB1FC),
         icon: Icons.open_in_new_rounded,
         label: 'Detay',
       ),
@@ -977,10 +981,10 @@ class _TransactionRow extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isAnomaly
-                ? AppColors.warning.withValues(alpha: 0.05)
+                ? _warning.withValues(alpha: 0.05)
                 : Colors.transparent,
             border: showTopBorder
-                ? Border(top: BorderSide(color: AppColors.border1Dark))
+                ? Border(top: BorderSide(color: _cardBorder))
                 : null,
             borderRadius: !showTopBorder
                 ? const BorderRadius.vertical(top: Radius.circular(20))
@@ -994,7 +998,7 @@ class _TransactionRow extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 0),
                 decoration: BoxDecoration(
                   color: isAnomaly
-                      ? AppColors.warning
+                      ? _warning
                       : catColor.withValues(alpha: 0.7),
                   borderRadius: showTopBorder
                       ? BorderRadius.zero
@@ -1061,13 +1065,17 @@ class _SwipeBg extends StatelessWidget {
                 Icon(icon, color: color, size: 20),
                 const SizedBox(width: 6),
                 Text(label,
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: color, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
               ]
             : [
                 Text(label,
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: color, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
                 const SizedBox(width: 6),
                 Icon(icon, color: color, size: 20),
               ],
@@ -1092,17 +1100,17 @@ class _CategoryIcon extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: (isAnomaly ? AppColors.warning : color).withValues(alpha: 0.14),
+        color: (isAnomaly ? _warning : color).withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
-          color: (isAnomaly ? AppColors.warning : color).withValues(alpha: 0.3),
+          color: (isAnomaly ? _warning : color).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
       child: Icon(
         isAnomaly ? Icons.warning_amber_rounded : icon,
         size: 19,
-        color: isAnomaly ? AppColors.warning : color,
+        color: isAnomaly ? _warning : color,
       ),
     );
   }
@@ -1127,15 +1135,16 @@ class _RowInfo extends StatelessWidget {
                 t.merchantName ?? t.description,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.text1Dark,
+                style: const TextStyle(
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
+                  color: _text1,
                 ),
               ),
             ),
             if (isAnomaly) ...[
               const SizedBox(width: 4),
-              const Icon(Icons.bolt_rounded, size: 13, color: AppColors.warning),
+              const Icon(Icons.bolt_rounded, size: 13, color: _warning),
             ],
           ],
         ),
@@ -1144,8 +1153,7 @@ class _RowInfo extends StatelessWidget {
           children: [
             Text(
               AppFormatters.time(t.postedAt),
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: AppColors.text3Dark),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
             ),
             if (t.channel != 'other') ...[
               _Dot(),
@@ -1173,7 +1181,7 @@ class _Dot extends StatelessWidget {
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 5),
       decoration: const BoxDecoration(
-        color: AppColors.text3Dark,
+        color: _text3,
         shape: BoxShape.circle,
       ),
     );
@@ -1198,12 +1206,11 @@ class _ChannelChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(data.$1, size: 10, color: AppColors.text3Dark),
+        Icon(data.$1, size: 10, color: _text3),
         const SizedBox(width: 3),
         Text(
           data.$2,
-          style: AppTextStyles.labelSmall
-              .copyWith(color: AppColors.text3Dark, fontSize: 10),
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text3),
         ),
       ],
     );
@@ -1217,22 +1224,23 @@ class _InstallmentBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const infoColor = Color(0xFF6FB1FC);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.15),
+        color: infoColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: AppColors.info.withValues(alpha: 0.3),
+          color: infoColor.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
       child: Text(
         '$no/$total',
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.info,
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
+          color: infoColor,
         ),
       ),
     );
@@ -1253,16 +1261,16 @@ class _AmountDisplay extends StatelessWidget {
       children: [
         Text(
           '${isExpense ? '−' : '+'}${AppFormatters.currencyCompact(t.tryAmount.abs())}',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: isExpense ? AppColors.negative : AppColors.positive,
+          style: TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w700,
+            color: isExpense ? _negative : _positive,
           ),
         ),
         if (t.channel == 'credit_card' || t.isInstallment)
-          Text(
+          const Text(
             '₺',
-            style: AppTextStyles.labelSmall
-                .copyWith(color: AppColors.text3Dark, fontSize: 10),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text3),
           ),
       ],
     );
@@ -1308,21 +1316,19 @@ class _FilterSheetState extends State<_FilterSheet> {
               Expanded(
                 child: Text(
                   'Filtrele',
-                  style: AppTextStyles.headlineMedium
-                      .copyWith(color: AppColors.text1Dark),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
                 ),
               ),
               GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.close, color: AppColors.text3Dark),
+                child: const Icon(Icons.close, color: _text3),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Text(
+          const Text(
             'İşlem Türü',
-            style: AppTextStyles.labelSmall
-                .copyWith(color: AppColors.text3Dark, letterSpacing: 0.8),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3, letterSpacing: 0.8),
           ),
           const SizedBox(height: 10),
           Row(
@@ -1347,10 +1353,9 @@ class _FilterSheetState extends State<_FilterSheet> {
             ],
           ),
           const SizedBox(height: 20),
-          Text(
+          const Text(
             'Özel Filtre',
-            style: AppTextStyles.labelSmall
-                .copyWith(color: AppColors.text3Dark, letterSpacing: 0.8),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3, letterSpacing: 0.8),
           ),
           const SizedBox(height: 10),
           Row(
@@ -1382,15 +1387,16 @@ class _FilterSheetState extends State<_FilterSheet> {
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
+                  color: _accent,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
-                child: Text(
+                child: const Text(
                   'Uygula',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.accentText,
+                  style: TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
+                    color: Color(0xFF051929),
                   ),
                 ),
               ),
@@ -1420,17 +1426,18 @@ class _SheetChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accentDim : AppColors.bg2,
+          color: selected ? _accent.withValues(alpha: 0.18) : _cardBg,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? AppColors.accent : AppColors.border1Dark,
+            color: selected ? _accent : _cardBorder,
           ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: selected ? AppColors.accent : AppColors.text1Dark,
+          style: TextStyle(
+            fontSize: 12,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+            color: selected ? _accent : _text1,
           ),
         ),
       ),

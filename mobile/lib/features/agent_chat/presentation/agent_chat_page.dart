@@ -7,8 +7,17 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
 
 // ── Starters ─────────────────────────────────────────────────────────
 const _starters = [
@@ -260,7 +269,7 @@ class _AgentChatPageState extends State<AgentChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -367,9 +376,9 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: Color(0xFF060D18),
+        color: _scaffoldBg,
         border: Border(
-            bottom: BorderSide(color: Color(0xFF1A2940))),
+            bottom: BorderSide(color: _cardBorder)),
       ),
       child: Row(
         children: [
@@ -392,8 +401,7 @@ class _Header extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                    color: const Color(0xFF00D4FF)
-                        .withValues(alpha: 0.25),
+                    color: _accent.withValues(alpha: 0.25),
                     blurRadius: 12,
                     spreadRadius: 1),
               ],
@@ -410,7 +418,7 @@ class _Header extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFE8F4FF))),
+                        color: _text1)),
                 SizedBox(height: 2),
                 Row(
                   children: [
@@ -419,7 +427,7 @@ class _Header extends StatelessWidget {
                     Text('Çok-ajanlı sistem',
                         style: TextStyle(
                             fontSize: 11,
-                            color: Color(0xFF00D4FF))),
+                            color: _accent)),
                   ],
                 ),
               ],
@@ -442,7 +450,7 @@ class _OnlineDot extends StatelessWidget {
         height: 6,
         decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            color: Color(0xFF0DD9A0)),
+            color: _positive),
       );
 }
 
@@ -459,13 +467,13 @@ class _IconBtn extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border:
-              Border.all(color: const Color(0xFF1A2940)),
+              Border.all(color: _cardBorder),
         ),
         child: Icon(icon,
-            size: 16, color: const Color(0xFF8BA4BC)),
+            size: 16, color: _text2),
       ),
     );
   }
@@ -509,11 +517,10 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
       padding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF00D4FF).withValues(alpha: 0.08),
+        color: _accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: const Color(0xFF00D4FF)
-                .withValues(alpha: 0.25)),
+            color: _accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -526,16 +533,17 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
             child: Icon(
               _stageIcon(widget.stage),
               size: 16,
-              color: const Color(0xFF00D4FF),
+              color: _accent,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: const Color(0xFF00D4FF),
+              style: const TextStyle(
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
+                color: _accent,
               ),
             ),
           ),
@@ -549,9 +557,8 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active
-                      ? const Color(0xFF00D4FF)
-                      : const Color(0xFF00D4FF)
-                          .withValues(alpha: 0.2),
+                      ? _accent
+                      : _accent.withValues(alpha: 0.2),
                 ),
               );
             }),
@@ -626,20 +633,19 @@ class _SmallChip extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF00D4FF).withValues(alpha: 0.10),
+        color: _accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: const Color(0xFF00D4FF)
-                .withValues(alpha: 0.20)),
+            color: _accent.withValues(alpha: 0.20)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: const Color(0xFF00D4FF)),
+          Icon(icon, size: 10, color: _accent),
           const SizedBox(width: 4),
           Text(label,
-              style: AppTextStyles.labelSmall.copyWith(
-                  color: const Color(0xFF00D4FF),
+              style: const TextStyle(
+                  color: _accent,
                   fontSize: 10,
                   fontWeight: FontWeight.w500)),
         ],
@@ -678,30 +684,28 @@ class _QuickActionRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D1B2A),
+                          color: _cardBg,
                           borderRadius:
                               BorderRadius.circular(20),
                           border: Border.all(
-                              color: const Color(0xFF1A2940)),
+                              color: _cardBorder),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(action.$2,
                                 size: 13,
-                                color: const Color(0xFF00D4FF)),
+                                color: _accent),
                             const SizedBox(width: 6),
                             Text(action.$1,
-                                style: AppTextStyles.labelSmall
-                                    .copyWith(
-                                        color: const Color(
-                                            0xFFE8F4FF),
-                                        fontWeight:
-                                            FontWeight.w500)),
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: _text1)),
                             const SizedBox(width: 4),
                             const Icon(Icons.arrow_forward_ios,
                                 size: 10,
-                                color: Color(0xFF4A6478)),
+                                color: _text3),
                           ],
                         ),
                       ),
@@ -738,8 +742,7 @@ class _EmptyChat extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                      color: const Color(0xFF00D4FF)
-                          .withValues(alpha: 0.25),
+                      color: _accent.withValues(alpha: 0.25),
                       blurRadius: 24,
                       spreadRadius: 2),
                 ],
@@ -748,16 +751,21 @@ class _EmptyChat extends StatelessWidget {
                   size: 34, color: Color(0xFF051929)),
             ),
             const SizedBox(height: 18),
-            Text('Merhaba',
-                style: AppTextStyles.headlineLarge.copyWith(
-                    color: const Color(0xFFE8F4FF),
+            const Text('Merhaba',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: _text1,
                     letterSpacing: -0.5)),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Finansal verilerine bakıp aksiyonlar önerebilirim.\nUzman ajanlarım ile birlikte çalışıyorum.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: const Color(0xFF4A6478), height: 1.5),
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: _text3,
+                  height: 1.5),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -785,9 +793,11 @@ class _EmptyChat extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 28),
-        Text('Hızlı başlangıç',
-            style: AppTextStyles.labelSmall
-                .copyWith(color: const Color(0xFF4A6478))),
+        const Text('Hızlı başlangıç',
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: _text3)),
         const SizedBox(height: 10),
         ..._starters.map((s) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -796,10 +806,10 @@ class _EmptyChat extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D1B2A),
+                    color: _cardBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: const Color(0xFF1A2940)),
+                        color: _cardBorder),
                   ),
                   child: Row(
                     children: [
@@ -807,26 +817,25 @@ class _EmptyChat extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00D4FF)
-                              .withValues(alpha: 0.10),
+                          color: _accent.withValues(alpha: 0.10),
                           borderRadius:
                               BorderRadius.circular(10),
                         ),
                         child: Icon(s.icon,
                             size: 18,
-                            color: const Color(0xFF00D4FF)),
+                            color: _accent),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(s.text,
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(
-                                    color: const Color(0xFFE8F4FF),
-                                    fontWeight: FontWeight.w500)),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: _text1)),
                       ),
                       const Icon(Icons.arrow_forward_ios,
                           size: 14,
-                          color: Color(0xFF4A6478)),
+                          color: _text3),
                     ],
                   ),
                 ),
@@ -867,13 +876,13 @@ class _MessageBubble extends StatelessWidget {
                       bottomRight: Radius.circular(4),
                     ),
                     border: Border.all(
-                        color: const Color(0xFF00D4FF)
-                            .withValues(alpha: 0.2)),
+                        color: _accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(msg.content,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: const Color(0xFFE8F4FF),
+                      style: const TextStyle(
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
+                          color: _text1,
                           height: 1.45)),
                 ),
               ),
@@ -892,7 +901,7 @@ class _MessageBubble extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(4),
                           topRight: Radius.circular(20),
@@ -900,20 +909,25 @@ class _MessageBubble extends StatelessWidget {
                           bottomRight: Radius.circular(20),
                         ),
                         border: Border.all(
-                            color: const Color(0xFF1A2940)),
+                            color: _cardBorder),
                       ),
                       child: MarkdownBody(
                         data: msg.content,
                         styleSheet: MarkdownStyleSheet(
-                          p: AppTextStyles.bodyMedium.copyWith(
-                              color: const Color(0xFFE8F4FF),
+                          p: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: _text1,
                               height: 1.5),
-                          strong: AppTextStyles.bodyMedium.copyWith(
-                              color: const Color(0xFF00D4FF),
-                              fontWeight: FontWeight.w600),
-                          code: AppTextStyles.bodySmall.copyWith(
-                              color: const Color(0xFF00D4FF),
-                              backgroundColor: const Color(0xFF00D4FF)
+                          strong: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _accent),
+                          code: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: _accent,
+                              backgroundColor: _accent
                                   .withValues(alpha: 0.10)),
                         ),
                       ),
@@ -989,7 +1003,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             padding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1B2A),
+              color: _cardBg,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(20),
@@ -997,7 +1011,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                 bottomRight: Radius.circular(20),
               ),
               border: Border.all(
-                  color: const Color(0xFF1A2940)),
+                  color: _cardBorder),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1033,7 +1047,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                             height: 6,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xFF8BA4BC),
+                              color: _text2,
                             ),
                           ),
                         ),
@@ -1093,16 +1107,16 @@ class _InputAreaState extends State<_InputArea> {
       padding:
           EdgeInsets.fromLTRB(16, 10, 16, 10 + bottom),
       decoration: const BoxDecoration(
-        color: Color(0xFF060D18),
+        color: _scaffoldBg,
         border: Border(
-            top: BorderSide(color: Color(0xFF1A2940))),
+            top: BorderSide(color: _cardBorder)),
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
           border:
-              Border.all(color: const Color(0xFF1A2940)),
+              Border.all(color: _cardBorder),
         ),
         padding: const EdgeInsets.all(6),
         child: Row(
@@ -1117,15 +1131,16 @@ class _InputAreaState extends State<_InputArea> {
                   textInputAction: TextInputAction.send,
                   onSubmitted:
                       widget.enabled ? widget.onSend : null,
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(
-                          color: const Color(0xFFE8F4FF)),
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: _text1),
                   decoration: InputDecoration(
                     hintText: widget.enabled
                         ? 'Paranette\'ye bir şey sor...'
                         : 'Ajanlar çalışıyor...',
                     hintStyle: const TextStyle(
-                        color: Color(0xFF4A6478),
+                        color: _text3,
                         fontSize: 14),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -1149,7 +1164,7 @@ class _InputAreaState extends State<_InputArea> {
                         height: 38,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF00D4FF),
+                          color: _accent,
                         ),
                         child: const Icon(Icons.send_rounded,
                             size: 16, color: Color(0xFF051929)),
@@ -1166,7 +1181,7 @@ class _InputAreaState extends State<_InputArea> {
                             ? Icons.mic_outlined
                             : Icons.hourglass_top_rounded,
                         size: 18,
-                        color: const Color(0xFF4A6478),
+                        color: _text3,
                       ),
                     ),
             ),
@@ -1230,7 +1245,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                   maxHeight:
                       MediaQuery.of(context).size.height * 0.72),
               decoration: const BoxDecoration(
-                color: Color(0xFF0D1B2A),
+                color: _cardBg,
                 borderRadius: BorderRadius.vertical(
                     top: Radius.circular(24)),
               ),
@@ -1243,7 +1258,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1A2940),
+                      color: _cardBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1253,11 +1268,11 @@ class _HistorySheetState extends State<_HistorySheet> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text('Geçmiş sohbetler',
-                              style: AppTextStyles.headlineSmall
-                                  .copyWith(
-                                      color: const Color(
-                                          0xFFE8F4FF))),
+                          child: const Text('Geçmiş sohbetler',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: _text1)),
                         ),
                         GestureDetector(
                           onTap: () => setState(() {
@@ -1265,7 +1280,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                           }),
                           child: const Icon(Icons.refresh,
                               size: 18,
-                              color: Color(0xFF4A6478)),
+                              color: _text3),
                         ),
                       ],
                     ),
@@ -1279,28 +1294,28 @@ class _HistorySheetState extends State<_HistorySheet> {
                           return const Center(
                               child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFF00D4FF)));
+                                  color: _accent));
                         }
                         if (snap.hasError || !snap.hasData) {
-                          return Padding(
-                            padding: const EdgeInsets.all(24),
+                          return const Padding(
+                            padding: EdgeInsets.all(24),
                             child: Text(
                                 'Geçmiş yüklenemedi.',
-                                style: AppTextStyles.bodySmall
-                                    .copyWith(
-                                        color: const Color(
-                                            0xFF4A6478))),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: _text3)),
                           );
                         }
                         final runs = snap.data!;
                         if (runs.isEmpty) {
-                          return Padding(
-                            padding: const EdgeInsets.all(24),
+                          return const Padding(
+                            padding: EdgeInsets.all(24),
                             child: Text('Henüz sohbet yok.',
-                                style: AppTextStyles.bodySmall
-                                    .copyWith(
-                                        color: const Color(
-                                            0xFF4A6478))),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: _text3)),
                           );
                         }
                         return ListView.builder(
@@ -1313,14 +1328,12 @@ class _HistorySheetState extends State<_HistorySheet> {
                             return Container(
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? const Color(0xFF00D4FF)
-                                        .withValues(alpha: 0.08)
+                                    ? _accent.withValues(alpha: 0.08)
                                     : Colors.transparent,
                                 border: i > 0
                                     ? const Border(
                                         top: BorderSide(
-                                            color: Color(
-                                                0xFF1A2940)))
+                                            color: _cardBorder))
                                     : null,
                               ),
                               child: InkWell(
@@ -1352,8 +1365,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                         const BoxDecoration(
                                                       shape: BoxShape
                                                           .circle,
-                                                      color: Color(
-                                                          0xFF00D4FF),
+                                                      color: _accent,
                                                     ),
                                                   ),
                                                 Expanded(
@@ -1363,14 +1375,10 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                       overflow:
                                                           TextOverflow
                                                               .ellipsis,
-                                                      style: AppTextStyles
-                                                          .bodyMedium
-                                                          .copyWith(
-                                                              color: const Color(
-                                                                  0xFFE8F4FF),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600)),
+                                                      style: const TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: _text1)),
                                                 ),
                                               ],
                                             ),
@@ -1380,11 +1388,10 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow
                                                     .ellipsis,
-                                                style: AppTextStyles
-                                                    .bodySmall
-                                                    .copyWith(
-                                                        color: const Color(
-                                                            0xFF4A6478))),
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: _text3)),
                                           ],
                                         ),
                                       ),
@@ -1420,9 +1427,9 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case 'completed': color = const Color(0xFF0DD9A0); break;
-      case 'failed':    color = const Color(0xFFFF4D6D); break;
-      default:          color = const Color(0xFF00D4FF);
+      case 'completed': color = _positive; break;
+      case 'failed':    color = _negative; break;
+      default:          color = _accent;
     }
     return Container(
       width: 8,

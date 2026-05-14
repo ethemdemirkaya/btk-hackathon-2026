@@ -4,13 +4,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
+
+// ── Providers ─────────────────────────────────────────────────────────
 final _fxAlertsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.fxAlerts);
@@ -23,6 +34,7 @@ final _fxRatesProvider =
   return res.data as Map<String, dynamic>;
 });
 
+// ── Constants ─────────────────────────────────────────────────────────
 const _currencies = ['USD', 'EUR', 'GBP', 'XAU', 'CHF', 'JPY', 'BTC'];
 const _currencyLabels = {
   'USD': 'Amerikan Doları',
@@ -34,6 +46,14 @@ const _currencyLabels = {
   'BTC': 'Bitcoin',
 };
 
+const _liveRateDisplay = ['USD', 'EUR', 'XAU'];
+const _liveRateLabels = {
+  'USD': 'USD/TRY',
+  'EUR': 'EUR/TRY',
+  'XAU': 'ALTIN/g',
+};
+
+// ── Page ──────────────────────────────────────────────────────────────
 class FxAlertsPage extends ConsumerWidget {
   const FxAlertsPage({super.key});
 
@@ -43,82 +63,230 @@ class FxAlertsPage extends ConsumerWidget {
     final ratesAsync = ref.watch(_fxRatesProvider);
 
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddAlarm(context, ref),
-        child: const Icon(Icons.add),
+        backgroundColor: _accent,
+        foregroundColor: const Color(0xFF051929),
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, size: 26),
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // ── Header ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                    onTap: () =>
+                        shellScaffoldKey.currentState?.openDrawer(),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
+                        color: _cardBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
+                          size: 18, color: _text2),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text('Kur & Altın Alarmları',
-                      style: AppTextStyles.headlineMedium
-                          .copyWith(color: AppColors.text1Dark)),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Kur Alarmları',
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: _text1)),
+                        Text('Güncel kurlar',
+                            style: TextStyle(
+                                fontSize: 12, color: _text3)),
+                      ],
+                    ),
+                  ),
+                  // Refresh button
+                  GestureDetector(
+                    onTap: () {
+                      ref.invalidate(_fxAlertsProvider);
+                      ref.invalidate(_fxRatesProvider);
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _cardBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _cardBorder),
+                      ),
+                      child: const Icon(Icons.refresh,
+                          size: 18, color: _text2),
+                    ),
+                  ),
                 ],
               ),
             ),
+            // ── Live rates strip ─────────────────────────────────
+            ratesAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (rateData) {
+                final rates = (rateData['rates']
+                        as Map<String, dynamic>?) ??
+                    {};
+                if (rates.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                  child: Row(
+                    children: _liveRateDisplay.map((sym) {
+                      final rate =
+                          (rates[sym] as num?)?.toDouble();
+                      if (rate == null) {
+                        return const Expanded(
+                            child: SizedBox.shrink());
+                      }
+                      final change =
+                          (rates['${sym}_change_24h'] as num?)
+                              ?.toDouble() ??
+                              0;
+                      final isUp = change >= 0;
+                      return Expanded(
+                        child: Container(
+                          margin: EdgeInsets.only(
+                              right:
+                                  sym != _liveRateDisplay.last
+                                      ? 8
+                                      : 0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _cardBg,
+                            borderRadius:
+                                BorderRadius.circular(14),
+                            border: Border.all(
+                                color: _cardBorder),
+                          ),
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _liveRateLabels[sym] ?? sym,
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    color: _text3),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                sym == 'XAU'
+                                    ? '₺${rate.toStringAsFixed(0)}'
+                                    : '₺${rate.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight:
+                                        FontWeight.w700,
+                                    color: _text1),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    isUp
+                                        ? Icons.arrow_drop_up
+                                        : Icons.arrow_drop_down,
+                                    size: 14,
+                                    color: isUp
+                                        ? _negative
+                                        : _positive,
+                                  ),
+                                  Text(
+                                    '${change.abs().toStringAsFixed(2)}%',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight:
+                                            FontWeight.w600,
+                                        color: isUp
+                                            ? _negative
+                                            : _positive),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 4),
+            // ── Alerts list ──────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(_fxAlertsProvider);
-          ref.invalidate(_fxRatesProvider);
-        },
-        child: alertsAsync.when(
-          loading: () => const SkeletonListView(),
-          error: (e, __) => ErrorState(
-            message: e.toString(),
-            onRetry: () => ref.invalidate(_fxAlertsProvider),
-          ),
-          data: (data) {
-            final alerts = data['alerts'] as List? ?? [];
-            final rates = (ratesAsync.value?['rates'] as Map<String, dynamic>?) ?? {};
+                color: _accent,
+                backgroundColor: _cardBg,
+                onRefresh: () async {
+                  ref.invalidate(_fxAlertsProvider);
+                  ref.invalidate(_fxRatesProvider);
+                },
+                child: alertsAsync.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () =>
+                        ref.invalidate(_fxAlertsProvider),
+                  ),
+                  data: (data) {
+                    final alerts =
+                        data['alerts'] as List? ?? [];
+                    final rates = (ratesAsync.value?['rates']
+                            as Map<String, dynamic>?) ??
+                        {};
 
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (rates.isNotEmpty) ...[
-                  _RatesTicker(rates: rates),
-                  const SizedBox(height: 16),
-                ],
-                if (alerts.isEmpty)
-                  EmptyState(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Alarm bulunamadı',
-                    subtitle: 'Döviz ve altın için fiyat alarmı oluşturun.',
-                    ctaLabel: '+ Alarm Ekle',
-                    onCta: () => _showAddAlarm(context, ref),
-                  )
-                else
-                  ...alerts.map((a) => _AlertCard(
-                        alert: a as Map<String, dynamic>,
-                        currentRate: (rates[(a['currency'] as String?) ?? ''] as num?)
-                            ?.toDouble(),
-                        onDelete: () => _deleteAlert(
-                            context, ref, (a['id'] as num).toInt()),
-                      )),
-              ],
-            );
-          },
-        ),
-      ),
+                    if (alerts.isEmpty) {
+                      return EmptyState(
+                        icon:
+                            Icons.notifications_active_outlined,
+                        title: 'Alarm bulunamadı',
+                        subtitle:
+                            'Döviz ve altın için fiyat alarmı oluşturun.',
+                        ctaLabel: '+ Alarm Ekle',
+                        onCta: () =>
+                            _showAddAlarm(context, ref),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(
+                          20, 12, 20, 100),
+                      itemCount: alerts.length,
+                      itemBuilder: (_, i) {
+                        final a =
+                            alerts[i] as Map<String, dynamic>;
+                        return _AlertCard(
+                          alert: a,
+                          currentRate: (rates[(a['currency']
+                                      as String?) ??
+                                  ''] as num?)
+                              ?.toDouble(),
+                          onDelete: () => _deleteAlert(
+                              context,
+                              ref,
+                              (a['id'] as num).toInt()),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -130,8 +298,10 @@ class FxAlertsPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AddAlertSheet(
         onAdded: () => ref.invalidate(_fxAlertsProvider),
       ),
@@ -147,59 +317,144 @@ class FxAlertsPage extends ConsumerWidget {
   }
 }
 
-class _RatesTicker extends StatelessWidget {
-  final Map<String, dynamic> rates;
-  const _RatesTicker({required this.rates});
+// ── Alert card ────────────────────────────────────────────────────────
+class _AlertCard extends StatelessWidget {
+  final Map<String, dynamic> alert;
+  final double? currentRate;
+  final VoidCallback onDelete;
+  const _AlertCard(
+      {required this.alert,
+      this.currentRate,
+      required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
-    final displayOrder = ['USD', 'EUR', 'GBP', 'XAU', 'BTC'];
+    final currency = alert['currency'] as String? ?? '';
+    final direction =
+        alert['direction'] as String? ?? 'above';
+    final targetRate =
+        (alert['target_rate'] as num?)?.toDouble() ?? 0;
+    final isTriggered =
+        alert['is_triggered'] as bool? ?? false;
+
+    final isAbove = direction == 'above';
+    final dirColor = isAbove ? _negative : _positive;
+    final dirIcon = isAbove
+        ? Icons.arrow_upward_rounded
+        : Icons.arrow_downward_rounded;
+    final dirLabel =
+        isAbove ? 'üzerine çıkarsa' : 'altına inerse';
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryDark]),
-        borderRadius: BorderRadius.circular(12),
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+            color: isTriggered
+                ? _warning.withValues(alpha: 0.3)
+                : _cardBorder),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Row(
-            children: [
-              Icon(Icons.show_chart, color: Colors.white70, size: 16),
-              SizedBox(width: 6),
-              Text('Anlık Kurlar',
-                  style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-            ],
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: dirColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(dirIcon, color: dirColor, size: 20),
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: displayOrder.map((cur) {
-              final rate = (rates[cur] as num?)?.toDouble();
-              if (rate == null) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(cur,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(currency,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _text1)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '₺${targetRate.toStringAsFixed(2)} $dirLabel',
                       style: const TextStyle(
-                          color: Colors.white70, fontSize: 11)),
-                  Text(
-                    cur == 'XAU'
-                        ? '₺${rate.toStringAsFixed(0)}'
-                        : '₺${rate.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15),
+                          fontSize: 12, color: _text2),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      _currencyLabels[currency] ?? currency,
+                      style: const TextStyle(
+                          fontSize: 11, color: _text3),
+                    ),
+                    if (currentRate != null) ...[
+                      const Text(' · ',
+                          style: TextStyle(
+                              fontSize: 11, color: _text3)),
+                      Text(
+                        'Şu an: ₺${currentRate!.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 11, color: _text3),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (isTriggered)
+                Container(
+                  margin:
+                      const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: _warning.withValues(alpha: 0.3)),
                   ),
-                ],
-              );
-            }).toList(),
+                  child: const Text('Tetiklendi',
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _warning)),
+                )
+              else
+                Container(
+                  margin:
+                      const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _accent.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('Bekliyor',
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: _accent)),
+                ),
+              GestureDetector(
+                onTap: onDelete,
+                child: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: _negative),
+              ),
+            ],
           ),
         ],
       ),
@@ -207,88 +462,7 @@ class _RatesTicker extends StatelessWidget {
   }
 }
 
-class _AlertCard extends StatelessWidget {
-  final Map<String, dynamic> alert;
-  final double? currentRate;
-  final VoidCallback onDelete;
-  const _AlertCard(
-      {required this.alert, this.currentRate, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    final currency = alert['currency'] as String? ?? '';
-    final direction = alert['direction'] as String? ?? 'above';
-    final targetRate = (alert['target_rate'] as num?)?.toDouble() ?? 0;
-    final isTriggered = alert['is_triggered'] as bool? ?? false;
-
-    final directionIcon =
-        direction == 'above' ? Icons.arrow_upward : Icons.arrow_downward;
-    final directionColor =
-        direction == 'above' ? AppColors.danger : AppColors.success;
-    final directionLabel = direction == 'above' ? 'üzerine çıkarsa' : 'altına inerse';
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: directionColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(directionIcon, color: directionColor, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$currency — ₺${targetRate.toStringAsFixed(2)} $directionLabel',
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                  Text(
-                    _currencyLabels[currency] ?? currency,
-                    style: AppTextStyles.bodySmall,
-                  ),
-                  if (currentRate != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Mevcut: ₺${currentRate!.toStringAsFixed(2)}',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondaryLight),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (isTriggered)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.warningLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('Tetiklendi',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.warning)),
-              ),
-            IconButton(
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline,
-                  color: AppColors.danger, size: 20),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+// ── Add alert sheet ───────────────────────────────────────────────────
 class _AddAlertSheet extends StatefulWidget {
   final VoidCallback onAdded;
   const _AddAlertSheet({required this.onAdded});
@@ -310,23 +484,26 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
   }
 
   Future<void> _submit() async {
-    final rate = double.tryParse(_rateCtrl.text.replaceAll(',', '.'));
+    final rate =
+        double.tryParse(_rateCtrl.text.replaceAll(',', '.'));
     if (rate == null || rate <= 0) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Geçerli kur girin')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Geçerli kur girin')));
       return;
     }
     setState(() => _loading = true);
     try {
-      await DioClient.instance.post(ApiEndpoints.fxAlerts, data: {
-        'currency': _currency,
-        'direction': _direction,
-        'target_rate': rate,
-      });
+      await DioClient.instance.post(ApiEndpoints.fxAlerts,
+          data: {
+            'currency': _currency,
+            'direction': _direction,
+            'target_rate': rate,
+          });
       widget.onAdded();
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Alarm eklenemedi.';
+      final msg =
+          e.response?.data?['message'] ?? 'Alarm eklenemedi.';
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
@@ -336,61 +513,114 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
     }
   }
 
+  InputDecoration _deco(String label, {IconData? icon}) =>
+      InputDecoration(
+        labelText: label,
+        labelStyle:
+            const TextStyle(color: _text3, fontSize: 13),
+        prefixIcon:
+            icon != null ? Icon(icon, size: 18, color: _text3) : null,
+        filled: true,
+        fillColor: _scaffoldBg,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _cardBorder)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _cardBorder)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: _accent, width: 1.5)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Kur Alarmı Ekle', style: AppTextStyles.headlineMedium),
-          const SizedBox(height: 20),
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                  color: _cardBorder,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text('Kur Alarmı Ekle',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _text1)),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close,
+                    color: _text2, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _currency,
-            decoration: const InputDecoration(labelText: 'Döviz / Varlık'),
+            dropdownColor: _cardBg,
+            style: const TextStyle(
+                color: _text1, fontSize: 14),
+            decoration: _deco('Döviz / Varlık'),
             items: _currencies
                 .map((c) => DropdownMenuItem(
                       value: c,
-                      child: Text('$c — ${_currencyLabels[c] ?? c}'),
+                      child: Text(
+                          '$c — ${_currencyLabels[c] ?? c}'),
                     ))
                 .toList(),
-            onChanged: (v) => setState(() => _currency = v!),
+            onChanged: (v) =>
+                setState(() => _currency = v!),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Üzerine çıkarsa'),
-                  value: 'above',
-                  groupValue: _direction,
-                  onChanged: (v) => setState(() => _direction = v!),
-                  contentPadding: EdgeInsets.zero,
-                ),
+              _DirBtn(
+                label: 'Üzerine çıkarsa',
+                selected: _direction == 'above',
+                color: _negative,
+                icon: Icons.arrow_upward,
+                onTap: () =>
+                    setState(() => _direction = 'above'),
               ),
-              Expanded(
-                child: RadioListTile<String>(
-                  title: const Text('Altına inerse'),
-                  value: 'below',
-                  groupValue: _direction,
-                  onChanged: (v) => setState(() => _direction = v!),
-                  contentPadding: EdgeInsets.zero,
-                ),
+              const SizedBox(width: 8),
+              _DirBtn(
+                label: 'Altına inerse',
+                selected: _direction == 'below',
+                color: _positive,
+                icon: Icons.arrow_downward,
+                onTap: () =>
+                    setState(() => _direction = 'below'),
               ),
             ],
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _rateCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Hedef Kur (₺)',
-              prefixIcon: Icon(Icons.attach_money),
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(
+                color: _text1, fontSize: 14),
+            decoration: _deco('Hedef Kur (₺)',
+                icon: Icons.attach_money),
+            keyboardType:
+                const TextInputType.numberWithOptions(
+                    decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
+              FilteringTextInputFormatter.allow(
+                  RegExp(r'[0-9,.]'))
             ],
             autofocus: true,
           ),
@@ -399,16 +629,87 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _loading ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: const Color(0xFF051929),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(14)),
+              ),
               icon: _loading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.notifications_active_outlined),
-              label: const Text('Alarm Oluştur'),
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white))
+                  : const Icon(
+                      Icons.notifications_active_outlined,
+                      size: 18),
+              label: const Text('Alarm Oluştur',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700)),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DirBtn extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _DirBtn(
+      {required this.label,
+      required this.selected,
+      required this.color,
+      required this.icon,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.withValues(alpha: 0.12)
+                : _scaffoldBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: selected
+                    ? color.withValues(alpha: 0.4)
+                    : _cardBorder),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  size: 14,
+                  color: selected ? color : _text3),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: selected ? color : _text3),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

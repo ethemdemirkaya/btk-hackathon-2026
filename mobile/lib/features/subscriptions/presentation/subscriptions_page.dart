@@ -2,13 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _warning    = Color(0xFFF59E0B);
+
+// ── Provider ─────────────────────────────────────────────────────────
+final _subscriptionsProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  final res = await DioClient.instance.get(ApiEndpoints.subscriptions);
+  return res.data as Map<String, dynamic>;
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const _cycleLabels = {
+  'weekly': 'Haftalık',
+  'monthly': 'Aylık',
+  'quarterly': '3 Aylık',
+  'yearly': 'Yıllık',
+};
+
+const _subColors = [
+  Color(0xFFE50914),
+  Color(0xFF1DB954),
+  Color(0xFF0066CC),
+  Color(0xFFFF6900),
+  Color(0xFF5865F2),
+  Color(0xFF00D4FF),
+  Color(0xFFA78BFA),
+  Color(0xFFFFC857),
+];
 
 Future<void> _showAddSubscriptionSheet(
     BuildContext context, WidgetRef ref) async {
@@ -20,7 +54,7 @@ Future<void> _showAddSubscriptionSheet(
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.bg1,
+    backgroundColor: _cardBg,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (ctx) => StatefulBuilder(
@@ -28,73 +62,67 @@ Future<void> _showAddSubscriptionSheet(
         padding: EdgeInsets.only(
             left: 24,
             right: 24,
-            top: 24,
+            top: 20,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                    color: _cardBorder,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
             Row(children: [
               const Expanded(
                   child: Text('Abonelik Ekle',
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.text1Dark))),
+                          color: _text1))),
               IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: const Icon(Icons.close, color: AppColors.text2Dark)),
+                  icon:
+                      const Icon(Icons.close, color: _text2, size: 20)),
             ]),
             const SizedBox(height: 16),
-            TextField(
-              controller: nameCtrl,
-              style: const TextStyle(color: AppColors.text1Dark),
-              decoration: InputDecoration(
-                labelText: 'Abonelik Adı',
-                labelStyle: const TextStyle(color: AppColors.text3Dark),
-                filled: true,
-                fillColor: AppColors.bg2,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
+            _darkField(nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
             const SizedBox(height: 12),
-            TextField(
-              controller: amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: AppColors.text1Dark),
-              decoration: InputDecoration(
-                labelText: 'Tutar (₺/ay)',
-                labelStyle: const TextStyle(color: AppColors.text3Dark),
-                prefixText: '₺ ',
-                prefixStyle: const TextStyle(color: AppColors.text2Dark),
-                filled: true,
-                fillColor: AppColors.bg2,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
+            _darkField(amountCtrl, 'Tutar (₺/ay)', Icons.attach_money,
+                prefix: '₺ ',
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: billingCycle,
-              dropdownColor: AppColors.bg2,
-              style: const TextStyle(color: AppColors.text1Dark),
+              dropdownColor: _cardBg,
+              style: const TextStyle(color: _text1, fontSize: 14),
               decoration: InputDecoration(
                 labelText: 'Fatura Döngüsü',
-                labelStyle: const TextStyle(color: AppColors.text3Dark),
+                labelStyle: const TextStyle(color: _text3, fontSize: 13),
                 filled: true,
-                fillColor: AppColors.bg2,
+                fillColor: _scaffoldBg,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
+                    borderSide: const BorderSide(color: _cardBorder)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _cardBorder)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: _accent, width: 1.5)),
               ),
               items: const [
                 DropdownMenuItem(value: 'weekly', child: Text('Haftalık')),
                 DropdownMenuItem(value: 'monthly', child: Text('Aylık')),
-                DropdownMenuItem(value: 'quarterly', child: Text('3 Aylık')),
+                DropdownMenuItem(
+                    value: 'quarterly', child: Text('3 Aylık')),
                 DropdownMenuItem(value: 'yearly', child: Text('Yıllık')),
               ],
               onChanged: (v) => setState(() => billingCycle = v!),
@@ -108,7 +136,8 @@ Future<void> _showAddSubscriptionSheet(
                     : () async {
                         final name = nameCtrl.text.trim();
                         final amount =
-                            double.tryParse(amountCtrl.text.trim()) ?? 0;
+                            double.tryParse(amountCtrl.text.trim()) ??
+                                0;
                         if (name.isEmpty || amount <= 0) return;
                         setState(() => saving = true);
                         try {
@@ -127,8 +156,8 @@ Future<void> _showAddSubscriptionSheet(
                         }
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: AppColors.accentText,
+                  backgroundColor: _accent,
+                  foregroundColor: const Color(0xFF051929),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
@@ -140,7 +169,7 @@ Future<void> _showAddSubscriptionSheet(
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
                     : const Text('Kaydet',
-                        style: TextStyle(fontWeight: FontWeight.w600)),
+                        style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -150,31 +179,35 @@ Future<void> _showAddSubscriptionSheet(
   );
 }
 
-final _subscriptionsProvider =
-    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final res = await DioClient.instance.get(ApiEndpoints.subscriptions);
-  return res.data as Map<String, dynamic>;
-});
+Widget _darkField(
+    TextEditingController ctrl, String label, IconData icon,
+    {String? prefix, TextInputType? keyboardType}) {
+  return TextField(
+    controller: ctrl,
+    keyboardType: keyboardType,
+    style: const TextStyle(color: _text1, fontSize: 14),
+    decoration: InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: _text3, fontSize: 13),
+      prefixIcon: Icon(icon, size: 18, color: _text3),
+      prefixText: prefix,
+      prefixStyle: const TextStyle(color: _text2),
+      filled: true,
+      fillColor: _scaffoldBg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _cardBorder)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _cardBorder)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _accent, width: 1.5)),
+    ),
+  );
+}
 
-const _cycleLabels = {
-  'weekly': 'Haftalık',
-  'monthly': 'Aylık',
-  'quarterly': '3 Aylık',
-  'yearly': 'Yıllık',
-};
-
-// Brand colors for subscription logos
-const _subColors = [
-  Color(0xFFE50914), // Netflix red
-  Color(0xFF1DB954), // Spotify green
-  Color(0xFF0066CC), // Apple blue
-  Color(0xFFFF6900), // Amazon
-  Color(0xFF5865F2), // Discord purple
-  Color(0xFF00D4FF), // cyan
-  Color(0xFFA78BFA), // violet
-  Color(0xFFFFC857), // amber
-];
-
+// ── Page ──────────────────────────────────────────────────────────────
 class SubscriptionsPage extends ConsumerWidget {
   const SubscriptionsPage({super.key});
 
@@ -183,10 +216,11 @@ class SubscriptionsPage extends ConsumerWidget {
     final async = ref.watch(_subscriptionsProvider);
 
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSubscriptionSheet(context, ref),
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.accentText,
+        backgroundColor: _accent,
+        foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
@@ -194,161 +228,231 @@ class SubscriptionsPage extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
-                      ),
-                      child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('Abonelikler',
-                      style: AppTextStyles.headlineMedium
-                          .copyWith(color: AppColors.text1Dark)),
-                ],
-              ),
+            // ── Header ──────────────────────────────────────────────
+            async.when(
+              loading: () => _buildHeader('Yükleniyor…'),
+              error: (_, __) => _buildHeader(''),
+              data: (data) {
+                final total =
+                    (data['total_monthly'] as num?)?.toDouble() ?? 0;
+                return _buildHeader(
+                    'Aylık ₺${AppFormatters.currencyCompact(total)}');
+              },
             ),
+            // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-          color: AppColors.accent,
-          backgroundColor: AppColors.bg2,
-          onRefresh: () async => ref.invalidate(_subscriptionsProvider),
-          child: async.when(
-            loading: () => const SkeletonListView(),
-            error: (e, __) => ErrorState(
-              message: e.toString(),
-              onRetry: () => ref.invalidate(_subscriptionsProvider),
-            ),
-            data: (data) {
-              final subs = (data['subscriptions'] as List? ?? [])
-                  .cast<Map<String, dynamic>>();
-              final candidates = (data['candidates'] as List? ?? [])
-                  .cast<Map<String, dynamic>>();
-              final totalMonthly =
-                  (data['total_monthly'] as num?)?.toDouble() ?? 0;
-
-              if (subs.isEmpty && candidates.isEmpty) {
-                return const EmptyState(
-                  icon: Icons.subscriptions,
-                  title: 'Abonelik bulunamadı',
-                  subtitle:
-                      'AI, işlemlerinizden abonelikleri otomatik tespit eder.',
-                );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.only(bottom: 100),
-                children: [
-                  // Hero header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Abonelikler',
-                            style: AppTextStyles.headlineLarge
-                                .copyWith(color: AppColors.text1Dark)),
-                        const SizedBox(height: 4),
-                        Text('Aylık toplam',
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.text3Dark,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.08 * 11)),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              AppFormatters.currencyCompact(totalMonthly),
-                              style: AppTextStyles.amountHero.copyWith(
-                                  fontSize: 36,
-                                  color: AppColors.text1Dark,
-                                  letterSpacing: -0.03 * 36),
-                            ),
-                            const SizedBox(width: 4),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text('₺',
-                                  style: AppTextStyles.headlineMedium
-                                      .copyWith(color: AppColors.text2Dark)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Yıllık ${AppFormatters.currencyCompact(totalMonthly * 12)} ₺ · ${subs.length} aktif abonelik',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.text3Dark),
-                        ),
-                      ],
-                    ),
+                color: _accent,
+                backgroundColor: _cardBg,
+                onRefresh: () async =>
+                    ref.invalidate(_subscriptionsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () =>
+                        ref.invalidate(_subscriptionsProvider),
                   ),
-                  // Active subscriptions
-                  if (subs.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                      child: Text('Aktif Abonelikler',
-                          style: AppTextStyles.headlineSmall),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: subs
-                            .asMap()
-                            .entries
-                            .map((e) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: _SubCard(
-                                      sub: e.value,
-                                      colorIndex: e.key),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                  // Suggested subscriptions
-                  if (candidates.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
-                      child: Text('Önerilen Abonelikler',
-                          style: AppTextStyles.headlineSmall),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        children: candidates
-                            .map((c) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: _CandidateCard(candidate: c),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ),
+                  data: (data) {
+                    final subs = (data['subscriptions'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
+                    final candidates =
+                        (data['candidates'] as List? ?? [])
+                            .cast<Map<String, dynamic>>();
+                    final totalMonthly =
+                        (data['total_monthly'] as num?)?.toDouble() ??
+                            0;
+
+                    if (subs.isEmpty && candidates.isEmpty) {
+                      return const EmptyState(
+                        icon: Icons.subscriptions,
+                        title: 'Abonelik bulunamadı',
+                        subtitle:
+                            'AI, işlemlerinizden abonelikleri otomatik tespit eder.',
+                      );
+                    }
+
+                    return ListView(
+                      padding: const EdgeInsets.only(bottom: 100),
+                      children: [
+                        // ── Hero card ────────────────────────────
+                        Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: _cardBg,
+                              borderRadius: BorderRadius.circular(20),
+                              border:
+                                  Border.all(color: _cardBorder),
+                            ),
+                            child: Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'AYLIK TOPLAM',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: _text3,
+                                            letterSpacing: 0.8),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '₺${AppFormatters.currencyCompact(totalMonthly)}',
+                                        style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.w800,
+                                            color: _text1,
+                                            letterSpacing: -0.5),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Yıllık ₺${AppFormatters.currencyCompact(totalMonthly * 12)} · ${subs.length} aktif',
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: _text3),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: _accent.withValues(alpha: 0.1),
+                                    borderRadius:
+                                        BorderRadius.circular(14),
+                                    border: Border.all(
+                                        color: _accent.withValues(alpha: 0.2)),
+                                  ),
+                                  child: const Icon(
+                                      Icons.subscriptions_outlined,
+                                      size: 22,
+                                      color: _accent),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // ── Active subs ──────────────────────────
+                        if (subs.isNotEmpty) ...[
+                          const Padding(
+                            padding:
+                                EdgeInsets.fromLTRB(20, 24, 20, 10),
+                            child: Text('Aktif Abonelikler',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _text3,
+                                    letterSpacing: 0.6)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20),
+                            child: Column(
+                              children: subs
+                                  .asMap()
+                                  .entries
+                                  .map((e) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(
+                                                bottom: 8),
+                                        child: _SubCard(
+                                            sub: e.value,
+                                            colorIndex: e.key),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                        // ── Candidates ───────────────────────────
+                        if (candidates.isNotEmpty) ...[
+                          const Padding(
+                            padding:
+                                EdgeInsets.fromLTRB(20, 16, 20, 10),
+                            child: Text('Tespit Edilenler',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _text3,
+                                    letterSpacing: 0.6)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20),
+                            child: Column(
+                              children: candidates
+                                  .map((c) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(
+                                                bottom: 8),
+                                        child:
+                                            _CandidateCard(candidate: c),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildHeader(String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+              ),
+              child: const Icon(Icons.menu, size: 18, color: _text2),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Abonelikler',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _text1)),
+                Text(subtitle,
+                    style: const TextStyle(fontSize: 12, color: _text3)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+// ── Sub card ──────────────────────────────────────────────────────────
 class _SubCard extends StatelessWidget {
   final Map<String, dynamic> sub;
   final int colorIndex;
@@ -362,6 +466,7 @@ class _SubCard extends StatelessWidget {
     final cycle = sub['billing_cycle'] as String? ?? 'monthly';
     final aiDetected = sub['auto_detected'] as bool? ?? false;
     final nextBilling = sub['next_billing_date'] as String?;
+    final isCancel = sub['cancel_candidate'] as bool? ?? false;
 
     final initials = name
         .split(' ')
@@ -373,115 +478,101 @@ class _SubCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bg1,
+        color: _cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border1Dark),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Logo/initials
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    initials,
-                    style: AppTextStyles.labelSmall.copyWith(
-                        color: color, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(name,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600)),
-                        if (aiDetected) ...[
-                          const SizedBox(width: 6),
-                          const Icon(Icons.auto_awesome,
-                              size: 12, color: AppColors.accent),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${_cycleLabels[cycle] ?? cycle}${nextBilling != null ? ' · sonraki: ${AppFormatters.dateShort(DateTime.parse(nextBilling))}' : ''}',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: AppColors.text3Dark),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    AppFormatters.currencyCompact(amount),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    '/ay',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.text3Dark),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _SubAction(
-                  icon: Icons.local_offer_outlined, label: 'İndirim talep'),
-              const SizedBox(width: 8),
-              _SubAction(icon: Icons.cancel_outlined, label: 'İptal'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SubAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _SubAction({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border1Dark),
-        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.text2Dark),
-          const SizedBox(width: 4),
-          Text(label,
-              style: AppTextStyles.labelSmall
-                  .copyWith(color: AppColors.text1Dark)),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                initials,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: color),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(name,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _text1)),
+                    ),
+                    if (aiDetected)
+                      const Icon(Icons.auto_awesome,
+                          size: 12, color: _accent),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Text(
+                      '${_cycleLabels[cycle] ?? cycle}${nextBilling != null ? ' · ${AppFormatters.dateShort(DateTime.parse(nextBilling))}' : ''}',
+                      style:
+                          const TextStyle(fontSize: 11, color: _text3),
+                    ),
+                    if (isCancel) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: _warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: _warning.withValues(alpha: 0.3)),
+                        ),
+                        child: const Text('İptal Adayı',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: _warning)),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '₺${AppFormatters.currencyCompact(amount)}',
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _text1),
+              ),
+              const Text('/ay',
+                  style: TextStyle(fontSize: 11, color: _text3)),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
+// ── Candidate card ────────────────────────────────────────────────────
 class _CandidateCard extends StatelessWidget {
   final Map<String, dynamic> candidate;
   const _CandidateCard({required this.candidate});
@@ -490,26 +581,27 @@ class _CandidateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = candidate['name'] as String? ?? '';
     final amount = (candidate['amount'] as num?)?.toDouble() ?? 0;
-    final confidence = (candidate['confidence'] as num?)?.toDouble() ?? 0;
+    final confidence =
+        (candidate['confidence'] as num?)?.toDouble() ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.accentDim.withValues(alpha: 0.3),
+        color: _accent.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(color: _accent.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: AppColors.accentDim,
-              borderRadius: BorderRadius.circular(10),
+              color: _accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.auto_awesome,
-                size: 18, color: AppColors.accent),
+                size: 20, color: _accent),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -517,20 +609,23 @@ class _CandidateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600)),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _text1)),
                 Text(
                   'Olasılık: %${(confidence * 100).toStringAsFixed(0)}',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.text3Dark),
+                  style: const TextStyle(fontSize: 11, color: _text3),
                 ),
               ],
             ),
           ),
           Text(
-            AppFormatters.currencyCompact(amount),
-            style: AppTextStyles.bodyMedium
-                .copyWith(fontWeight: FontWeight.w600),
+            '₺${AppFormatters.currencyCompact(amount)}',
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _text1),
           ),
         ],
       ),

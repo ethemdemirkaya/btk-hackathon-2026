@@ -4,12 +4,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+// ignore: unused_element
+const _warning    = Color(0xFFF59E0B);
 
 final _receiptsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -81,7 +92,7 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
   void _showPickerOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D1B2A),
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => SafeArea(
@@ -93,7 +104,7 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A2940),
+                color: _cardBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -124,24 +135,21 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1B2A),
+        backgroundColor: _cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Fişi Sil',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: const Color(0xFFE8F4FF))),
-        content: Text('Bu fiş kaydı silinecek.',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: const Color(0xFF8BA4BC))),
+        title: const Text('Fişi Sil',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+        content: const Text('Bu fiş kaydı silinecek.',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('İptal',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: const Color(0xFF8BA4BC)))),
+              child: const Text('İptal',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4D6D),
+                backgroundColor: _negative,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
             child: const Text('Sil',
@@ -169,10 +177,10 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
     final async = ref.watch(_receiptsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: _uploading ? null : _showPickerOptions,
-        backgroundColor: const Color(0xFF00D4FF),
+        backgroundColor: _accent,
         foregroundColor: const Color(0xFF051929),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: _uploading
@@ -198,12 +206,12 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1A2940)),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: const Icon(Icons.menu,
-                          size: 18, color: Color(0xFF8BA4BC)),
+                          size: 18, color: _text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -211,12 +219,10 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Fişler & Makbuzlar',
-                            style: AppTextStyles.headlineMedium
-                                .copyWith(color: const Color(0xFFE8F4FF))),
-                        Text('OCR ile tara',
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: const Color(0xFF4A6478))),
+                        const Text('Fişler & Makbuzlar',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                        const Text('OCR ile tara',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                       ],
                     ),
                   ),
@@ -225,8 +231,8 @@ class _ReceiptsPageState extends ConsumerState<ReceiptsPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: const Color(0xFF00D4FF),
-                backgroundColor: const Color(0xFF0D1B2A),
+                color: _accent,
+                backgroundColor: _cardBg,
                 onRefresh: () async => ref.invalidate(_receiptsProvider),
                 child: async.when(
                   loading: () => const SkeletonListView(),
@@ -291,20 +297,20 @@ class _HeroSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1A2940)),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+              color: _accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.receipt_long,
-                size: 24, color: Color(0xFF00D4FF)),
+                size: 24, color: _accent),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -313,15 +319,16 @@ class _HeroSummaryCard extends StatelessWidget {
               children: [
                 Text(
                   '$count fiş kaydedildi',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                      color: const Color(0xFFE8F4FF),
-                      fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _text1),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '₺${AppFormatters.currencyCompact(total)} toplam',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: const Color(0xFF4A6478)),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                 ),
               ],
             ),
@@ -347,28 +354,29 @@ class _PickerOption extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF060D18),
+          color: _scaffoldBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF1A2940)),
+          border: Border.all(color: _cardBorder),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+                color: _accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 18, color: const Color(0xFF00D4FF)),
+              child: Icon(icon, size: 18, color: _accent),
             ),
             const SizedBox(width: 14),
             Text(label,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: const Color(0xFFE8F4FF),
-                        fontWeight: FontWeight.w500)),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _text1)),
             const Spacer(),
             const Icon(Icons.arrow_forward_ios,
-                size: 14, color: Color(0xFF4A6478)),
+                size: 14, color: _text3),
           ],
         ),
       ),
@@ -400,9 +408,9 @@ class _ReceiptCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF1A2940)),
+          border: Border.all(color: _cardBorder),
         ),
         child: Row(
           children: [
@@ -410,11 +418,11 @@ class _ReceiptCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF00D4FF).withValues(alpha: 0.10),
+                color: _accent.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.receipt_long,
-                  color: Color(0xFF00D4FF), size: 20),
+                  color: _accent, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -422,9 +430,10 @@ class _ReceiptCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(merchant,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: const Color(0xFFE8F4FF),
-                          fontWeight: FontWeight.w600)),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _text1)),
                   const SizedBox(height: 3),
                   Text(
                     [
@@ -433,8 +442,8 @@ class _ReceiptCard extends StatelessWidget {
                       if (category != null) category,
                       if (itemsCount > 0) '$itemsCount ürün',
                     ].join(' · '),
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: const Color(0xFF4A6478)),
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -443,9 +452,10 @@ class _ReceiptCard extends StatelessWidget {
             ),
             Text(
               AppFormatters.currency(total),
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: const Color(0xFFE8F4FF),
-                  fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _text1),
             ),
           ],
         ),
@@ -469,7 +479,7 @@ class _ReceiptResultSheet extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: DraggableScrollableSheet(
@@ -487,7 +497,7 @@ class _ReceiptResultSheet extends StatelessWidget {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A2940),
+                  color: _cardBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -498,23 +508,22 @@ class _ReceiptResultSheet extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0DD9A0).withValues(alpha: 0.12),
+                    color: _positive.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: const Icon(Icons.check_circle,
-                      color: Color(0xFF0DD9A0), size: 22),
+                      color: _positive, size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Fiş Tarandı',
-                          style: AppTextStyles.titleMedium.copyWith(
-                              color: const Color(0xFFE8F4FF))),
+                      const Text('Fiş Tarandı',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1)),
                       Text(merchant,
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: const Color(0xFF4A6478))),
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                     ],
                   ),
                 ),
@@ -524,9 +533,9 @@ class _ReceiptResultSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF060D18),
+                color: _scaffoldBg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF1A2940)),
+                border: Border.all(color: _cardBorder),
               ),
               child: Column(
                 children: [
@@ -542,15 +551,18 @@ class _ReceiptResultSheet extends StatelessWidget {
             if (items.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text('Ürünler (${items.length})',
-                  style: AppTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFF4A6478), letterSpacing: 0.5)),
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _text3,
+                      letterSpacing: 0.5)),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF060D18),
+                  color: _scaffoldBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF1A2940)),
+                  border: Border.all(color: _cardBorder),
                 ),
                 child: Column(
                   children: items.asMap().entries.map((entry) {
@@ -561,7 +573,7 @@ class _ReceiptResultSheet extends StatelessWidget {
                         border: entry.key > 0
                             ? const Border(
                                 top: BorderSide(
-                                    color: Color(0xFF1A2940)))
+                                    color: _cardBorder))
                             : null,
                       ),
                       child: Row(
@@ -569,16 +581,19 @@ class _ReceiptResultSheet extends StatelessWidget {
                           Expanded(
                             child: Text(
                               i['name'] as String? ?? '',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                  color: const Color(0xFFE8F4FF)),
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: _text1),
                             ),
                           ),
                           Text(
                             AppFormatters.currency(
                                 (i['total'] as num?)?.toDouble() ?? 0),
-                            style: AppTextStyles.bodySmall.copyWith(
-                                color: const Color(0xFF8BA4BC),
-                                fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _text2),
                           ),
                         ],
                       ),
@@ -593,7 +608,7 @@ class _ReceiptResultSheet extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00D4FF),
+                  backgroundColor: _accent,
                   foregroundColor: const Color(0xFF051929),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
@@ -624,12 +639,13 @@ class _InfoRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: const Color(0xFF8BA4BC))),
+              style: const TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w400, color: _text2)),
           Text(value,
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: const Color(0xFFE8F4FF),
-                  fontWeight: FontWeight.w600)),
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _text1)),
         ],
       ),
     );

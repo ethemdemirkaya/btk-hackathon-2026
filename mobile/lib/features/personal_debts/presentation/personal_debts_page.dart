@@ -4,20 +4,31 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+
+// ── Provider ─────────────────────────────────────────────────────────
 final _personalDebtsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.personalDebts);
   return res.data as Map<String, dynamic>;
 });
 
+// ── Page ──────────────────────────────────────────────────────────────
 class PersonalDebtsPage extends ConsumerWidget {
   const PersonalDebtsPage({super.key});
 
@@ -26,101 +37,149 @@ class PersonalDebtsPage extends ConsumerWidget {
     final async = ref.watch(_personalDebtsProvider);
 
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(context, ref, null),
-        child: const Icon(Icons.add),
+        backgroundColor: _accent,
+        foregroundColor: const Color(0xFF051929),
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, size: 26),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => shellScaffoldKey.currentState?.openDrawer(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bg2,
-                        border: Border.all(color: AppColors.border1Dark),
-                      ),
-                      child: const Icon(Icons.menu,
-                          size: 16, color: AppColors.text2Dark),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text('Kişisel Borçlar',
-                      style: AppTextStyles.headlineMedium
-                          .copyWith(color: AppColors.text1Dark)),
-                ],
-              ),
+            // ── Header ──────────────────────────────────────────────
+            async.when(
+              loading: () => _buildHeader('Yükleniyor…'),
+              error: (_, __) => _buildHeader(''),
+              data: (data) {
+                final count =
+                    (data['debts'] as List? ?? []).length;
+                return _buildHeader('$count kayıt');
+              },
             ),
+            // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(_personalDebtsProvider),
-        child: async.when(
-          loading: () => const SkeletonListView(),
-          error: (e, __) => ErrorState(
-            message: e.toString(),
-            onRetry: () => ref.invalidate(_personalDebtsProvider),
-          ),
-          data: (data) {
-            final debts = data['debts'] as List? ?? [];
-            final summary = data['summary'] as Map<String, dynamic>?;
+                color: _accent,
+                backgroundColor: _cardBg,
+                onRefresh: () async =>
+                    ref.invalidate(_personalDebtsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () =>
+                        ref.invalidate(_personalDebtsProvider),
+                  ),
+                  data: (data) {
+                    final debts = data['debts'] as List? ?? [];
+                    final summary =
+                        data['summary'] as Map<String, dynamic>?;
 
-            if (debts.isEmpty) {
-              return EmptyState(
-                icon: Icons.handshake_outlined,
-                title: 'Kişisel borç bulunamadı',
-                subtitle: 'Arkadaş ve aile borçlarını takip edin.',
-                ctaLabel: '+ Borç Ekle',
-                onCta: () => _showForm(context, ref, null),
-              );
-            }
+                    if (debts.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.handshake_outlined,
+                        title: 'Kişisel borç bulunamadı',
+                        subtitle:
+                            'Arkadaş ve aile borçlarını takip edin.',
+                        ctaLabel: '+ Borç Ekle',
+                        onCta: () => _showForm(context, ref, null),
+                      );
+                    }
 
-            final iOwe = (summary?['i_owe'] as num?)?.toDouble() ?? 0;
-            final owedToMe = (summary?['owed_to_me'] as num?)?.toDouble() ?? 0;
+                    final iOwe =
+                        (summary?['i_owe'] as num?)?.toDouble() ??
+                            0;
+                    final owedToMe =
+                        (summary?['owed_to_me'] as num?)
+                                ?.toDouble() ??
+                            0;
 
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryBox(
-                        label: 'Borcum',
-                        amount: iOwe,
-                        color: AppColors.danger,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _SummaryBox(
-                        label: 'Alacağım',
-                        amount: owedToMe,
-                        color: AppColors.success,
-                      ),
-                    ),
-                  ],
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                          20, 16, 20, 100),
+                      children: [
+                        // ── Summary ──────────────────────────
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Verilecek',
+                                amount: iOwe,
+                                color: _negative,
+                                icon: Icons.arrow_upward,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _SummaryCard(
+                                label: 'Alınacak',
+                                amount: owedToMe,
+                                color: _positive,
+                                icon: Icons.arrow_downward,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        ...debts.map((d) => _DebtCard(
+                              debt: d as Map<String, dynamic>,
+                              onSettle: () => _settle(
+                                  context,
+                                  ref,
+                                  (d['id'] as num).toInt()),
+                              onEdit: () =>
+                                  _showForm(context, ref, d),
+                            )),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-                ...debts.map((d) => _DebtCard(
-                      debt: d as Map<String, dynamic>,
-                      onSettle: () => _settle(
-                          context, ref, (d['id'] as num).toInt()),
-                      onEdit: () => _showForm(context, ref, d),
-                    )),
-              ],
-            );
-          },
-        ),
-      ),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+              ),
+              child: const Icon(Icons.menu, size: 18, color: _text2),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Kişisel Borçlar',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _text1)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        fontSize: 12, color: _text3)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -130,8 +189,10 @@ class PersonalDebtsPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _DebtFormSheet(
         existing: existing,
         onSaved: () => ref.refresh(_personalDebtsProvider),
@@ -144,15 +205,24 @@ class PersonalDebtsPage extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Borcu Kapat'),
-        content: const Text('Bu borcu kapalı olarak işaretlemek istiyor musunuz?'),
+        backgroundColor: _cardBg,
+        title: const Text('Borcu Kapat',
+            style: TextStyle(color: _text1)),
+        content: const Text(
+            'Bu borcu kapalı olarak işaretlemek istiyor musunuz?',
+            style: TextStyle(color: _text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('İptal')),
+              child:
+                  const Text('İptal', style: TextStyle(color: _text2))),
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Kapat')),
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: _positive,
+                foregroundColor: Colors.black),
+            child: const Text('Kapat'),
+          ),
         ],
       ),
     );
@@ -166,69 +236,114 @@ class PersonalDebtsPage extends ConsumerWidget {
   }
 }
 
-class _SummaryBox extends StatelessWidget {
+// ── Summary card ──────────────────────────────────────────────────────
+class _SummaryCard extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  const _SummaryBox(
-      {required this.label, required this.amount, required this.color});
+  final IconData icon;
+  const _SummaryCard(
+      {required this.label,
+      required this.amount,
+      required this.color,
+      required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondaryLight)),
-          const SizedBox(height: 4),
-          Text(AppFormatters.currency(amount),
-              style: AppTextStyles.titleMedium.copyWith(color: color)),
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 12, color: _text3)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '₺${AppFormatters.currencyCompact(amount)}',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: color),
+          ),
         ],
       ),
     );
   }
 }
 
+// ── Debt card ─────────────────────────────────────────────────────────
 class _DebtCard extends StatelessWidget {
   final Map<String, dynamic> debt;
   final VoidCallback onSettle;
   final VoidCallback onEdit;
   const _DebtCard(
-      {required this.debt, required this.onSettle, required this.onEdit});
+      {required this.debt,
+      required this.onSettle,
+      required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    final isBorrowed = debt['type'] == 'borrowed'; // i owe
+    final isBorrowed = debt['type'] == 'borrowed';
     final amount = (debt['amount'] as num?)?.toDouble() ?? 0;
     final name = debt['counterparty_name'] as String? ?? 'Bilinmiyor';
     final description = debt['description'] as String?;
     final dueDate = debt['due_date'] as String?;
     final isSettled = debt['is_settled'] as bool? ?? false;
-    final color = isBorrowed ? AppColors.danger : AppColors.success;
-    final label = isBorrowed ? 'Borçlu' : 'Alacaklı';
+    final color = isBorrowed ? _negative : _positive;
+    final label = isBorrowed ? 'Borç' : 'Alacak';
+    final avatarLetter =
+        name.isNotEmpty ? name[0].toUpperCase() : '?';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _cardBorder),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: color.withValues(alpha: 0.12),
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: TextStyle(color: color, fontWeight: FontWeight.w700),
+                // Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      avatarLetter,
+                      style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: color),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -236,59 +351,127 @@ class _DebtCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: AppTextStyles.titleMedium),
-                      Text(label,
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: color)),
+                      Text(name,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _text1)),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(label,
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: color)),
+                          ),
+                          if (dueDate != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              'Vade: ${AppFormatters.dateFromIso(dueDate)}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: _text3),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                Text(
-                  AppFormatters.currency(amount),
-                  style:
-                      AppTextStyles.titleMedium.copyWith(color: color),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₺${AppFormatters.currencyCompact(amount)}',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: color),
+                    ),
+                  ],
                 ),
               ],
             ),
-            if (description != null) ...[
+            if (description != null && description.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(description,
-                  style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight)),
+                  style: const TextStyle(
+                      fontSize: 12, color: _text2)),
             ],
-            if (dueDate != null) ...[
-              const SizedBox(height: 4),
-              Text('Vade: ${AppFormatters.dateFromIso(dueDate)}',
-                  style: AppTextStyles.bodySmall),
-            ],
-            if (!isSettled) ...[
+            if (isSettled) ...[
+              const SizedBox(height: 10),
+              const Row(
+                children: [
+                  Icon(Icons.check_circle_outline,
+                      color: _positive, size: 14),
+                  SizedBox(width: 4),
+                  Text('Kapatıldı',
+                      style: TextStyle(
+                          fontSize: 12, color: _positive)),
+                ],
+              ),
+            ] else ...[
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: onEdit,
-                      child: const Text('Düzenle'),
+                    child: GestureDetector(
+                      onTap: onEdit,
+                      child: Container(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: _scaffoldBg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _cardBorder),
+                        ),
+                        child: const Center(
+                          child: Text('Düzenle',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _text2)),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: onSettle,
-                      child: const Text('Kapat'),
+                    child: GestureDetector(
+                      onTap: onSettle,
+                      child: Container(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 9),
+                        decoration: BoxDecoration(
+                          color: _positive.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color:
+                                  _positive.withValues(alpha: 0.25)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check, size: 14, color: _positive),
+                            SizedBox(width: 4),
+                            Text('Kapat',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: _positive)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ] else ...[
-              const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Icon(Icons.check_circle, color: AppColors.success, size: 16),
-                  SizedBox(width: 4),
-                  Text('Kapatıldı',
-                      style: TextStyle(
-                          color: AppColors.success, fontSize: 12)),
                 ],
               ),
             ],
@@ -299,6 +482,7 @@ class _DebtCard extends StatelessWidget {
   }
 }
 
+// ── Debt form sheet ───────────────────────────────────────────────────
 class _DebtFormSheet extends StatefulWidget {
   final Map<String, dynamic>? existing;
   final VoidCallback onSaved;
@@ -360,10 +544,12 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
       final payload = {
         'type': _type,
         'counterparty_name': _nameCtrl.text.trim(),
-        'amount': double.parse(_amountCtrl.text.replaceAll(',', '.')),
+        'amount':
+            double.parse(_amountCtrl.text.replaceAll(',', '.')),
         'description': _descCtrl.text.trim(),
         if (_dueDate != null)
-          'due_date': _dueDate!.toIso8601String().split('T').first,
+          'due_date':
+              _dueDate!.toIso8601String().split('T').first,
       };
       if (_isEdit) {
         final id = (widget.existing!['id'] as num).toInt();
@@ -386,11 +572,31 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
     }
   }
 
+  InputDecoration _deco(String label, {IconData? icon}) =>
+      InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: _text3, fontSize: 13),
+        prefixIcon:
+            icon != null ? Icon(icon, size: 18, color: _text3) : null,
+        filled: true,
+        fillColor: _scaffoldBg,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _cardBorder)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _cardBorder)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: _accent, width: 1.5)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -398,77 +604,101 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                      color: _cardBorder,
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
               Text(_isEdit ? 'Borç Düzenle' : 'Borç Ekle',
-                  style: AppTextStyles.headlineMedium),
-              const SizedBox(height: 20),
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _text1)),
+              const SizedBox(height: 16),
+              // Type toggle
               Row(
                 children: [
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Borçluyum'),
-                      value: 'borrowed',
-                      groupValue: _type,
-                      onChanged: (v) => setState(() => _type = v!),
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                  _TypeBtn(
+                    label: 'Borçluyum',
+                    selected: _type == 'borrowed',
+                    color: _negative,
+                    onTap: () =>
+                        setState(() => _type = 'borrowed'),
                   ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: const Text('Alacaklıyım'),
-                      value: 'lent',
-                      groupValue: _type,
-                      onChanged: (v) => setState(() => _type = v!),
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                  const SizedBox(width: 8),
+                  _TypeBtn(
+                    label: 'Alacaklıyım',
+                    selected: _type == 'lent',
+                    color: _positive,
+                    onTap: () => setState(() => _type = 'lent'),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Kişi Adı',
-                    prefixIcon: Icon(Icons.person_outline)),
+                style:
+                    const TextStyle(color: _text1, fontSize: 14),
+                decoration:
+                    _deco('Kişi Adı', icon: Icons.person_outline),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Ad gerekli' : null,
+                    (v == null || v.trim().isEmpty)
+                        ? 'Ad gerekli'
+                        : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _amountCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Tutar (₺)',
-                    prefixIcon: Icon(Icons.attach_money)),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                style:
+                    const TextStyle(color: _text1, fontSize: 14),
+                decoration:
+                    _deco('Tutar (₺)', icon: Icons.attach_money),
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'[0-9,.]'))
                 ],
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Tutar gerekli';
-                  final n = double.tryParse(v.replaceAll(',', '.'));
-                  if (n == null || n <= 0) return 'Geçerli tutar girin';
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Tutar gerekli';
+                  }
+                  final n = double.tryParse(
+                      v.replaceAll(',', '.'));
+                  if (n == null || n <= 0) {
+                    return 'Geçerli tutar girin';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Açıklama (opsiyonel)',
-                    prefixIcon: Icon(Icons.notes_outlined)),
+                style:
+                    const TextStyle(color: _text1, fontSize: 14),
+                decoration: _deco('Açıklama (opsiyonel)',
+                    icon: Icons.notes_outlined),
               ),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: _pickDate,
                 child: AbsorbPointer(
                   child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: 'Son Ödeme Tarihi (opsiyonel)',
-                      prefixIcon:
-                          const Icon(Icons.calendar_today_outlined),
+                    style: const TextStyle(
+                        color: _text1, fontSize: 14),
+                    decoration: _deco(
+                            'Son Ödeme Tarihi (opsiyonel)',
+                            icon: Icons.calendar_today_outlined)
+                        .copyWith(
                       hintText: _dueDate != null
                           ? AppFormatters.dateShort(_dueDate!)
                           : 'Tarih seçin',
+                      hintStyle: const TextStyle(color: _text3),
                     ),
                     controller: TextEditingController(
                       text: _dueDate != null
@@ -483,16 +713,69 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: const Color(0xFF051929),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(14)),
+                  ),
                   child: _loading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white))
+                      : Text(_isEdit ? 'Güncelle' : 'Kaydet',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeBtn extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  const _TypeBtn(
+      {required this.label,
+      required this.selected,
+      required this.color,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? color.withValues(alpha: 0.12)
+                : _scaffoldBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: selected
+                    ? color.withValues(alpha: 0.4)
+                    : _cardBorder),
+          ),
+          child: Center(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? color : _text3)),
           ),
         ),
       ),

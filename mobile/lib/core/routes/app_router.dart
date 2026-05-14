@@ -32,7 +32,7 @@ import '../../features/settings/presentation/profile_page.dart';
 import '../../features/insights/presentation/health_score_page.dart';
 import '../widgets/bottom_nav_shell.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _rootNavigatorKey  = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -43,44 +43,33 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     redirect: (context, state) {
       final loading = authState.isLoading;
-      final authed = authState.isAuthenticated;
-      final loc = state.matchedLocation;
+      final authed  = authState.isAuthenticated;
+      final loc     = state.matchedLocation;
 
       if (loading) return '/splash';
 
-      final publicRoutes = ['/splash', '/onboarding', '/login', '/register'];
+      const publicRoutes = ['/splash', '/onboarding', '/login', '/register'];
       final isPublic = publicRoutes.contains(loc);
 
       if (!authed && !isPublic) return '/login';
-      if (authed && isPublic) return '/dashboard';
+      if (authed  &&  isPublic) return '/dashboard';
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (_, __) => const SplashPage(),
-      ),
-      GoRoute(
-        path: '/onboarding',
-        builder: (_, __) => const OnboardingPage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (_, __) => const LoginPage(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (_, __) => const RegisterPage(),
-      ),
+      // ── Auth (full-screen, no shell) ──────────────────────────────
+      GoRoute(path: '/splash',     builder: (_, __) => const SplashPage()),
+      GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingPage()),
+      GoRoute(path: '/login',      builder: (_, __) => const LoginPage()),
+      GoRoute(path: '/register',   builder: (_, __) => const RegisterPage()),
+
+      // ── Shell (drawer always mounted) ────────────────────────────
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) =>
-            BottomNavShell(child: child, location: state.matchedLocation),
+            BottomNavShell(location: state.matchedLocation, child: child),
         routes: [
-          GoRoute(
-            path: '/dashboard',
-            builder: (_, __) => const DashboardPage(),
-          ),
+          // Tab routes (show bottom nav)
+          GoRoute(path: '/dashboard',    builder: (_, __) => const DashboardPage()),
           GoRoute(
             path: '/transactions',
             builder: (_, __) => const TransactionsPage(),
@@ -93,92 +82,30 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          GoRoute(
-            path: '/chat',
-            builder: (_, __) => const AgentChatPage(),
-          ),
-          GoRoute(
-            path: '/calendar',
-            builder: (_, __) => const CalendarPage(),
-          ),
-          GoRoute(
-            path: '/insights',
-            builder: (_, __) => const InsightsPage(),
-          ),
+          GoRoute(path: '/chat',      builder: (_, __) => const AgentChatPage()),
+          GoRoute(path: '/calendar',  builder: (_, __) => const CalendarPage()),
+          GoRoute(path: '/insights',  builder: (_, __) => const InsightsPage()),
+
+          // Non-tab routes (no bottom nav, but drawer stays mounted)
+          GoRoute(path: '/bank-connections', builder: (_, __) => const BankConnectionsPage()),
+          GoRoute(path: '/cards',            builder: (_, __) => const CardsPage()),
+          GoRoute(path: '/loans',            builder: (_, __) => const LoansPage()),
+          GoRoute(path: '/bills',            builder: (_, __) => const BillsPage()),
+          GoRoute(path: '/subscriptions',    builder: (_, __) => const SubscriptionsPage()),
+          GoRoute(path: '/budgets',          builder: (_, __) => const BudgetsPage()),
+          GoRoute(path: '/goals',            builder: (_, __) => const GoalsPage()),
+          GoRoute(path: '/personal-debts',   builder: (_, __) => const PersonalDebtsPage()),
+          GoRoute(path: '/investments',      builder: (_, __) => const InvestmentsPage()),
+          GoRoute(path: '/fx-alerts',        builder: (_, __) => const FxAlertsPage()),
+          GoRoute(path: '/negotiation',      builder: (_, __) => const NegotiationPage()),
+          GoRoute(path: '/simulator',        builder: (_, __) => const SimulatorPage()),
+          GoRoute(path: '/inflation',        builder: (_, __) => const InflationPage()),
+          GoRoute(path: '/reports',          builder: (_, __) => const ReportsPage()),
+          GoRoute(path: '/receipts',         builder: (_, __) => const ReceiptsPage()),
+          GoRoute(path: '/settings',         builder: (_, __) => const SettingsPage()),
+          GoRoute(path: '/profile',          builder: (_, __) => const ProfilePage()),
+          GoRoute(path: '/health-score',     builder: (_, __) => const HealthScorePage()),
         ],
-      ),
-      // Non-tab routes
-      GoRoute(
-        path: '/bank-connections',
-        builder: (_, __) => const BankConnectionsPage(),
-      ),
-      GoRoute(
-        path: '/cards',
-        builder: (_, __) => const CardsPage(),
-      ),
-      GoRoute(
-        path: '/loans',
-        builder: (_, __) => const LoansPage(),
-      ),
-      GoRoute(
-        path: '/bills',
-        builder: (_, __) => const BillsPage(),
-      ),
-      GoRoute(
-        path: '/subscriptions',
-        builder: (_, __) => const SubscriptionsPage(),
-      ),
-      GoRoute(
-        path: '/budgets',
-        builder: (_, __) => const BudgetsPage(),
-      ),
-      GoRoute(
-        path: '/goals',
-        builder: (_, __) => const GoalsPage(),
-      ),
-      GoRoute(
-        path: '/personal-debts',
-        builder: (_, __) => const PersonalDebtsPage(),
-      ),
-      GoRoute(
-        path: '/investments',
-        builder: (_, __) => const InvestmentsPage(),
-      ),
-      GoRoute(
-        path: '/fx-alerts',
-        builder: (_, __) => const FxAlertsPage(),
-      ),
-      GoRoute(
-        path: '/negotiation',
-        builder: (_, __) => const NegotiationPage(),
-      ),
-      GoRoute(
-        path: '/simulator',
-        builder: (_, __) => const SimulatorPage(),
-      ),
-      GoRoute(
-        path: '/inflation',
-        builder: (_, __) => const InflationPage(),
-      ),
-      GoRoute(
-        path: '/reports',
-        builder: (_, __) => const ReportsPage(),
-      ),
-      GoRoute(
-        path: '/receipts',
-        builder: (_, __) => const ReceiptsPage(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (_, __) => const SettingsPage(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (_, __) => const ProfilePage(),
-      ),
-      GoRoute(
-        path: '/health-score',
-        builder: (_, __) => const HealthScorePage(),
       ),
     ],
   );

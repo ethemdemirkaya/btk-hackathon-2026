@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0); // ignore: unused_element
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B); // ignore: unused_element
+
 final _cardsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.cards);
   return res.data as Map<String, dynamic>;
 });
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _negative = Color(0xFFFF4D6D);
 
 class CardsPage extends ConsumerWidget {
   const CardsPage({super.key});
@@ -141,12 +142,11 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge.copyWith(
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
                       color: _text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
             ],
           ),
         ],
@@ -176,24 +176,113 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Toplam borç',
+          const Text('Toplam borç',
               style:
-                  AppTextStyles.labelSmall.copyWith(color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 6),
           Text(
             '${AppFormatters.currencyCompact(debt)} ₺',
-            style: AppTextStyles.amountHero.copyWith(
+            style: const TextStyle(
                 fontSize: 32,
-                color: _text1,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.03 * 32),
+                letterSpacing: -0.03 * 32,
+                color: _text1),
           ),
           const SizedBox(height: 4),
           Text(
             '${used.toStringAsFixed(0)}% limit kullanımı · ${AppFormatters.currencyCompact(available)} ₺ kullanılabilir',
-            style: AppTextStyles.bodySmall.copyWith(color: _text3),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Bank brand helpers ────────────────────────────────────────────────
+const _bankAssets = <String, String>{
+  'garanti':   'assets/banks/garanti.svg',
+  'bbva':      'assets/banks/garanti.svg',
+  'isbank':    'assets/banks/isbank.svg',
+  'iş':        'assets/banks/isbank.svg',
+  'ziraat':    'assets/banks/ziraat.svg',
+  'akbank':    'assets/banks/akbank.svg',
+  'vakif':     'assets/banks/vakifbank.svg',
+  'vakıf':     'assets/banks/vakifbank.svg',
+  'yapikredi': 'assets/banks/yapikredi.svg',
+  'yapı':      'assets/banks/yapikredi.svg',
+  'deniz':     'assets/banks/denizbank.svg',
+  'halk':      'assets/banks/halkbank.svg',
+};
+
+const _bankGradients = <String, List<Color>>{
+  'garanti':   [Color(0xFF009900), Color(0xFF006600)],
+  'bbva':      [Color(0xFF009900), Color(0xFF006600)],
+  'isbank':    [Color(0xFF003087), Color(0xFF001a4d)],
+  'iş':        [Color(0xFF003087), Color(0xFF001a4d)],
+  'ziraat':    [Color(0xFFCC0000), Color(0xFF8B0000)],
+  'akbank':    [Color(0xFFE8000D), Color(0xFFA0000A)],
+  'vakif':     [Color(0xFFD4890A), Color(0xFF8B5E00)],
+  'vakıf':     [Color(0xFFD4890A), Color(0xFF8B5E00)],
+  'yapikredi': [Color(0xFF003366), Color(0xFF001A33)],
+  'yapı':      [Color(0xFF003366), Color(0xFF001A33)],
+  'deniz':     [Color(0xFF005BAA), Color(0xFF003875)],
+  'halk':      [Color(0xFF00703C), Color(0xFF004D28)],
+};
+
+String? _svgForSlug(String? slug) {
+  if (slug == null) return null;
+  final lower = slug.toLowerCase();
+  for (final key in _bankAssets.keys) {
+    if (lower.contains(key)) return _bankAssets[key];
+  }
+  return null;
+}
+
+List<Color> _gradientForSlug(String? slug, int fallbackIndex) {
+  const fallbacks = [
+    [Color(0xFF1B4FD8), Color(0xFF0F2F8A)],
+    [Color(0xFF0F766E), Color(0xFF064E3B)],
+    [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+    [Color(0xFF9D174D), Color(0xFF6B0F36)],
+  ];
+  if (slug == null) return fallbacks[fallbackIndex % fallbacks.length];
+  final lower = slug.toLowerCase();
+  for (final key in _bankGradients.keys) {
+    if (lower.contains(key)) return _bankGradients[key]!;
+  }
+  return fallbacks[fallbackIndex % fallbacks.length];
+}
+
+// ── Bank Logo Widget ──────────────────────────────────────────────────
+class _BankLogo extends StatelessWidget {
+  final String? slug;
+  final String? bankName;
+  final double height;
+  const _BankLogo({this.slug, this.bankName, this.height = 22});
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = _svgForSlug(slug);
+    if (asset != null) {
+      return SvgPicture.asset(
+        asset,
+        height: height,
+        colorFilter: const ColorFilter.matrix([
+          // Invert to white (for dark card backgrounds)
+          -1, 0, 0, 0, 255,
+          0, -1, 0, 0, 255,
+          0, 0, -1, 0, 255,
+          0, 0,  0, 1, 0,
+        ]),
+      );
+    }
+    // Fallback: styled text
+    return Text(
+      (bankName ?? 'BANKA').toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11, fontWeight: FontWeight.w700,
+        color: Colors.white70, letterSpacing: 1.5,
       ),
     );
   }
@@ -203,39 +292,25 @@ class _SummaryCard extends StatelessWidget {
 class _PhysicalCard extends StatelessWidget {
   final Map<String, dynamic> card;
   final int colorIndex;
-
-  static const _gradientPairs = [
-    [Color(0xFF1B4FD8), Color(0xFF0F2F8A)],
-    [Color(0xFF0F766E), Color(0xFF064E3B)],
-    [Color(0xFF7C3AED), Color(0xFF4C1D95)],
-    [Color(0xFF9D174D), Color(0xFF6B0F36)],
-    [Color(0xFF1D4ED8), Color(0xFF1E3A8A)],
-  ];
-
-  const _PhysicalCard(
-      {required this.card, required this.colorIndex});
+  const _PhysicalCard({required this.card, required this.colorIndex});
 
   @override
   Widget build(BuildContext context) {
-    final debt =
-        (card['current_debt'] as num?)?.toDouble() ?? 0;
-    final limit =
-        (card['credit_limit'] as num?)?.toDouble() ?? 0;
-    final pct = limit > 0 ? (debt / limit) : 0.0;
-    final masked = card['masked_number'] as String? ??
-        '**** **** **** ****';
-    final holder = card['holder_name'] as String? ?? '';
-    final bankName = card['bank_name'] as String? ??
-        card['name'] as String? ??
-        'PARANETTE';
-    final expiry =
-        '${card['expiry_month']}/${card['expiry_year']}';
+    final debt     = (card['current_debt']  as num?)?.toDouble() ?? 0;
+    final limit    = (card['credit_limit']  as num?)?.toDouble() ?? 0;
+    final pct      = limit > 0 ? (debt / limit) : 0.0;
+    final masked   = card['masked_number']  as String? ?? '**** **** **** ****';
+    final holder   = card['holder_name']    as String? ?? '';
+    final bankName = card['bank_name']      as String? ?? card['name'] as String? ?? 'PARANETTE';
+    final bankSlug = card['bank_slug']      as String? ?? bankName;
+    final isCredit = (card['type'] as String?) == 'credit';
+    final month    = card['expiry_month']?.toString().padLeft(2, '0') ?? '??';
+    final year     = card['expiry_year']?.toString() ?? '??';
 
-    final colors = _gradientPairs[colorIndex % _gradientPairs.length];
+    final colors     = _gradientForSlug(bankSlug, colorIndex);
     final usageColor = pct > 0.8 ? _negative : Colors.white;
 
     return Container(
-      height: 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: colors,
@@ -243,37 +318,33 @@ class _PhysicalCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: colors[0].withValues(alpha: 0.35),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
+            color: colors[0].withValues(alpha: 0.40),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Stack(
         children: [
-          // Decorative circles
+          // Decorative circle top-right
           Positioned(
-            top: -40,
-            right: -40,
+            top: -50, right: -50,
             child: Container(
-              width: 150,
-              height: 150,
+              width: 160, height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.04),
+                color: Colors.white.withValues(alpha: 0.06),
               ),
             ),
           ),
+          // Decorative circle bottom-left
           Positioned(
-            bottom: -20,
-            left: -20,
+            bottom: -60, left: '20%'.isEmpty ? 60 : 60,
             child: Container(
-              width: 100,
-              height: 100,
+              width: 200, height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.04),
@@ -285,89 +356,108 @@ class _PhysicalCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: bank + chip icon
+                // ── Row 1: Bank logo + hologram ───────────────────
                 Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      bankName.toUpperCase(),
-                      style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white70,
-                          letterSpacing: 2),
-                    ),
+                    _BankLogo(slug: bankSlug, bankName: bankName, height: 22),
+                    // Holographic circle (conic gradient-ish via multiple colors)
                     Container(
-                      width: 32,
-                      height: 24,
+                      width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color:
-                            Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
+                        shape: BoxShape.circle,
+                        gradient: SweepGradient(colors: [
+                          Colors.pinkAccent.withValues(alpha: 0.55),
+                          Colors.yellowAccent.withValues(alpha: 0.55),
+                          Colors.cyanAccent.withValues(alpha: 0.55),
+                          Colors.purpleAccent.withValues(alpha: 0.55),
+                          Colors.blueAccent.withValues(alpha: 0.55),
+                          Colors.pinkAccent.withValues(alpha: 0.55),
+                        ]),
                       ),
-                      child: const Icon(Icons.credit_card,
-                          size: 14, color: Colors.white70),
                     ),
                   ],
                 ),
-                const Spacer(),
-                // Card number
+                const SizedBox(height: 16),
+
+                // ── Row 2: Chip + card type badge ────────────────
+                Row(
+                  children: [
+                    // EMV chip
+                    Container(
+                      width: 38, height: 28,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFC9A227), Color(0xFFF5D066)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: CustomPaint(painter: _ChipPainter()),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isCredit ? 'KREDİ' : 'DEBİT',
+                        style: const TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.w700,
+                          color: Colors.white, letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // ── Card number ───────────────────────────────────
                 Text(
                   masked,
                   style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      letterSpacing: 2.5,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 15, color: Colors.white,
+                    letterSpacing: 3, fontWeight: FontWeight.w500,
+                    fontFamily: 'monospace',
+                  ),
                 ),
                 const SizedBox(height: 14),
-                // Debt/limit row
+
+                // ── Debt/limit + progress ─────────────────────────
                 Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _CardStat(
-                        label: 'Borç',
-                        value: AppFormatters.currencyCompact(
-                            debt)),
-                    _CardStat(
-                        label: 'Limit',
-                        value: AppFormatters.currencyCompact(
-                            limit),
-                        alignEnd: true),
+                    _CardStat(label: 'Borç',  value: AppFormatters.currencyCompact(debt)),
+                    _CardStat(label: 'Limit', value: AppFormatters.currencyCompact(limit), alignEnd: true),
                   ],
                 ),
-                const SizedBox(height: 10),
-                // Usage progress bar
+                const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
                     value: pct.clamp(0, 1),
-                    backgroundColor:
-                        Colors.white.withValues(alpha: 0.18),
-                    valueColor:
-                        AlwaysStoppedAnimation(usageColor),
+                    backgroundColor: Colors.white.withValues(alpha: 0.18),
+                    valueColor: AlwaysStoppedAnimation(usageColor),
                     minHeight: 4,
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Holder + expiry
+                const SizedBox(height: 10),
+
+                // ── Holder + expiry ───────────────────────────────
                 Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (holder.isNotEmpty)
-                      Text(holder.toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.white60,
-                              letterSpacing: 0.5))
-                    else
-                      const SizedBox.shrink(),
-                    Text(expiry,
-                        style: const TextStyle(
-                            fontSize: 10, color: Colors.white60)),
+                    Text(
+                      holder.isNotEmpty ? holder.toUpperCase() : '',
+                      style: const TextStyle(fontSize: 9, color: Colors.white60, letterSpacing: 0.8),
+                    ),
+                    Text(
+                      '$month/$year',
+                      style: const TextStyle(fontSize: 9, color: Colors.white60),
+                    ),
                   ],
                 ),
               ],
@@ -377,6 +467,25 @@ class _PhysicalCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── EMV Chip Painter ──────────────────────────────────────────────────
+class _ChipPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.15)
+      ..strokeWidth = 0.8
+      ..style = PaintingStyle.stroke;
+    // Vertical lines
+    canvas.drawLine(Offset(size.width * 0.33, 2), Offset(size.width * 0.33, size.height - 2), paint);
+    canvas.drawLine(Offset(size.width * 0.67, 2), Offset(size.width * 0.67, size.height - 2), paint);
+    // Horizontal lines
+    canvas.drawLine(Offset(2, size.height * 0.35), Offset(size.width - 2, size.height * 0.35), paint);
+    canvas.drawLine(Offset(2, size.height * 0.65), Offset(size.width - 2, size.height * 0.65), paint);
+  }
+  @override
+  bool shouldRepaint(_ChipPainter _) => false;
 }
 
 class _CardStat extends StatelessWidget {
@@ -436,9 +545,8 @@ class _AddCardButton extends StatelessWidget {
                 size: 20, color: _text3),
           ),
           const SizedBox(width: 12),
-          Text('Kart ekle',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: _text3, fontWeight: FontWeight.w500)),
+          const Text('Kart ekle',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
         ],
       ),
     );

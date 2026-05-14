@@ -3,9 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../shared/providers/auth_provider.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _negative   = Color(0xFFFF4D6D);
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -87,7 +95,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         .join();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -136,16 +144,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFE8F4FF),
+                            color: _text1,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           email,
-                          style: AppTextStyles.bodySmall
-                              .copyWith(
-                                  color:
-                                      const Color(0xFF4A6478)),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: _text3),
                         ),
                       ],
                     ),
@@ -204,20 +212,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF0D1B2A),
+                color: _cardBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: const Color(0xFF1A2940)),
+                    color: _cardBorder),
               ),
               child: const Icon(Icons.menu,
-                  size: 18, color: Color(0xFF8BA4BC)),
+                  size: 18, color: _text2),
             ),
           ),
           const SizedBox(width: 14),
-          Text(
+          const Text(
             'Profilim',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: const Color(0xFFE8F4FF)),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: _text1),
           ),
         ],
       ),
@@ -236,10 +246,11 @@ class _SectionLabel extends StatelessWidget {
           const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Text(
         label,
-        style: AppTextStyles.labelSmall.copyWith(
-            color: const Color(0xFF4A6478),
-            letterSpacing: 1.2,
-            fontSize: 10),
+        style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: _text3,
+            letterSpacing: 1.2),
       ),
     );
   }
@@ -262,18 +273,20 @@ class _IncomeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: const Color(0xFF1A2940)),
+              color: _cardBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Aylık Gelir',
-              style: AppTextStyles.labelSmall.copyWith(
-                  color: const Color(0xFF4A6478)),
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _text3),
             ),
             const SizedBox(height: 10),
             Row(
@@ -281,11 +294,11 @@ class _IncomeCard extends StatelessWidget {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF060D18),
+                      color: _scaffoldBg,
                       borderRadius:
                           BorderRadius.circular(12),
                       border: Border.all(
-                          color: const Color(0xFF1A2940)),
+                          color: _cardBorder),
                     ),
                     child: Row(
                       children: [
@@ -295,7 +308,7 @@ class _IncomeCard extends StatelessWidget {
                           child: Text(
                             '₺',
                             style: TextStyle(
-                              color: Color(0xFF00D4FF),
+                              color: _accent,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -307,16 +320,16 @@ class _IncomeCard extends StatelessWidget {
                             keyboardType:
                                 const TextInputType.numberWithOptions(
                                     decimal: true),
-                            style: AppTextStyles.bodyMedium
-                                .copyWith(
-                                    color: const Color(
-                                        0xFFE8F4FF)),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: _text1),
                             decoration:
                                 const InputDecoration(
                               border: InputBorder.none,
                               hintText: '0',
                               hintStyle: TextStyle(
-                                  color: Color(0xFF4A6478)),
+                                  color: _text3),
                               contentPadding:
                                   EdgeInsets.symmetric(
                                       vertical: 12),
@@ -334,8 +347,7 @@ class _IncomeCard extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: saving ? null : onSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          const Color(0xFF00D4FF),
+                      backgroundColor: _accent,
                       foregroundColor:
                           const Color(0xFF051929),
                       shape: RoundedRectangleBorder(
@@ -381,10 +393,10 @@ class _AccountInfoCard extends StatelessWidget {
           const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
           border:
-              Border.all(color: const Color(0xFF1A2940)),
+              Border.all(color: _cardBorder),
         ),
         child: Column(
           children: [
@@ -429,22 +441,24 @@ class _InfoRow extends StatelessWidget {
             ? null
             : const Border(
                 top: BorderSide(
-                    color: Color(0xFF1A2940))),
+                    color: _cardBorder)),
       ),
       child: Row(
         children: [
           Icon(icon,
-              size: 16, color: const Color(0xFF4A6478)),
+              size: 16, color: _text3),
           const SizedBox(width: 10),
           Text(label,
-              style: AppTextStyles.bodySmall
-                  .copyWith(
-                      color: const Color(0xFF8BA4BC))),
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: _text2)),
           const Spacer(),
           Text(value,
-              style: AppTextStyles.bodySmall.copyWith(
-                  color: const Color(0xFFE8F4FF),
-                  fontWeight: FontWeight.w500)),
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: _text1)),
         ],
       ),
     );
@@ -465,10 +479,10 @@ class _SecuritySection extends StatelessWidget {
           const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
           border:
-              Border.all(color: const Color(0xFF1A2940)),
+              Border.all(color: _cardBorder),
         ),
         child: Column(
           children: [
@@ -490,28 +504,26 @@ class _SecuritySection extends StatelessWidget {
               decoration: const BoxDecoration(
                 border: Border(
                     top: BorderSide(
-                        color: Color(0xFF1A2940))),
+                        color: _cardBorder)),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.fingerprint,
-                      size: 16, color: Color(0xFF4A6478)),
+                      size: 16, color: _text3),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text('Biyometrik Giriş',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(
-                                color: const Color(
-                                    0xFF8BA4BC))),
+                    child: const Text('Biyometrik Giriş',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: _text2)),
                   ),
                   Switch(
                     value: biometricEnabled,
                     onChanged: onBiometricChanged,
-                    activeThumbColor: const Color(0xFF00D4FF),
-                    inactiveThumbColor:
-                        const Color(0xFF4A6478),
-                    inactiveTrackColor:
-                        const Color(0xFF1A2940),
+                    activeThumbColor: _accent,
+                    inactiveThumbColor: _text3,
+                    inactiveTrackColor: _cardBorder,
                     materialTapTargetSize:
                         MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -549,21 +561,22 @@ class _TappableRow extends StatelessWidget {
               ? null
               : const Border(
                   top: BorderSide(
-                      color: Color(0xFF1A2940))),
+                      color: _cardBorder)),
         ),
         child: Row(
           children: [
             Icon(icon,
-                size: 16, color: const Color(0xFF4A6478)),
+                size: 16, color: _text3),
             const SizedBox(width: 10),
             Expanded(
               child: Text(label,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(
-                          color: const Color(0xFF8BA4BC))),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: _text2)),
             ),
             const Icon(Icons.chevron_right,
-                size: 16, color: Color(0xFF4A6478)),
+                size: 16, color: _text3),
           ],
         ),
       ),
@@ -587,29 +600,31 @@ class _AppearanceSection extends StatelessWidget {
         padding: const EdgeInsets.symmetric(
             horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1B2A),
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
           border:
-              Border.all(color: const Color(0xFF1A2940)),
+              Border.all(color: _cardBorder),
         ),
         child: Row(
           children: [
             const Icon(Icons.dark_mode_outlined,
-                size: 16, color: Color(0xFF4A6478)),
+                size: 16, color: _text3),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 darkMode ? 'Koyu Tema' : 'Açık Tema',
-                style: AppTextStyles.bodySmall.copyWith(
-                    color: const Color(0xFF8BA4BC)),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: _text2),
               ),
             ),
             Switch(
               value: darkMode,
               onChanged: onDarkModeChanged,
-              activeThumbColor: const Color(0xFF00D4FF),
-              inactiveThumbColor: const Color(0xFF4A6478),
-              inactiveTrackColor: const Color(0xFF1A2940),
+              activeThumbColor: _accent,
+              inactiveThumbColor: _text3,
+              inactiveTrackColor: _cardBorder,
               materialTapTargetSize:
                   MaterialTapTargetSize.shrinkWrap,
             ),
@@ -640,10 +655,9 @@ class _LogoutButton extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   fontSize: 15)),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFFF4D6D),
+            foregroundColor: _negative,
             side: BorderSide(
-                color: const Color(0xFFFF4D6D)
-                    .withValues(alpha: 0.4)),
+                color: _negative.withValues(alpha: 0.4)),
             shape: RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.circular(14)),

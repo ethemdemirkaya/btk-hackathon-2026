@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
@@ -13,17 +12,17 @@ import '../domain/dashboard_repository.dart';
 
 // ── Design tokens ──────────────────────────────────────────────────────────
 const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
+const _cardBg     = Color(0xFF0D1B2A);
 const _cardBorder = Color(0xFF1A2940);
-const _accentCyan = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _positive = Color(0xFF0DD9A0);
-const _negative = Color(0xFFFF4D6D);
-const _warning = Color(0xFFF59E0B);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 const _heroBgFrom = Color(0xFF0A1929);
-const _heroBgTo = Color(0xFF0D2240);
+const _heroBgTo   = Color(0xFF0D2240);
 
 // ── Dashboard page ─────────────────────────────────────────────────────────
 class DashboardPage extends ConsumerWidget {
@@ -36,7 +35,7 @@ class DashboardPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: _scaffoldBg,
       body: RefreshIndicator(
-        color: _accentCyan,
+        color: _accent,
         backgroundColor: _cardBg,
         onRefresh: () async => ref.invalidate(dashboardProvider),
         child: CustomScrollView(
@@ -109,14 +108,11 @@ class _GreetingHeader extends ConsumerWidget {
             children: [
               Text(
                 greeting,
-                style: AppTextStyles.labelSmall.copyWith(color: _text3),
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
               ),
               Text(
                 firstName,
-                style: AppTextStyles.headlineSmall.copyWith(
-                  color: _text1,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1),
               ),
             ],
           ),
@@ -286,7 +282,7 @@ class _HeroBalanceCard extends StatelessWidget {
                 width: 3,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [_accentCyan, Color(0xFF0066FF)],
+                    colors: [_accent, Color(0xFF0066FF)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -307,10 +303,7 @@ class _HeroBalanceCard extends StatelessWidget {
                     children: [
                       Text(
                         'Toplam Varlık',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: _text2,
-                          letterSpacing: 0.6,
-                        ),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2, letterSpacing: 0.6),
                       ),
                       GestureDetector(
                         onTap: onToggleHide,
@@ -344,8 +337,7 @@ class _HeroBalanceCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'geçen aya göre',
-                        style:
-                            AppTextStyles.labelSmall.copyWith(color: _text3),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                       ),
                     ],
                   ),
@@ -357,8 +349,7 @@ class _HeroBalanceCard extends StatelessWidget {
                       const SizedBox(width: 5),
                       Text(
                         '3 banka bağlı',
-                        style:
-                            AppTextStyles.labelSmall.copyWith(color: _text3),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                       ),
                       const SizedBox(width: 12),
                       Container(
@@ -375,8 +366,7 @@ class _HeroBalanceCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         'Son güncelleme: bugün',
-                        style:
-                            AppTextStyles.labelSmall.copyWith(color: _text3),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                       ),
                     ],
                   ),
@@ -416,9 +406,10 @@ class _ChangePill extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             value,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: color,
+            style: TextStyle(
+              fontSize: 11,
               fontWeight: FontWeight.w600,
+              color: color,
             ),
           ),
         ],
@@ -456,7 +447,7 @@ class _QuickStatsGrid extends StatelessWidget {
       ),
       _StatItem(
         icon: Icons.savings_outlined,
-        iconColor: _accentCyan,
+        iconColor: _accent,
         label: 'Tasarruf',
         value: hide
             ? '••••'
@@ -596,7 +587,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
           child: Text(
             'Hızlı Erişim',
-            style: AppTextStyles.headlineSmall.copyWith(color: _text1),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
           ),
         ),
         SizedBox(
@@ -619,11 +610,11 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? _accentCyan.withValues(alpha: 0.15)
+                        ? _accent.withValues(alpha: 0.15)
                         : _cardBg,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: isActive ? _accentCyan : _cardBorder,
+                      color: isActive ? _accent : _cardBorder,
                     ),
                   ),
                   child: Row(
@@ -632,7 +623,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                       Icon(
                         chip.icon,
                         size: 14,
-                        color: isActive ? _accentCyan : _text2,
+                        color: isActive ? _accent : _text2,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -640,7 +631,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isActive ? _accentCyan : _text2,
+                          color: isActive ? _accent : _text2,
                         ),
                       ),
                     ],
@@ -678,14 +669,14 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.headlineSmall.copyWith(color: _text1),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
           ),
           if (action != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
                 action!,
-                style: AppTextStyles.labelSmall.copyWith(color: _text2),
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2),
               ),
             ),
         ],
@@ -740,7 +731,7 @@ class _HealthScoreCard extends StatelessWidget {
                     ),
                     Text(
                       '$score',
-                      style: AppTextStyles.headlineMedium.copyWith(color: _color),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _color),
                     ),
                   ],
                 ),
@@ -752,18 +743,12 @@ class _HealthScoreCard extends StatelessWidget {
                   children: [
                     Text(
                       'Finansal Sağlık',
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: _text1,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _label,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: _text2,
-                        height: 1.5,
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.5),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -781,8 +766,7 @@ class _HealthScoreCard extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             '+3 son 30 gün',
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: _positive),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _positive),
                           ),
                         ],
                       ),
@@ -834,7 +818,7 @@ class _CashFlowChart extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           toY: p.income,
-                          color: _accentCyan,
+                          color: _accent,
                           width: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -866,8 +850,7 @@ class _CashFlowChart extends StatelessWidget {
                           final parts = period.split('-');
                           return Text(
                             parts.length > 1 ? parts[1] : period,
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: _text3),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                           );
                         },
                       ),
@@ -880,7 +863,7 @@ class _CashFlowChart extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ChartLegend(color: _accentCyan, label: 'Gelir'),
+                _ChartLegend(color: _accent, label: 'Gelir'),
                 const SizedBox(width: 16),
                 _ChartLegend(
                     color: _negative.withValues(alpha: 0.8), label: 'Gider'),
@@ -910,7 +893,7 @@ class _ChartLegend extends StatelessWidget {
         ),
         const SizedBox(width: 5),
         Text(label,
-            style: AppTextStyles.labelSmall.copyWith(color: _text3)),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
       ],
     );
   }
@@ -931,7 +914,7 @@ class _AiInsightCard extends StatelessWidget {
           color: _heroBgFrom,
           borderRadius: BorderRadius.circular(20),
           border: Border(
-            left: const BorderSide(color: _accentCyan, width: 3),
+            left: const BorderSide(color: _accent, width: 3),
             top: BorderSide(color: _cardBorder),
             right: BorderSide(color: _cardBorder),
             bottom: BorderSide(color: _cardBorder),
@@ -949,7 +932,7 @@ class _AiInsightCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _accentCyan.withValues(alpha: 0.12),
+                      color: _accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -959,15 +942,16 @@ class _AiInsightCard extends StatelessWidget {
                           '✦',
                           style: TextStyle(
                             fontSize: 10,
-                            color: _accentCyan,
+                            color: _accent,
                           ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'AI Önerisi',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: _accentCyan,
+                          style: const TextStyle(
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
+                            color: _accent,
                           ),
                         ),
                       ],
@@ -984,19 +968,13 @@ class _AiInsightCard extends StatelessWidget {
               // Title
               Text(
                 alert.title,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: _text1,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1),
               ),
               const SizedBox(height: 4),
               // Body
               Text(
                 alert.body,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: _text2,
-                  height: 1.5,
-                ),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.5),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1011,14 +989,15 @@ class _AiInsightCard extends StatelessWidget {
                       children: [
                         Text(
                           'Sohbet et',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: _accentCyan,
+                          style: const TextStyle(
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
+                            color: _accent,
                           ),
                         ),
                         const SizedBox(width: 3),
                         const Icon(Icons.arrow_forward,
-                            size: 12, color: _accentCyan),
+                            size: 12, color: _accent),
                       ],
                     ),
                   ),
@@ -1027,8 +1006,7 @@ class _AiInsightCard extends StatelessWidget {
                     onTap: onDismiss,
                     child: Text(
                       'Sonra',
-                      style:
-                          AppTextStyles.labelSmall.copyWith(color: _text3),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                     ),
                   ),
                 ],
@@ -1047,7 +1025,7 @@ class _BudgetCard extends StatelessWidget {
   const _BudgetCard({required this.items});
 
   static const _categoryColors = [
-    _accentCyan,
+    _accent,
     Color(0xFFA78BFA),
     Color(0xFFFF5C7C),
     Color(0xFFFFC857),
@@ -1080,17 +1058,15 @@ class _BudgetCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           item.category,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: _text1,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
                         ),
                       ),
                       Text(
                         '${AppFormatters.currencyCompact(item.spent)} / ${AppFormatters.currencyCompact(item.budgeted)}',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: item.overBudget ? _negative : _text2,
+                        style: TextStyle(
+                          fontSize: 11,
                           fontWeight: FontWeight.w500,
+                          color: item.overBudget ? _negative : _text2,
                         ),
                       ),
                     ],
@@ -1122,7 +1098,7 @@ class _CategorySpendCard extends StatelessWidget {
   const _CategorySpendCard({required this.items});
 
   static const _colors = [
-    _accentCyan,
+    _accent,
     Color(0xFFA78BFA),
     _negative,
     _warning,
@@ -1181,26 +1157,19 @@ class _CategorySpendCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.category,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: _text1,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
                       ),
                     ),
                     Text(
                       '%${pct.toStringAsFixed(0)}',
-                      style:
-                          AppTextStyles.labelSmall.copyWith(color: _text3),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                     ),
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 72,
                       child: Text(
                         AppFormatters.currencyCompact(item.amount),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: _text1,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
                         textAlign: TextAlign.right,
                       ),
                     ),
@@ -1252,24 +1221,19 @@ class _InflationCard extends StatelessWidget {
                   children: [
                     Text(
                       'Senin enflasyonun',
-                      style:
-                          AppTextStyles.bodySmall.copyWith(color: _text3),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
                         Text(
                           '%${inflation.personalRate.toStringAsFixed(1)}',
-                          style: AppTextStyles.amountMedium.copyWith(
-                            color: _text1,
-                            letterSpacing: -0.02 * 18,
-                          ),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1, letterSpacing: -0.36),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'vs TÜFE %${inflation.tufeRate.toStringAsFixed(1)}',
-                          style:
-                              AppTextStyles.labelSmall.copyWith(color: _text3),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                         ),
                       ],
                     ),

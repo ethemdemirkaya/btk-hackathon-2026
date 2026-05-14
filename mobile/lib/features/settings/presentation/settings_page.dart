@@ -3,16 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _negative   = Color(0xFFFF4D6D);
 
 const _quickActions = [
   (icon: Icons.receipt_long_outlined,    label: 'Fiş çek',  color: Color(0xFF00D4FF),  route: '/receipts'),
   (icon: Icons.science_outlined,         label: 'Simüle et', color: Color(0xFFA78BFA), route: '/simulator'),
   (icon: Icons.handshake_outlined,       label: 'Müzakere',  color: Color(0xFFFFB547),  route: '/negotiation'),
-  (icon: Icons.trending_up,              label: 'Portföy',   color: AppColors.info,     route: '/investments'),
+  (icon: Icons.trending_up,              label: 'Portföy',   color: Color(0xFF6FB1FC),  route: '/investments'),
   (icon: Icons.picture_as_pdf_outlined,  label: 'Rapor',     color: Color(0xFFF472B6),  route: '/reports'),
 ];
 
@@ -60,7 +67,7 @@ class SettingsPage extends ConsumerWidget {
         .join();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 40),
@@ -77,7 +84,7 @@ class SettingsPage extends ConsumerWidget {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF1A2940)),
+                  border: Border.all(color: _cardBorder),
                 ),
                 child: Row(
                   children: [
@@ -108,25 +115,29 @@ class SettingsPage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(name,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                  color: const Color(0xFFE8F4FF),
-                                  fontWeight: FontWeight.w700)),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _text1)),
                           const SizedBox(height: 2),
                           Text(email,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                  color: const Color(0xFF4A6478))),
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: _text3)),
                           const SizedBox(height: 6),
                           RichText(
                             text: TextSpan(
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(
-                                      color: const Color(0xFF4A6478)),
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: _text3),
                               children: [
                                 const TextSpan(text: 'Aylık gelir: '),
                                 TextSpan(
                                   text: '${AppFormatters.currencyCompact(income)} ₺',
                                   style: const TextStyle(
-                                      color: Color(0xFFE8F4FF),
+                                      color: _text1,
                                       fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -141,14 +152,14 @@ class SettingsPage extends ConsumerWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF060D18),
+                          color: _scaffoldBg,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                              color: const Color(0xFF1A2940)),
+                              color: _cardBorder),
                         ),
                         child: const Icon(Icons.edit_outlined,
                             size: 16,
-                            color: Color(0xFF8BA4BC)),
+                            color: _text2),
                       ),
                     ),
                   ],
@@ -165,19 +176,19 @@ class SettingsPage extends ConsumerWidget {
                       child: _StatCard(
                           value: '72',
                           label: 'SKOR',
-                          color: const Color(0xFF00D4FF))),
+                          color: _accent)),
                   const SizedBox(width: 8),
                   Expanded(
                       child: _StatCard(
                           value: '4',
                           label: 'HEDEF',
-                          color: const Color(0xFFE8F4FF))),
+                          color: _text1)),
                   const SizedBox(width: 8),
                   Expanded(
                       child: _StatCard(
                           value: '147',
                           label: 'GÜN',
-                          color: const Color(0xFFE8F4FF))),
+                          color: _text1)),
                 ],
               ),
             ),
@@ -188,12 +199,14 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
+                  const Padding(
+                    padding: EdgeInsets.only(
                         right: 20, left: 2, bottom: 10),
                     child: Text('Hızlı erişim',
-                        style: AppTextStyles.labelSmall.copyWith(
-                            color: const Color(0xFF4A6478),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _text3,
                             letterSpacing: 0.5)),
                   ),
                   SizedBox(
@@ -213,11 +226,11 @@ class SettingsPage extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 14, horizontal: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0D1B2A),
+                              color: _cardBg,
                               borderRadius:
                                   BorderRadius.circular(16),
                               border: Border.all(
-                                  color: const Color(0xFF1A2940)),
+                                  color: _cardBorder),
                             ),
                             child: Column(
                               children: [
@@ -236,13 +249,10 @@ class SettingsPage extends ConsumerWidget {
                                 const SizedBox(height: 8),
                                 Text(a.label,
                                     textAlign: TextAlign.center,
-                                    style: AppTextStyles.labelSmall
-                                        .copyWith(
-                                            color: const Color(
-                                                0xFF8BA4BC),
-                                            fontWeight:
-                                                FontWeight.w500,
-                                            fontSize: 11)),
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: _text2)),
                               ],
                             ),
                           ),
@@ -265,16 +275,18 @@ class SettingsPage extends ConsumerWidget {
                         padding:
                             const EdgeInsets.only(left: 2, bottom: 10),
                         child: Text(group.group,
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: const Color(0xFF4A6478),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: _text3,
                                 letterSpacing: 0.5)),
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D1B2A),
+                          color: _cardBg,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: const Color(0xFF1A2940)),
+                              color: _cardBorder),
                         ),
                         child: Column(
                           children: group.items
@@ -292,8 +304,7 @@ class SettingsPage extends ConsumerWidget {
                                   border: entry.key > 0
                                       ? const Border(
                                           top: BorderSide(
-                                              color: Color(
-                                                  0xFF1A2940)))
+                                              color: _cardBorder))
                                       : null,
                                 ),
                                 child: Row(
@@ -302,19 +313,16 @@ class SettingsPage extends ConsumerWidget {
                                       width: 36,
                                       height: 36,
                                       decoration: BoxDecoration(
-                                        color: const Color(
-                                            0xFF060D18),
+                                        color: _scaffoldBg,
                                         borderRadius:
                                             BorderRadius.circular(
                                                 10),
                                         border: Border.all(
-                                            color: const Color(
-                                                0xFF1A2940)),
+                                            color: _cardBorder),
                                       ),
                                       child: Icon(m.icon,
                                           size: 16,
-                                          color: const Color(
-                                              0xFF8BA4BC)),
+                                          color: _text2),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -324,26 +332,21 @@ class SettingsPage extends ConsumerWidget {
                                                 .start,
                                         children: [
                                           Text(m.label,
-                                              style: AppTextStyles
-                                                  .bodyMedium
-                                                  .copyWith(
-                                                      color: const Color(
-                                                          0xFFE8F4FF),
-                                                      fontWeight:
-                                                          FontWeight
-                                                              .w500)),
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: _text1)),
                                           Text(m.sub,
-                                              style: AppTextStyles
-                                                  .labelSmall
-                                                  .copyWith(
-                                                      color: const Color(
-                                                          0xFF4A6478))),
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: _text3)),
                                         ],
                                       ),
                                     ),
                                     const Icon(Icons.chevron_right,
                                         size: 16,
-                                        color: Color(0xFF4A6478)),
+                                        color: _text3),
                                   ],
                                 ),
                               ),
@@ -361,20 +364,22 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(
+                  const Padding(
+                    padding: EdgeInsets.only(
                         left: 2, bottom: 10),
                     child: Text('Ayarlar',
-                        style: AppTextStyles.labelSmall.copyWith(
-                            color: const Color(0xFF4A6478),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _text3,
                             letterSpacing: 0.5)),
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D1B2A),
+                      color: _cardBg,
                       borderRadius: BorderRadius.circular(20),
                       border:
-                          Border.all(color: const Color(0xFF1A2940)),
+                          Border.all(color: _cardBorder),
                     ),
                     child: Column(
                       children: [
@@ -414,9 +419,9 @@ class SettingsPage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D1B2A),
+                  color: _cardBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF1A2940)),
+                  border: Border.all(color: _cardBorder),
                 ),
                 child: Column(
                   children: [
@@ -448,10 +453,10 @@ class SettingsPage extends ConsumerWidget {
               padding: const EdgeInsets.only(top: 24),
               child: Center(
                 child: Text('Paranette v1.2 · 2026',
-                    style: AppTextStyles.labelSmall.copyWith(
-                        color: const Color(0xFF4A6478)
-                            .withValues(alpha: 0.6),
-                        fontSize: 10)),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: _text3.withValues(alpha: 0.6))),
               ),
             ),
           ],
@@ -465,27 +470,32 @@ class SettingsPage extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1B2A),
+        backgroundColor: _cardBg,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
-        title: Text('Çıkış Yap',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: const Color(0xFFE8F4FF))),
-        content: Text(
+        title: const Text('Çıkış Yap',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: _text1)),
+        content: const Text(
             'Hesabınızdan çıkmak istediğinize emin misiniz?',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: const Color(0xFF8BA4BC))),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: _text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('İptal',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(
-                          color: const Color(0xFF8BA4BC)))),
+              child: const Text('İptal',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: _text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4D6D),
+                backgroundColor: _negative,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
             child: const Text('Çıkış Yap',
@@ -522,9 +532,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1A2940)),
+        border: Border.all(color: _cardBorder),
       ),
       child: Column(
         children: [
@@ -535,10 +545,10 @@ class _StatCard extends StatelessWidget {
                   color: color)),
           const SizedBox(height: 3),
           Text(label,
-              style: AppTextStyles.labelSmall.copyWith(
-                  color: const Color(0xFF4A6478),
+              style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
+                  color: _text3,
                   letterSpacing: 0.8)),
         ],
       ),
@@ -569,7 +579,7 @@ class _SettingsRow extends StatelessWidget {
             horizontal: 14, vertical: 14),
         decoration: const BoxDecoration(
           border: Border(
-              top: BorderSide(color: Color(0xFF1A2940))),
+              top: BorderSide(color: _cardBorder)),
         ),
         child: Row(
           children: [
@@ -578,38 +588,40 @@ class _SettingsRow extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: danger
-                    ? const Color(0xFFFF4D6D).withValues(alpha: 0.12)
-                    : const Color(0xFF060D18),
+                    ? _negative.withValues(alpha: 0.12)
+                    : _scaffoldBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: const Color(0xFF1A2940)),
+                    color: _cardBorder),
               ),
               child: Icon(icon,
                   size: 15,
                   color: danger
-                      ? const Color(0xFFFF4D6D)
-                      : const Color(0xFF8BA4BC)),
+                      ? _negative
+                      : _text2),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(label,
-                  style: AppTextStyles.bodyMedium.copyWith(
+                  style: TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: danger
-                          ? const Color(0xFFFF4D6D)
-                          : const Color(0xFFE8F4FF))),
+                          ? _negative
+                          : _text1)),
             ),
             if (value.isNotEmpty)
               Text(value,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: const Color(0xFF4A6478))),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: _text3)),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right,
                 size: 14,
                 color: danger
-                    ? const Color(0xFFFF4D6D)
-                        .withValues(alpha: 0.6)
-                    : const Color(0xFF4A6478)),
+                    ? _negative.withValues(alpha: 0.6)
+                    : _text3),
           ],
         ),
       ),
