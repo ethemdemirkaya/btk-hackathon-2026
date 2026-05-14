@@ -288,7 +288,7 @@ class DashboardService
         ->all();
     }
 
-    /** Returns up to 3 recent undismissed AI insights */
+    /** Returns up to 3 recent undismissed AI insights (filters out empty / error-body insights) */
     public function getRecentInsights(User $user, int $limit = 3): Collection
     {
         return AgentInsight::where('user_id', $user->id)
@@ -296,6 +296,17 @@ class DashboardService
             ->where(function ($q) {
                 $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
             })
+            ->whereNotNull('title')
+            ->where('title', '!=', '')
+            ->whereNotNull('body')
+            ->where('body', '!=', '')
+            ->where('body', 'not like', '%hata oluştu%')
+            ->where('body', 'not like', '%rate-limited%')
+            ->where('body', 'not like', '%API error%')
+            ->where('body', 'not like', '%503%')
+            ->where('body', 'not like', '%429%')
+            ->where('body', 'not like', '%yoğun talep%')
+            ->where('body', 'not like', '%baş finansal asistan%')
             ->orderByDesc('importance')
             ->orderByDesc('created_at')
             ->limit($limit)
