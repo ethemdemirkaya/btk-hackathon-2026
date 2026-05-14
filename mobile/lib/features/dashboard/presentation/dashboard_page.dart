@@ -92,6 +92,12 @@ class _GreetingHeader extends ConsumerWidget {
         hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi günler' : 'İyi akşamlar';
     final firstName = user?.name.split(' ').first ?? 'Kullanıcı';
 
+    final initials = (user?.name ?? 'U')
+        .split(' ')
+        .take(2)
+        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+        .join();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 12),
       child: Row(
@@ -102,22 +108,53 @@ class _GreetingHeader extends ConsumerWidget {
             onTap: () => shellScaffoldKey.currentState?.openDrawer(),
           ),
           const Spacer(),
-          // Center greeting
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                greeting,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
-              ),
-              Text(
-                firstName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1),
-              ),
-            ],
+          // Center greeting — tappable to open profile
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.push('/profile'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  greeting,
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                ),
+                Text(
+                  firstName,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1),
+                ),
+              ],
+            ),
           ),
           const Spacer(),
+          // Profile avatar shortcut
+          GestureDetector(
+            onTap: () => context.push('/profile'),
+            child: Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF00D4FF), Color(0xFFC99B5B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  initials.isEmpty ? 'U' : initials,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF051929),
+                  ),
+                ),
+              ),
+            ),
+          ),
           // AI Insights button
           AiInsightsButton(page: 'dashboard'),
         ],

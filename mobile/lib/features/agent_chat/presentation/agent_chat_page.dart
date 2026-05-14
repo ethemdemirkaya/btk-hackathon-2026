@@ -1124,148 +1124,267 @@ class _InputAreaState extends State<_InputArea>
     return AnimatedBuilder(
       animation: _glowAnim,
       builder: (_, child) => Container(
-        padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + bottom),
-        decoration: BoxDecoration(
+        padding: EdgeInsets.fromLTRB(14, 10, 14, 10 + bottom),
+        decoration: const BoxDecoration(
           color: _scaffoldBg,
-          border: const Border(top: BorderSide(color: _cardBorder)),
+          border: Border(top: BorderSide(color: _cardBorder, width: 0.5)),
         ),
         child: child,
       ),
       child: Container(
+        constraints: const BoxConstraints(minHeight: 52),
         decoration: BoxDecoration(
-          color: _scaffoldBg,
-          borderRadius: BorderRadius.circular(24),
+          color: const Color(0xFF0B1624),
+          borderRadius: BorderRadius.circular(26),
           border: Border.all(
             color: _focused
-                ? _accent.withValues(alpha: 0.5)
+                ? _accent.withValues(alpha: 0.55)
                 : _cardBorder,
-            width: 1.5,
+            width: 1,
           ),
           boxShadow: _focused
               ? [
                   BoxShadow(
-                    color: _accent.withValues(alpha: 0.12),
-                    blurRadius: 16,
-                    spreadRadius: 0,
+                    color: _accent.withValues(alpha: 0.16),
+                    blurRadius: 18,
+                    spreadRadius: -2,
                   )
                 ]
               : null,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            // AI sparkle avatar
-            Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 6),
-              child: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      _accent.withValues(alpha: 0.9),
-                      const Color(0xFF0A7DA8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(Icons.auto_awesome,
-                    size: 14, color: Color(0xFF051929)),
-              ),
+            // Plus / attach affordance — flat icon, no decorative bubble
+            _ChatIconButton(
+              icon: Icons.add_rounded,
+              onTap: widget.enabled ? () => _showQuickActions(context) : null,
             ),
-            const SizedBox(width: 8),
             // Text field
             Expanded(
-              child: TextField(
-                controller: widget.controller,
-                focusNode: _focusNode,
-                enabled: widget.enabled,
-                maxLines: 5,
-                minLines: 1,
-                textInputAction: TextInputAction.send,
-                onSubmitted: widget.enabled ? widget.onSend : null,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: _text1,
-                    height: 1.4),
-                decoration: InputDecoration(
-                  hintText: widget.enabled
-                      ? 'Paranette AI\'ye bir şey sor…'
-                      : 'Ajanlar çalışıyor…',
-                  hintStyle: TextStyle(
-                      color: _text3.withValues(alpha: 0.8),
-                      fontSize: 14),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 8),
-                  isDense: true,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  maxLines: 5,
+                  minLines: 1,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: widget.enabled ? widget.onSend : null,
+                  cursorColor: _accent,
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: _text1,
+                      height: 1.35),
+                  decoration: InputDecoration(
+                    hintText: widget.enabled
+                        ? 'Mesajını yaz…'
+                        : 'Ajanlar çalışıyor…',
+                    hintStyle: TextStyle(
+                        color: _text3.withValues(alpha: 0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                    isDense: true,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 4),
-            // Send / loading button
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, anim) =>
-                    ScaleTransition(scale: anim, child: child),
-                child: widget.enabled
-                    ? GestureDetector(
-                        key: ValueKey(_hasText ? 'send' : 'mic'),
-                        onTap: _hasText
-                            ? () => widget.onSend(widget.controller.text)
-                            : null,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: _hasText
-                                ? const LinearGradient(
-                                    colors: [
-                                      Color(0xFF00D4FF),
-                                      Color(0xFF0066FF)
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  )
-                                : null,
-                            color:
-                                _hasText ? null : Colors.transparent,
-                          ),
-                          child: Icon(
-                            _hasText
-                                ? Icons.arrow_upward_rounded
-                                : Icons.mic_none_rounded,
-                            size: 18,
-                            color: _hasText ? const Color(0xFF051929) : _text3,
-                          ),
-                        ),
-                      )
-                    : Container(
-                        key: const ValueKey('loading'),
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(
-                            shape: BoxShape.circle),
-                        child: const Padding(
-                          padding: EdgeInsets.all(11),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: _accent,
-                          ),
+            // Mic (shown when no text) / Send (shown when typing) / Spinner (when busy)
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, anim) =>
+                  ScaleTransition(scale: anim, child: child),
+              child: !widget.enabled
+                  ? const Padding(
+                      key: ValueKey('loading'),
+                      padding: EdgeInsets.all(11),
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: _accent,
                         ),
                       ),
+                    )
+                  : _hasText
+                      ? GestureDetector(
+                          key: const ValueKey('send'),
+                          onTap: () => widget.onSend(widget.controller.text),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0xFF00D4FF),
+                                  Color(0xFF0066FF),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x4D00D4FF),
+                                  blurRadius: 12,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.arrow_upward_rounded,
+                              size: 22,
+                              color: Color(0xFF051929),
+                            ),
+                          ),
+                        )
+                      : _ChatIconButton(
+                          key: const ValueKey('mic'),
+                          icon: Icons.mic_none_rounded,
+                          onTap: () {},
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQuickActions(BuildContext context) {
+    FocusScope.of(context).unfocus();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: _cardBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              _QuickActionTile(
+                icon: Icons.attach_file_rounded,
+                label: 'Dosya / fiş yükle',
+                onTap: () => Navigator.pop(context),
+              ),
+              _QuickActionTile(
+                icon: Icons.psychology_outlined,
+                label: 'Hızlı analiz',
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onSend(
+                      'Son harcamalarımı analiz et ve bütçe önerileri sun.');
+                },
+              ),
+              _QuickActionTile(
+                icon: Icons.lightbulb_outline,
+                label: 'Tasarruf önerileri',
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onSend('Bu ay nereden tasarruf edebilirim?');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  const _ChatIconButton({super.key, required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            size: 22,
+            color: enabled ? _text2 : _text3,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: _accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _text1,
+                ),
               ),
             ),
+            const Icon(Icons.chevron_right, size: 18, color: _text3),
           ],
         ),
       ),
