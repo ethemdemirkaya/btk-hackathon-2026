@@ -1,5 +1,6 @@
 *.exe
 *.dll
+launcher/build/
 docs/api-keys.md
 docs/secrets/
 **/node_modules
