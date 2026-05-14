@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,6 +128,50 @@ class InsightsPage extends ConsumerStatefulWidget {
 
 class _InsightsPageState extends ConsumerState<InsightsPage> {
   final _dismissed = <int>{};
+  Timer? _autoRefreshTimer;
+  DateTime _lastFetched = DateTime.now();
+  // Drives the "X minutes ago" display without rebuilding the whole tree
+  Timer? _tickTimer;
+  int _minutesSinceRefresh = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh every 5 minutes
+    _autoRefreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      if (mounted) {
+        ref.invalidate(_insightsProvider);
+        setState(() {
+          _lastFetched = DateTime.now();
+          _minutesSinceRefresh = 0;
+        });
+      }
+    });
+    // Update "X minutes ago" label every minute
+    _tickTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _minutesSinceRefresh =
+              DateTime.now().difference(_lastFetched).inMinutes;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    _tickTimer?.cancel();
+    super.dispose();
+  }
+
+  void _manualRefresh() {
+    ref.invalidate(_insightsProvider);
+    setState(() {
+      _lastFetched = DateTime.now();
+      _minutesSinceRefresh = 0;
+    });
+  }
 
   Future<void> _dismiss(int id) async {
     setState(() => _dismissed.add(id));
@@ -135,6 +181,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
     } catch (_) {
       if (mounted) setState(() => _dismissed.remove(id));
     }
+  }
+
+  String get _lastUpdatedLabel {
+    if (_minutesSinceRefresh == 0) return 'Az önce güncellendi';
+    if (_minutesSinceRefresh == 1) return '1 dakika önce';
+    return '$_minutesSinceRefresh dakika önce';
   }
 
   @override
@@ -183,21 +235,26 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                                 .where((i) =>
                                     !_dismissed.contains(i.id))
                                 .length;
-                            return Text('$visible aktif öngörü',
+                            return Text(
+                                '$visible aktif öngörü · $_lastUpdatedLabel',
                                 style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                     color: _text3));
                           },
-                          loading: () => const SizedBox.shrink(),
+                          loading: () => Text(
+                              'Yükleniyor...',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: _text3)),
                           error: (_, __) => const SizedBox.shrink(),
                         ),
                       ],
                     ),
                   ),
                   GestureDetector(
-                    onTap: () =>
-                        ref.invalidate(_insightsProvider),
+                    onTap: _manualRefresh,
                     child: Container(
                       width: 40,
                       height: 40,
@@ -220,8 +277,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                 loading: () => const SkeletonListView(),
                 error: (e, __) => ErrorState(
                   message: e.toString(),
-                  onRetry: () =>
-                      ref.invalidate(_insightsProvider),
+                  onRetry: _manualRefresh,
                 ),
                 data: (items) {
                   final visible = items

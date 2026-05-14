@@ -57,6 +57,7 @@ class ApiEndpoints {
 
   // Investments
   static const investments = '/investments';
+  static const investmentsLiveRates = '/investments/live-rates';
   static String investment(int id) => '/investments/$id';
 
   // FX Alerts

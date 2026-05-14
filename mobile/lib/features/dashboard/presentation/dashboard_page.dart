@@ -161,11 +161,13 @@ class _DashboardBody extends StatefulWidget {
 class _DashboardBodyState extends State<_DashboardBody> {
   bool _hideBalance = false;
   late List<SmartAlert> _alerts;
+  late List<AiInsight> _aiInsights;
 
   @override
   void initState() {
     super.initState();
-    _alerts = List.from(widget.data.smartAlerts);
+    _alerts     = List.from(widget.data.smartAlerts);
+    _aiInsights = List.from(widget.data.aiInsights);
   }
 
   @override
@@ -199,16 +201,17 @@ class _DashboardBodyState extends State<_DashboardBody> {
           _CashFlowChart(cashFlow: data.cashFlow),
           const SizedBox(height: 20),
         ],
-        // ── AI smart alerts / insight card ──
-        if (_alerts.isNotEmpty) ...[
+        // ── AI Öngörüleri: rule-based alerts + AI insights ──
+        if (_alerts.isNotEmpty || _aiInsights.isNotEmpty) ...[
           _SectionHeader(
             title: 'AI Öngörüleri',
-            action: '${_alerts.length}',
+            action: '${_alerts.length + _aiInsights.length}',
           ),
           ..._alerts.take(2).map((a) => _AiInsightCard(
                 alert: a,
                 onDismiss: () => setState(() => _alerts.remove(a)),
               )),
+          ..._aiInsights.take(3).map((ins) => _AiInsightBanner(insight: ins)),
           const SizedBox(height: 20),
         ],
         // ── Budget summary ──
@@ -1011,6 +1014,66 @@ class _AiInsightCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── AI Insight Banner (from agent_insights table) ──────────────────────────
+class _AiInsightBanner extends StatelessWidget {
+  final AiInsight insight;
+  const _AiInsightBanner({required this.insight});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, icon) = switch (insight.type) {
+      'alert'   => (const Color(0xFFFF4D6D), Icons.warning_amber_rounded),
+      'warning' => (const Color(0xFFF59E0B), Icons.info_outline),
+      'tip'     => (const Color(0xFF0DD9A0), Icons.lightbulb_outline),
+      _         => (_accent,                 Icons.auto_awesome),
+    };
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 15, color: color),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(insight.title,
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+                  if (insight.body.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(insight.body,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 12, color: _text2, height: 1.4)),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

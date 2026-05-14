@@ -23,20 +23,36 @@ final _calendarProvider = FutureProvider.autoDispose
   return res.data as Map<String, dynamic>;
 });
 
+// API returns: 'bill', 'subscription', 'loan' — map them to display types
+String _normalizeType(String? raw) {
+  switch (raw) {
+    case 'bill':
+      return 'fatura';
+    case 'subscription':
+      return 'abonelik';
+    case 'loan':
+      return 'kredi';
+    case 'card':
+      return 'kart';
+    default:
+      return raw ?? '';
+  }
+}
+
 const _eventColors = {
-  'fatura': Color(0xFFC084FC),
-  'kredi': Color(0xFFFF4D6D),
-  'kart': Color(0xFF6FB1FC),
-  'abonelik': Color(0xFFA78BFA),
-  'danger': Color(0xFFFF4D6D),
-  'warning': Color(0xFFF59E0B),
-  'info': Color(0xFF6FB1FC),
-  'success': Color(0xFF0DD9A0),
-  'primary': Color(0xFF00D4FF),
+  'fatura':    Color(0xFFC084FC),
+  'kredi':     Color(0xFFFF4D6D),
+  'kart':      Color(0xFF6FB1FC),
+  'abonelik':  Color(0xFFA78BFA),
+  'danger':    Color(0xFFFF4D6D),
+  'warning':   Color(0xFFF59E0B),
+  'info':      Color(0xFF6FB1FC),
+  'success':   Color(0xFF0DD9A0),
+  'primary':   Color(0xFF00D4FF),
 };
 
 Color _eventColor(Map<String, dynamic> ev) {
-  final type = ev['type'] as String?;
+  final type = _normalizeType(ev['type'] as String?);
   final color = ev['color'] as String?;
   return _eventColors[type] ??
       _eventColors[color] ??
@@ -44,7 +60,7 @@ Color _eventColor(Map<String, dynamic> ev) {
 }
 
 const _filterOptions = ['all', 'fatura', 'kredi', 'kart', 'abonelik'];
-const _filterLabels = ['Tümü', 'Fatura', 'Kredi', 'Kart', 'Abonelik'];
+const _filterLabels  = ['Tümü', 'Fatura', 'Kredi', 'Kart', 'Abonelik'];
 const _weekDays = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
 class CalendarPage extends ConsumerStatefulWidget {
@@ -194,8 +210,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                     final rawEvents =
                         data['events'] as Map<String, dynamic>? ??
                             {};
+                    // API returns 'total_payments', not 'total_monthly_payments'
                     final totalMonthly =
-                        (data['total_monthly_payments'] as num?)
+                        (data['total_payments'] as num?)
                                 ?.toDouble() ??
                             0;
 
@@ -206,15 +223,18 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       if (day == null) return;
                       final dateStr =
                           '${_month.year}-${_month.month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
-                      final list = (dayEvents as List)
+                      final rawList = (dayEvents as List)
                           .cast<Map<String, dynamic>>();
+                      // Normalize API types ('bill','subscription','loan') to display types
+                      final list = rawList.map((e) {
+                        final normalized = Map<String, dynamic>.from(e);
+                        normalized['type'] = _normalizeType(e['type'] as String?);
+                        return normalized;
+                      }).toList();
                       final filtered = _filter == 'all'
                           ? list
                           : list.where((e) {
-                              return (e['type'] as String?) ==
-                                      _filter ||
-                                  (e['color'] as String?) ==
-                                      _filter;
+                              return (e['type'] as String?) == _filter;
                             }).toList();
                       if (filtered.isNotEmpty) {
                         eventsByDate[dateStr] = filtered;
@@ -243,6 +263,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                 ? (eventsByDate[_selectedDate!] ??
                                     [])
                                 : [],
+                          ),
+                          _UpcomingEventsList(
+                            eventsByDate: eventsByDate,
+                            currentMonth: _month,
                           ),
                         ] else ...[
                           _AgendaList(
@@ -498,30 +522,51 @@ class _CalendarGrid extends StatelessWidget {
                                 Padding(
                                   padding: const EdgeInsets.only(
                                       top: 2),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: dayEvents
-                                        .take(3)
-                                        .map((e) => Container(
-                                              width: 4,
-                                              height: 4,
-                                              margin: const EdgeInsets
-                                                  .symmetric(
-                                                  horizontal: 1),
-                                              decoration:
-                                                  BoxDecoration(
-                                                shape:
-                                                    BoxShape.circle,
-                                                color: isSelected
-                                                    ? const Color(
-                                                        0xFF051929)
-                                                    : _eventColor(
-                                                        e),
-                                              ),
-                                            ))
-                                        .toList(),
-                                  ),
+                                  child: dayEvents.length > 1
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 4, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? const Color(0xFF051929).withValues(alpha: 0.5)
+                                                : _eventColor(dayEvents.first).withValues(alpha: 0.25),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            '${dayEvents.length}',
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w700,
+                                              color: isSelected
+                                                  ? const Color(0xFF051929)
+                                                  : _eventColor(dayEvents.first),
+                                            ),
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: dayEvents
+                                              .take(3)
+                                              .map((e) => Container(
+                                                    width: 4,
+                                                    height: 4,
+                                                    margin: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 1),
+                                                    decoration:
+                                                        BoxDecoration(
+                                                      shape:
+                                                          BoxShape.circle,
+                                                      color: isSelected
+                                                          ? const Color(
+                                                              0xFF051929)
+                                                          : _eventColor(
+                                                              e),
+                                                    ),
+                                                  ))
+                                              .toList(),
+                                        ),
                                 ),
                             ],
                           ),
@@ -708,6 +753,13 @@ class _EventRow extends StatelessWidget {
         return Icons.credit_card_outlined;
       case 'abonelik':
         return Icons.subscriptions_outlined;
+      // Legacy API type names (in case normalization is bypassed)
+      case 'bill':
+        return Icons.power_outlined;
+      case 'loan':
+        return Icons.account_balance_outlined;
+      case 'subscription':
+        return Icons.subscriptions_outlined;
       default:
         return Icons.event_outlined;
     }
@@ -867,6 +919,163 @@ class _AgendaList extends StatelessWidget {
       'Paz'
     ];
     return days[weekday];
+  }
+}
+
+// ── Upcoming Events List ─────────────────────────────────────────────
+class _UpcomingEventsList extends StatelessWidget {
+  final Map<String, List<Map<String, dynamic>>> eventsByDate;
+  final DateTime currentMonth;
+  const _UpcomingEventsList(
+      {required this.eventsByDate, required this.currentMonth});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    // Show events from today forward (within this month or future months)
+    final upcoming = eventsByDate.entries
+        .where((e) {
+          try {
+            final dt = DateTime.parse(e.key);
+            return !dt.isBefore(DateTime(now.year, now.month, now.day));
+          } catch (_) {
+            return false;
+          }
+        })
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (upcoming.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 2, bottom: 10),
+            child: Text(
+              'Yaklaşan Ödemeler',
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _text3,
+                  letterSpacing: 0.5),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _cardBorder),
+            ),
+            child: Column(
+              children: upcoming.take(5).expand((entry) {
+                DateTime? dt;
+                try { dt = DateTime.parse(entry.key); } catch (_) {}
+                return entry.value.map((e) {
+                  final isFirst = entry == upcoming.first &&
+                      e == entry.value.first;
+                  final color = _eventColor(e);
+                  final type = e['type'] as String? ?? '';
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: !isFirst
+                          ? const Border(
+                              top: BorderSide(color: _cardBorder))
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.13),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (dt != null) ...[
+                                Text(
+                                  '${dt.day}',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: color),
+                                ),
+                                Text(
+                                  _monthShort(dt.month),
+                                  style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w600,
+                                      color: color.withValues(alpha: 0.7)),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                e['title'] as String? ?? '',
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _text1),
+                              ),
+                              if (type.isNotEmpty)
+                                Text(
+                                  _typeLabel(type),
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                      color: color.withValues(alpha: 0.8)),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)} ₺',
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _negative),
+                        ),
+                      ],
+                    ),
+                  );
+                });
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _monthShort(int month) {
+    const months = [
+      '', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
+      'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'
+    ];
+    return months[month];
+  }
+
+  String _typeLabel(String type) {
+    switch (type) {
+      case 'fatura':    return 'Fatura';
+      case 'kredi':     return 'Kredi Ödemesi';
+      case 'kart':      return 'Kart Ödemesi';
+      case 'abonelik':  return 'Abonelik';
+      default:          return type;
+    }
   }
 }
 

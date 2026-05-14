@@ -133,6 +133,33 @@ class BudgetSummaryItem {
       );
 }
 
+class AiInsight {
+  final int? id;
+  final String type;
+  final String title;
+  final String body;
+  final String importance;
+  final String? actionLink;
+
+  const AiInsight({
+    this.id,
+    required this.type,
+    required this.title,
+    required this.body,
+    required this.importance,
+    this.actionLink,
+  });
+
+  factory AiInsight.fromJson(Map<String, dynamic> j) => AiInsight(
+        id: (j['id'] as num?)?.toInt(),
+        type: j['type'] as String? ?? 'info',
+        title: j['title'] as String? ?? '',
+        body: j['body'] as String? ?? '',
+        importance: j['importance'] as String? ?? 'medium',
+        actionLink: j['action_link'] as String?,
+      );
+}
+
 class DashboardData {
   final DashboardSummary summary;
   final List<CashFlowPoint> cashFlow;
@@ -140,6 +167,7 @@ class DashboardData {
   final PersonalInflation? personalInflation;
   final List<SmartAlert> smartAlerts;
   final List<BudgetSummaryItem> budgetSummary;
+  final List<AiInsight> aiInsights;
 
   const DashboardData({
     required this.summary,
@@ -148,6 +176,7 @@ class DashboardData {
     this.personalInflation,
     required this.smartAlerts,
     required this.budgetSummary,
+    this.aiInsights = const [],
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> j) {
@@ -172,6 +201,9 @@ class DashboardData {
       budgetSummary: (j['budget_summary'] as List? ?? [])
           .map((e) =>
               BudgetSummaryItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      aiInsights: (j['ai_insights'] as List? ?? [])
+          .map((e) => AiInsight.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }

@@ -262,13 +262,15 @@ class _ReportBody extends StatelessWidget {
     final savingsRate = income > 0
         ? ((income - expense) / income * 100).clamp(0, 100)
         : 0.0;
-    final cashFlow =
-        (data['cash_flow'] as List?)?.cast<Map<String, dynamic>>() ??
-            [];
-    final categories =
-        (data['categories'] as List?)?.cast<dynamic>() ?? [];
-    final topMerchants =
-        (data['top_merchants'] as List?)?.cast<dynamic>() ?? [];
+    final cashFlow = ((data['cash_flow'] as List?) ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    final categories = ((data['categories'] as List?) ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    final topMerchants = ((data['top_merchants'] as List?) ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
     final healthScore =
         (data['health_score'] as num?)?.toInt() ?? 0;
 
@@ -339,22 +341,18 @@ class _ReportBody extends StatelessWidget {
             ),
             child: Column(
               children: categories.asMap().entries.map((entry) {
-                final cat =
-                    entry.value as Map<String, dynamic>;
+                final cat = entry.value;
                 final total =
                     (cat['total'] as num?)?.toDouble() ?? 0;
                 return Padding(
                   padding: EdgeInsets.only(
                       top: entry.key > 0 ? 10 : 0),
                   child: _CategoryRow(
-                    name:
-                        cat['merchant_category'] as String? ??
-                            'Diğer',
+                    name: cat['merchant_category'] as String? ??
+                        'Diğer',
                     total: total,
-                    maxTotal: (categories.first
-                            as Map<String, dynamic>)['total']
-                        as num? ??
-                        1,
+                    maxTotal:
+                        categories.first['total'] as num? ?? 1,
                   ),
                 );
               }).toList(),
@@ -384,8 +382,7 @@ class _ReportBody extends StatelessWidget {
                   .asMap()
                   .entries
                   .map((entry) {
-                final merch =
-                    entry.value as Map<String, dynamic>;
+                final merch = entry.value;
                 return Container(
                   padding: const EdgeInsets.symmetric(
                       vertical: 10),
