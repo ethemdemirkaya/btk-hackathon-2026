@@ -157,7 +157,7 @@ class AgentChatController extends Controller
                     'agent_name' => 'budget_advisor',
                     'type'       => 'tip',
                     'title'      => 'Bütçe Analizi',
-                    'body'       => Str::limit($summary, 300),
+                    'body'       => Str::limit($summary, 2000),
                     'importance' => 7,
                     'expires_at' => now()->addDays(7),
                 ]);
@@ -176,7 +176,7 @@ class AgentChatController extends Controller
                     'agent_name' => 'budget_advisor',
                     'type'       => 'tip',
                     'title'      => ($rec['category'] ?? 'Bütçe') . ' Önerisi',
-                    'body'       => Str::limit($suggestion, 300),
+                    'body'       => Str::limit($suggestion, 2000),
                     'importance' => $priority,
                     'expires_at' => now()->addDays(7),
                 ]);
@@ -195,7 +195,7 @@ class AgentChatController extends Controller
                     'agent_name' => 'anomaly_detector',
                     'type'       => 'warning',
                     'title'      => 'Harcama Anomalisi',
-                    'body'       => Str::limit($summary, 300),
+                    'body'       => Str::limit($summary, 2000),
                     'importance' => 9,
                     'expires_at' => now()->addDays(3),
                 ]);

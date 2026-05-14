@@ -121,7 +121,7 @@ class OrchestratorAgent
             'agent_name' => 'orchestrator',
             'type'       => 'recommendation',
             'title'      => $title,
-            'body'       => \Illuminate\Support\Str::limit($final, 300),
+            'body'       => \Illuminate\Support\Str::limit($final, 2000),
             'importance' => $importance,
             'expires_at' => now()->addDays(7),
         ]);
