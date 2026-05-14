@@ -1,9 +1,9 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Emülatör için: 10.0.2.2 (host machine localhost)
-  // Gerçek cihaz için: 192.168.43.125 (Wi-Fi IP)
-  static const baseUrl = 'http://10.0.2.2:8000/api/v1';
+  static const _host =
+      String.fromEnvironment('API_HOST', defaultValue: '10.0.2.2');
+  static const baseUrl = 'http://$_host:8000/api/v1';
 
   // Auth
   static const authMe = '/auth/me';
