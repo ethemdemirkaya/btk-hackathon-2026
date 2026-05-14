@@ -297,7 +297,7 @@
 
   {{-- ── FOOTER PAGE 1 ── --}}
   <div class="footer">
-    <div class="footer-l">Paranette &mdash; TEKNOFEST Hackathon 2026 &mdash; paranette.local</div>
+    <div class="footer-l">Paranette &mdash; BTK Akademi Hackathon 2026 &mdash; paranette.local</div>
     <div class="footer-r">Bu rapor {{ now()->format('d.m.Y H:i') }} tarihinde oluşturulmuştur. Yatırım tavsiyesi değildir.</div>
   </div>
 
@@ -508,7 +508,7 @@
 
     {{-- ── FOOTER PAGE 2 ── --}}
     <div class="footer">
-      <div class="footer-l">Paranette &mdash; TEKNOFEST Hackathon 2026 &mdash; paranette.local</div>
+      <div class="footer-l">Paranette &mdash; BTK Akademi Hackathon 2026 &mdash; paranette.local</div>
       <div class="footer-r">Bu rapor {{ now()->format('d.m.Y H:i') }} tarihinde oluşturulmuştur. Yatırım tavsiyesi değildir.</div>
     </div>
 

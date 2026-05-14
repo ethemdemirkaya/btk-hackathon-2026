@@ -1,7 +1,7 @@
 # Paranette — Modül & Özellik Kataloğu
 
 > **Stack:** Laravel 13.7 · Google Gemini Pro/Flash/Vision · MySQL · Bootstrap 5 (Vuexy)  
-> **Hedef kitle:** Türk bireysel kullanıcılar · **Hackathon:** TEKNOFEST 2026
+> **Hedef kitle:** Türk bireysel kullanıcılar · **Hackathon:** BTK AKADEMİ HACKATHON
 
 ---
 

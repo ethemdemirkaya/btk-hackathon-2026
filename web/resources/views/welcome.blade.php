@@ -588,7 +588,7 @@
         <div class="col-lg-5">
           <div class="pn-hero-eyebrow">
             <i class="ti ti-sparkles" style="font-size:12px"></i>
-            TEKNOFEST Hackathon 2026
+            BTK Akademi Hackathon 2026
           </div>
           <h1 class="pn-hero-title">
             Paranızı<br>
@@ -980,7 +980,7 @@
         <path fill-rule="evenodd" clip-rule="evenodd" d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z" fill="#10B981"/>
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z" fill="#10B981"/>
       </svg>
-      <span class="pn-footer-text"><strong style="color:rgba(255,255,255,.5)">Paranette</strong> &copy; {{ date('Y') }} — TEKNOFEST Hackathon 2026</span>
+      <span class="pn-footer-text"><strong style="color:rgba(255,255,255,.5)">Paranette</strong> &copy; {{ date('Y') }} — BTK Akademi Hackathon 2026</span>
     </div>
     <div class="pn-footer-stack">
       <span class="pn-stack-tag">Laravel 13</span>
