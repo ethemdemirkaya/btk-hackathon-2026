@@ -383,7 +383,7 @@
             <footer class="content-footer footer bg-footer-theme">
               <div class="container-xxl">
                 <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                  <div class="text-body">&copy; {{ date('Y') }}, <strong>Paranette</strong> &mdash; TEKNOFEST Hackathon 2026</div>
+                  <div class="text-body">&copy; {{ date('Y') }}, <strong>Paranette</strong> &mdash; BTK Akademi Hackathon 2026</div>
                 </div>
               </div>
             </footer>
