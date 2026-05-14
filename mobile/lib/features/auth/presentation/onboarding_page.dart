@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -15,30 +13,40 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _controller = PageController();
   int _page = 0;
 
+  static const _bg = Color(0xFF060D18);
+  static const _accent = Color(0xFF00D4FF);
+  static const _textPrimary = Color(0xFFE8F4FF);
+  static const _textSecondary = Color(0xFF8BA4BC);
+  static const _border = Color(0xFF1A2940);
+
   static const _slides = [
     _OnboardingSlide(
-      icon: Icons.account_balance,
-      title: 'Tüm bankalarını tek yerde',
+      icon: Icons.currency_lira,
+      title: 'Paranoya yok, sadece para',
       subtitle:
-          'Ziraat, Garanti, İşbank ve daha fazlasını bağla. Hesaplarını, kartlarını ve kredilerini tek yerden yönet.',
+          'Tüm banka hesaplarını, kartlarını ve kredilerini tek bir yerde birleştir. Finansa bakışın değişecek.',
+      glowColor: Color(0xFF00D4FF),
     ),
     _OnboardingSlide(
-      icon: Icons.psychology,
-      title: 'AI ile finansal tavsiye',
+      icon: Icons.psychology_rounded,
+      title: 'AI Finansal Koçunuz',
       subtitle:
-          'Kişisel finans asistanın her zaman yanında. Harcamalarını analiz et, bütçeni optimize et.',
+          'Kişisel yapay zeka asistanın harcamalarını analiz eder, tasarruf fırsatlarını bulur ve geleceğini planlar.',
+      glowColor: Color(0xFF7C3AED),
     ),
     _OnboardingSlide(
-      icon: Icons.flag,
-      title: 'Hedeflerini takip et',
+      icon: Icons.bar_chart_rounded,
+      title: 'Tüm hesaplarınız tek yerde',
       subtitle:
-          'Tasarruf hedefleri oluştur, kişisel enflasyonunu gör ve geleceğini simüle et.',
+          'Ziraat, Garanti, İşbank ve daha fazlası. Anlık bakiye, harcama grafikleri ve trend analizleri.',
+      glowColor: Color(0xFF0DD9A0),
     ),
     _OnboardingSlide(
-      icon: Icons.document_scanner,
-      title: 'Fişini çek, otomatik kaydet',
+      icon: Icons.shield_rounded,
+      title: 'Güvenli ve şifreli',
       subtitle:
-          'Kamerandan fişini tara, AI otomatik olarak işlem oluştursun. Garanti takibini hiç kaçırma.',
+          'Banka düzeyinde şifreleme ve KVKK uyumlu altyapıyla verileriniz her zaman güvende.',
+      glowColor: Color(0xFFF59E0B),
     ),
   ];
 
@@ -68,21 +76,61 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final isLast = _page == _slides.length - 1;
 
     return Scaffold(
+      backgroundColor: _bg,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextButton(
-                  onPressed: _complete,
-                  child: const Text('Geç'),
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00D4FF), Color(0xFF0099CC)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Icon(Icons.account_balance_wallet,
+                            size: 18, color: Colors.white),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Paranette',
+                        style: TextStyle(
+                          color: _textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: _complete,
+                    style: TextButton.styleFrom(
+                      foregroundColor: _textSecondary,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                    ),
+                    child: const Text(
+                      'Atla',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Pages
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -91,7 +139,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 itemBuilder: (_, i) => _OnboardingSlideView(slide: _slides[i]),
               ),
             ),
-            // Dots + buttons
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -102,34 +149,102 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     children: List.generate(
                       _slides.length,
                       (i) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
+                        duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: i == _page ? 24 : 8,
+                        width: i == _page ? 28 : 8,
                         height: 8,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4),
-                          color: i == _page
-                              ? AppColors.primary
-                              : AppColors.borderLight,
+                          color: i == _page ? _accent : Colors.transparent,
+                          border: i == _page
+                              ? null
+                              : Border.all(color: _border, width: 1.5),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                   if (isLast) ...[
-                    ElevatedButton(
-                      onPressed: () => context.go('/register'),
-                      child: const Text('Hesap Oluştur'),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () => context.go('/register'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _accent,
+                          foregroundColor: const Color(0xFF051929),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Başlayalım',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () => context.go('/login'),
-                      child: const Text('Giriş Yap'),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: () => context.go('/login'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _textSecondary,
+                          side: const BorderSide(color: _border, width: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Giriş Yap',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                   ] else
-                    ElevatedButton(
-                      onPressed: _next,
-                      child: const Text('İleri'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _next,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _accent,
+                              foregroundColor: const Color(0xFF051929),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 32),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'İleri',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, size: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -145,41 +260,87 @@ class _OnboardingSlide {
   final IconData icon;
   final String title;
   final String subtitle;
-  const _OnboardingSlide(
-      {required this.icon, required this.title, required this.subtitle});
+  final Color glowColor;
+  const _OnboardingSlide({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.glowColor,
+  });
 }
 
 class _OnboardingSlideView extends StatelessWidget {
   final _OnboardingSlide slide;
   const _OnboardingSlideView({required this.slide});
 
+  static const _cardBg = Color(0xFF0D1B2A);
+  static const _border = Color(0xFF1A2940);
+  static const _textPrimary = Color(0xFFE8F4FF);
+  static const _textSecondary = Color(0xFF8BA4BC);
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 200,
+            height: 200,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(48),
+              border: Border.all(color: _border, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: slide.glowColor.withValues(alpha: 0.18),
+                  blurRadius: 60,
+                  spreadRadius: 8,
+                ),
+                BoxShadow(
+                  color: slide.glowColor.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-            child: Icon(slide.icon, size: 56, color: AppColors.primary),
+            child: Center(
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  color: slide.glowColor.withValues(alpha: 0.12),
+                  border: Border.all(
+                    color: slide.glowColor.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(slide.icon, size: 52, color: slide.glowColor),
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 48),
           Text(
             slide.title,
-            style: AppTextStyles.headlineLarge,
+            style: const TextStyle(
+              color: _textPrimary,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              height: 1.2,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             slide.subtitle,
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: Theme.of(context).textTheme.bodySmall?.color,
+            style: const TextStyle(
+              color: _textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              height: 1.6,
             ),
             textAlign: TextAlign.center,
           ),
