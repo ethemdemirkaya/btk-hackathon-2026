@@ -56,7 +56,7 @@ class CategorySpend {
   });
 
   factory CategorySpend.fromJson(Map<String, dynamic> j) => CategorySpend(
-        category: (j['category'] ?? j['name'] ?? '') as String,
+        category: (j['category'] ?? j['name'] ?? '').toString(),
         amount: ((j['amount'] ?? j['total']) as num? ?? 0).toDouble(),
         percentage: (j['percentage'] as num? ?? 0).toDouble(),
       );
@@ -97,11 +97,11 @@ class SmartAlert {
   });
 
   factory SmartAlert.fromJson(Map<String, dynamic> j) => SmartAlert(
-        type: j['type'] as String? ?? 'info',
-        title: j['title'] as String,
-        body: j['body'] as String,
-        icon: j['icon'] as String? ?? 'tabler-info-circle',
-        link: j['link'] as String? ?? '/',
+        type: j['type']?.toString() ?? 'info',
+        title: j['title']?.toString() ?? '',
+        body: j['body']?.toString() ?? '',
+        icon: j['icon']?.toString() ?? 'tabler-info-circle',
+        link: j['link']?.toString() ?? '/',
       );
 }
 
@@ -124,7 +124,7 @@ class BudgetSummaryItem {
 
   factory BudgetSummaryItem.fromJson(Map<String, dynamic> j) =>
       BudgetSummaryItem(
-        category: (j['category'] ?? j['name'] ?? '') as String,
+        category: (j['category'] ?? j['name'] ?? '').toString(),
         budgeted: ((j['budgeted'] ?? j['amount']) as num? ?? 0).toDouble(),
         spent: (j['spent'] as num? ?? 0).toDouble(),
         remaining: (j['remaining'] as num? ?? 0).toDouble(),
@@ -152,11 +152,11 @@ class AiInsight {
 
   factory AiInsight.fromJson(Map<String, dynamic> j) => AiInsight(
         id: (j['id'] as num?)?.toInt(),
-        type: j['type'] as String? ?? 'info',
-        title: j['title'] as String? ?? '',
-        body: j['body'] as String? ?? '',
-        importance: j['importance'] as String? ?? 'medium',
-        actionLink: j['action_link'] as String?,
+        type: j['type']?.toString() ?? 'info',
+        title: j['title']?.toString() ?? '',
+        body: j['body']?.toString() ?? '',
+        importance: j['importance']?.toString() ?? 'medium',
+        actionLink: j['action_link']?.toString(),
       );
 }
 
