@@ -73,8 +73,19 @@ class HealthScorePage extends ConsumerWidget {
             onRetry: () => ref.invalidate(_healthProvider),
           ),
           data: (data) {
-            final healthScore =
-                (data['health_score'] as num?)?.toInt() ?? 72;
+            // /dashboard returns health_score as a Map; summary.health_score is the number
+            final healthMap = data['health_score'];
+            final summary = data['summary'] as Map<String, dynamic>?;
+            final int healthScore;
+            if (healthMap is Map && healthMap['score'] is num) {
+              healthScore = (healthMap['score'] as num).toInt();
+            } else if (summary != null && summary['health_score'] is num) {
+              healthScore = (summary['health_score'] as num).toInt();
+            } else if (healthMap is num) {
+              healthScore = healthMap.toInt();
+            } else {
+              healthScore = 72;
+            }
             final scoreChange =
                 (data['score_change'] as num?)?.toInt() ?? 2;
 

@@ -1133,7 +1133,7 @@ class _InputAreaState extends State<_InputArea>
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: _scaffoldBg,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: _focused

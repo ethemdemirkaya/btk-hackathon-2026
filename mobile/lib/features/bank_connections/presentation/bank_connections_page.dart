@@ -246,19 +246,33 @@ class _ConnectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // API returns connection.bank.{slug,name,...} and connection.accounts[...]
+    final bankNode = conn['bank'];
+    final String? bankSlug = bankNode is Map ? bankNode['slug']?.toString() : conn['bank_slug']?.toString();
+    final String? apiBankName = bankNode is Map ? bankNode['name']?.toString() : conn['bank_name']?.toString();
+    final accounts = (conn['accounts'] as List?) ?? const [];
+    final firstAccount = accounts.isNotEmpty && accounts.first is Map
+        ? accounts.first as Map
+        : null;
+
     final bankInfo = _banks.firstWhere(
-        (b) => b['id'] == conn['bank_slug'],
+        (b) => b['id'] == bankSlug,
         orElse: () => {
-              'name': conn['bank_name'] ?? 'Banka',
+              'id': bankSlug ?? '',
+              'name': apiBankName ?? 'Banka',
               'color': _text3,
               'type': 'credentials'
             });
     final bankName = bankInfo['name'] as String;
     final bankColor = bankInfo['color'] as Color;
-    final isActive = conn['status'] == 'active';
-    final lastSynced = conn['last_synced_at'] as String?;
-    final balance = (conn['balance'] as num?)?.toDouble();
-    final accountType = conn['account_type'] as String?;
+    final isActive = conn['status'] == 'active' || conn['status'] == 'connected';
+    final lastSynced = (conn['last_sync_at'] ?? conn['last_synced_at']) as String?;
+    final double? balance = firstAccount != null && firstAccount['balance'] is num
+        ? (firstAccount['balance'] as num).toDouble()
+        : (conn['balance'] as num?)?.toDouble();
+    final accountType = firstAccount?['type']?.toString()
+        ?? firstAccount?['account_type']?.toString()
+        ?? conn['account_type']?.toString();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -478,19 +492,20 @@ class _AddBankSheetState extends State<_AddBankSheet> {
     setState(() => _loading = true);
     try {
       final type = _selectedBank!['type'] as String;
-      final Map<String, dynamic> payload = {
-        'bank_slug': _selectedBank!['id'],
-        'bank_name': _selectedBank!['name'],
-      };
+      final Map<String, dynamic> credentials = {};
       if (type == 'credentials') {
-        payload['username'] = _usernameCtrl.text.trim();
-        payload['password'] = _passwordCtrl.text;
+        credentials['username'] = _usernameCtrl.text.trim();
+        credentials['password'] = _passwordCtrl.text;
       } else if (type == 'api_key') {
-        payload['api_key'] = _apiKeyCtrl.text.trim();
-        payload['client_id'] = _clientIdCtrl.text.trim();
+        credentials['api_key'] = _apiKeyCtrl.text.trim();
+        credentials['client_id'] = _clientIdCtrl.text.trim();
       } else if (type == 'oauth') {
-        payload['oauth_token'] = _apiKeyCtrl.text.trim();
+        credentials['oauth_token'] = _apiKeyCtrl.text.trim();
       }
+      final payload = <String, dynamic>{
+        'bank_slug': _selectedBank!['id'],
+        'credentials': credentials,
+      };
       await DioClient.instance
           .post(ApiEndpoints.bankConnections, data: payload);
       widget.onAdded();

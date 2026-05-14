@@ -24,31 +24,31 @@ class BottomNavShell extends StatelessWidget {
   static const _tabs = [
     _NavTab(
       path:       '/dashboard',
-      icon:       Iconsax.home_outline,
+      icon:       Iconsax.home_bold,
       activeIcon: Iconsax.home_bold,
       label:      'Ana Sayfa',
     ),
     _NavTab(
       path:       '/transactions',
-      icon:       Iconsax.receipt_outline,
+      icon:       Iconsax.receipt_bold,
       activeIcon: Iconsax.receipt_bold,
       label:      'İşlemler',
     ),
     _NavTab(
       path:       '/chat',
-      icon:       Iconsax.message_outline,
+      icon:       Iconsax.message_bold,
       activeIcon: Iconsax.message_bold,
       label:      'AI',
     ),
     _NavTab(
       path:       '/calendar',
-      icon:       Iconsax.calendar_outline,
+      icon:       Iconsax.calendar_bold,
       activeIcon: Iconsax.calendar_bold,
       label:      'Takvim',
     ),
     _NavTab(
       path:       '/insights',
-      icon:       Iconsax.chart_outline,
+      icon:       Iconsax.chart_bold,
       activeIcon: Iconsax.chart_bold,
       label:      'Öngörüler',
     ),
