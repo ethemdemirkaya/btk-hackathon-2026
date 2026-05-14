@@ -237,7 +237,7 @@ class SubscriptionsPage extends ConsumerWidget {
                 final total =
                     (data['total_monthly'] as num?)?.toDouble() ?? 0;
                 return _buildHeader(
-                    'Aylık ₺${AppFormatters.currencyCompact(total)}');
+                    'Aylık ${AppFormatters.currencyCompact(total)}');
               },
             ),
             // ── Body ────────────────────────────────────────────────
@@ -307,7 +307,7 @@ class SubscriptionsPage extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
-                                        '₺${AppFormatters.currencyCompact(totalMonthly)}',
+                                        '${AppFormatters.currencyCompact(totalMonthly)}',
                                         style: const TextStyle(
                                             fontSize: 32,
                                             fontWeight: FontWeight.w800,
@@ -316,7 +316,7 @@ class SubscriptionsPage extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Yıllık ₺${AppFormatters.currencyCompact(totalMonthly * 12)} · ${subs.length} aktif',
+                                        'Yıllık ${AppFormatters.currencyCompact(totalMonthly * 12)} · ${subs.length} aktif',
                                         style: const TextStyle(
                                             fontSize: 12,
                                             color: _text3),
@@ -558,7 +558,7 @@ class _SubCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '₺${AppFormatters.currencyCompact(amount)}',
+                '${AppFormatters.currencyCompact(amount)}',
                 style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -623,7 +623,7 @@ class _CandidateCard extends StatelessWidget {
             ),
           ),
           Text(
-            '₺${AppFormatters.currencyCompact(amount)}',
+            '${AppFormatters.currencyCompact(amount)}',
             style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

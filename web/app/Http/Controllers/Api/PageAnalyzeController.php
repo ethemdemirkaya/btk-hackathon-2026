@@ -12,6 +12,7 @@ use App\Services\Agents\Specialists\SubscriptionHunterAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PageAnalyzeController extends Controller
 {
@@ -22,7 +23,7 @@ class PageAnalyzeController extends Controller
     public function analyze(Request $request): JsonResponse
     {
         $request->validate([
-            'page'  => ['required', 'string', 'in:budgets,transactions,loans,goals,investments,subscriptions,inflation,fx_alerts,dashboard,personal_debts,bills,cards,calendar'],
+            'page'  => ['required', 'string', 'in:budgets,transactions,loans,goals,investments,subscriptions,inflation,fx_alerts,dashboard,personal_debts,bills,cards,calendar,simulator,negotiation,receipts'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:10'],
         ]);
 
@@ -86,6 +87,18 @@ class PageAnalyzeController extends Controller
                 'calendar' => [
                     $insights  = $this->runForecaster($user, 'goals'),
                     $agentName = 'forecaster',
+                ],
+                'simulator' => [
+                    $insights  = $this->runForecaster($user, 'investments'),
+                    $agentName = 'forecaster',
+                ],
+                'negotiation' => [
+                    $insights  = $this->runDebtOptimizer($user),
+                    $agentName = 'debt_optimizer',
+                ],
+                'receipts' => [
+                    $insights  = $this->runAnomalyDetector($user),
+                    $agentName = 'anomaly_detector',
                 ],
             };
 

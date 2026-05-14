@@ -76,8 +76,19 @@
         <div class="divider-text">veya</div>
       </div>
 
-      <button type="button" class="btn btn-outline-secondary d-grid w-100" id="demoLoginBtn">
-        <i class="icon-base ti tabler-player-play me-2"></i>Demo Hesabıyla Gir
+      <button type="button" id="demoLoginBtn" style="
+          width:100%; padding:12px 20px; border-radius:8px; cursor:pointer;
+          background:linear-gradient(135deg,rgba(40,199,111,.08),rgba(0,207,232,.08));
+          border:1.5px solid rgba(40,199,111,.4); color:#28c76f;
+          font-size:.9375rem; font-weight:600; letter-spacing:.3px;
+          display:flex; align-items:center; justify-content:center; gap:10px;
+          transition:all .2s;" type="button"
+          onmouseover="this.style.background='linear-gradient(135deg,rgba(40,199,111,.18),rgba(0,207,232,.18))';this.style.borderColor='rgba(40,199,111,.7)'"
+          onmouseout="this.style.background='linear-gradient(135deg,rgba(40,199,111,.08),rgba(0,207,232,.08))';this.style.borderColor='rgba(40,199,111,.4)'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 4l14 8-14 8z"/>
+        </svg>
+        Demo Hesabıyla Gir
       </button>
       <script>
         document.getElementById('demoLoginBtn').addEventListener('click', function () {

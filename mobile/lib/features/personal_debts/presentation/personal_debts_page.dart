@@ -279,7 +279,7 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '₺${AppFormatters.currencyCompact(amount)}',
+            '${AppFormatters.currencyCompact(amount)}',
             style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -389,7 +389,7 @@ class _DebtCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₺${AppFormatters.currencyCompact(amount)}',
+                      '${AppFormatters.currencyCompact(amount)}',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

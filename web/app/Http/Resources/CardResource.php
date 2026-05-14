@@ -14,6 +14,10 @@ class CardResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $bank     = $this->account?->bankConnection?->bank;
+        $bankName = $bank?->name;
+        $bankSlug = $bank?->slug;
+
         return [
             'id'              => $this->id,
             'type'            => $this->type,
@@ -29,6 +33,8 @@ class CardResource extends JsonResource
             'utilization_pct' => $this->credit_limit > 0
                 ? round($this->current_debt / $this->credit_limit * 100, 1)
                 : 0,
+            'bank_name'       => $bankName,
+            'bank_slug'       => $bankSlug,
         ];
     }
 }

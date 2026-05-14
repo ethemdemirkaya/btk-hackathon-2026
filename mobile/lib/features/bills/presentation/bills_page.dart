@@ -157,7 +157,7 @@ class BillsPage extends ConsumerWidget {
                                 child: _StatChip(
                                   label: 'Bekleyen',
                                   value:
-                                      '₺${AppFormatters.currencyCompact(pendingTotal)}',
+                                      '${AppFormatters.currencyCompact(pendingTotal)}',
                                   icon: Icons.pending_outlined,
                                   color: _warning,
                                 ),
@@ -167,7 +167,7 @@ class BillsPage extends ConsumerWidget {
                                 child: _StatChip(
                                   label: 'Aylık Est.',
                                   value:
-                                      '₺${AppFormatters.currencyCompact(totalMonthly)}',
+                                      '${AppFormatters.currencyCompact(totalMonthly)}',
                                   icon:
                                       Icons.calendar_month_outlined,
                                   color: _accent,
@@ -441,7 +441,7 @@ class _BillCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₺${AppFormatters.currencyCompact(amount)}',
+                  '${AppFormatters.currencyCompact(amount)}',
                   style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

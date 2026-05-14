@@ -19,7 +19,8 @@ class CardController extends Controller
                 ->pluck('id'))
             ->pluck('id');
 
-        $cards = Card::whereIn('account_id', $accountIds)
+        $cards = Card::with('account.bankConnection.bank')
+            ->whereIn('account_id', $accountIds)
             ->get();
 
         $totalDebt  = $cards->sum('current_debt');

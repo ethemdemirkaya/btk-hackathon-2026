@@ -326,7 +326,7 @@ class _HeroSummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '₺${AppFormatters.currencyCompact(total)} toplam',
+                  '${AppFormatters.currencyCompact(total)} toplam',
                   style: const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                 ),
