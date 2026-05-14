@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -35,7 +36,8 @@ final _fxRatesProvider =
 });
 
 // ── Constants ─────────────────────────────────────────────────────────
-const _currencies = ['USD', 'EUR', 'GBP', 'XAU', 'CHF', 'JPY', 'BTC'];
+// Matches backend TRACKED: ['USD','EUR','GBP','XAU','CHF','JPY','AUD']
+const _currencies = ['USD', 'EUR', 'GBP', 'XAU', 'CHF', 'JPY', 'AUD'];
 const _currencyLabels = {
   'USD': 'Amerikan Doları',
   'EUR': 'Euro',
@@ -43,7 +45,7 @@ const _currencyLabels = {
   'XAU': 'Altın (gram)',
   'CHF': 'İsviçre Frangı',
   'JPY': 'Japon Yeni',
-  'BTC': 'Bitcoin',
+  'AUD': 'Avustralya Doları',
 };
 
 const _liveRateDisplay = ['USD', 'EUR', 'XAU'];
@@ -111,6 +113,9 @@ class FxAlertsPage extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  // AI insights button
+                  const AiInsightsButton(page: 'fx_alerts'),
+                  const SizedBox(width: 8),
                   // Refresh button
                   GestureDetector(
                     onTap: () {
@@ -137,6 +142,7 @@ class FxAlertsPage extends ConsumerWidget {
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
               data: (rateData) {
+                // Backend returns rates as: {USD: {rate, change, change_pct, ...}, ...}
                 final rates = (rateData['rates']
                         as Map<String, dynamic>?) ??
                     {};
@@ -146,14 +152,20 @@ class FxAlertsPage extends ConsumerWidget {
                       const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Row(
                     children: _liveRateDisplay.map((sym) {
+                      final rateObj =
+                          rates[sym] as Map<String, dynamic>?;
+                      if (rateObj == null) {
+                        return const Expanded(
+                            child: SizedBox.shrink());
+                      }
                       final rate =
-                          (rates[sym] as num?)?.toDouble();
+                          (rateObj['rate'] as num?)?.toDouble();
                       if (rate == null) {
                         return const Expanded(
                             child: SizedBox.shrink());
                       }
                       final change =
-                          (rates['${sym}_change_24h'] as num?)
+                          (rateObj['change_pct'] as num?)
                               ?.toDouble() ??
                               0;
                       final isUp = change >= 0;
@@ -247,7 +259,8 @@ class FxAlertsPage extends ConsumerWidget {
                   data: (data) {
                     final alerts =
                         data['alerts'] as List? ?? [];
-                    final rates = (ratesAsync.value?['rates']
+                    // rates from the alerts endpoint: same structure
+                    final rates = (data['rates']
                             as Map<String, dynamic>?) ??
                         {};
 
@@ -271,12 +284,18 @@ class FxAlertsPage extends ConsumerWidget {
                       itemBuilder: (_, i) {
                         final a =
                             alerts[i] as Map<String, dynamic>;
+                        final currency =
+                            a['currency'] as String? ?? '';
+                        // current_rate is provided per-alert by the backend;
+                        // fall back to the rates map if missing
+                        final double? currentRate =
+                            (a['current_rate'] as num?)?.toDouble() ??
+                            ((rates[currency] as Map<String, dynamic>?)?['rate']
+                                as num?)
+                                ?.toDouble();
                         return _AlertCard(
                           alert: a,
-                          currentRate: (rates[(a['currency']
-                                      as String?) ??
-                                  ''] as num?)
-                              ?.toDouble(),
+                          currentRate: currentRate,
                           onDelete: () => _deleteAlert(
                               context,
                               ref,
@@ -330,14 +349,15 @@ class _AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = alert['currency'] as String? ?? '';
-    final direction =
-        alert['direction'] as String? ?? 'above';
-    final targetRate =
-        (alert['target_rate'] as num?)?.toDouble() ?? 0;
+    // Backend uses 'condition' (above/below) and 'threshold'
+    final condition =
+        alert['condition'] as String? ?? 'above';
+    final threshold =
+        (alert['threshold'] as num?)?.toDouble() ?? 0;
     final isTriggered =
         alert['is_triggered'] as bool? ?? false;
 
-    final isAbove = direction == 'above';
+    final isAbove = condition == 'above';
     final dirColor = isAbove ? _negative : _positive;
     final dirIcon = isAbove
         ? Icons.arrow_upward_rounded
@@ -381,7 +401,7 @@ class _AlertCard extends StatelessWidget {
                             color: _text1)),
                     const SizedBox(width: 6),
                     Text(
-                      '₺${targetRate.toStringAsFixed(2)} $dirLabel',
+                      '₺${threshold.toStringAsFixed(2)} $dirLabel',
                       style: const TextStyle(
                           fontSize: 12, color: _text2),
                     ),
@@ -473,7 +493,7 @@ class _AddAlertSheet extends StatefulWidget {
 
 class _AddAlertSheetState extends State<_AddAlertSheet> {
   String _currency = 'USD';
-  String _direction = 'above';
+  String _condition = 'above';
   final _rateCtrl = TextEditingController();
   bool _loading = false;
 
@@ -493,11 +513,12 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
     }
     setState(() => _loading = true);
     try {
+      // Backend validates: currency, condition (above/below), threshold
       await DioClient.instance.post(ApiEndpoints.fxAlerts,
           data: {
-            'currency': _currency,
-            'direction': _direction,
-            'target_rate': rate,
+            'currency':  _currency,
+            'condition': _condition,
+            'threshold': rate,
           });
       widget.onAdded();
       if (mounted) Navigator.pop(context);
@@ -591,20 +612,20 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
             children: [
               _DirBtn(
                 label: 'Üzerine çıkarsa',
-                selected: _direction == 'above',
+                selected: _condition == 'above',
                 color: _negative,
                 icon: Icons.arrow_upward,
                 onTap: () =>
-                    setState(() => _direction = 'above'),
+                    setState(() => _condition = 'above'),
               ),
               const SizedBox(width: 8),
               _DirBtn(
                 label: 'Altına inerse',
-                selected: _direction == 'below',
+                selected: _condition == 'below',
                 color: _positive,
                 icon: Icons.arrow_downward,
                 onTap: () =>
-                    setState(() => _direction = 'below'),
+                    setState(() => _condition = 'below'),
               ),
             ],
           ),

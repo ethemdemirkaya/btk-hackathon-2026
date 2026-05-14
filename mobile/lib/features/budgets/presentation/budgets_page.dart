@@ -642,7 +642,15 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
   Future<void> _apply() async {
     setState(() => _applying = true);
     try {
-      await DioClient.instance.post(ApiEndpoints.budgetsAiApply);
+      final payload = {
+        'suggestions': _suggestions
+            .map((s) => {
+                  'category_id': s['category_id'],
+                  'amount': (s['suggested'] as num?)?.toDouble() ?? 0,
+                })
+            .toList(),
+      };
+      await DioClient.instance.post(ApiEndpoints.budgetsAiApply, data: payload);
       widget.onApplied();
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
@@ -707,7 +715,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                         itemBuilder: (_, i) {
                           final s = _suggestions[i];
                           final amount =
-                              (s['suggested_amount'] as num?)
+                              (s['suggested'] as num?)
                                       ?.toDouble() ??
                                   0;
                           final catName =
