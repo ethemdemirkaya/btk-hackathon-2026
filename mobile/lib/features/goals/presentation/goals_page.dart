@@ -37,6 +37,17 @@ IconData _iconForGoal(String name) {
   return Icons.flag_outlined;
 }
 
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent = Color(0xFF00D4FF);
+const _text1 = Color(0xFFE8F4FF);
+const _text2 = Color(0xFF8BA4BC);
+const _text3 = Color(0xFF4A6478);
+const _positive = Color(0xFF0DD9A0);
+const _warning = Color(0xFFF59E0B);
+
 class GoalsPage extends ConsumerStatefulWidget {
   const GoalsPage({super.key});
 
@@ -52,178 +63,112 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
     final async = ref.watch(_goalsProvider);
 
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showGoalForm(context, null),
-        backgroundColor: AppColors.accent,
+        backgroundColor: _accent,
         foregroundColor: AppColors.accentText,
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.accent,
-          backgroundColor: AppColors.bg2,
-          onRefresh: () async => ref.invalidate(_goalsProvider),
-          child: async.when(
-            loading: () => const SkeletonListView(),
-            error: (e, __) => ErrorState(
-              message: e.toString(),
-              onRetry: () => ref.invalidate(_goalsProvider),
-            ),
-            data: (data) {
-              final goals = (data['goals'] as List? ?? [])
-                  .cast<Map<String, dynamic>>();
-
-              if (goals.isEmpty) {
-                return EmptyState(
-                  icon: Icons.flag_outlined,
-                  title: 'Henüz hedef yok',
-                  subtitle:
-                      'Tasarruf hedefleri oluşturarak finansal hedeflerinize ulaşın.',
-                  ctaLabel: '+ Hedef Ekle',
-                  onCta: () => _showGoalForm(context, null),
-                );
-              }
-
-              final active = goals
-                  .where((g) => (g['status'] as String?) == 'active')
-                  .toList();
-              final completed = goals
-                  .where((g) => (g['status'] as String?) == 'completed')
-                  .toList();
-              final abandoned = goals
-                  .where((g) => (g['status'] as String?) == 'abandoned')
-                  .toList();
-
-              final totalProgress = goals.fold<double>(
-                  0,
-                  (s, g) =>
-                      s + ((g['current_amount'] as num?)?.toDouble() ?? 0));
-              final totalTarget = goals.fold<double>(
-                  0,
-                  (s, g) =>
-                      s + ((g['target_amount'] as num?)?.toDouble() ?? 0));
-              final overallPct =
-                  totalTarget > 0 ? totalProgress / totalTarget : 0.0;
-
-              final filtered = _filter == 'active'
-                  ? active
-                  : _filter == 'done'
-                      ? completed
-                      : abandoned;
-
-              return ListView(
-                padding: const EdgeInsets.only(bottom: 100),
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () =>
-                              shellScaffoldKey.currentState?.openDrawer(),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.bg2,
-                              border: Border.all(color: AppColors.border1Dark),
-                            ),
-                            child: const Icon(Icons.menu,
-                                size: 18, color: AppColors.text2Dark),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text('Hedefler',
-                            style: AppTextStyles.headlineLarge
-                                .copyWith(color: AppColors.text1Dark)),
-                      ],
-                    ),
+        child: Column(
+          children: [
+            _Header(title: 'Hedefler', subtitle: 'Tasarruf hedeflerin'),
+            Expanded(
+              child: RefreshIndicator(
+                color: _accent,
+                backgroundColor: _cardBg,
+                onRefresh: () async => ref.invalidate(_goalsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () => ref.invalidate(_goalsProvider),
                   ),
+                  data: (data) {
+                    final goals = (data['goals'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
 
-                  // Hero
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    if (goals.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.flag_outlined,
+                        title: 'Henüz hedef yok',
+                        subtitle:
+                            'Tasarruf hedefleri oluşturarak finansal hedeflerinize ulaşın.',
+                        ctaLabel: '+ Hedef Ekle',
+                        onCta: () => _showGoalForm(context, null),
+                      );
+                    }
+
+                    final active = goals
+                        .where((g) =>
+                            (g['status'] as String?) == 'active')
+                        .toList();
+                    final completed = goals
+                        .where((g) =>
+                            (g['status'] as String?) == 'completed')
+                        .toList();
+                    final abandoned = goals
+                        .where((g) =>
+                            (g['status'] as String?) == 'abandoned')
+                        .toList();
+
+                    final totalProgress = goals.fold<double>(
+                        0,
+                        (s, g) =>
+                            s +
+                            ((g['current_amount'] as num?)
+                                    ?.toDouble() ??
+                                0));
+
+                    final filtered = _filter == 'active'
+                        ? active
+                        : _filter == 'done'
+                            ? completed
+                            : abandoned;
+
+                    return ListView(
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 16, 20, 100),
                       children: [
-                        Text('Toplam birikim',
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.text3Dark)),
-                        const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              AppFormatters.currencyCompact(totalProgress),
-                              style: AppTextStyles.amountHero.copyWith(
-                                  fontSize: 36,
-                                  color: AppColors.text1Dark,
-                                  letterSpacing: -0.03 * 36),
-                            ),
-                            const SizedBox(width: 4),
-                            Text('₺',
-                                style: AppTextStyles.headlineMedium
-                                    .copyWith(color: AppColors.text2Dark)),
+                        // Hero card
+                        _HeroCard(
+                          activeCount: active.length,
+                          totalSaved: totalProgress,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Segmented filter
+                        _SegmentedToggle(
+                          options: [
+                            _SegOpt(
+                                'active', 'Aktif · ${active.length}'),
+                            _SegOpt('done', 'Tamamlanan'),
+                            _SegOpt('abandoned', 'Vazgeçilen'),
                           ],
+                          value: _filter,
+                          onChange: (v) =>
+                              setState(() => _filter = v),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${AppFormatters.currencyCompact(totalTarget)} ₺ hedeften %${(overallPct * 100).toStringAsFixed(0)}',
-                          style: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.text3Dark),
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: overallPct.clamp(0, 1),
-                            backgroundColor:
-                                AppColors.accent.withValues(alpha: 0.1),
-                            valueColor: const AlwaysStoppedAnimation(
-                                AppColors.accent),
-                            minHeight: 6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        const SizedBox(height: 16),
 
-                  // Segmented filter
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: _SegmentedToggle(
-                      options: [
-                        _SegOpt('active', 'Aktif · ${active.length}'),
-                        _SegOpt('done', 'Tamamlanan'),
-                        _SegOpt('abandoned', 'Vazgeçilen'),
-                      ],
-                      value: _filter,
-                      onChange: (v) => setState(() => _filter = v),
-                    ),
-                  ),
-
-                  // Goals list
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Column(
-                      children: [
+                        // Goals list
                         if (filtered.isEmpty)
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 32),
                             child: Text(
                               'Bu kategoride hedef yok.',
                               style: AppTextStyles.bodyMedium
-                                  .copyWith(color: AppColors.text3Dark),
+                                  .copyWith(color: _text3),
                               textAlign: TextAlign.center,
                             ),
                           ),
                         ...filtered.map((g) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
+                              padding:
+                                  const EdgeInsets.only(bottom: 12),
                               child: _GoalCard(
                                 goal: g,
                                 onAddFunds: _filter == 'active'
@@ -234,58 +179,38 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                         )
                                     : null,
                                 onEdit: _filter == 'active'
-                                    ? () => _showGoalForm(context, g)
+                                    ? () =>
+                                        _showGoalForm(context, g)
                                     : null,
                               ),
                             )),
 
                         // Dashed add button
-                        GestureDetector(
+                        _DashedAddButton(
+                          label: 'Yeni hedef oluştur',
                           onTap: () => _showGoalForm(context, null),
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.border2Dark,
-                                style: BorderStyle.solid,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.add,
-                                    size: 18, color: AppColors.text3Dark),
-                                const SizedBox(width: 8),
-                                Text('Yeni hedef oluştur',
-                                    style: AppTextStyles.bodyMedium
-                                        .copyWith(
-                                            color: AppColors.text3Dark,
-                                            fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _showGoalForm(BuildContext context, Map<String, dynamic>? existing) {
+  void _showGoalForm(
+      BuildContext context, Map<String, dynamic>? existing) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _GoalFormSheet(
         existing: existing,
         onSaved: () => ref.invalidate(_goalsProvider),
@@ -293,17 +218,160 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
     );
   }
 
-  void _showAddFunds(BuildContext context, int goalId, String goalName) {
+  void _showAddFunds(
+      BuildContext context, int goalId, String goalName) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AddFundsSheet(
         goalId: goalId,
         goalName: goalName,
         onAdded: () => ref.invalidate(_goalsProvider),
+      ),
+    );
+  }
+}
+
+// ── Standard Header ──────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _Header({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+              ),
+              child: const Icon(Icons.menu, size: 20, color: _text2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: AppTextStyles.headlineLarge.copyWith(
+                      color: _text1, fontWeight: FontWeight.w700)),
+              Text(subtitle,
+                  style:
+                      AppTextStyles.bodySmall.copyWith(color: _text3)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hero Card ────────────────────────────────────────────────────────
+class _HeroCard extends StatelessWidget {
+  final int activeCount;
+  final double totalSaved;
+  const _HeroCard(
+      {required this.activeCount, required this.totalSaved});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: _accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: _accent.withValues(alpha: 0.25)),
+            ),
+            child: const Icon(Icons.flag_outlined,
+                size: 26, color: _accent),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$activeCount aktif hedef · ${AppFormatters.currencyCompact(totalSaved)} ₺ biriktirildi',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: _text2),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${AppFormatters.currencyCompact(totalSaved)} ₺',
+                  style: AppTextStyles.amountHero.copyWith(
+                      fontSize: 28,
+                      color: _text1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.02 * 28),
+                ),
+                const SizedBox(height: 4),
+                Text('Toplam birikim',
+                    style: AppTextStyles.labelSmall
+                        .copyWith(color: _text3)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Dashed Add Button ────────────────────────────────────────────────
+class _DashedAddButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _DashedAddButton(
+      {required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _cardBorder,
+            style: BorderStyle.solid,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, size: 18, color: _text3),
+            const SizedBox(width: 8),
+            Text(label,
+                style: AppTextStyles.bodyMedium.copyWith(
+                    color: _text3, fontWeight: FontWeight.w500)),
+          ],
+        ),
       ),
     );
   }
@@ -321,15 +389,18 @@ class _SegmentedToggle extends StatelessWidget {
   final String value;
   final ValueChanged<String> onChange;
   const _SegmentedToggle(
-      {required this.options, required this.value, required this.onChange});
+      {required this.options,
+      required this.value,
+      required this.onChange});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.bg2,
-        borderRadius: BorderRadius.circular(12),
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
         children: options.map((o) {
@@ -341,17 +412,23 @@ class _SegmentedToggle extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: active ? AppColors.bg3 : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9),
+                  color: active
+                      ? _accent.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: active
+                      ? Border.all(
+                          color: _accent.withValues(alpha: 0.3))
+                      : null,
                 ),
                 child: Text(
                   o.label,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color:
-                        active ? AppColors.text1Dark : AppColors.text3Dark,
-                    fontWeight:
-                        active ? FontWeight.w600 : FontWeight.w400,
+                    color: active ? _accent : _text3,
+                    fontWeight: active
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                   ),
                 ),
               ),
@@ -368,12 +445,14 @@ class _GoalCard extends StatelessWidget {
   final Map<String, dynamic> goal;
   final VoidCallback? onAddFunds;
   final VoidCallback? onEdit;
-  const _GoalCard({required this.goal, this.onAddFunds, this.onEdit});
+  const _GoalCard(
+      {required this.goal, this.onAddFunds, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
     final name = goal['name'] as String? ?? '';
-    final pct = (goal['progress_pct'] as num?)?.toDouble() ?? 0;
+    final pct =
+        (goal['progress_pct'] as num?)?.toDouble() ?? 0;
     final current =
         (goal['current_amount'] as num?)?.toDouble() ?? 0;
     final target =
@@ -383,9 +462,10 @@ class _GoalCard extends StatelessWidget {
     final monthly =
         (goal['monthly_contribution'] as num?)?.toDouble() ?? 0;
     final remaining = target - current;
-    final monthlyNeeded = (monthsLeft != null && monthsLeft > 0)
-        ? (remaining / monthsLeft)
-        : 0.0;
+    final monthlyNeeded =
+        (monthsLeft != null && monthsLeft > 0)
+            ? (remaining / monthsLeft)
+            : 0.0;
     final onTrack = monthly >= monthlyNeeded;
 
     String deadlineText = '';
@@ -406,27 +486,28 @@ class _GoalCard extends StatelessWidget {
     return GestureDetector(
       onTap: onEdit,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.bg1,
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top: icon + name + circular progress
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
-                    color: AppColors.accentDim,
-                    borderRadius: BorderRadius.circular(12),
+                    color: _accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(13),
                   ),
                   child: Icon(_iconForGoal(name),
-                      size: 22, color: AppColors.accent),
+                      size: 22, color: _accent),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -434,108 +515,137 @@ class _GoalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name,
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(fontWeight: FontWeight.w600)),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                              color: _text1,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${AppFormatters.currencyCompact(target)} ₺ hedef',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: _text3),
+                      ),
                       if (deadlineText.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(deadlineText,
                             style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.text3Dark)),
+                                .copyWith(color: _text3)),
                       ],
                     ],
                   ),
                 ),
-                Text(
-                  '%${pct.toStringAsFixed(0)}',
-                  style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.02 * 22),
+                // Circular progress indicator 60px
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: (pct / 100).clamp(0.0, 1.0),
+                        strokeWidth: 5,
+                        backgroundColor:
+                            _accent.withValues(alpha: 0.12),
+                        valueColor: const AlwaysStoppedAnimation(
+                            _accent),
+                      ),
+                      Text(
+                        '%${pct.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _text1),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
+
+            // Progress bar
             ClipRRect(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (pct / 100).clamp(0, 1),
-                backgroundColor: AppColors.accent.withValues(alpha: 0.1),
+                backgroundColor:
+                    _accent.withValues(alpha: 0.1),
                 valueColor:
-                    const AlwaysStoppedAnimation(AppColors.accent),
+                    const AlwaysStoppedAnimation(_accent),
                 minHeight: 6,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
+
+            // Bottom: current / target + days chip
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${AppFormatters.currencyCompact(current)} ₺',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.text3Dark)),
-                Text('${AppFormatters.currencyCompact(target)} ₺',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.text3Dark)),
+                Text(
+                  '${AppFormatters.currencyCompact(current)} ₺ / ${AppFormatters.currencyCompact(target)} ₺',
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: _text3),
+                ),
+                if (monthsLeft != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _cardBorder,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$monthsLeft ay kaldı',
+                      style: AppTextStyles.labelSmall.copyWith(
+                          color: _text2, fontSize: 10),
+                    ),
+                  ),
               ],
             ),
+
+            // Add funds row
             if (onAddFunds != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.bg2,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      onTrack ? Icons.check_circle_outline : Icons.warning_amber_rounded,
-                      size: 16,
-                      color: onTrack ? AppColors.positive : AppColors.warning,
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Icon(
+                    onTrack
+                        ? Icons.check_circle_outline
+                        : Icons.warning_amber_rounded,
+                    size: 14,
+                    color:
+                        onTrack ? _positive : _warning,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      onTrack
+                          ? 'Hedefe ulaşma yolundasın'
+                          : '${AppFormatters.currencyCompact(monthlyNeeded)} ₺/ay gerekli',
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: _text2),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
+                  ),
+                  GestureDetector(
+                    onTap: onAddFunds,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: _accent.withValues(alpha: 0.12),
+                        borderRadius:
+                            BorderRadius.circular(10),
+                        border: Border.all(
+                            color:
+                                _accent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text('Para Ekle',
                           style: AppTextStyles.labelSmall
-                              .copyWith(color: AppColors.text2Dark),
-                          children: [
-                            const TextSpan(text: 'Aylık '),
-                            TextSpan(
-                              text:
-                                  '${AppFormatters.currencyCompact(monthly)} ₺',
-                              style: const TextStyle(
-                                  color: AppColors.text1Dark,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                            if (!onTrack)
-                              TextSpan(
-                                text:
-                                    ' · ${AppFormatters.currencyCompact(monthlyNeeded)} ₺ gerekli',
-                                style: const TextStyle(
-                                    color: AppColors.warning),
-                              ),
-                          ],
-                        ),
-                      ),
+                              .copyWith(
+                                  color: _accent,
+                                  fontWeight: FontWeight.w600)),
                     ),
-                    GestureDetector(
-                      onTap: onAddFunds,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentDim,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text('+ Katkı',
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.accent,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -551,7 +661,9 @@ class _AddFundsSheet extends StatefulWidget {
   final String goalName;
   final VoidCallback onAdded;
   const _AddFundsSheet(
-      {required this.goalId, required this.goalName, required this.onAdded});
+      {required this.goalId,
+      required this.goalName,
+      required this.onAdded});
 
   @override
   State<_AddFundsSheet> createState() => _AddFundsSheetState();
@@ -571,8 +683,8 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
     final amount =
         double.tryParse(_amountCtrl.text.replaceAll(',', '.'));
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Geçerli tutar girin')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Geçerli tutar girin')));
       return;
     }
     setState(() => _loading = true);
@@ -584,7 +696,8 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
       widget.onAdded();
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Para eklenemedi.';
+      final msg =
+          e.response?.data?['message'] ?? 'Para eklenemedi.';
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
@@ -603,11 +716,13 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Katkı Ekle', style: AppTextStyles.headlineMedium),
+          Text('Katkı Ekle',
+              style: AppTextStyles.headlineMedium
+                  .copyWith(color: _text1)),
           const SizedBox(height: 4),
           Text(widget.goalName,
               style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.text3Dark)),
+                  .copyWith(color: _text3)),
           const SizedBox(height: 20),
           TextField(
             controller: _amountCtrl,
@@ -627,11 +742,21 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _loading ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: AppColors.accentText,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
               child: _loading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentText))
                   : const Text('Ekle'),
             ),
           ),
@@ -688,7 +813,8 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: _targetDate ?? now.add(const Duration(days: 365)),
+      initialDate:
+          _targetDate ?? now.add(const Duration(days: 365)),
       firstDate: now,
       lastDate: DateTime(now.year + 30),
     );
@@ -704,8 +830,8 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
         'target_amount':
             double.parse(_targetCtrl.text.replaceAll(',', '.')),
         if (_initialCtrl.text.isNotEmpty)
-          'initial_amount':
-              double.parse(_initialCtrl.text.replaceAll(',', '.')),
+          'initial_amount': double.parse(
+              _initialCtrl.text.replaceAll(',', '.')),
         if (_targetDate != null)
           'target_date':
               _targetDate!.toIso8601String().split('T').first,
@@ -715,12 +841,14 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
         await DioClient.instance
             .put(ApiEndpoints.goal(id), data: payload);
       } else {
-        await DioClient.instance.post(ApiEndpoints.goals, data: payload);
+        await DioClient.instance
+            .post(ApiEndpoints.goals, data: payload);
       }
       widget.onSaved();
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Kaydedilemedi.';
+      final msg =
+          e.response?.data?['message'] ?? 'Kaydedilemedi.';
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(msg)));
@@ -743,14 +871,17 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Hedef Düzenle' : 'Hedef Ekle',
-                  style: AppTextStyles.headlineMedium),
+                  style: AppTextStyles.headlineMedium
+                      .copyWith(color: _text1)),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameCtrl,
                 decoration: const InputDecoration(
                     labelText: 'Hedef Adı (ör: Araba, Tatil)'),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Ad gerekli' : null,
+                    (v == null || v.trim().isEmpty)
+                        ? 'Ad gerekli'
+                        : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -759,14 +890,21 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                     labelText: 'Hedef Tutar (₺)',
                     prefixIcon: Icon(Icons.flag_outlined)),
                 keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                    const TextInputType.numberWithOptions(
+                        decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'[0-9,.]'))
                 ],
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Tutar gerekli';
-                  final n = double.tryParse(v.replaceAll(',', '.'));
-                  if (n == null || n <= 0) return 'Geçerli tutar girin';
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Tutar gerekli';
+                  }
+                  final n =
+                      double.tryParse(v.replaceAll(',', '.'));
+                  if (n == null || n <= 0) {
+                    return 'Geçerli tutar girin';
+                  }
                   return null;
                 },
               ),
@@ -775,11 +913,14 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                 controller: _initialCtrl,
                 decoration: const InputDecoration(
                     labelText: 'Mevcut Birikim (₺, opsiyonel)',
-                    prefixIcon: Icon(Icons.savings_outlined)),
+                    prefixIcon:
+                        Icon(Icons.savings_outlined)),
                 keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                    const TextInputType.numberWithOptions(
+                        decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
+                  FilteringTextInputFormatter.allow(
+                      RegExp(r'[0-9,.]'))
                 ],
               ),
               const SizedBox(height: 12),
@@ -788,16 +929,19 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                 child: AbsorbPointer(
                   child: TextFormField(
                     decoration: InputDecoration(
-                      labelText: 'Hedef Tarihi (opsiyonel)',
-                      prefixIcon:
-                          const Icon(Icons.calendar_today_outlined),
+                      labelText:
+                          'Hedef Tarihi (opsiyonel)',
+                      prefixIcon: const Icon(
+                          Icons.calendar_today_outlined),
                       hintText: _targetDate != null
-                          ? AppFormatters.dateShort(_targetDate!)
+                          ? AppFormatters.dateShort(
+                              _targetDate!)
                           : 'Tarih seçin',
                     ),
                     controller: TextEditingController(
                       text: _targetDate != null
-                          ? AppFormatters.dateShort(_targetDate!)
+                          ? AppFormatters.dateShort(
+                              _targetDate!)
                           : '',
                     ),
                   ),
@@ -808,12 +952,25 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: AppColors.accentText,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(14)),
+                  ),
                   child: _loading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(_isEdit ? 'Güncelle' : 'Hedef Oluştur'),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentText))
+                      : Text(_isEdit
+                          ? 'Güncelle'
+                          : 'Hedef Oluştur'),
                 ),
               ),
             ],

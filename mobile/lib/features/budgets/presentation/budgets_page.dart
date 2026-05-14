@@ -38,6 +38,17 @@ Color _colorForName(String name) {
   return _catColorPalette[h % _catColorPalette.length];
 }
 
+// ── Design tokens ────────────────────────────────────────────────────
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent = Color(0xFF00D4FF);
+const _text1 = Color(0xFFE8F4FF);
+const _text2 = Color(0xFF8BA4BC);
+const _text3 = Color(0xFF4A6478);
+const _negative = Color(0xFFFF4D6D);
+const _warning = Color(0xFFF59E0B);
+
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
 
@@ -46,225 +57,82 @@ class BudgetsPage extends ConsumerWidget {
     final async = ref.watch(_budgetsProvider);
 
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showBudgetForm(context, ref, null),
-        backgroundColor: AppColors.accent,
+        backgroundColor: _accent,
         foregroundColor: AppColors.accentText,
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          color: AppColors.accent,
-          backgroundColor: AppColors.bg2,
-          onRefresh: () async => ref.invalidate(_budgetsProvider),
-          child: async.when(
-            loading: () => const SkeletonListView(),
-            error: (e, __) => ErrorState(
-              message: e.toString(),
-              onRetry: () => ref.invalidate(_budgetsProvider),
+        child: Column(
+          children: [
+            _Header(
+              title: 'Bütçe',
+              subtitle: _monthLabel(),
             ),
-            data: (data) {
-              final budgets = (data['budgets'] as List? ?? [])
-                  .cast<Map<String, dynamic>>();
+            Expanded(
+              child: RefreshIndicator(
+                color: _accent,
+                backgroundColor: _cardBg,
+                onRefresh: () async => ref.invalidate(_budgetsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () => ref.invalidate(_budgetsProvider),
+                  ),
+                  data: (data) {
+                    final budgets = (data['budgets'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
 
-              if (budgets.isEmpty) {
-                return EmptyState(
-                  icon: Icons.pie_chart_outline,
-                  title: 'Bütçe oluşturulmadı',
-                  subtitle: 'AI önerisiyle veya kendiniz bütçe oluşturun.',
-                  ctaLabel: '+ Bütçe Ekle',
-                  onCta: () => _showBudgetForm(context, ref, null),
-                );
-              }
+                    if (budgets.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.pie_chart_outline,
+                        title: 'Bütçe oluşturulmadı',
+                        subtitle:
+                            'AI önerisiyle veya kendiniz bütçe oluşturun.',
+                        ctaLabel: '+ Bütçe Ekle',
+                        onCta: () => _showBudgetForm(context, ref, null),
+                      );
+                    }
 
-              final totalLimit = budgets.fold<double>(
-                  0, (s, b) => s + ((b['amount'] as num?)?.toDouble() ?? 0));
-              final totalSpent = budgets.fold<double>(
-                  0, (s, b) => s + ((b['spent'] as num?)?.toDouble() ?? 0));
-              final overCount =
-                  budgets.where((b) => b['over_budget'] == true).length;
-              final pctTotal =
-                  totalLimit > 0 ? (totalSpent / totalLimit * 100) : 0.0;
+                    final totalLimit = budgets.fold<double>(
+                        0,
+                        (s, b) =>
+                            s + ((b['amount'] as num?)?.toDouble() ?? 0));
+                    final totalSpent = budgets.fold<double>(
+                        0,
+                        (s, b) =>
+                            s + ((b['spent'] as num?)?.toDouble() ?? 0));
+                    final overCount =
+                        budgets.where((b) => b['over_budget'] == true).length;
+                    final pctTotal =
+                        totalLimit > 0 ? (totalSpent / totalLimit * 100) : 0.0;
 
-              return ListView(
-                padding: const EdgeInsets.only(bottom: 100),
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: Row(
+                    return ListView(
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 16, 20, 100),
                       children: [
-                        GestureDetector(
-                          onTap: () =>
-                              shellScaffoldKey.currentState?.openDrawer(),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.bg2,
-                              border: Border.all(color: AppColors.border1Dark),
-                            ),
-                            child: const Icon(Icons.menu,
-                                size: 18, color: AppColors.text2Dark),
-                          ),
+                        // Hero card
+                        _HeroCard(
+                          totalSpent: totalSpent,
+                          totalLimit: totalLimit,
+                          pctTotal: pctTotal,
+                          overCount: overCount,
+                          budgetCount: budgets.length,
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Bütçe',
-                                style: AppTextStyles.headlineLarge
-                                    .copyWith(color: AppColors.text1Dark)),
-                            Text(
-                              _monthLabel(),
-                              style: AppTextStyles.bodySmall
-                                  .copyWith(color: AppColors.text3Dark),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                        const SizedBox(height: 12),
 
-                  // Hero ring card
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.bg1, AppColors.bg2],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                        // AI suggest button
+                        _AiSuggestButton(
+                          onTap: () => _showAiSuggest(context, ref),
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border1Dark),
-                      ),
-                      child: Row(
-                        children: [
-                          _ScoreRing(value: pctTotal),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Bu ay toplam',
-                                    style: AppTextStyles.labelSmall
-                                        .copyWith(color: AppColors.text3Dark)),
-                                const SizedBox(height: 4),
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: AppFormatters.currencyCompact(
-                                            totalSpent),
-                                        style: AppTextStyles.amountHero
-                                            .copyWith(
-                                                fontSize: 24,
-                                                color: AppColors.text1Dark,
-                                                letterSpacing: -0.02 * 24),
-                                      ),
-                                      TextSpan(
-                                        text:
-                                            ' / ${AppFormatters.currencyCompact(totalLimit)} ₺',
-                                        style: AppTextStyles.bodySmall
-                                            .copyWith(
-                                                color: AppColors.text3Dark),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (overCount > 0) ...[
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.warning_amber_rounded,
-                                          size: 12, color: AppColors.warning),
-                                      const SizedBox(width: 4),
-                                      Text('$overCount bütçe aşıldı',
-                                          style: AppTextStyles.labelSmall
-                                              .copyWith(
-                                                  color: AppColors.warning)),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        const SizedBox(height: 16),
 
-                  // AI suggestion banner
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: GestureDetector(
-                      onTap: () => _showAiSuggest(context, ref),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.accentDim,
-                              Colors.transparent,
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border:
-                              Border.all(color: AppColors.accentDim),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.accent,
-                              ),
-                              child: const Icon(Icons.auto_awesome,
-                                  size: 18, color: AppColors.accentText),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('AI bütçe önerisi al',
-                                      style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.text1Dark)),
-                                  SizedBox(height: 1),
-                                  Text(
-                                    'Harcama örüntüne göre kategori bazlı limitler',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.text3Dark),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right,
-                                size: 16, color: AppColors.text2Dark),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Budget list
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Column(
-                      children: [
+                        // Budget list
                         ...budgets.map((b) => Padding(
                               padding: const EdgeInsets.only(bottom: 10),
                               child: _BudgetCard(
@@ -273,41 +141,19 @@ class BudgetsPage extends ConsumerWidget {
                                     _showBudgetForm(context, ref, b),
                               ),
                             )),
+
                         // Dashed add button
-                        GestureDetector(
+                        _DashedAddButton(
+                          label: 'Yeni bütçe ekle',
                           onTap: () => _showBudgetForm(context, ref, null),
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.border2Dark,
-                                style: BorderStyle.solid,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.add,
-                                    size: 18, color: AppColors.text3Dark),
-                                const SizedBox(width: 8),
-                                Text('Yeni bütçe ekle',
-                                    style: AppTextStyles.bodyMedium
-                                        .copyWith(
-                                            color: AppColors.text3Dark,
-                                            fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -315,8 +161,19 @@ class BudgetsPage extends ConsumerWidget {
 
   String _monthLabel() {
     const months = [
-      '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      '',
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık'
     ];
     final now = DateTime.now();
     return '${months[now.month]} ${now.year}';
@@ -327,7 +184,7 @@ class BudgetsPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _BudgetFormSheet(
@@ -341,7 +198,7 @@ class BudgetsPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bg1,
+      backgroundColor: _cardBg,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AiSuggestSheet(
@@ -351,15 +208,220 @@ class BudgetsPage extends ConsumerWidget {
   }
 }
 
-// ── Score Ring ──────────────────────────────────────────────────────
-class _ScoreRing extends StatelessWidget {
-  final double value;
-  final double size;
-  final double stroke;
-  const _ScoreRing({required this.value, this.size = 100, this.stroke = 10});
+// ── Standard Header ──────────────────────────────────────────────────
+class _Header extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _Header({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _cardBorder),
+              ),
+              child: const Icon(Icons.menu, size: 20, color: _text2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: AppTextStyles.headlineLarge
+                      .copyWith(color: _text1, fontWeight: FontWeight.w700)),
+              Text(subtitle,
+                  style: AppTextStyles.bodySmall.copyWith(color: _text3)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hero Card ────────────────────────────────────────────────────────
+class _HeroCard extends StatelessWidget {
+  final double totalSpent;
+  final double totalLimit;
+  final double pctTotal;
+  final int overCount;
+  final int budgetCount;
+  const _HeroCard({
+    required this.totalSpent,
+    required this.totalLimit,
+    required this.pctTotal,
+    required this.overCount,
+    required this.budgetCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          _ScoreRing(value: pctTotal),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Bu ay toplam bütçe',
+                    style:
+                        AppTextStyles.labelSmall.copyWith(color: _text3)),
+                const SizedBox(height: 6),
+                Text(
+                  '${AppFormatters.currencyCompact(totalSpent)} ₺',
+                  style: AppTextStyles.amountHero.copyWith(
+                      fontSize: 26,
+                      color: _text1,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.02 * 26),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$budgetCount kategoride ${AppFormatters.currencyCompact(totalLimit)} ₺ harcandı',
+                  style: AppTextStyles.bodySmall.copyWith(color: _text3),
+                ),
+                if (overCount > 0) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          size: 12, color: _warning),
+                      const SizedBox(width: 4),
+                      Text('$overCount bütçe aşıldı',
+                          style: AppTextStyles.labelSmall
+                              .copyWith(color: _warning)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── AI Suggest Button ────────────────────────────────────────────────
+class _AiSuggestButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AiSuggestButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _accent.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _accent.withValues(alpha: 0.15),
+                border: Border.all(
+                    color: _accent.withValues(alpha: 0.3)),
+              ),
+              child: const Icon(Icons.auto_awesome,
+                  size: 18, color: _accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('AI bütçe önerisi al',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                          color: _text1,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Harcama örüntüne göre kategori bazlı limitler',
+                    style:
+                        AppTextStyles.labelSmall.copyWith(color: _text3),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 16, color: _text2),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Dashed Add Button ────────────────────────────────────────────────
+class _DashedAddButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _DashedAddButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: _cardBorder,
+            style: BorderStyle.solid,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, size: 18, color: _text3),
+            const SizedBox(width: 8),
+            Text(label,
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: _text3, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Score Ring ──────────────────────────────────────────────────────
+class _ScoreRing extends StatelessWidget {
+  final double value;
+  const _ScoreRing({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    const double size = 90;
+    const double stroke = 9;
     return SizedBox(
       width: size,
       height: size,
@@ -371,14 +433,14 @@ class _ScoreRing extends StatelessWidget {
             children: [
               Text(
                 '${value.clamp(0, 999).toStringAsFixed(0)}%',
-                style: AppTextStyles.bodyMedium.copyWith(
+                style: const TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.text1Dark,
-                    fontSize: 18),
+                    color: _text1),
               ),
               Text('kullanıldı',
-                  style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.text3Dark, fontSize: 9)),
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: _text3, fontSize: 9)),
             ],
           ),
         ),
@@ -397,17 +459,17 @@ class _RingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - stroke) / 2;
     final trackPaint = Paint()
-      ..color = AppColors.bg3
+      ..color = _cardBorder
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, radius, trackPaint);
 
     final fillColor = value > 100
-        ? AppColors.negative
+        ? _negative
         : value >= 80
-            ? AppColors.warning
-            : AppColors.accent;
+            ? _warning
+            : _accent;
     final valuePaint = Paint()
       ..color = fillColor
       ..style = PaintingStyle.stroke
@@ -444,14 +506,21 @@ class _BudgetCard extends StatelessWidget {
     final catColor = _colorForName(catName);
     final remaining = limit - spent;
 
+    // Progress color: accent < 80%, warning 80-99%, red ≥ 100%
+    final progressColor = pct >= 100
+        ? _negative
+        : pct >= 80
+            ? _warning
+            : _accent;
+
     return GestureDetector(
       onTap: onEdit,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.bg1,
+          color: _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border1Dark),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           children: [
@@ -459,17 +528,19 @@ class _BudgetCard extends StatelessWidget {
               children: [
                 // Category bubble
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
                     color: catColor.withValues(alpha: 0.13),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
                     child: Text(
                       catName.isNotEmpty ? catName[0].toUpperCase() : '?',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: catColor, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: catColor),
                     ),
                   ),
                 ),
@@ -479,54 +550,63 @@ class _BudgetCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(catName,
-                          style: AppTextStyles.bodyMedium
-                              .copyWith(fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 2),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                              color: _text1,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 3),
                       over
                           ? Text(
                               '${AppFormatters.currencyCompact(spent - limit)} ₺ aşıldı',
                               style: AppTextStyles.labelSmall
-                                  .copyWith(color: AppColors.negative),
+                                  .copyWith(color: _negative),
                             )
                           : Text(
                               'Kalan ${AppFormatters.currencyCompact(remaining)} ₺',
                               style: AppTextStyles.labelSmall
-                                  .copyWith(color: AppColors.text3Dark),
+                                  .copyWith(color: _text3),
                             ),
                     ],
                   ),
                 ),
-                Text(
-                  '%${pct.toStringAsFixed(0)}',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: over
-                          ? AppColors.negative
-                          : AppColors.text1Dark),
+                // Percentage badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: progressColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '%${pct.toStringAsFixed(0)}',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: progressColor),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             ClipRRect(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (pct / 100).clamp(0, 1),
-                backgroundColor: catColor.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation(
-                    over ? AppColors.negative : catColor),
+                backgroundColor: progressColor.withValues(alpha: 0.1),
+                valueColor:
+                    AlwaysStoppedAnimation(progressColor),
                 minHeight: 6,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppFormatters.currencyCompact(spent),
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.text3Dark)),
+                Text('${AppFormatters.currencyCompact(spent)} ₺',
+                    style:
+                        AppTextStyles.labelSmall.copyWith(color: _text3)),
                 Text('${AppFormatters.currencyCompact(limit)} ₺',
-                    style: AppTextStyles.labelSmall
-                        .copyWith(color: AppColors.text3Dark)),
+                    style:
+                        AppTextStyles.labelSmall.copyWith(color: _text3)),
               ],
             ),
           ],
@@ -559,7 +639,8 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
 
   Future<void> _load() async {
     try {
-      final res = await DioClient.instance.post(ApiEndpoints.budgetsAiSuggest);
+      final res =
+          await DioClient.instance.post(ApiEndpoints.budgetsAiSuggest);
       final data = res.data as Map<String, dynamic>;
       setState(() {
         _suggestions = (data['suggestions'] as List? ?? [])
@@ -606,7 +687,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.border2Dark,
+              color: _cardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -614,10 +695,11 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome, color: AppColors.accent),
+                const Icon(Icons.auto_awesome, color: _accent),
                 const SizedBox(width: 8),
                 Text('AI Bütçe Önerisi',
-                    style: AppTextStyles.headlineMedium),
+                    style: AppTextStyles.headlineMedium
+                        .copyWith(color: _text1)),
               ],
             ),
           ),
@@ -625,36 +707,40 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
           Expanded(
             child: _loading
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.accent))
+                    child: CircularProgressIndicator(color: _accent))
                 : _error != null
                     ? Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(_error!,
                               style: AppTextStyles.bodyMedium
-                                  .copyWith(color: AppColors.text2Dark),
+                                  .copyWith(color: _text2),
                               textAlign: TextAlign.center),
                         ),
                       )
                     : ListView.builder(
                         controller: ctrl,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         itemCount: _suggestions.length,
                         itemBuilder: (_, i) {
                           final s = _suggestions[i];
                           final amount =
-                              (s['suggested_amount'] as num?)?.toDouble() ?? 0;
+                              (s['suggested_amount'] as num?)
+                                      ?.toDouble() ??
+                                  0;
                           final catName =
                               s['category_name'] as String? ?? '';
                           final catColor = _colorForName(catName);
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin:
+                                const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: AppColors.bg2,
-                              borderRadius: BorderRadius.circular(16),
-                              border:
-                                  Border.all(color: AppColors.border1Dark),
+                              color: _cardBg,
+                              borderRadius:
+                                  BorderRadius.circular(16),
+                              border: Border.all(color: _cardBorder),
                             ),
                             child: Row(
                               children: [
@@ -662,18 +748,20 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                   width: 36,
                                   height: 36,
                                   decoration: BoxDecoration(
-                                    color: catColor.withValues(alpha: 0.13),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: catColor
+                                        .withValues(alpha: 0.13),
+                                    borderRadius:
+                                        BorderRadius.circular(8),
                                   ),
                                   child: Center(
                                     child: Text(
                                       catName.isNotEmpty
                                           ? catName[0].toUpperCase()
                                           : '?',
-                                      style: AppTextStyles.bodyMedium
-                                          .copyWith(
-                                              color: catColor,
-                                              fontWeight: FontWeight.w700),
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: catColor),
                                     ),
                                   ),
                                 ),
@@ -684,26 +772,30 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(catName,
-                                          style: AppTextStyles.bodyMedium
+                                          style: AppTextStyles
+                                              .bodyMedium
                                               .copyWith(
+                                                  color: _text1,
                                                   fontWeight:
                                                       FontWeight.w600)),
                                       if ((s['reason'] as String?)
                                               ?.isNotEmpty ==
                                           true)
                                         Text(s['reason'] as String,
-                                            style: AppTextStyles.labelSmall
+                                            style: AppTextStyles
+                                                .labelSmall
                                                 .copyWith(
-                                                    color:
-                                                        AppColors.text3Dark)),
+                                                    color: _text3)),
                                     ],
                                   ),
                                 ),
                                 Text(
-                                    AppFormatters.currencyCompact(amount),
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.accent)),
+                                    AppFormatters.currencyCompact(
+                                        amount),
+                                    style: AppTextStyles.bodyMedium
+                                        .copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: _accent)),
                               ],
                             ),
                           );
@@ -712,17 +804,26 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
           ),
           if (!_loading && _error == null)
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                  24, 8, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.fromLTRB(24, 8, 24,
+                  24 + MediaQuery.of(context).viewInsets.bottom),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _applying ? null : _apply,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: AppColors.accentText,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: _applying
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentText))
                       : const Icon(Icons.check),
                   label: const Text('Tümünü Uygula'),
                 ),
@@ -781,7 +882,8 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
       final list =
           (res.data as Map<String, dynamic>)['categories'] as List? ?? [];
       setState(() {
-        _categories = list.map((c) => c as Map<String, dynamic>).toList();
+        _categories =
+            list.map((c) => c as Map<String, dynamic>).toList();
         _loadingCats = false;
       });
     } catch (_) {
@@ -810,7 +912,8 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
     try {
       final payload = {
         'category_id': _categoryId,
-        'amount': double.parse(_amountCtrl.text.replaceAll(',', '.')),
+        'amount':
+            double.parse(_amountCtrl.text.replaceAll(',', '.')),
         'alert_threshold': int.tryParse(_alertCtrl.text) ?? 80,
         'period': period,
       };
@@ -818,7 +921,8 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
         final id = (widget.existing!['id'] as num).toInt();
         await DioClient.instance.put('/budgets/$id', data: payload);
       } else {
-        await DioClient.instance.post(ApiEndpoints.budgets, data: payload);
+        await DioClient.instance
+            .post(ApiEndpoints.budgets, data: payload);
       }
       widget.onSaved();
       if (mounted) Navigator.pop(context);
@@ -846,18 +950,19 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Bütçe Düzenle' : 'Bütçe Ekle',
-                  style: AppTextStyles.headlineMedium),
+                  style: AppTextStyles.headlineMedium
+                      .copyWith(color: _text1)),
               const SizedBox(height: 20),
               _loadingCats
-                  ? const LinearProgressIndicator(color: AppColors.accent)
+                  ? const LinearProgressIndicator(color: _accent)
                   : DropdownButtonFormField<int>(
-                      value: _categoryId,
-                      dropdownColor: AppColors.bg2,
+                      initialValue: _categoryId,
+                      dropdownColor: _cardBg,
                       decoration:
                           const InputDecoration(labelText: 'Kategori'),
                       hint: Text(_categoryName,
                           style: AppTextStyles.bodyMedium
-                              .copyWith(color: AppColors.text3Dark)),
+                              .copyWith(color: _text3)),
                       items: _categories
                           .map((c) => DropdownMenuItem<int>(
                                 value: (c['id'] as num).toInt(),
@@ -868,8 +973,9 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                         setState(() {
                           _categoryId = v;
                           _categoryName = _categories.firstWhere(
-                                  (c) => (c['id'] as num).toInt() == v)[
-                              'name'] as String;
+                                  (c) =>
+                                      (c['id'] as num).toInt() ==
+                                      v)['name'] as String;
                         });
                       },
                     ),
@@ -879,15 +985,17 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                 decoration: const InputDecoration(
                     labelText: 'Aylık Bütçe (₺)',
                     prefixIcon: Icon(Icons.attach_money)),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
                 ],
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Tutar gerekli';
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Tutar gerekli';
+                  }
                   final n = double.tryParse(v.replaceAll(',', '.'));
-                  if (n == null || n <= 0) return 'Geçerli tutar girin';
+                  if (n == null || n <= 0) { return 'Geçerli tutar girin'; }
                   return null;
                 },
               ),
@@ -899,7 +1007,9 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                     prefixIcon: Icon(Icons.notifications_outlined),
                     hintText: '80'),
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly
+                ],
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
                   if (n == null || n < 1 || n > 100) {
@@ -913,11 +1023,20 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    foregroundColor: AppColors.accentText,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
                   child: _loading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentText),
                         )
                       : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
                 ),
