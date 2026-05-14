@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api/api_endpoints.dart';
+import '../../../core/api/dio_client.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -204,11 +206,31 @@ class _DashboardBodyState extends State<_DashboardBody> {
   void initState() {
     super.initState();
     _alerts = widget.data.smartAlerts
-        .where((a) => a.title.trim().isNotEmpty && a.body.trim().isNotEmpty)
+        .where((a) => a.title.trim().isNotEmpty && a.body.trim().length >= 15)
         .toList();
     _aiInsights = widget.data.aiInsights
-        .where((i) => i.title.trim().isNotEmpty && i.body.trim().isNotEmpty)
+        .where((i) => i.title.trim().isNotEmpty && i.body.trim().length >= 15)
         .toList();
+    // If no AI insights exist in today's cache, trigger a background refresh
+    if (_aiInsights.isEmpty) {
+      Future.microtask(_refreshInsightsInBackground);
+    }
+  }
+
+  Future<void> _refreshInsightsInBackground() async {
+    try {
+      final res = await DioClient.instance.post(ApiEndpoints.agentInsightsRefresh);
+      final list = (res.data['insights'] as List?) ?? [];
+      final fresh = list
+          .map((j) => AiInsight.fromJson(j as Map<String, dynamic>))
+          .where((i) => i.title.trim().isNotEmpty && i.body.trim().length >= 15)
+          .toList();
+      if (mounted && fresh.isNotEmpty) {
+        setState(() => _aiInsights = fresh);
+      }
+    } catch (_) {
+      // background refresh failure is non-fatal
+    }
   }
 
   @override
@@ -951,20 +973,27 @@ class _AiInsightCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _heroBgFrom,
-          borderRadius: BorderRadius.circular(20),
-          border: Border(
-            left: const BorderSide(color: _accent, width: 3),
-            top: BorderSide(color: _cardBorder),
-            right: BorderSide(color: _cardBorder),
-            bottom: BorderSide(color: _cardBorder),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _heroBgFrom,
+            border: Border.all(color: _cardBorder),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          child: Stack(
+            children: [
+              // Left accent stripe
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 3,
+                child: Container(color: _accent),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Badge row
@@ -1052,6 +1081,9 @@ class _AiInsightCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+                  ],
+                ),
               ),
             ],
           ),
