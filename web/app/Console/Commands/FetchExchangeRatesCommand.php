@@ -19,6 +19,9 @@ class FetchExchangeRatesCommand extends Command
         'USDTRY=X' => 'USD',
         'EURTRY=X' => 'EUR',
         'GBPTRY=X' => 'GBP',
+        'CHFTRY=X' => 'CHF',
+        'JPYTRY=X' => 'JPY',
+        'AUDTRY=X' => 'AUD',
         'XAUTRY=X' => null, // special: divide by troy oz for gram; stored as XAU + GOLD
         'BTC-USD'  => null, // special: multiply by USDTRY
         'ETH-USD'  => null, // special: multiply by USDTRY
@@ -52,6 +55,22 @@ class FetchExchangeRatesCommand extends Command
                 case 'GBPTRY=X':
                     $rows['GBP'] = $this->makeRow('GBP', $price, $today);
                     $this->info(sprintf('GBP/TRY: %.4f', $price));
+                    break;
+
+                case 'CHFTRY=X':
+                    $rows['CHF'] = $this->makeRow('CHF', $price, $today);
+                    $this->info(sprintf('CHF/TRY: %.4f', $price));
+                    break;
+
+                case 'JPYTRY=X':
+                    // Store raw 1 JPY rate; display layer multiplies by 100
+                    $rows['JPY'] = $this->makeRow('JPY', $price, $today);
+                    $this->info(sprintf('JPY/TRY: %.6f', $price));
+                    break;
+
+                case 'AUDTRY=X':
+                    $rows['AUD'] = $this->makeRow('AUD', $price, $today);
+                    $this->info(sprintf('AUD/TRY: %.4f', $price));
                     break;
 
                 case 'XAUTRY=X':

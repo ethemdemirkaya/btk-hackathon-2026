@@ -47,6 +47,12 @@
 
 /* ── Triggered row ───────────────────────────────────────────────────── */
 .triggered-row td{background:rgba(234,84,85,.04)}
+
+/* ── Rate flash animations ───────────────────────────────────────────── */
+@keyframes flash-up{0%{background:rgba(40,199,111,.35);border-radius:6px}100%{background:transparent}}
+@keyframes flash-dn{0%{background:rgba(234,84,85,.35);border-radius:6px}100%{background:transparent}}
+.rate-flash-up{animation:flash-up .9s ease-out}
+.rate-flash-dn{animation:flash-dn .9s ease-out}
 </style>
 
 {{-- ═══════════════════ HEADER (compact) ══════════════════════════════ --}}
@@ -66,7 +72,7 @@
         <circle class="bg" cx="16" cy="16" r="14"/>
         <circle class="fg" id="cnt-arc" cx="16" cy="16" r="14"/>
       </svg>
-      <span id="cnt-label">5:00</span>
+      <span id="cnt-label">1:00</span>
     </div>
     <button class="btn btn-primary btn-sm d-flex align-items-center gap-1"
             data-bs-toggle="modal" data-bs-target="#addAlarmModal">
@@ -294,7 +300,7 @@ $mktIcons = [
   <i class="ti tabler-info-circle me-1"></i>
   Veri kaynakları: Yahoo Finance (anlık) → open.er-api.com (saatlik) → TCMB DB (günlük).
   Altın: gold-api.com (USD/oz → TRY/gram). JPY: 100 birim üzerinden.
-  Her <strong>5 dakikada</strong> bir otomatik güncellenir.
+  Her <strong>1 dakikada</strong> bir otomatik güncellenir.
 </p>
 
 {{-- ══════════════════════ ADD ALARM MODAL ════════════════════════════ --}}
@@ -419,9 +425,9 @@ document.querySelectorAll('[id^="spark-"]').forEach(canvas => {
   });
 });
 
-// ── Auto-refresh (5 minutes = 300 s) ─────────────────────────────────
+// ── Auto-refresh (60 s) ──────────────────────────────────────────────
 const MARKET_URL  = '{{ route('fx-alerts.market') }}';
-const TOTAL_SECS  = 300;
+const TOTAL_SECS  = 60;
 const CIRCUMF     = 2 * Math.PI * 14; // r=14 → ~87.96
 const arc         = document.getElementById('cnt-arc');
 const cntLabel    = document.getElementById('cnt-label');
@@ -430,6 +436,7 @@ const timeEl      = document.getElementById('hdr-time');
 const SRC_LABELS  = { yahoo:'Yahoo Finance', 'open-er':'OpenER', db:'TCMB DB' };
 const SRC_CLASSES = { yahoo:'src-yahoo', 'open-er':'src-open-er', db:'src-db' };
 let liveRates = {};
+let prevRates = {};
 let remaining = TOTAL_SECS;
 
 function setRing(secs) {
@@ -446,13 +453,26 @@ function fmtRate(v, code) {
   return '₺' + parseFloat(v).toLocaleString('tr-TR',{minimumFractionDigits:dp,maximumFractionDigits:dp});
 }
 
+function flashEl(el, direction) {
+  el.classList.remove('rate-flash-up', 'rate-flash-dn');
+  void el.offsetWidth; // force reflow so animation restarts
+  el.classList.add(direction === 'up' ? 'rate-flash-up' : 'rate-flash-dn');
+  setTimeout(() => el.classList.remove('rate-flash-up', 'rate-flash-dn'), 900);
+}
+
 function applyRates(rates) {
   Object.entries(rates).forEach(([code, r]) => {
-    const dp = code === 'XAU' ? 0 : 2;
+    const newRate = parseFloat(r.rate);
+    const oldRate = prevRates[code] ? parseFloat(prevRates[code].rate) : null;
+    const changed = oldRate !== null && newRate !== oldRate;
+    const direction = changed ? (newRate > oldRate ? 'up' : 'dn') : null;
 
     // Rate card
     const rEl = document.querySelector(`[data-rate="${code}"]`);
-    if (rEl) rEl.textContent = fmtRate(r.rate, code);
+    if (rEl) {
+      rEl.textContent = fmtRate(r.rate, code);
+      if (changed) flashEl(rEl, direction);
+    }
 
     // Change pill
     const cEl = document.querySelector(`[data-chg="${code}"]`);
@@ -461,13 +481,14 @@ function applyRates(rates) {
       cEl.className = `pill ${p>0?'pill-up':p<0?'pill-dn':'pill-flat'}`;
       const icon = p>0?'tabler-trending-up':'tabler-trending-down';
       cEl.innerHTML = `<i class="ti ${icon}" style="font-size:.65rem"></i>${p>0?'+':''}${Math.abs(p).toFixed(2)}%`;
+      if (changed) flashEl(cEl, direction);
     }
 
     // Ticker
     document.querySelectorAll(`[data-ticker-code="${code}"]`).forEach(item => {
       const p = parseFloat(r.change_pct || 0);
       const rr = item.querySelector('[data-ticker-rate]');
-      if (rr) rr.textContent = fmtRate(r.rate, code);
+      if (rr) { rr.textContent = fmtRate(r.rate, code); if (changed) flashEl(rr, direction); }
       const cc = item.querySelector('[data-ticker-chg]');
       if (cc) {
         cc.className = `pill ${p>0?'pill-up':p<0?'pill-dn':'pill-flat'}`;
@@ -475,10 +496,19 @@ function applyRates(rates) {
       }
     });
 
+    // Alert table current-rate cells
+    const atEl = document.querySelector(`[data-alert-rate="${code}"]`);
+    if (atEl) {
+      const dp = code === 'XAU' ? 0 : 2;
+      atEl.textContent = '₺' + newRate.toLocaleString('tr-TR',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+      if (changed) flashEl(atEl, direction);
+    }
+
     // Alarm button data-rate
     const ab = document.querySelector(`.alarm-quick[data-currency="${code}"]`);
     if (ab) ab.dataset.rate = r.rate;
   });
+  prevRates = rates;
   liveRates = rates;
 }
 
