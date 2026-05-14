@@ -585,11 +585,9 @@ class _BudgetCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${AppFormatters.currencyCompact(spent)} ₺',
-                    style:
-                        AppTextStyles.labelSmall.copyWith(color: _text3)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
                 Text('${AppFormatters.currencyCompact(limit)} ₺',
-                    style:
-                        AppTextStyles.labelSmall.copyWith(color: _text3)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
               ],
             ),
           ],
@@ -681,8 +679,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                 const Icon(Icons.auto_awesome, color: _accent),
                 const SizedBox(width: 8),
                 Text('AI Bütçe Önerisi',
-                    style: AppTextStyles.headlineMedium
-                        .copyWith(color: _text1)),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
               ],
             ),
           ),
@@ -696,8 +693,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(_error!,
-                              style: AppTextStyles.bodyMedium
-                                  .copyWith(color: _text2),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text2),
                               textAlign: TextAlign.center),
                         ),
                       )
@@ -755,30 +751,28 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(catName,
-                                          style: AppTextStyles
-                                              .bodyMedium
-                                              .copyWith(
-                                                  color: _text1,
-                                                  fontWeight:
-                                                      FontWeight.w600)),
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: _text1)),
                                       if ((s['reason'] as String?)
                                               ?.isNotEmpty ==
                                           true)
                                         Text(s['reason'] as String,
-                                            style: AppTextStyles
-                                                .labelSmall
-                                                .copyWith(
-                                                    color: _text3)),
+                                            style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: _text3)),
                                     ],
                                   ),
                                 ),
                                 Text(
                                     AppFormatters.currencyCompact(
                                         amount),
-                                    style: AppTextStyles.bodyMedium
-                                        .copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: _accent)),
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: _accent)),
                               ],
                             ),
                           );

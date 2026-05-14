@@ -17,7 +17,7 @@ const _text2      = Color(0xFF8BA4BC);
 const _text3      = Color(0xFF4A6478);
 const _positive   = Color(0xFF0DD9A0);
 const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
+const _warning    = Color(0xFFF59E0B); // ignore: unused_element
 
 final _investmentsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
