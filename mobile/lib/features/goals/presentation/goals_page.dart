@@ -603,8 +603,7 @@ class _GoalCard extends StatelessWidget {
                       onTrack
                           ? 'Hedefe ulaşma yolundasın'
                           : '${AppFormatters.currencyCompact(monthlyNeeded)} ₺/ay gerekli',
-                      style: AppTextStyles.labelSmall
-                          .copyWith(color: _text2),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2),
                     ),
                   ),
                   GestureDetector(
@@ -621,10 +620,10 @@ class _GoalCard extends StatelessWidget {
                                 _accent.withValues(alpha: 0.3)),
                       ),
                       child: Text('Para Ekle',
-                          style: AppTextStyles.labelSmall
-                              .copyWith(
-                                  color: _accent,
-                                  fontWeight: FontWeight.w600)),
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _accent)),
                     ),
                   ),
                 ],
@@ -699,12 +698,10 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Katkı Ekle',
-              style: AppTextStyles.headlineMedium
-                  .copyWith(color: _text1)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
           const SizedBox(height: 4),
           Text(widget.goalName,
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: _text3)),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3)),
           const SizedBox(height: 20),
           TextField(
             controller: _amountCtrl,
@@ -853,8 +850,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Hedef Düzenle' : 'Hedef Ekle',
-                  style: AppTextStyles.headlineMedium
-                      .copyWith(color: _text1)),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameCtrl,

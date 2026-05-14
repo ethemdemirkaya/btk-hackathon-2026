@@ -14,9 +14,7 @@ const _accent     = Color(0xFF00D4FF);
 const _text1      = Color(0xFFE8F4FF);
 const _text2      = Color(0xFF8BA4BC);
 const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
 const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 final _calendarProvider = FutureProvider.autoDispose
     .family<Map<String, dynamic>, String>((ref, month) async {
