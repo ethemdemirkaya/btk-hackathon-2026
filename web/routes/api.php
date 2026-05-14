@@ -117,9 +117,10 @@ Route::prefix('v1')->group(function () {
         Route::delete('personal-debts/{id}',         [PersonalDebtController::class, 'destroy']);
 
         // Investments / Portfolio
-        Route::get   ('investments',        [InvestmentController::class, 'index']);
-        Route::post  ('investments',        [InvestmentController::class, 'store']);
-        Route::delete('investments/{id}',   [InvestmentController::class, 'destroy']);
+        Route::get   ('investments/live-rates', [InvestmentController::class, 'liveRates']);
+        Route::get   ('investments',            [InvestmentController::class, 'index']);
+        Route::post  ('investments',            [InvestmentController::class, 'store']);
+        Route::delete('investments/{id}',       [InvestmentController::class, 'destroy']);
 
         // FX / Gold Alerts
         Route::get   ('fx-alerts',          [FxAlertController::class, 'index']);

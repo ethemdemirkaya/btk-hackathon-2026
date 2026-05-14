@@ -43,7 +43,7 @@ class AgentChatController extends Controller
             AgentMessage::create([
                 'agent_run_id' => $run->id,
                 'role'         => 'assistant',
-                'content'      => $response['reply'] ?? '',
+                'content'      => $response['final'] ?? '',
                 'metadata'     => json_encode(['agents_used' => $response['agents_used'] ?? []]),
             ]);
 
@@ -54,7 +54,7 @@ class AgentChatController extends Controller
             ]);
 
             return response()->json([
-                'reply'       => $response['reply'] ?? '',
+                'reply'       => $response['final'] ?? '',
                 'agents_used' => $response['agents_used'] ?? [],
                 'session_id'  => $sessionId,
                 'run_id'      => $run->id,

@@ -5,102 +5,183 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchExchangeRatesCommand extends Command
 {
     protected $signature   = 'rates:fetch';
-    protected $description = 'Fetch latest exchange rates from TCMB XML + gold-api.com';
+    protected $description = 'Fetch live exchange rates from Yahoo Finance (no API key required)';
 
-    private const TCMB_URL = 'https://www.tcmb.gov.tr/kurlar/today.xml';
-    private const GOLD_URL = 'https://api.gold-api.com/price/XAU';
-    private const TRACKED  = ['USD', 'EUR', 'GBP', 'CHF', 'JPY', 'SAR', 'AUD', 'CAD'];
+    private const TROY_OZ_TO_GRAM = 31.1035;
+
+    // Yahoo Finance symbol → internal currency key
+    private const SYMBOLS = [
+        'USDTRY=X' => 'USD',
+        'EURTRY=X' => 'EUR',
+        'GBPTRY=X' => 'GBP',
+        'XAUTRY=X' => null, // special: divide by troy oz for gram; stored as XAU + GOLD
+        'BTC-USD'  => null, // special: multiply by USDTRY
+        'ETH-USD'  => null, // special: multiply by USDTRY
+    ];
 
     public function handle(): int
     {
         $today = now()->toDateString();
         $rows  = [];
 
-        // ── 1. TCMB döviz kurları ────────────────────────────────────────────
-        try {
-            $xml = Http::withoutVerifying()
-                ->timeout(15)
-                ->get(self::TCMB_URL)
-                ->body();
+        // ── 1. Fetch all symbols from Yahoo Finance ───────────────────────────
+        foreach (self::SYMBOLS as $symbol => $_) {
+            $price = $this->fetchYahooPrice($symbol);
 
-            $data = simplexml_load_string($xml);
-
-            foreach ($data->Currency as $cur) {
-                $code = (string) $cur['CurrencyCode'];
-                if (! in_array($code, self::TRACKED, true)) {
-                    continue;
-                }
-
-                $buying  = (float) $cur->ForexBuying;
-                $selling = (float) $cur->ForexSelling;
-                $unit    = max(1, (int) $cur->Unit);
-
-                if ($buying <= 0 || $selling <= 0) {
-                    continue;
-                }
-
-                $rows[$code] = [
-                    'currency'    => $code,
-                    'rate_to_try' => round(($buying + $selling) / 2 / $unit, 6),
-                    'date'        => $today,
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ];
+            if ($price === null) {
+                $this->warn("Skipped {$symbol}: could not fetch price.");
+                continue;
             }
 
-            $this->info('TCMB: ' . count($rows) . ' kur alındı.');
-        } catch (\Throwable $e) {
-            $this->error('TCMB hatası: ' . $e->getMessage());
-        }
+            switch ($symbol) {
+                case 'USDTRY=X':
+                    $rows['USD'] = $this->makeRow('USD', $price, $today);
+                    $this->info(sprintf('USD/TRY: %.4f', $price));
+                    break;
 
-        // ── 2. Altın (XAU) — USD/troy oz → TRY/gram ─────────────────────────
-        try {
-            $goldResp = Http::withoutVerifying()
-                ->timeout(10)
-                ->get(self::GOLD_URL);
+                case 'EURTRY=X':
+                    $rows['EUR'] = $this->makeRow('EUR', $price, $today);
+                    $this->info(sprintf('EUR/TRY: %.4f', $price));
+                    break;
 
-            if ($goldResp->ok()) {
-                $xauUsd = (float) $goldResp->json('price'); // $/troy oz
-                $usdTry = $rows['USD']['rate_to_try'] ?? null;
+                case 'GBPTRY=X':
+                    $rows['GBP'] = $this->makeRow('GBP', $price, $today);
+                    $this->info(sprintf('GBP/TRY: %.4f', $price));
+                    break;
 
-                if ($xauUsd > 0 && $usdTry) {
-                    // 1 troy oz = 31.1035 gram
-                    $xauTry = ($xauUsd / 31.1035) * $usdTry;
+                case 'XAUTRY=X':
+                    // XAUTRY gives XAU per troy ounce in TRY; convert to per gram
+                    $gramTry = $price / self::TROY_OZ_TO_GRAM;
+                    $rows['XAU']  = $this->makeRow('XAU',  round($gramTry, 4), $today);
+                    $rows['GOLD'] = $this->makeRow('GOLD', round($gramTry, 4), $today);
+                    $this->info(sprintf('XAU/TRY: %.2f/oz → %.4f/gram', $price, $gramTry));
+                    break;
 
-                    $rows['XAU'] = [
-                        'currency'    => 'XAU',
-                        'rate_to_try' => round($xauTry, 4),
-                        'date'        => $today,
-                        'created_at'  => now(),
-                        'updated_at'  => now(),
-                    ];
+                case 'BTC-USD':
+                    // Will be processed after USD rate is known
+                    $rows['_BTC_USD'] = $price;
+                    break;
 
-                    $this->info(sprintf(
-                        'Altın: $%.2f/oz → ₺%.2f/gram',
-                        $xauUsd,
-                        $xauTry
-                    ));
-                }
+                case 'ETH-USD':
+                    // Will be processed after USD rate is known
+                    $rows['_ETH_USD'] = $price;
+                    break;
             }
-        } catch (\Throwable $e) {
-            $this->warn('Altın fiyatı alınamadı: ' . $e->getMessage());
         }
 
-        // ── 3. DB upsert ─────────────────────────────────────────────────────
+        // ── 2. Convert BTC/ETH from USD to TRY ───────────────────────────────
+        $usdTry = isset($rows['USD']) ? (float) $rows['USD']['rate_to_try'] : null;
+
+        if (isset($rows['_BTC_USD'])) {
+            $btcUsd = $rows['_BTC_USD'];
+            unset($rows['_BTC_USD']);
+
+            if ($usdTry !== null) {
+                $btcTry = $btcUsd * $usdTry;
+                $rows['BTC'] = $this->makeRow('BTC', round($btcTry, 2), $today);
+                $this->info(sprintf('BTC: $%.2f × %.4f = ₺%.2f', $btcUsd, $usdTry, $btcTry));
+            } else {
+                $this->warn('BTC skipped: USD/TRY rate unavailable.');
+            }
+        }
+
+        if (isset($rows['_ETH_USD'])) {
+            $ethUsd = $rows['_ETH_USD'];
+            unset($rows['_ETH_USD']);
+
+            if ($usdTry !== null) {
+                $ethTry = $ethUsd * $usdTry;
+                $rows['ETH'] = $this->makeRow('ETH', round($ethTry, 2), $today);
+                $this->info(sprintf('ETH: $%.2f × %.4f = ₺%.2f', $ethUsd, $usdTry, $ethTry));
+            } else {
+                $this->warn('ETH skipped: USD/TRY rate unavailable.');
+            }
+        }
+
+        // ── 3. Upsert into exchange_rates ─────────────────────────────────────
+        $written = 0;
         foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue; // skip leftover scalar temp values
+            }
+
             DB::table('exchange_rates')->upsert(
                 $row,
                 ['currency', 'date'],
                 ['rate_to_try', 'updated_at']
             );
+            $written++;
         }
 
-        $this->info(count($rows) . ' kur exchange_rates tablosuna yazıldı (' . $today . ').');
+        $this->info("{$written} rate(s) written to exchange_rates ({$today}).");
+        Log::info("rates:fetch completed: {$written} rates written for {$today}.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Fetch the current price for a Yahoo Finance symbol.
+     * Returns null on any HTTP or parse error.
+     */
+    private function fetchYahooPrice(string $symbol): ?float
+    {
+        $url = "https://query1.finance.yahoo.com/v8/finance/chart/{$symbol}";
+
+        try {
+            $response = Http::withoutVerifying()
+                ->timeout(10)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (compatible; Paranette/1.0)',
+                    'Accept'     => 'application/json',
+                ])
+                ->get($url, [
+                    'interval' => '1m',
+                    'range'    => '1d',
+                ]);
+
+            if (! $response->ok()) {
+                Log::warning("Yahoo Finance HTTP error for {$symbol}: " . $response->status());
+                return null;
+            }
+
+            $json = $response->json();
+
+            // Try regularMarketPrice from meta first (most reliable)
+            $price = $json['chart']['result'][0]['meta']['regularMarketPrice'] ?? null;
+
+            if ($price !== null) {
+                return (float) $price;
+            }
+
+            // Fallback: last close from indicators
+            $closes = $json['chart']['result'][0]['indicators']['quote'][0]['close'] ?? [];
+            $closes = array_filter($closes, fn($v) => $v !== null);
+
+            if (! empty($closes)) {
+                return (float) end($closes);
+            }
+
+            Log::warning("Yahoo Finance: no price found in response for {$symbol}.");
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("Yahoo Finance fetch error for {$symbol}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function makeRow(string $currency, float $rate, string $date): array
+    {
+        return [
+            'currency'    => $currency,
+            'rate_to_try' => $rate,
+            'date'        => $date,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ];
     }
 }

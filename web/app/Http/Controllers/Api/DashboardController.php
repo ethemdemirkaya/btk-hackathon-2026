@@ -28,6 +28,7 @@ class DashboardController extends Controller
             $categorySpend    = $this->service->getCategorySpending($user);
             $personalInflation= $this->service->getPersonalInflation($user);
             $smartAlerts      = $this->service->getSmartAlerts($user);
+            $recentInsights   = $this->service->getRecentInsights($user);
             $budgetSummary    = $this->service->getBudgetSummary($user);
             $healthDetails    = $this->service->getHealthScoreDetails($user);
             $macroIndicators  = DB::table('economic_indicators')
@@ -38,6 +39,7 @@ class DashboardController extends Controller
             $categorySpend    = [];
             $personalInflation= ['personal_rate' => null, 'tufe_rate' => 37.86, 'diff' => null, 'breakdown' => [], 'period' => null];
             $smartAlerts      = [];
+            $recentInsights   = collect();
             $budgetSummary    = [];
             $healthDetails    = null;
             $macroIndicators  = collect();
@@ -49,6 +51,14 @@ class DashboardController extends Controller
             'category_spend'   => $categorySpend,
             'personal_inflation' => $personalInflation,
             'smart_alerts'     => $smartAlerts,
+            'ai_insights'      => $recentInsights->map(fn ($i) => [
+                'id'         => $i->id,
+                'type'       => $i->type ?? 'info',
+                'title'      => $i->title ?? '',
+                'body'       => $i->body ?? '',
+                'importance' => $i->importance,
+                'created_at' => $i->created_at?->toIso8601String(),
+            ])->values(),
             'budget_summary'   => $budgetSummary,
             'health_score'     => $healthDetails ? [
                 'score'                      => $healthDetails->score,

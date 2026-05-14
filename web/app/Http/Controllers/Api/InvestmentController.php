@@ -86,6 +86,51 @@ class InvestmentController extends Controller
         return response()->json(['asset' => $asset], 201);
     }
 
+    public function liveRates(): JsonResponse
+    {
+        $currencies = ['USD', 'EUR', 'GBP', 'XAU', 'BTC', 'ETH'];
+
+        $dbRates = DB::table('exchange_rates')
+            ->whereIn('currency', $currencies)
+            ->orderByDesc('date')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->unique('currency')
+            ->keyBy('currency');
+
+        $symbols = [
+            'USD' => 'USDTRY=X',
+            'EUR' => 'EURTRY=X',
+            'GBP' => 'GBPTRY=X',
+            'XAU' => 'XAUTRY=X',
+            'BTC' => 'BTC-USD',
+            'ETH' => 'ETH-USD',
+        ];
+
+        $rates     = [];
+        $updatedAt = null;
+
+        foreach ($currencies as $currency) {
+            if (isset($dbRates[$currency])) {
+                $row = $dbRates[$currency];
+                $rates[$currency] = [
+                    'rate'   => (float) $row->rate_to_try,
+                    'symbol' => $symbols[$currency] ?? $currency,
+                ];
+
+                $rowUpdatedAt = $row->updated_at ?? $row->date;
+                if ($updatedAt === null || $rowUpdatedAt > $updatedAt) {
+                    $updatedAt = $rowUpdatedAt;
+                }
+            }
+        }
+
+        return response()->json([
+            'rates'      => $rates,
+            'updated_at' => $updatedAt,
+        ]);
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         $asset = PortfolioAsset::where('id', $id)
