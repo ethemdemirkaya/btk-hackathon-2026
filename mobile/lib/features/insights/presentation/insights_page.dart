@@ -401,13 +401,33 @@ class _InsightCard extends StatelessWidget {
   const _InsightCard(
       {required this.insight, required this.onDismiss});
 
+  void _openDetail(BuildContext context) {
+    final typeColor = _colorFromHint(insight.type);
+    final impColor =
+        _importanceColors[insight.importance] ?? typeColor;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _InsightDetailSheet(
+        insight: insight,
+        typeColor: typeColor,
+        impColor: impColor,
+        iconForType: _iconForType,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final typeColor = _colorFromHint(insight.type);
     final impColor =
         _importanceColors[insight.importance] ?? typeColor;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _openDetail(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
       decoration: BoxDecoration(
         color: _cardBg,
         borderRadius: BorderRadius.circular(20),
@@ -526,6 +546,7 @@ class _InsightCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -542,5 +563,153 @@ class _InsightCard extends StatelessWidget {
       default:
         return Icons.info_outline;
     }
+  }
+}
+
+class _InsightDetailSheet extends StatelessWidget {
+  final _Insight insight;
+  final Color typeColor;
+  final Color impColor;
+  final IconData Function(String) iconForType;
+
+  const _InsightDetailSheet({
+    required this.insight,
+    required this.typeColor,
+    required this.impColor,
+    required this.iconForType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.62,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _cardBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: controller,
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: impColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _importanceLabels[insight.importance] ??
+                              insight.importance.toUpperCase(),
+                          style: TextStyle(
+                              color: impColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        AppFormatters.dateShort(insight.createdAt),
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _text3),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: typeColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(iconForType(insight.type),
+                            color: typeColor, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          insight.title,
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: _text1,
+                              height: 1.3),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _scaffoldBg,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _cardBorder),
+                    ),
+                    child: Text(
+                      insight.body,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: _text1,
+                          height: 1.6),
+                    ),
+                  ),
+                  if (insight.actionLink != null) ...[
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.push(insight.actionLink!);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: typeColor,
+                          foregroundColor: const Color(0xFF051929),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.arrow_forward, size: 18),
+                        label: const Text('Detaylı İncele',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

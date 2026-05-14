@@ -166,8 +166,9 @@ class _DashboardBodyState extends State<_DashboardBody> {
   @override
   void initState() {
     super.initState();
-    _alerts     = List.from(widget.data.smartAlerts);
-    // Filter out blank/empty insights (e.g. agent runs that produced no usable content)
+    _alerts = widget.data.smartAlerts
+        .where((a) => a.title.trim().isNotEmpty && a.body.trim().isNotEmpty)
+        .toList();
     _aiInsights = widget.data.aiInsights
         .where((i) => i.title.trim().isNotEmpty && i.body.trim().isNotEmpty)
         .toList();
