@@ -142,17 +142,19 @@ class _SplashPageState extends ConsumerState<SplashPage>
         builder: (_, __) => Stack(
           children: [
             // Dark gradient background
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF020D1A),
-                    Color(0xFF061425),
-                    Color(0xFF0A2540),
-                  ],
-                  stops: [0.0, 0.5, 1.0],
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF020D1A),
+                      Color(0xFF061425),
+                      Color(0xFF0A2540),
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  ),
                 ),
               ),
             ),
@@ -178,15 +180,17 @@ class _SplashPageState extends ConsumerState<SplashPage>
             ),
 
             // Floating particles
-            CustomPaint(
-              painter: _ParticlePainter(animation: _particleController),
-              size: MediaQuery.of(context).size,
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ParticlePainter(animation: _particleController),
+              ),
             ),
 
             // Grid lines (subtle)
-            CustomPaint(
-              painter: _GridPainter(),
-              size: MediaQuery.of(context).size,
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _GridPainter(),
+              ),
             ),
 
             // Main content

@@ -82,7 +82,8 @@ class GeminiClient
         $key = $this->pickKey();
         $url = self::BASE . "/{$model->value}:streamGenerateContent?alt=sse&key={$key}";
 
-        $response = Http::withHeaders(['Accept' => 'text/event-stream'])
+        $response = Http::withoutVerifying()
+            ->withHeaders(['Accept' => 'text/event-stream'])
             ->timeout(120)
             ->post($url, $body);
 
@@ -155,7 +156,7 @@ class GeminiClient
             $key = $this->apiKeys[$idx];
 
             $url      = self::BASE . "/{$method}?key={$key}";
-            $response = Http::timeout(60)->post($url, $body);
+            $response = Http::withoutVerifying()->timeout(60)->post($url, $body);
 
             if ($response->status() === 429) {
                 $this->cooldownKey($idx);
