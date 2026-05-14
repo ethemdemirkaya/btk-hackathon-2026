@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
@@ -321,6 +322,8 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _IconBtn(icon: Icons.tune, onTap: onFilter),
+              const SizedBox(width: 8),
+              AiInsightsButton(page: 'transactions'),
             ],
           ),
           if (searchExpanded) ...[

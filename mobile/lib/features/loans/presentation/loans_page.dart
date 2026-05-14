@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -182,6 +183,8 @@ class _Header extends StatelessWidget {
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
             ],
           ),
+          const Spacer(),
+          AiInsightsButton(page: 'loans'),
         ],
       ),
     );

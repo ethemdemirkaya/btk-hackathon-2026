@@ -23,6 +23,16 @@ const _quickActions = [
   (icon: Icons.picture_as_pdf_outlined,  label: 'Rapor',     color: Color(0xFFF472B6),  route: '/reports'),
 ];
 
+final _settingsStatsProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+  final res = await DioClient.instance.get(ApiEndpoints.dashboard);
+  final data = res.data as Map<String, dynamic>;
+  return {
+    'score':      (data['health_score'] as num?)?.toInt() ?? 0,
+    'goal_count': (data['active_goals_count'] as num?)?.toInt() ?? (data['goals'] as List?)?.length ?? 0,
+    'days':       (data['days_since_joined'] as num?)?.toInt() ?? 0,
+  };
+});
+
 const _modules = [
   (group: 'Bankacılık', items: [
     (id: 'cards',            icon: Icons.credit_card_outlined,          label: 'Kartlar',          sub: 'Kart borçları ve limitler',   route: '/cards'),
@@ -167,29 +177,48 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
 
-            // Quick stats
+            // Quick stats from API
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                      child: _StatCard(
-                          value: '72',
-                          label: 'SKOR',
-                          color: _accent)),
+              child: ref.watch(_settingsStatsProvider).when(
+                loading: () => Row(
+                  children: List.generate(3, (_) => Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: _cardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: _cardBorder),
+                      ),
+                    ),
+                  )),
+                ),
+                error: (_, __) => Row(children: [
+                  Expanded(child: _StatCard(value: '—', label: 'SKOR', color: _accent)),
                   const SizedBox(width: 8),
-                  Expanded(
-                      child: _StatCard(
-                          value: '4',
-                          label: 'HEDEF',
-                          color: _text1)),
+                  Expanded(child: _StatCard(value: '—', label: 'HEDEF', color: _text1)),
                   const SizedBox(width: 8),
-                  Expanded(
-                      child: _StatCard(
-                          value: '147',
-                          label: 'GÜN',
-                          color: _text1)),
-                ],
+                  Expanded(child: _StatCard(value: '—', label: 'GÜN', color: _text1)),
+                ]),
+                data: (stats) => Row(
+                  children: [
+                    Expanded(child: _StatCard(
+                        value: stats['score'].toString(),
+                        label: 'SKOR',
+                        color: _accent)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _StatCard(
+                        value: stats['goal_count'].toString(),
+                        label: 'HEDEF',
+                        color: _text1)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _StatCard(
+                        value: stats['days'].toString(),
+                        label: 'GÜN',
+                        color: _text1)),
+                  ],
+                ),
               ),
             ),
 

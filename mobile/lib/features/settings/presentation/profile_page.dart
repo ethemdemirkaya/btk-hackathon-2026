@@ -490,13 +490,7 @@ class _SecuritySection extends StatelessWidget {
               icon: Icons.lock_outline,
               label: 'Şifreyi Değiştir',
               isFirst: true,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Yakında eklenecek.')),
-                );
-              },
+              onTap: () => _showPasswordChange(context),
             ),
             Container(
               padding: const EdgeInsets.symmetric(
@@ -531,6 +525,205 @@ class _SecuritySection extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showPasswordChange(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _PasswordChangeSheet(),
+  );
+}
+
+class _PasswordChangeSheet extends StatefulWidget {
+  const _PasswordChangeSheet();
+
+  @override
+  State<_PasswordChangeSheet> createState() => _PasswordChangeSheetState();
+}
+
+class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
+  final _currentCtrl  = TextEditingController();
+  final _newCtrl      = TextEditingController();
+  final _confirmCtrl  = TextEditingController();
+  bool _saving        = false;
+  bool _showCurrent   = false;
+  bool _showNew       = false;
+  bool _showConfirm   = false;
+
+  @override
+  void dispose() {
+    _currentCtrl.dispose();
+    _newCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final current = _currentCtrl.text.trim();
+    final next    = _newCtrl.text.trim();
+    final confirm = _confirmCtrl.text.trim();
+
+    if (current.isEmpty || next.isEmpty || confirm.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Tüm alanları doldurun.')));
+      return;
+    }
+    if (next.length < 8) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Yeni şifre en az 8 karakter olmalı.')));
+      return;
+    }
+    if (next != confirm) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Yeni şifreler eşleşmiyor.')));
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      await DioClient.instance.patch(
+        ApiEndpoints.authPatchMe(),
+        data: {
+          'current_password':      current,
+          'password':              next,
+          'password_confirmation': confirm,
+        },
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Şifre başarıyla güncellendi.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Şifre güncellenemedi. Mevcut şifrenizi kontrol edin.')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + bottom),
+      decoration: const BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: _cardBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Text('Şifre Değiştir',
+              style: TextStyle(
+                  fontSize: 17, fontWeight: FontWeight.w700, color: _text1)),
+          const SizedBox(height: 20),
+          _PwField(
+            controller: _currentCtrl,
+            label: 'Mevcut şifre',
+            show: _showCurrent,
+            onToggle: () => setState(() => _showCurrent = !_showCurrent),
+          ),
+          const SizedBox(height: 12),
+          _PwField(
+            controller: _newCtrl,
+            label: 'Yeni şifre (en az 8 karakter)',
+            show: _showNew,
+            onToggle: () => setState(() => _showNew = !_showNew),
+          ),
+          const SizedBox(height: 12),
+          _PwField(
+            controller: _confirmCtrl,
+            label: 'Yeni şifre tekrar',
+            show: _showConfirm,
+            onToggle: () => setState(() => _showConfirm = !_showConfirm),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: const Color(0xFF051929),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFF051929)),
+                    )
+                  : const Text('Güncelle',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PwField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final bool show;
+  final VoidCallback onToggle;
+  const _PwField({
+    required this.controller,
+    required this.label,
+    required this.show,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _scaffoldBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: !show,
+        style: const TextStyle(fontSize: 14, color: _text1),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          hintText: label,
+          hintStyle: const TextStyle(fontSize: 13, color: _text3),
+          isDense: true,
+          suffixIcon: GestureDetector(
+            onTap: onToggle,
+            child: Icon(
+              show ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              size: 18,
+              color: _text3,
+            ),
+          ),
         ),
       ),
     );

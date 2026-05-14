@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -446,6 +447,7 @@ class SubscriptionsPage extends ConsumerWidget {
               ],
             ),
           ),
+          AiInsightsButton(page: 'subscriptions'),
         ],
       ),
     );
