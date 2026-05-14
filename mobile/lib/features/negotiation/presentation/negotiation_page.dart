@@ -5,11 +5,22 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+// ignore: unused_element
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 final _negotiationProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -34,10 +45,10 @@ class NegotiationPage extends ConsumerWidget {
     final async = ref.watch(_negotiationProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showGenerateSheet(context, ref),
-        backgroundColor: const Color(0xFF00D4FF),
+        backgroundColor: _accent,
         foregroundColor: const Color(0xFF051929),
         icon: const Icon(Icons.auto_awesome, size: 18),
         label: const Text('Yeni Mektup', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -56,11 +67,11 @@ class NegotiationPage extends ConsumerWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1A2940)),
+                        border: Border.all(color: _cardBorder),
                       ),
-                      child: const Icon(Icons.menu, size: 18, color: Color(0xFF8BA4BC)),
+                      child: const Icon(Icons.menu, size: 18, color: _text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -68,12 +79,10 @@ class NegotiationPage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Müzakere Asistanı',
-                            style: AppTextStyles.headlineMedium
-                                .copyWith(color: const Color(0xFFE8F4FF))),
-                        Text('AI destekli taslak oluştur',
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: const Color(0xFF4A6478))),
+                        const Text('Müzakere Asistanı',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                        const Text('AI destekli taslak oluştur',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                       ],
                     ),
                   ),
@@ -86,20 +95,20 @@ class NegotiationPage extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D1B2A),
+                  color: _cardBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF1A2940)),
+                  border: Border.all(color: _cardBorder),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+                        color: _accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.auto_awesome,
-                          size: 22, color: Color(0xFF00D4FF)),
+                          size: 22, color: _accent),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -112,17 +121,17 @@ class NegotiationPage extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+                                  color: _accent.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text('✦ ', style: TextStyle(
-                                        color: Color(0xFF00D4FF), fontSize: 10)),
+                                        color: _accent, fontSize: 10)),
                                     Text('Yapay Zeka',
                                         style: TextStyle(
-                                            color: Color(0xFF00D4FF),
+                                            color: _accent,
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600)),
                                   ],
@@ -131,10 +140,9 @@ class NegotiationPage extends ConsumerWidget {
                             ],
                           ),
                           const SizedBox(height: 6),
-                          Text(
+                          const Text(
                             'Banka ve abonelik şirketlerine profesyonel müzakere mektupları oluştur.',
-                            style: AppTextStyles.bodySmall.copyWith(
-                                color: const Color(0xFF8BA4BC), height: 1.4),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.4),
                           ),
                         ],
                       ),
@@ -145,8 +153,8 @@ class NegotiationPage extends ConsumerWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: const Color(0xFF00D4FF),
-                backgroundColor: const Color(0xFF0D1B2A),
+                color: _accent,
+                backgroundColor: _cardBg,
                 onRefresh: () async => ref.invalidate(_negotiationProvider),
                 child: async.when(
                   loading: () => const SkeletonListView(),
@@ -217,10 +225,10 @@ class _DraftCard extends StatelessWidget {
         orElse: () => _letterTypes.last);
     final status = draft['status'] as String? ?? 'draft';
     final statusColor = status == 'sent'
-        ? const Color(0xFF0DD9A0)
+        ? _positive
         : status == 'draft'
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFF00D4FF);
+            ? _warning
+            : _accent;
     final statusLabel = status == 'sent'
         ? 'Gönderildi'
         : status == 'draft'
@@ -230,9 +238,9 @@ class _DraftCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1A2940)),
+        border: Border.all(color: _cardBorder),
       ),
       child: InkWell(
         onTap: onTap,
@@ -247,11 +255,11 @@ class _DraftCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(9),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00D4FF).withValues(alpha: 0.10),
+                      color: _accent.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(typeInfo['icon'] as IconData,
-                        color: const Color(0xFF00D4FF), size: 18),
+                        color: _accent, size: 18),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -261,12 +269,11 @@ class _DraftCard extends StatelessWidget {
                         Text(
                             draft['title'] as String? ??
                                 typeInfo['label'] as String,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                                color: const Color(0xFFE8F4FF),
-                                fontWeight: FontWeight.w600)),
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
                         Text(typeInfo['label'] as String,
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: const Color(0xFF4A6478))),
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                       ],
                     ),
                   ),
@@ -278,9 +285,10 @@ class _DraftCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(statusLabel,
-                        style: AppTextStyles.labelSmall
-                            .copyWith(color: statusColor,
-                                fontWeight: FontWeight.w600)),
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor)),
                   ),
                 ],
               ),
@@ -288,22 +296,23 @@ class _DraftCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   draft['summary'] as String,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: const Color(0xFF8BA4BC), height: 1.4),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.4),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
               const SizedBox(height: 10),
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.arrow_forward_ios,
-                      size: 12, color: Color(0xFF00D4FF)),
-                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 12, color: _accent),
+                  SizedBox(width: 4),
                   Text('Mektubu görüntüle',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: const Color(0xFF00D4FF),
-                              fontWeight: FontWeight.w500)),
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _accent)),
                 ],
               ),
             ],
@@ -381,7 +390,7 @@ class _GenerateSheetState extends State<_GenerateSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: DraggableScrollableSheet(
@@ -398,7 +407,7 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A2940),
+                  color: _cardBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -409,16 +418,15 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00D4FF).withValues(alpha: 0.12),
+                        color: _accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.auto_awesome,
-                          color: Color(0xFF00D4FF), size: 18),
+                          color: _accent, size: 18),
                     ),
                     const SizedBox(width: 12),
-                    Text('Müzakere Mektubu Oluştur',
-                        style: AppTextStyles.headlineMedium
-                            .copyWith(color: const Color(0xFFE8F4FF))),
+                    const Text('Müzakere Mektubu Oluştur',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
                   ],
                 ),
               ),
@@ -428,10 +436,12 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                   controller: ctrl,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
-                    Text('Mektup Türü',
-                        style: AppTextStyles.labelSmall
-                            .copyWith(color: const Color(0xFF4A6478),
-                                letterSpacing: 0.5)),
+                    const Text('Mektup Türü',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: _text3,
+                            letterSpacing: 0.5)),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -447,13 +457,13 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                                 horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF00D4FF).withValues(alpha: 0.15)
-                                  : const Color(0xFF0D1B2A),
+                                  ? _accent.withValues(alpha: 0.15)
+                                  : _cardBg,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF00D4FF)
-                                    : const Color(0xFF1A2940),
+                                    ? _accent
+                                    : _cardBorder,
                               ),
                             ),
                             child: Row(
@@ -462,18 +472,19 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                                 Icon(t['icon'] as IconData,
                                     size: 15,
                                     color: isSelected
-                                        ? const Color(0xFF00D4FF)
-                                        : const Color(0xFF8BA4BC)),
+                                        ? _accent
+                                        : _text2),
                                 const SizedBox(width: 6),
                                 Text(
                                   t['label'] as String,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: isSelected
-                                        ? const Color(0xFF00D4FF)
-                                        : const Color(0xFFE8F4FF),
+                                  style: TextStyle(
+                                    fontSize: 12,
                                     fontWeight: isSelected
                                         ? FontWeight.w600
                                         : FontWeight.w400,
+                                    color: isSelected
+                                        ? _accent
+                                        : _text1,
                                   ),
                                 ),
                               ],
@@ -488,8 +499,8 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                         _letterTypes.firstWhere(
                                 (t) => t['value'] == _selectedType)[
                             'desc'] as String,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: const Color(0xFF4A6478)),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                       ),
                     ],
                     const SizedBox(height: 20),
@@ -514,7 +525,7 @@ class _GenerateSheetState extends State<_GenerateSheet> {
                       child: ElevatedButton.icon(
                         onPressed: _loading ? null : _generate,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00D4FF),
+                          backgroundColor: _accent,
                           foregroundColor: const Color(0xFF051929),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
@@ -566,32 +577,32 @@ class _DarkTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: AppTextStyles.labelSmall
-                .copyWith(color: const Color(0xFF4A6478))),
+            style: const TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF060D18),
+            color: _scaffoldBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF1A2940)),
+            border: Border.all(color: _cardBorder),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 13, 0, 0),
-                child: Icon(icon, size: 16, color: const Color(0xFF4A6478)),
+                child: Icon(icon, size: 16, color: _text3),
               ),
               Expanded(
                 child: TextField(
                   controller: controller,
                   maxLines: maxLines,
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: const Color(0xFFE8F4FF)),
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w400, color: _text1),
                   decoration: InputDecoration(
                     hintText: hint,
                     hintStyle: const TextStyle(
-                        color: Color(0xFF4A6478), fontSize: 13),
+                        color: _text3, fontSize: 13),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 13),
@@ -617,7 +628,7 @@ class _GeneratedView extends StatelessWidget {
     final content = draft['content'] as String? ?? '';
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1B2A),
+        color: _cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -627,7 +638,7 @@ class _GeneratedView extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A2940),
+              color: _cardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -638,16 +649,15 @@ class _GeneratedView extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0DD9A0).withValues(alpha: 0.12),
+                    color: _positive.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.check_circle,
-                      color: Color(0xFF0DD9A0), size: 18),
+                      color: _positive, size: 18),
                 ),
                 const SizedBox(width: 12),
-                Text('Mektup Hazır',
-                    style: AppTextStyles.headlineMedium
-                        .copyWith(color: const Color(0xFFE8F4FF))),
+                const Text('Mektup Hazır',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
                 const Spacer(),
                 GestureDetector(
                   onTap: () {
@@ -659,12 +669,12 @@ class _GeneratedView extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF060D18),
+                      color: _scaffoldBg,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF1A2940)),
+                      border: Border.all(color: _cardBorder),
                     ),
                     child: const Icon(Icons.copy_outlined,
-                        size: 16, color: Color(0xFF8BA4BC)),
+                        size: 16, color: _text2),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -673,12 +683,12 @@ class _GeneratedView extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF060D18),
+                      color: _scaffoldBg,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF1A2940)),
+                      border: Border.all(color: _cardBorder),
                     ),
                     child: const Icon(Icons.close,
-                        size: 16, color: Color(0xFF8BA4BC)),
+                        size: 16, color: _text2),
                   ),
                 ),
               ],
@@ -690,15 +700,14 @@ class _GeneratedView extends StatelessWidget {
               data: content,
               padding: const EdgeInsets.all(20),
               styleSheet: MarkdownStyleSheet(
-                p: AppTextStyles.bodyMedium.copyWith(
-                    color: const Color(0xFFE8F4FF), height: 1.6),
-                h1: AppTextStyles.headlineMedium
-                    .copyWith(color: const Color(0xFFE8F4FF)),
-                h2: AppTextStyles.titleMedium
-                    .copyWith(color: const Color(0xFFE8F4FF)),
-                strong: AppTextStyles.bodyMedium.copyWith(
-                    color: const Color(0xFF00D4FF),
-                    fontWeight: FontWeight.w600),
+                p: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w400, color: _text1, height: 1.6),
+                h1: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
+                h2: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                strong: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _accent),
               ),
             ),
           ),
@@ -710,7 +719,7 @@ class _GeneratedView extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onClose,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00D4FF),
+                  backgroundColor: _accent,
                   foregroundColor: const Color(0xFF051929),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
@@ -741,7 +750,7 @@ class _DraftDetailPage extends StatelessWidget {
         (t) => t['value'] == typeVal, orElse: () => _letterTypes.last);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060D18),
+      backgroundColor: _scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -755,20 +764,20 @@ class _DraftDetailPage extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1A2940)),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: const Icon(Icons.arrow_back_ios_new,
-                          size: 15, color: Color(0xFF8BA4BC)),
+                          size: 15, color: _text2),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       draft['title'] as String? ?? typeInfo['label'] as String,
-                      style: AppTextStyles.headlineMedium
-                          .copyWith(color: const Color(0xFFE8F4FF)),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -784,12 +793,12 @@ class _DraftDetailPage extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1B2A),
+                        color: _cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1A2940)),
+                        border: Border.all(color: _cardBorder),
                       ),
                       child: const Icon(Icons.copy_outlined,
-                          size: 16, color: Color(0xFF8BA4BC)),
+                          size: 16, color: _text2),
                     ),
                   ),
                 ],
@@ -800,15 +809,14 @@ class _DraftDetailPage extends StatelessWidget {
                 data: content,
                 padding: const EdgeInsets.all(20),
                 styleSheet: MarkdownStyleSheet(
-                  p: AppTextStyles.bodyMedium.copyWith(
-                      color: const Color(0xFFE8F4FF), height: 1.6),
-                  h1: AppTextStyles.headlineMedium
-                      .copyWith(color: const Color(0xFFE8F4FF)),
-                  h2: AppTextStyles.titleMedium
-                      .copyWith(color: const Color(0xFFE8F4FF)),
-                  strong: AppTextStyles.bodyMedium.copyWith(
-                      color: const Color(0xFF00D4FF),
-                      fontWeight: FontWeight.w600),
+                  p: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w400, color: _text1, height: 1.6),
+                  h1: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
+                  h2: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                  strong: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _accent),
                 ),
               ),
             ),

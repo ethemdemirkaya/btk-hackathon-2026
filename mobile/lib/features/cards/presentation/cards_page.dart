@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
+
 final _cardsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final res = await DioClient.instance.get(ApiEndpoints.cards);
   return res.data as Map<String, dynamic>;
 });
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _negative = Color(0xFFFF4D6D);
 
 class CardsPage extends ConsumerWidget {
   const CardsPage({super.key});
@@ -141,12 +141,11 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge.copyWith(
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
                       color: _text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
             ],
           ),
         ],
@@ -176,22 +175,22 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Toplam borç',
+          const Text('Toplam borç',
               style:
-                  AppTextStyles.labelSmall.copyWith(color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 6),
           Text(
             '${AppFormatters.currencyCompact(debt)} ₺',
-            style: AppTextStyles.amountHero.copyWith(
+            style: const TextStyle(
                 fontSize: 32,
-                color: _text1,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.03 * 32),
+                letterSpacing: -0.03 * 32,
+                color: _text1),
           ),
           const SizedBox(height: 4),
           Text(
             '${used.toStringAsFixed(0)}% limit kullanımı · ${AppFormatters.currencyCompact(available)} ₺ kullanılabilir',
-            style: AppTextStyles.bodySmall.copyWith(color: _text3),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
         ],
       ),
@@ -436,9 +435,8 @@ class _AddCardButton extends StatelessWidget {
                 size: 20, color: _text3),
           ),
           const SizedBox(width: 12),
-          Text('Kart ekle',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: _text3, fontWeight: FontWeight.w500)),
+          const Text('Kart ekle',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
         ],
       ),
     );

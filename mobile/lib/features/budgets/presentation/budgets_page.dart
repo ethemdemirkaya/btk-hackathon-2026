@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -40,14 +38,15 @@ Color _colorForName(String name) {
 
 // ── Design tokens ────────────────────────────────────────────────────
 const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
+const _cardBg     = Color(0xFF0D1B2A);
 const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _negative = Color(0xFFFF4D6D);
-const _warning = Color(0xFFF59E0B);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
@@ -61,7 +60,7 @@ class BudgetsPage extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showBudgetForm(context, ref, null),
         backgroundColor: _accent,
-        foregroundColor: AppColors.accentText,
+        foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 26),
@@ -238,10 +237,9 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge
-                      .copyWith(color: _text1, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text1)),
               Text(subtitle,
-                  style: AppTextStyles.bodySmall.copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
             ],
           ),
         ],
@@ -283,21 +281,16 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Bu ay toplam bütçe',
-                    style:
-                        AppTextStyles.labelSmall.copyWith(color: _text3)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
                 const SizedBox(height: 6),
                 Text(
                   '${AppFormatters.currencyCompact(totalSpent)} ₺',
-                  style: AppTextStyles.amountHero.copyWith(
-                      fontSize: 26,
-                      color: _text1,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.02 * 26),
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.52),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$budgetCount kategoride ${AppFormatters.currencyCompact(totalLimit)} ₺ harcandı',
-                  style: AppTextStyles.bodySmall.copyWith(color: _text3),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
                 ),
                 if (overCount > 0) ...[
                   const SizedBox(height: 8),
@@ -307,8 +300,7 @@ class _HeroCard extends StatelessWidget {
                           size: 12, color: _warning),
                       const SizedBox(width: 4),
                       Text('$overCount bütçe aşıldı',
-                          style: AppTextStyles.labelSmall
-                              .copyWith(color: _warning)),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _warning)),
                     ],
                   ),
                 ],
@@ -358,14 +350,11 @@ class _AiSuggestButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('AI bütçe önerisi al',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: _text1,
-                          fontWeight: FontWeight.w600)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
                   const SizedBox(height: 2),
                   Text(
                     'Harcama örüntüne göre kategori bazlı limitler',
-                    style:
-                        AppTextStyles.labelSmall.copyWith(color: _text3),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                   ),
                 ],
               ),
@@ -404,8 +393,7 @@ class _DashedAddButton extends StatelessWidget {
             const Icon(Icons.add, size: 18, color: _text3),
             const SizedBox(width: 8),
             Text(label,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: _text3, fontWeight: FontWeight.w500)),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
           ],
         ),
       ),
@@ -439,8 +427,7 @@ class _ScoreRing extends StatelessWidget {
                     color: _text1),
               ),
               Text('kullanıldı',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: _text3, fontSize: 9)),
+                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: _text3)),
             ],
           ),
         ),
@@ -550,20 +537,16 @@ class _BudgetCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(catName,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                              color: _text1,
-                              fontWeight: FontWeight.w600)),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
                       const SizedBox(height: 3),
                       over
                           ? Text(
                               '${AppFormatters.currencyCompact(spent - limit)} ₺ aşıldı',
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(color: _negative),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _negative),
                             )
                           : Text(
                               'Kalan ${AppFormatters.currencyCompact(remaining)} ₺',
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(color: _text3),
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
                             ),
                     ],
                   ),
@@ -812,7 +795,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                   onPressed: _applying ? null : _apply,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _accent,
-                    foregroundColor: AppColors.accentText,
+                    foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
@@ -823,7 +806,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                           height: 16,
                           child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.accentText))
+                              color: const Color(0xFF051929)))
                       : const Icon(Icons.check),
                   label: const Text('Tümünü Uygula'),
                 ),
@@ -1025,7 +1008,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _accent,
-                    foregroundColor: AppColors.accentText,
+                    foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
@@ -1036,7 +1019,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                           height: 20,
                           child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.accentText),
+                              color: const Color(0xFF051929)),
                         )
                       : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
                 ),

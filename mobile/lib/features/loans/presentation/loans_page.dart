@@ -3,12 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
-import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
+
+const _scaffoldBg = Color(0xFF060D18);
+const _cardBg     = Color(0xFF0D1B2A);
+const _cardBorder = Color(0xFF1A2940);
+const _accent     = Color(0xFF00D4FF);
+const _text1      = Color(0xFFE8F4FF);
+const _text2      = Color(0xFF8BA4BC);
+const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _negative   = Color(0xFFFF4D6D);
+const _warning    = Color(0xFFF59E0B);
 
 final _loansProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -37,16 +47,6 @@ Color _bankColor(String bankName) {
       bankName.codeUnits.fold(0, (a, b) => a + b);
   return palette[h % palette.length];
 }
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1 = Color(0xFFE8F4FF);
-const _text2 = Color(0xFF8BA4BC);
-const _text3 = Color(0xFF4A6478);
-const _positive = Color(0xFF0DD9A0);
 
 class LoansPage extends ConsumerWidget {
   const LoansPage({super.key});
@@ -175,12 +175,11 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: AppTextStyles.headlineLarge.copyWith(
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
                       color: _text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
             ],
           ),
         ],
@@ -212,17 +211,17 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Toplam kredi borcu',
+          const Text('Toplam kredi borcu',
               style:
-                  AppTextStyles.labelSmall.copyWith(color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
           const SizedBox(height: 6),
           Text(
             '${AppFormatters.currencyCompact(totalBalance)} ₺',
-            style: AppTextStyles.amountHero.copyWith(
+            style: const TextStyle(
                 fontSize: 34,
-                color: _text1,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.03 * 34),
+                letterSpacing: -0.03 * 34,
+                color: _text1),
           ),
           const SizedBox(height: 10),
           Row(
@@ -239,16 +238,16 @@ class _HeroCard extends StatelessWidget {
                 ),
                 child: Text(
                   '$loanCount aktif kredi',
-                  style: AppTextStyles.labelSmall.copyWith(
-                      color: _accent,
-                      fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _accent),
                 ),
               ),
               const SizedBox(width: 10),
               Text(
                 'Aylık ${AppFormatters.currencyCompact(monthlyTotal)} ₺ taksit',
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: _text3),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
               ),
             ],
           ),
@@ -333,9 +332,10 @@ class _LoanCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(bankName.isNotEmpty ? bankName : label,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                                color: _text1,
-                                fontWeight: FontWeight.w600)),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _text1)),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -347,17 +347,19 @@ class _LoanCard extends StatelessWidget {
                                 BorderRadius.circular(6),
                           ),
                           child: Text(label,
-                              style: AppTextStyles.labelSmall
-                                  .copyWith(
-                                      color: _text3,
-                                      fontSize: 10)),
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: _text3)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text('%${rate.toStringAsFixed(1)} faiz',
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: _text3, fontSize: 12)),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: _text3)),
                   ],
                 ),
               ),
@@ -368,16 +370,16 @@ class _LoanCard extends StatelessWidget {
           // Outstanding amount (large, bold)
           Text(
             '${AppFormatters.currencyCompact(balance)} ₺',
-            style: AppTextStyles.amountHero.copyWith(
+            style: const TextStyle(
                 fontSize: 26,
-                color: _text1,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.02 * 26),
+                letterSpacing: -0.02 * 26,
+                color: _text1),
           ),
           const SizedBox(height: 4),
           Text(
             '$remaining taksit kaldı · Aylık ${AppFormatters.currencyCompact(nextAmount)} ₺',
-            style: AppTextStyles.bodySmall.copyWith(color: _text3),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
           ),
           const SizedBox(height: 14),
 
@@ -400,13 +402,17 @@ class _LoanCard extends StatelessWidget {
             children: [
               Text(
                 '%${(progress * 100).toStringAsFixed(0)} ödendi',
-                style: AppTextStyles.labelSmall
-                    .copyWith(color: _positive, fontSize: 11),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: _positive),
               ),
               Text(
                 '$total taksit',
-                style: AppTextStyles.labelSmall
-                    .copyWith(color: _text3, fontSize: 11),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: _text3),
               ),
             ],
           ),
@@ -430,29 +436,30 @@ class _LoanCard extends StatelessWidget {
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
-                      Text('SONRAKI TAKSİT',
-                          style: AppTextStyles.labelSmall
-                              .copyWith(
-                                  color: _text3,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.8)),
+                      const Text('SONRAKI TAKSİT',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: _text3,
+                              letterSpacing: 0.8)),
                       const SizedBox(height: 3),
                       Text(
                         nextDate != null
                             ? AppFormatters.dateFromIso(nextDate)
                             : '—',
-                        style: AppTextStyles.bodySmall.copyWith(
-                            color: _text1,
-                            fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _text1),
                       ),
                     ],
                   ),
                   Text(
                     AppFormatters.currencyCompact(nextAmount),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                        color: _text1,
-                        fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: _text1),
                   ),
                 ],
               ),
@@ -521,9 +528,10 @@ class _ActionBtn extends StatelessWidget {
                 color: ghost ? _text3 : _text2),
             const SizedBox(width: 4),
             Text(label,
-                style: AppTextStyles.labelSmall.copyWith(
-                    color: ghost ? _text3 : _text2,
-                    fontWeight: FontWeight.w500)),
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: ghost ? _text3 : _text2)),
           ],
         ),
       ),
@@ -552,10 +560,11 @@ class _DashedAddButton extends StatelessWidget {
           children: [
             const Icon(Icons.add, size: 18, color: _text3),
             const SizedBox(width: 8),
-            Text('Yeni kredi ekle',
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: _text3,
-                    fontWeight: FontWeight.w500)),
+            const Text('Yeni kredi ekle',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: _text3)),
           ],
         ),
       ),
