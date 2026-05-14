@@ -3,16 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/providers/auth_provider.dart';
 
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
 const _cardBorder = Color(0xFF1A2940);
 const _accent     = Color(0xFF00D4FF);
 const _text1      = Color(0xFFE8F4FF);
 const _text2      = Color(0xFF8BA4BC);
 const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
