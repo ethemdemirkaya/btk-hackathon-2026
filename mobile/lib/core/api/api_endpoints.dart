@@ -65,6 +65,9 @@ class ApiEndpoints {
   static const fxAlertRates = '/fx-alerts/rates';
   static String fxAlert(int id) => '/fx-alerts/$id';
 
+  // Financial Health Score (live, recomputed on every request)
+  static const healthScore = '/health-score';
+
   // Agent
   static const agentSend = '/agent/send';
   static const agentHistory = '/agent/history';

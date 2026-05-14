@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
+import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
 
 const _scaffoldBg = Color(0xFF060D18);
@@ -13,28 +16,55 @@ const _accent     = Color(0xFF00D4FF);
 const _text1      = Color(0xFFE8F4FF);
 const _text2      = Color(0xFF8BA4BC);
 const _text3      = Color(0xFF4A6478);
+const _positive   = Color(0xFF0DD9A0);
+const _warning    = Color(0xFFF59E0B);
 const _negative   = Color(0xFFFF4D6D);
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfilePage> createState() =>
-      _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   late final TextEditingController _incomeCtrl;
   bool _savingIncome = false;
-  bool _biometricEnabled = false;
+  bool _biometric = false;
+  bool _notifs = true;
   bool _darkMode = true;
+  UserModel? _lastUser;
 
   @override
   void initState() {
     super.initState();
     final user = ref.read(authProvider).user;
+    _lastUser = user;
     _incomeCtrl = TextEditingController(
         text: user?.monthlyIncome.toStringAsFixed(0) ?? '');
+    // Re-fetch in case the user opened profile from cold start without /auth/me
+    _refreshUser();
+  }
+
+  Future<void> _refreshUser() async {
+    try {
+      final res = await DioClient.instance.get(ApiEndpoints.authMe);
+      final raw = res.data;
+      final userJson = (raw is Map<String, dynamic>)
+          ? (raw['user'] as Map<String, dynamic>?)
+          : null;
+      if (userJson == null || !mounted) return;
+      final user = UserModel.fromJson(userJson);
+      ref.read(authProvider.notifier).setAuthenticated(user);
+      if (mounted) {
+        setState(() {
+          _lastUser = user;
+          _incomeCtrl.text = user.monthlyIncome.toStringAsFixed(0);
+        });
+      }
+    } catch (_) {
+      // keep cached state — splash already validated the token
+    }
   }
 
   @override
@@ -44,14 +74,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _saveIncome() async {
-    final raw =
-        _incomeCtrl.text.replaceAll(',', '.').trim();
+    final raw = _incomeCtrl.text.replaceAll(',', '.').replaceAll('.', '').trim();
     final income = double.tryParse(raw);
     if (income == null || income < 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Geçerli bir tutar girin.')),
-      );
+      _snack('Geçerli bir tutar girin.', _negative);
       return;
     }
     setState(() => _savingIncome = true);
@@ -60,174 +86,285 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ApiEndpoints.authPatchMe(),
         data: {'monthly_income': income},
       );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Aylık gelir güncellendi.')),
-      );
+      _snack('Aylık gelir güncellendi.', _positive);
+      await _refreshUser();
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text('Kayıt başarısız. Tekrar deneyin.')),
-      );
+      _snack('Kayıt başarısız. Tekrar deneyin.', _negative);
     } finally {
       if (mounted) setState(() => _savingIncome = false);
     }
   }
 
   Future<void> _logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: _cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Çıkış yap?',
+            style: TextStyle(color: _text1, fontWeight: FontWeight.w700)),
+        content: const Text('Hesabınızdan çıkmak istediğinize emin misiniz?',
+            style: TextStyle(color: _text2, fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal', style: TextStyle(color: _text2)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Çıkış yap',
+                style: TextStyle(color: _negative, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
     await ref.read(authProvider.notifier).logout();
     if (!mounted) return;
     context.go('/login');
   }
 
+  void _snack(String msg, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authProvider).user;
+    final user = ref.watch(authProvider).user ?? _lastUser;
     final name = user?.name ?? 'Kullanıcı';
     final email = user?.email ?? '';
     final initials = name
-        .split(' ')
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
         .take(2)
-        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+        .map((w) => w[0].toUpperCase())
         .join();
 
     return Scaffold(
       backgroundColor: _scaffoldBg,
-      body: SafeArea(
-        child: Column(
+      body: RefreshIndicator(
+        color: _accent,
+        backgroundColor: _cardBg,
+        onRefresh: _refreshUser,
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            _buildHeader(),
-            Expanded(
-              child: ListView(
-                padding:
-                    const EdgeInsets.only(bottom: 40),
-                children: [
-                  // Avatar section
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        20, 28, 20, 0),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFF00D4FF),
-                                Color(0xFFC99B5B)
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              initials.isEmpty
-                                  ? 'U'
-                                  : initials,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF051929),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: _text1,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: _text3),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _SectionLabel(label: 'FİNANSAL BİLGİLER'),
-                  _IncomeCard(
-                    controller: _incomeCtrl,
-                    saving: _savingIncome,
-                    onSave: _saveIncome,
-                  ),
-                  _SectionLabel(label: 'HESAP BİLGİLERİ'),
-                  _AccountInfoCard(
-                      email: email, user: user),
-                  _SectionLabel(label: 'GÜVENLİK'),
-                  _SecuritySection(
-                    biometricEnabled: _biometricEnabled,
-                    onBiometricChanged: (v) =>
-                        setState(() => _biometricEnabled = v),
-                  ),
-                  _SectionLabel(label: 'GÖRÜNÜM'),
-                  _AppearanceSection(
-                    darkMode: _darkMode,
-                    onDarkModeChanged: (v) async {
-                      setState(() => _darkMode = v);
-                      try {
-                        await DioClient.instance.patch(
-                          ApiEndpoints.authPatchMe(),
-                          data: {
-                            'theme': v ? 'dark' : 'light'
-                          },
-                        );
-                      } catch (_) {}
-                    },
-                  ),
-                  const SizedBox(height: 28),
-                  _LogoutButton(onLogout: _logout),
-                ],
-              ),
+            _HeroHeader(
+              name: name,
+              email: email,
+              initials: initials.isEmpty ? 'P' : initials,
+              monthlyIncome: user?.monthlyIncome ?? 0,
             ),
+            const SizedBox(height: 16),
+            _SectionLabel('FİNANSAL'),
+            _IncomeCard(
+              controller: _incomeCtrl,
+              saving: _savingIncome,
+              onSave: _saveIncome,
+            ),
+            const SizedBox(height: 20),
+            _SectionLabel('HESAP'),
+            _AccountCard(user: user, email: email),
+            const SizedBox(height: 20),
+            _SectionLabel('GÜVENLİK'),
+            _SecurityCard(
+              biometric: _biometric,
+              onBiometric: (v) => setState(() => _biometric = v),
+              onChangePassword: () => _showPasswordSheet(context),
+            ),
+            const SizedBox(height: 20),
+            _SectionLabel('TERCİHLER'),
+            _PreferencesCard(
+              darkMode: _darkMode,
+              notifications: _notifs,
+              onDark: (v) => setState(() => _darkMode = v),
+              onNotifications: (v) => setState(() => _notifs = v),
+            ),
+            const SizedBox(height: 20),
+            _SectionLabel('UYGULAMA'),
+            _AboutCard(),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _LogoutButton(onTap: _logout),
+            ),
+            const SizedBox(height: 14),
+            const Center(
+              child: Text('Paranette · v1.0.0',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: _text3,
+                      fontWeight: FontWeight.w500)),
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Row(
+  void _showPasswordSheet(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PasswordSheet(),
+    );
+  }
+}
+
+// ── Hero header ───────────────────────────────────────────────────────
+class _HeroHeader extends StatelessWidget {
+  final String name;
+  final String email;
+  final String initials;
+  final double monthlyIncome;
+
+  const _HeroHeader({
+    required this.name,
+    required this.email,
+    required this.initials,
+    required this.monthlyIncome,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0A1929), Color(0xFF0D2240)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border(bottom: BorderSide(color: _cardBorder)),
+      ),
+      child: Column(
         children: [
-          GestureDetector(
-            onTap: () =>
-                shellScaffoldKey.currentState?.openDrawer(),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _cardBg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: _cardBorder),
+          // Top row: drawer + title + edit (placeholder)
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _cardBg.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _cardBorder),
+                  ),
+                  child: const Icon(Icons.menu, size: 18, color: _text2),
+                ),
               ),
-              child: const Icon(Icons.menu,
-                  size: 18, color: _text2),
-            ),
+              const Spacer(),
+              const Text('Profilim',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _text1)),
+              const Spacer(),
+              const SizedBox(width: 40),
+            ],
           ),
-          const SizedBox(width: 14),
-          const Text(
-            'Profilim',
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: _text1),
+          const SizedBox(height: 28),
+          // Avatar with ring
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 102,
+                height: 102,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      _accent.withValues(alpha: 0.7),
+                      const Color(0xFFC99B5B).withValues(alpha: 0.7),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _scaffoldBg,
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: _accent,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: 4,
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _positive,
+                    border: Border.all(color: _scaffoldBg, width: 2),
+                  ),
+                  child: const Icon(Icons.check, size: 14, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            name,
+            style: const TextStyle(
+                fontSize: 22, fontWeight: FontWeight.w700, color: _text1),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            email.isEmpty ? '—' : email,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w400, color: _text3),
+          ),
+          const SizedBox(height: 18),
+          // Inline stats
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: _cardBg.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _cardBorder),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _Stat(
+                  label: 'Aylık gelir',
+                  value: AppFormatters.currencyCompact(monthlyIncome),
+                  color: _accent,
+                ),
+                Container(width: 1, height: 28, color: _cardBorder),
+                _Stat(
+                  label: 'Üyelik',
+                  value: 'Premium',
+                  color: _warning,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -235,31 +372,58 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 }
 
-class _SectionLabel extends StatelessWidget {
+class _Stat extends StatelessWidget {
   final String label;
-  const _SectionLabel({required this.label});
+  final String value;
+  final Color color;
+  const _Stat(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(20, 24, 20, 8),
-      child: Text(
-        label,
-        style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: _text3,
-            letterSpacing: 1.2),
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: color)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: _text3,
+                letterSpacing: 0.4)),
+      ],
     );
   }
 }
 
+// ── Section label ─────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+      child: Text(label,
+          style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: _text3,
+              letterSpacing: 1.2)),
+    );
+  }
+}
+
+// ── Income card ───────────────────────────────────────────────────────
 class _IncomeCard extends StatelessWidget {
   final TextEditingController controller;
   final bool saving;
   final VoidCallback onSave;
+
   const _IncomeCard(
       {required this.controller,
       required this.saving,
@@ -268,72 +432,86 @@ class _IncomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: _cardBorder),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Aylık Gelir',
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: _text3),
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: _accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.payments_outlined,
+                      color: _accent, size: 18),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Aylık Gelir',
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _text1)),
+                      SizedBox(height: 2),
+                      Text('Bütçe analizleri için temel',
+                          style: TextStyle(fontSize: 11, color: _text3)),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: _scaffoldBg,
-                      borderRadius:
-                          BorderRadius.circular(12),
-                      border: Border.all(
-                          color: _cardBorder),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _cardBorder),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12),
-                          child: Text(
-                            '₺',
+                        const Text('₺',
                             style: TextStyle(
-                              color: _accent,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                                color: _accent,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
                             controller: controller,
                             keyboardType:
                                 const TextInputType.numberWithOptions(
-                                    decimal: true),
+                                    decimal: false),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             style: const TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                fontWeight: FontWeight.w500,
                                 color: _text1),
-                            decoration:
-                                const InputDecoration(
+                            decoration: const InputDecoration(
                               border: InputBorder.none,
                               hintText: '0',
-                              hintStyle: TextStyle(
-                                  color: _text3),
-                              contentPadding:
-                                  EdgeInsets.symmetric(
-                                      vertical: 12),
+                              hintStyle: TextStyle(color: _text3),
                               isDense: true,
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),
@@ -343,32 +521,27 @@ class _IncomeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 SizedBox(
-                  height: 44,
+                  height: 48,
                   child: ElevatedButton(
                     onPressed: saving ? null : onSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _accent,
-                      foregroundColor:
-                          const Color(0xFF051929),
+                      foregroundColor: const Color(0xFF051929),
                       shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 18),
                     ),
                     child: saving
                         ? const SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 18,
+                            height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF051929)),
+                                strokeWidth: 2.2, color: Color(0xFF051929)),
                           )
                         : const Text('Kaydet',
-                            style: TextStyle(
-                                fontWeight:
-                                    FontWeight.w700)),
+                            style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -380,23 +553,21 @@ class _IncomeCard extends StatelessWidget {
   }
 }
 
-class _AccountInfoCard extends StatelessWidget {
+// ── Account card ──────────────────────────────────────────────────────
+class _AccountCard extends StatelessWidget {
+  final UserModel? user;
   final String email;
-  final dynamic user;
-  const _AccountInfoCard(
-      {required this.email, required this.user});
+  const _AccountCard({required this.user, required this.email});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
           color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: _cardBorder),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           children: [
@@ -409,9 +580,17 @@ class _AccountInfoCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.tag,
               label: 'Üye No',
-              value: user?.id != null
-                  ? '#${user!.id}'
-                  : '—',
+              value: user?.id != null ? '#${user!.id}' : '—',
+            ),
+            _InfoRow(
+              icon: Icons.phone_outlined,
+              label: 'Telefon',
+              value: (user?.phone ?? '').isEmpty ? '—' : user!.phone!,
+            ),
+            _InfoRow(
+              icon: Icons.cake_outlined,
+              label: 'Doğum tarihi',
+              value: (user?.birthDate ?? '').isEmpty ? '—' : user!.birthDate!,
             ),
           ],
         ),
@@ -425,38 +604,44 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   final bool isFirst;
-  const _InfoRow(
-      {required this.icon,
-      required this.label,
-      required this.value,
-      this.isFirst = false});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isFirst = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 14),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         border: isFirst
             ? null
-            : const Border(
-                top: BorderSide(
-                    color: _cardBorder)),
+            : const Border(top: BorderSide(color: _cardBorder)),
       ),
       child: Row(
         children: [
-          Icon(icon,
-              size: 16, color: _text3),
-          const SizedBox(width: 10),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: _cardBorder.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 15, color: _text2),
+          ),
+          const SizedBox(width: 12),
           Text(label,
               style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w400,
                   color: _text2)),
           const Spacer(),
           Text(value,
               style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: _text1)),
         ],
@@ -465,63 +650,48 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _SecuritySection extends StatelessWidget {
-  final bool biometricEnabled;
-  final ValueChanged<bool> onBiometricChanged;
-  const _SecuritySection(
-      {required this.biometricEnabled,
-      required this.onBiometricChanged});
+// ── Security card ─────────────────────────────────────────────────────
+class _SecurityCard extends StatelessWidget {
+  final bool biometric;
+  final ValueChanged<bool> onBiometric;
+  final VoidCallback onChangePassword;
+
+  const _SecurityCard({
+    required this.biometric,
+    required this.onBiometric,
+    required this.onChangePassword,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
           color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: _cardBorder),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _cardBorder),
         ),
         child: Column(
           children: [
-            _TappableRow(
+            _SettingRow(
               icon: Icons.lock_outline,
-              label: 'Şifreyi Değiştir',
+              label: 'Şifre değiştir',
+              trailing: const Icon(Icons.chevron_right,
+                  size: 18, color: _text3),
+              onTap: onChangePassword,
               isFirst: true,
-              onTap: () => _showPasswordChange(context),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 10),
-              decoration: const BoxDecoration(
-                border: Border(
-                    top: BorderSide(
-                        color: _cardBorder)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.fingerprint,
-                      size: 16, color: _text3),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: const Text('Biyometrik Giriş',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: _text2)),
-                  ),
-                  Switch(
-                    value: biometricEnabled,
-                    onChanged: onBiometricChanged,
-                    activeThumbColor: _accent,
-                    inactiveThumbColor: _text3,
-                    inactiveTrackColor: _cardBorder,
-                    materialTapTargetSize:
-                        MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
+            _SettingRow(
+              icon: Icons.fingerprint,
+              label: 'Biyometrik giriş',
+              trailing: Switch(
+                value: biometric,
+                onChanged: onBiometric,
+                activeThumbColor: _accent,
+                inactiveThumbColor: _text3,
+                inactiveTrackColor: _cardBorder,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
@@ -531,30 +701,211 @@ class _SecuritySection extends StatelessWidget {
   }
 }
 
-void _showPasswordChange(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => const _PasswordChangeSheet(),
-  );
-}
-
-class _PasswordChangeSheet extends StatefulWidget {
-  const _PasswordChangeSheet();
+// ── Preferences ──────────────────────────────────────────────────────
+class _PreferencesCard extends StatelessWidget {
+  final bool darkMode;
+  final bool notifications;
+  final ValueChanged<bool> onDark;
+  final ValueChanged<bool> onNotifications;
+  const _PreferencesCard({
+    required this.darkMode,
+    required this.notifications,
+    required this.onDark,
+    required this.onNotifications,
+  });
 
   @override
-  State<_PasswordChangeSheet> createState() => _PasswordChangeSheetState();
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _cardBorder),
+        ),
+        child: Column(
+          children: [
+            _SettingRow(
+              icon: Icons.dark_mode_outlined,
+              label: 'Koyu tema',
+              trailing: Switch(
+                value: darkMode,
+                onChanged: onDark,
+                activeThumbColor: _accent,
+                inactiveThumbColor: _text3,
+                inactiveTrackColor: _cardBorder,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              isFirst: true,
+            ),
+            _SettingRow(
+              icon: Icons.notifications_outlined,
+              label: 'Bildirimler',
+              trailing: Switch(
+                value: notifications,
+                onChanged: onNotifications,
+                activeThumbColor: _accent,
+                inactiveThumbColor: _text3,
+                inactiveTrackColor: _cardBorder,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            _SettingRow(
+              icon: Icons.language_outlined,
+              label: 'Dil',
+              trailing: const Text('Türkçe',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: _text2,
+                      fontWeight: FontWeight.w500)),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
-  final _currentCtrl  = TextEditingController();
-  final _newCtrl      = TextEditingController();
-  final _confirmCtrl  = TextEditingController();
-  bool _saving        = false;
-  bool _showCurrent   = false;
-  bool _showNew       = false;
-  bool _showConfirm   = false;
+class _AboutCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _cardBorder),
+        ),
+        child: Column(
+          children: [
+            _SettingRow(
+              icon: Icons.help_outline,
+              label: 'Yardım & Destek',
+              trailing: const Icon(Icons.chevron_right,
+                  size: 18, color: _text3),
+              onTap: () {},
+              isFirst: true,
+            ),
+            _SettingRow(
+              icon: Icons.privacy_tip_outlined,
+              label: 'Gizlilik politikası',
+              trailing: const Icon(Icons.chevron_right,
+                  size: 18, color: _text3),
+              onTap: () {},
+            ),
+            _SettingRow(
+              icon: Icons.description_outlined,
+              label: 'Kullanım koşulları',
+              trailing: const Icon(Icons.chevron_right,
+                  size: 18, color: _text3),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Widget trailing;
+  final VoidCallback? onTap;
+  final bool isFirst;
+
+  const _SettingRow({
+    required this.icon,
+    required this.label,
+    required this.trailing,
+    this.onTap,
+    this.isFirst = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: isFirst
+              ? null
+              : const Border(top: BorderSide(color: _cardBorder)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: _cardBorder.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: _text2),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: _text1)),
+            ),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────────────────
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _LogoutButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _negative,
+          side: BorderSide(color: _negative.withValues(alpha: 0.4)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+        ),
+        icon: const Icon(Icons.logout, size: 18),
+        label: const Text('Çıkış Yap',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+      ),
+    );
+  }
+}
+
+// ── Password change sheet ─────────────────────────────────────────────
+class _PasswordSheet extends StatefulWidget {
+  const _PasswordSheet();
+
+  @override
+  State<_PasswordSheet> createState() => _PasswordSheetState();
+}
+
+class _PasswordSheetState extends State<_PasswordSheet> {
+  final _currentCtrl = TextEditingController();
+  final _newCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  bool _saving = false;
+  bool _showCurrent = false;
+  bool _showNew = false;
+  bool _showConfirm = false;
 
   @override
   void dispose() {
@@ -566,22 +917,19 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
 
   Future<void> _submit() async {
     final current = _currentCtrl.text.trim();
-    final next    = _newCtrl.text.trim();
+    final next = _newCtrl.text.trim();
     final confirm = _confirmCtrl.text.trim();
 
     if (current.isEmpty || next.isEmpty || confirm.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Tüm alanları doldurun.')));
+      _snack('Tüm alanları doldurun.');
       return;
     }
     if (next.length < 8) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Yeni şifre en az 8 karakter olmalı.')));
+      _snack('Yeni şifre en az 8 karakter olmalı.');
       return;
     }
     if (next != confirm) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Yeni şifreler eşleşmiyor.')));
+      _snack('Yeni şifreler eşleşmiyor.');
       return;
     }
 
@@ -590,32 +938,37 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
       await DioClient.instance.patch(
         ApiEndpoints.authPatchMe(),
         data: {
-          'current_password':      current,
-          'password':              next,
+          'current_password': current,
+          'password': next,
           'password_confirmation': confirm,
         },
       );
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Şifre başarıyla güncellendi.')));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Şifre güncellenemedi. Mevcut şifrenizi kontrol edin.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Şifre güncellendi.')),
+      );
+    } catch (_) {
+      _snack('Şifre güncellenemedi. Mevcut şifreyi kontrol edin.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + bottom),
+      padding: EdgeInsets.fromLTRB(20, 18, 20, 22 + bottom),
       decoration: const BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -623,8 +976,9 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
+              width: 38,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
               decoration: BoxDecoration(
                 color: _cardBorder,
                 borderRadius: BorderRadius.circular(2),
@@ -633,29 +987,31 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
           ),
           const Text('Şifre Değiştir',
               style: TextStyle(
-                  fontSize: 17, fontWeight: FontWeight.w700, color: _text1)),
-          const SizedBox(height: 20),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _text1)),
+          const SizedBox(height: 18),
           _PwField(
             controller: _currentCtrl,
             label: 'Mevcut şifre',
             show: _showCurrent,
             onToggle: () => setState(() => _showCurrent = !_showCurrent),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _PwField(
             controller: _newCtrl,
             label: 'Yeni şifre (en az 8 karakter)',
             show: _showNew,
             onToggle: () => setState(() => _showNew = !_showNew),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _PwField(
             controller: _confirmCtrl,
             label: 'Yeni şifre tekrar',
             show: _showConfirm,
             onToggle: () => setState(() => _showConfirm = !_showConfirm),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -670,7 +1026,8 @@ class _PasswordChangeSheetState extends State<_PasswordChangeSheet> {
               ),
               child: _saving
                   ? const SizedBox(
-                      width: 20, height: 20,
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Color(0xFF051929)),
                     )
@@ -711,10 +1068,10 @@ class _PwField extends StatelessWidget {
         style: const TextStyle(fontSize: 14, color: _text1),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           hintText: label,
           hintStyle: const TextStyle(fontSize: 13, color: _text3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           isDense: true,
           suffixIcon: GestureDetector(
             onTap: onToggle,
@@ -723,137 +1080,6 @@ class _PwField extends StatelessWidget {
               size: 18,
               color: _text3,
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TappableRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool isFirst;
-  const _TappableRow(
-      {required this.icon,
-      required this.label,
-      required this.onTap,
-      this.isFirst = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          border: isFirst
-              ? null
-              : const Border(
-                  top: BorderSide(
-                      color: _cardBorder)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: 16, color: _text3),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: _text2)),
-            ),
-            const Icon(Icons.chevron_right,
-                size: 16, color: _text3),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AppearanceSection extends StatelessWidget {
-  final bool darkMode;
-  final ValueChanged<bool> onDarkModeChanged;
-  const _AppearanceSection(
-      {required this.darkMode,
-      required this.onDarkModeChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: _cardBorder),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.dark_mode_outlined,
-                size: 16, color: _text3),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                darkMode ? 'Koyu Tema' : 'Açık Tema',
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: _text2),
-              ),
-            ),
-            Switch(
-              value: darkMode,
-              onChanged: onDarkModeChanged,
-              activeThumbColor: _accent,
-              inactiveThumbColor: _text3,
-              inactiveTrackColor: _cardBorder,
-              materialTapTargetSize:
-                  MaterialTapTargetSize.shrinkWrap,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LogoutButton extends StatelessWidget {
-  final VoidCallback onLogout;
-  const _LogoutButton({required this.onLogout});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 20),
-      child: SizedBox(
-        height: 50,
-        child: OutlinedButton.icon(
-          onPressed: onLogout,
-          icon:
-              const Icon(Icons.logout, size: 18),
-          label: const Text('Çıkış Yap',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: _negative,
-            side: BorderSide(
-                color: _negative.withValues(alpha: 0.4)),
-            shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(14)),
           ),
         ),
       ),
