@@ -1,3 +1,4 @@
+*.exe
 docs/api-keys.md
 docs/secrets/
 **/node_modules
