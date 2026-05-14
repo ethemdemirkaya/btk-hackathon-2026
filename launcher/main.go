@@ -141,14 +141,9 @@ func listAVDs(flutter string) []avdInfo {
 	return []avdInfo{{ID: "Medium_Phone", Name: "Medium Phone"}}
 }
 
-// selectAVD: tek AVD varsa direkt seçer, birden fazla varsa kullanıcıya liste sunar.
+// selectAVD: her zaman kullanıcıya AVD listesini gösterir.
 func selectAVD(flutter string, reader *bufio.Reader) avdInfo {
 	avds := listAVDs(flutter)
-
-	if len(avds) == 1 {
-		logInfo(fmt.Sprintf("AVD: %s (%s)", avds[0].ID, avds[0].Name))
-		return avds[0]
-	}
 
 	fmt.Printf("%s%s┌─────────────────────────────────────────────────┐%s\n", bold, cyan, reset)
 	fmt.Printf("%s%s│  EMÜLATÖR SEÇİMİ                                │%s\n", bold, white, reset)
