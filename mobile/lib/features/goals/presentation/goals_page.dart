@@ -109,24 +109,19 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                         .where((g) =>
                             (g['status'] as String?) == 'completed')
                         .toList();
-                    final abandoned = goals
-                        .where((g) =>
-                            (g['status'] as String?) == 'abandoned')
-                        .toList();
 
-                    final totalProgress = goals.fold<double>(
-                        0,
-                        (s, g) =>
-                            s +
-                            ((g['current_amount'] as num?)
-                                    ?.toDouble() ??
-                                0));
+                    final totalProgress =
+                        (data['total_saved'] as num?)?.toDouble() ??
+                        goals.fold<double>(
+                            0,
+                            (s, g) =>
+                                s +
+                                ((g['current_amount'] as num?)
+                                        ?.toDouble() ??
+                                    0));
 
-                    final filtered = _filter == 'active'
-                        ? active
-                        : _filter == 'done'
-                            ? completed
-                            : abandoned;
+                    final filtered =
+                        _filter == 'done' ? completed : active;
 
                     return ListView(
                       padding:
@@ -144,8 +139,8 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                           options: [
                             _SegOpt(
                                 'active', 'Aktif · ${active.length}'),
-                            _SegOpt('done', 'Tamamlanan'),
-                            _SegOpt('abandoned', 'Vazgeçilen'),
+                            _SegOpt('done',
+                                'Tamamlanan · ${completed.length}'),
                           ],
                           value: _filter,
                           onChange: (v) =>
@@ -176,10 +171,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                           g['name'] as String? ?? '',
                                         )
                                     : null,
-                                onEdit: _filter == 'active'
-                                    ? () =>
-                                        _showGoalForm(context, g)
-                                    : null,
+                                onEdit: null,
                               ),
                             )),
 
@@ -811,7 +803,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
         'target_amount':
             double.parse(_targetCtrl.text.replaceAll(',', '.')),
         if (_initialCtrl.text.isNotEmpty)
-          'initial_amount': double.parse(
+          'current_amount': double.parse(
               _initialCtrl.text.replaceAll(',', '.')),
         if (_targetDate != null)
           'target_date':

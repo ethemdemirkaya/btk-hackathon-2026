@@ -84,14 +84,18 @@ class LoansPage extends ConsumerWidget {
                         (data['total_balance'] as num?)
                                 ?.toDouble() ??
                             0;
-                    final monthlyTotal = loans.fold<double>(
-                      0,
-                      (s, l) =>
-                          s +
-                          ((l['next_payment_amount'] as num?)
-                                  ?.toDouble() ??
-                              0),
-                    );
+                    final monthlyTotal =
+                        (data['due_next_30_days'] as num?)
+                                ?.toDouble() ??
+                            loans.fold<double>(
+                              0,
+                              (s, l) =>
+                                  s +
+                                  ((l['next_payment_amount']
+                                              as num?)
+                                          ?.toDouble() ??
+                                      0),
+                            );
 
                     if (loans.isEmpty) {
                       return ListView(
@@ -249,7 +253,7 @@ class _HeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'Aylık ${AppFormatters.currencyCompact(monthlyTotal)} ₺ taksit',
+                '30 günde ${AppFormatters.currencyCompact(monthlyTotal)} ₺ taksit',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
               ),
             ],

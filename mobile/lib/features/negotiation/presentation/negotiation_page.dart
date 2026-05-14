@@ -5,6 +5,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
@@ -28,13 +29,15 @@ final _negotiationProvider =
   return res.data as Map<String, dynamic>;
 });
 
+/// Target types must match NegotiationDraft::targetLabels() on the backend.
 const _letterTypes = [
-  {'value': 'interest_reduction', 'label': 'Faiz İndirimi', 'icon': Icons.percent, 'desc': 'Kredi veya kredi kartı faiz oranının düşürülmesi'},
-  {'value': 'subscription_cancel', 'label': 'Abonelik İptali', 'icon': Icons.cancel_outlined, 'desc': 'Abonelik iptali için müzakere'},
-  {'value': 'fee_waiver', 'label': 'Ücret Muafiyeti', 'icon': Icons.money_off, 'desc': 'Banka ücreti veya ceza muafiyeti'},
-  {'value': 'credit_limit', 'label': 'Limit Artırımı', 'icon': Icons.trending_up, 'desc': 'Kredi kartı limitinin artırılması'},
-  {'value': 'debt_restructure', 'label': 'Borç Yapılandırma', 'icon': Icons.account_balance_outlined, 'desc': 'Kredi taksitlerinin yeniden yapılandırılması'},
-  {'value': 'custom', 'label': 'Özel Mektup', 'icon': Icons.edit_note, 'desc': 'Kendi belirttiğiniz konuda müzakere'},
+  {'value': 'card_interest',      'label': 'Kredi Kartı Faiz İndirimi',    'icon': Icons.percent,                   'desc': 'Kredi kartı faiz oranının düşürülmesi talebi'},
+  {'value': 'loan_restructure',   'label': 'Kredi Yeniden Yapılandırma',   'icon': Icons.account_balance_outlined,  'desc': 'Kredi taksitlerinin yeniden yapılandırılması'},
+  {'value': 'bank_fee_waiver',    'label': 'Banka Ücreti İptali',          'icon': Icons.money_off,                 'desc': 'Banka ücreti veya ceza muafiyeti talebi'},
+  {'value': 'subscription_cancel','label': 'Abonelik İptali / İndirim',    'icon': Icons.cancel_outlined,           'desc': 'Abonelik iptali veya indirim müzakeresi'},
+  {'value': 'insurance_discount', 'label': 'Sigorta Prim İndirimi',        'icon': Icons.shield_outlined,           'desc': 'Sigorta prim indirim talebi'},
+  {'value': 'salary_raise',       'label': 'Maaş Zam Talebi',             'icon': Icons.trending_up,               'desc': 'İşverene maaş artışı talebi'},
+  {'value': 'other',              'label': 'Diğer',                        'icon': Icons.edit_note,                 'desc': 'Kendi belirttiğiniz konuda müzakere'},
 ];
 
 class NegotiationPage extends ConsumerWidget {
@@ -86,6 +89,7 @@ class NegotiationPage extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  const AiInsightsButton(page: 'negotiation'),
                 ],
               ),
             ),
@@ -219,21 +223,29 @@ class _DraftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeVal = draft['type'] as String? ?? 'custom';
+    final targetVal = draft['target'] as String? ?? 'other';
     final typeInfo = _letterTypes.firstWhere(
-        (t) => t['value'] == typeVal,
+        (t) => t['value'] == targetVal,
         orElse: () => _letterTypes.last);
     final status = draft['status'] as String? ?? 'draft';
     final statusColor = status == 'sent'
         ? _positive
-        : status == 'draft'
-            ? _warning
-            : _accent;
-    final statusLabel = status == 'sent'
-        ? 'Gönderildi'
-        : status == 'draft'
-            ? 'Taslak'
-            : 'Oluşturuldu';
+        : status == 'accepted'
+            ? _positive
+            : status == 'rejected'
+                ? _negative
+                : _warning;
+    final statusLabel = switch (status) {
+      'sent'     => 'Gönderildi',
+      'accepted' => 'Kabul Edildi',
+      'rejected' => 'Reddedildi',
+      _          => 'Taslak',
+    };
+
+    // Use target_label from API if available, else fall back to local label
+    final targetLabel = draft['target_label'] as String? ?? typeInfo['label'] as String;
+    final subject     = draft['subject'] as String? ?? targetLabel;
+    final body        = draft['body'] as String? ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -266,12 +278,10 @@ class _DraftCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            draft['title'] as String? ??
-                                typeInfo['label'] as String,
+                        Text(subject,
                             style: const TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
-                        Text(typeInfo['label'] as String,
+                        Text(targetLabel,
                             style: const TextStyle(
                                 fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
                       ],
@@ -292,10 +302,10 @@ class _DraftCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (draft['summary'] != null) ...[
+              if (body.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text(
-                  draft['summary'] as String,
+                  body,
                   style: const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.4),
                   maxLines: 2,
@@ -334,7 +344,7 @@ class _GenerateSheet extends StatefulWidget {
 class _GenerateSheetState extends State<_GenerateSheet> {
   String? _selectedType;
   final _recipientCtrl = TextEditingController();
-  final _contextCtrl = TextEditingController();
+  final _contextCtrl   = TextEditingController();
   bool _loading = false;
   Map<String, dynamic>? _generated;
 
@@ -356,22 +366,31 @@ class _GenerateSheetState extends State<_GenerateSheet> {
       final res = await DioClient.instance.post(
         ApiEndpoints.negotiationGenerate,
         data: {
-          'type': _selectedType,
-          'recipient': _recipientCtrl.text.trim(),
-          'context': _contextCtrl.text.trim(),
+          'target':         _selectedType,
+          'recipient_name': _recipientCtrl.text.trim(),
+          'extra_context':  _contextCtrl.text.trim(),
         },
         options: Options(receiveTimeout: const Duration(seconds: 120)),
       );
+      final responseData = res.data as Map<String, dynamic>;
+      // API returns { draft: {...}, key_arguments: [], success_tips: [], estimated_chance: ... }
+      // Flatten draft fields to top-level for _GeneratedView compatibility.
+      final draft = responseData['draft'] as Map<String, dynamic>? ?? responseData;
       setState(() {
-        _generated = res.data as Map<String, dynamic>;
+        _generated = {
+          ...draft,
+          'key_arguments':    responseData['key_arguments']    ?? [],
+          'success_tips':     responseData['success_tips']     ?? [],
+          'estimated_chance': responseData['estimated_chance'],
+        };
         _loading = false;
       });
       widget.onGenerated();
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] ?? 'Oluşturulamadı.';
+      final msg = e.response?.data?['error'] ?? e.response?.data?['message'] ?? 'Oluşturulamadı.';
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+            .showSnackBar(SnackBar(content: Text(msg as String)));
         setState(() => _loading = false);
       }
     }
@@ -625,7 +644,12 @@ class _GeneratedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = draft['content'] as String? ?? '';
+    // API stores letter text in 'body' field
+    final content       = draft['body'] as String? ?? '';
+    final keyArguments  = draft['key_arguments'] as List? ?? [];
+    final successTips   = draft['success_tips'] as List? ?? [];
+    final chance        = draft['estimated_chance'];
+
     return Container(
       decoration: const BoxDecoration(
         color: _cardBg,
@@ -659,6 +683,17 @@ class _GeneratedView extends StatelessWidget {
                 const Text('Mektup Hazır',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
                 const Spacer(),
+                if (chance != null)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _positive.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('$chance% başarı',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _positive)),
+                  ),
                 GestureDetector(
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: content));
@@ -696,19 +731,47 @@ class _GeneratedView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: Markdown(
-              data: content,
-              padding: const EdgeInsets.all(20),
-              styleSheet: MarkdownStyleSheet(
-                p: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w400, color: _text1, height: 1.6),
-                h1: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
-                h2: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
-                strong: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _accent),
-              ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              children: [
+                if (keyArguments.isNotEmpty) ...[
+                  _SectionLabel(label: 'Temel Argümanlar', icon: Icons.format_list_bulleted),
+                  const SizedBox(height: 8),
+                  ...keyArguments.map((a) => _BulletRow(text: a.toString(), color: _accent)),
+                  const SizedBox(height: 16),
+                ],
+                if (successTips.isNotEmpty) ...[
+                  _SectionLabel(label: 'Başarı İpuçları', icon: Icons.lightbulb_outline),
+                  const SizedBox(height: 8),
+                  ...successTips.map((t) => _BulletRow(text: t.toString(), color: _positive)),
+                  const SizedBox(height: 16),
+                ],
+                _SectionLabel(label: 'Mektup İçeriği', icon: Icons.description_outlined),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _scaffoldBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _cardBorder),
+                  ),
+                  child: MarkdownBody(
+                    data: content,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text1, height: 1.6),
+                      h1: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
+                      h2: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                      strong: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _accent),
+                      blockquoteDecoration: BoxDecoration(
+                        color: _accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border(left: BorderSide(color: _accent, width: 3)),
+                      ),
+                    ),
+                    shrinkWrap: true,
+                    softLineBreak: true,
+                  ),
+                ),
+              ],
             ),
           ),
           Padding(
@@ -726,11 +789,64 @@ class _GeneratedView extends StatelessWidget {
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.check, size: 18),
-                label: const Text('Kaydedildi',
+                label: const Text('Tamam',
                     style: TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 15)),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  const _SectionLabel({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: _text3),
+        const SizedBox(width: 6),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: _text3,
+                letterSpacing: 0.5)),
+      ],
+    );
+  }
+}
+
+class _BulletRow extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _BulletRow({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.5)),
           ),
         ],
       ),
@@ -744,10 +860,12 @@ class _DraftDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = draft['content'] as String? ?? '';
-    final typeVal = draft['type'] as String? ?? 'custom';
-    final typeInfo = _letterTypes.firstWhere(
-        (t) => t['value'] == typeVal, orElse: () => _letterTypes.last);
+    // API stores letter text in 'body' field
+    final content    = draft['body'] as String? ?? '';
+    final targetVal  = draft['target'] as String? ?? 'other';
+    final typeInfo   = _letterTypes.firstWhere(
+        (t) => t['value'] == targetVal, orElse: () => _letterTypes.last);
+    final subject    = draft['subject'] as String? ?? typeInfo['label'] as String;
 
     return Scaffold(
       backgroundColor: _scaffoldBg,
@@ -775,7 +893,7 @@ class _DraftDetailPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      draft['title'] as String? ?? typeInfo['label'] as String,
+                      subject,
                       style: const TextStyle(
                           fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
                       maxLines: 1,
