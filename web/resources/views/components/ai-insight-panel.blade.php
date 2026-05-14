@@ -307,18 +307,20 @@
 </div>
 
 @php
-    $jsPageSlug = e($page);
-    $jsPanelId  = e($panelId);
-    $jsBtnId    = e($btnId);
-    $jsAutoload = $autoload ? 'true' : 'false';
+    $jsPageSlug    = e($page);
+    $jsPanelId     = e($panelId);
+    $jsBtnId       = e($btnId);
+    $jsAutoload    = $autoload ? 'true' : 'false';
+    $jsAnalyzeUrl  = e(route('page-analyze'));
 @endphp
 <script>
 (function () {
     'use strict';
 
-    var PAGE_SLUG = '{{ $jsPageSlug }}';
-    var PANEL_ID  = '{{ $jsPanelId }}';
-    var AUTOLOAD  = {{ $jsAutoload }};
+    var PAGE_SLUG    = '{{ $jsPageSlug }}';
+    var PANEL_ID     = '{{ $jsPanelId }}';
+    var AUTOLOAD     = {{ $jsAutoload }};
+    var ANALYZE_URL  = '{{ $jsAnalyzeUrl }}';
 
     var panel         = document.getElementById(PANEL_ID);
     var btnRefresh    = document.getElementById('{{ $jsBtnId }}');
@@ -407,7 +409,7 @@
         var csrfMeta  = document.querySelector('meta[name="csrf-token"]');
         var csrfToken = csrfMeta ? csrfMeta.content : '';
 
-        fetch('/api/v1/agent/page-analyze', {
+        fetch(ANALYZE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type':  'application/json',

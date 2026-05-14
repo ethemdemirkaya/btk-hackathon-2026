@@ -127,6 +127,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/negotiation/{draft}/status', [NegotiationController::class, 'updateStatus'])->name('negotiation.status');
     Route::delete('/negotiation/{draft}', [NegotiationController::class, 'destroy'])->name('negotiation.destroy');
 
+    // AI Page Analyzer (web session auth — used by x-ai-insight-panel component)
+    Route::post('/page-analyze', [\App\Http\Controllers\Api\PageAnalyzeController::class, 'analyze'])->name('page-analyze');
+
     // Demo Data Generator
     Route::get('/demo-data', [DemoDataController::class, 'index'])->name('demo-data.index');
     Route::post('/demo-data/generate', [DemoDataController::class, 'generate'])->name('demo-data.generate');
