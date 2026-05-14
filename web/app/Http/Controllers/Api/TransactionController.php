@@ -27,7 +27,7 @@ class TransactionController extends Controller
             ->where('bank_connections.user_id', $userId)
             ->pluck('accounts.id');
 
-        $query = Transaction::with(['account.bankConnection.bank', 'category'])
+        $query = Transaction::with('category')
             ->whereIn('account_id', $accountIds)
             ->orderByDesc('posted_at');
 

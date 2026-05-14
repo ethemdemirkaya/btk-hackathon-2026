@@ -95,13 +95,13 @@
     100% { transform: translateX(100%); }
 }
 
-/* insight card */
+/* insight card — use tertiary-bg so it contrasts against the card body */
 .ai-insight-card {
     border-left: 3px solid transparent;
     border-radius: .45rem;
     padding: .7rem .85rem;
     margin-bottom: .5rem;
-    background: var(--bs-secondary-bg);
+    background: var(--bs-tertiary-bg, var(--bs-body-bg));
     transition: box-shadow .14s;
 }
 .ai-insight-card:last-child { margin-bottom: 0; }
@@ -131,14 +131,18 @@
 .ai-insight-title {
     font-size: .8rem;
     font-weight: 700;
-    color: var(--bs-heading-color);
+    color: var(--bs-heading-color, var(--bs-body-color));
     line-height: 1.2;
     margin-bottom: .18rem;
 }
+/* Body text needs to be the main body colour, NOT secondary-color
+   (secondary-color in dark mode is barely distinguishable from the card bg). */
 .ai-insight-body {
-    font-size: .75rem;
-    color: var(--bs-secondary-color);
-    line-height: 1.45;
+    font-size: .78rem;
+    color: var(--bs-body-color);
+    opacity: .92;
+    line-height: 1.5;
+    word-wrap: break-word;
 }
 .ai-insight-action {
     margin-top: .4rem;
