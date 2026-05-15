@@ -25,9 +25,9 @@ if (-not $adb) {
     pause; exit 1
 }
 
-# ── Kayıt klasörü — her zaman repo kökündeki docs\screenshots\ ───────────────
-$repoRoot = Split-Path $PSScriptRoot -Parent
-$outDir   = Join-Path $repoRoot "docs\screenshots"
+# ── Kayıt klasörü — script'in yanındaki screenshots\ klasörü ─────────────────
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path }
+$outDir    = Join-Path $scriptDir "screenshots"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 Write-Host ""
@@ -59,19 +59,15 @@ function Capture($file, $label) {
 
     Write-Host "  Cekiliyor: $label ... " -NoNewline -ForegroundColor White
 
-    # screencap
-    $r1 = & $adb shell screencap -p $remote
-    # pull — stdout'u değişkene al, stderr'i göster
-    $r2 = & $adb pull $remote $local
-    # temizle
-    & $adb shell rm $remote | Out-Null
+    & $adb shell screencap -p $remote 2>$null | Out-Null
+    & $adb pull $remote $local 2>$null  | Out-Null
+    & $adb shell rm $remote             2>$null | Out-Null
 
     if (Test-Path $local) {
         Write-Host "TAMAM" -ForegroundColor Green
         Write-Host "    -> $local" -ForegroundColor DarkGray
     } else {
-        Write-Host "HATA" -ForegroundColor Red
-        Write-Host "    adb pull ciktisi: $r2" -ForegroundColor Red
+        Write-Host "HATA — dosya olusturulamadi: $local" -ForegroundColor Red
     }
 }
 
