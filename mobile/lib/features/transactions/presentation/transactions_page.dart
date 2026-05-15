@@ -139,7 +139,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 _searchCtrl.clear();
                 ref.read(_searchQueryProvider.notifier).state = '';
               },
-              onFilter: () => _showFilterSheet(context),
             ),
             const SizedBox(height: 10),
             asyncData.when(
@@ -235,24 +234,6 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     return result;
   }
 
-  void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: _cardBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => _FilterSheet(
-        onApply: (type, extFilter) {
-          ref.read(_filterTypeProvider.notifier).state = type;
-          ref.read(_selectedFilterProvider.notifier).state = extFilter;
-          Navigator.pop(context);
-        },
-        currentType: ref.read(_filterTypeProvider),
-        currentFilter: ref.read(_selectedFilterProvider),
-      ),
-    );
-  }
 }
 
 class _Header extends StatelessWidget {
@@ -263,7 +244,6 @@ class _Header extends StatelessWidget {
   final VoidCallback onSearchToggle;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onSearchClear;
-  final VoidCallback onFilter;
 
   const _Header({
     required this.asyncData,
@@ -273,7 +253,6 @@ class _Header extends StatelessWidget {
     required this.onSearchToggle,
     required this.onSearchChanged,
     required this.onSearchClear,
-    required this.onFilter,
   });
 
   String _subtitle(AsyncValue<TransactionPage> data) {
@@ -320,8 +299,6 @@ class _Header extends StatelessWidget {
                 icon: searchExpanded ? Icons.search_off : Icons.search,
                 onTap: onSearchToggle,
               ),
-              const SizedBox(width: 8),
-              _IconBtn(icon: Icons.tune, onTap: onFilter),
               const SizedBox(width: 8),
               AiInsightsButton(page: 'transactions'),
             ],
@@ -720,11 +697,7 @@ class _PillChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 12,
-              color: selected ? _accent : _text3,
-            ),
+            Icon(icon, size: 12, color: selected ? _accent : _text3),
             const SizedBox(width: 5),
             Text(
               label,
@@ -1280,170 +1253,3 @@ class _AmountDisplay extends StatelessWidget {
   }
 }
 
-class _FilterSheet extends StatefulWidget {
-  final String? currentType;
-  final String? currentFilter;
-  final void Function(String? type, String? extFilter) onApply;
-
-  const _FilterSheet({
-    required this.currentType,
-    required this.currentFilter,
-    required this.onApply,
-  });
-
-  @override
-  State<_FilterSheet> createState() => _FilterSheetState();
-}
-
-class _FilterSheetState extends State<_FilterSheet> {
-  String? _type;
-  String? _extFilter;
-
-  @override
-  void initState() {
-    super.initState();
-    _type = widget.currentType;
-    _extFilter = widget.currentFilter;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Filtrele',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1),
-                ),
-              ),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: const Icon(Icons.close, color: _text3),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'İşlem Türü',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3, letterSpacing: 0.8),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _SheetChip(
-                label: 'Tümü',
-                selected: _type == null,
-                onTap: () => setState(() => _type = null),
-              ),
-              const SizedBox(width: 8),
-              _SheetChip(
-                label: 'Gider',
-                selected: _type == 'expense',
-                onTap: () => setState(() => _type = 'expense'),
-              ),
-              const SizedBox(width: 8),
-              _SheetChip(
-                label: 'Gelir',
-                selected: _type == 'income',
-                onTap: () => setState(() => _type = 'income'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Özel Filtre',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3, letterSpacing: 0.8),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _SheetChip(
-                label: 'Taksit',
-                selected: _extFilter == 'installment',
-                onTap: () => setState(
-                  () => _extFilter =
-                      _extFilter == 'installment' ? null : 'installment',
-                ),
-              ),
-              const SizedBox(width: 8),
-              _SheetChip(
-                label: 'Anomali',
-                selected: _extFilter == 'anomaly',
-                onTap: () => setState(
-                  () => _extFilter =
-                      _extFilter == 'anomaly' ? null : 'anomaly',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          SizedBox(
-            width: double.infinity,
-            child: GestureDetector(
-              onTap: () => widget.onApply(_type, _extFilter),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _accent,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'Uygula',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF051929),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _SheetChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? _accent.withValues(alpha: 0.18) : _cardBg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? _accent : _cardBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            color: selected ? _accent : _text1,
-          ),
-        ),
-      ),
-    );
-  }
-}
