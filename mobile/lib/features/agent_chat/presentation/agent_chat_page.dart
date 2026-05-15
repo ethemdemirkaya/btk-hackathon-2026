@@ -1187,6 +1187,8 @@ class _InputAreaState extends State<_InputArea>
                         color: _text3.withValues(alpha: 0.9),
                         fontSize: 15,
                         fontWeight: FontWeight.w400),
+                    filled: true,
+                    fillColor: Colors.transparent,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
