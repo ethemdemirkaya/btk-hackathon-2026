@@ -1,26 +1,19 @@
 # Paranette Screenshot Capture Script
-# Emülatörde istediğin sayfaya geç, sonra numaraya bas ve Enter'a bas.
 
 # ── ADB otomatik bul ─────────────────────────────────────────────────────────
 function Find-ADB {
-    # 1. Ortam değişkenleri
     foreach ($env in @($env:ANDROID_HOME, $env:ANDROID_SDK_ROOT)) {
         if ($env) {
             $p = Join-Path $env "platform-tools\adb.exe"
             if (Test-Path $p) { return $p }
         }
     }
-    # 2. Android Studio varsayılan konumu
     $candidates = @(
         "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
         "$env:USERPROFILE\AppData\Local\Android\Sdk\platform-tools\adb.exe",
-        "C:\Android\platform-tools\adb.exe",
-        "C:\android-sdk\platform-tools\adb.exe"
+        "C:\Android\platform-tools\adb.exe"
     )
-    foreach ($p in $candidates) {
-        if (Test-Path $p) { return $p }
-    }
-    # 3. PATH
+    foreach ($p in $candidates) { if (Test-Path $p) { return $p } }
     $found = Get-Command adb -ErrorAction SilentlyContinue
     if ($found) { return $found.Source }
     return $null
@@ -28,16 +21,19 @@ function Find-ADB {
 
 $adb = Find-ADB
 if (-not $adb) {
-    Write-Host ""
-    Write-Host "HATA: adb.exe bulunamadi." -ForegroundColor Red
-    Write-Host "Android Studio SDK yüklü mü? Yoksa ANDROID_HOME ortam degiskenini ayarla." -ForegroundColor Yellow
-    Write-Host "Örnek: `$env:ANDROID_HOME = 'C:\Users\<kullanici>\AppData\Local\Android\Sdk'" -ForegroundColor Gray
-    Write-Host ""
-    pause
-    exit 1
+    Write-Host "HATA: adb.exe bulunamadi. ANDROID_HOME ortam degiskenini ayarla." -ForegroundColor Red
+    pause; exit 1
 }
 
-Write-Host "ADB: $adb" -ForegroundColor DarkGray
+# ── Kayıt klasörü — her zaman repo kökündeki docs\screenshots\ ───────────────
+$repoRoot = Split-Path $PSScriptRoot -Parent
+$outDir   = Join-Path $repoRoot "docs\screenshots"
+New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+Write-Host ""
+Write-Host "ADB      : $adb" -ForegroundColor DarkGray
+Write-Host "Kaydedilecek klasor: $outDir" -ForegroundColor Cyan
+Write-Host ""
 
 # ── Ekran listesi ─────────────────────────────────────────────────────────────
 $screens = @(
@@ -51,59 +47,55 @@ $screens = @(
     @{ key = "8"; file = "08-reports";      label = "Raporlar" }
 )
 
-$outDir = "$PSScriptRoot\screenshots"
-New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-
-Write-Host ""
 Write-Host "=== Paranette Screenshot Capture ===" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Emülatörde ilgili sayfaya gec, sonra asagidaki numaraya bas." -ForegroundColor Gray
-Write-Host ""
-
-foreach ($s in $screens) {
-    Write-Host "  [$($s.key)] $($s.label)" -ForegroundColor Yellow
-}
-Write-Host "  [a] Hepsini sirayla cek (her birinde Enter beklenir)" -ForegroundColor Green
+foreach ($s in $screens) { Write-Host "  [$($s.key)] $($s.label)" -ForegroundColor Yellow }
+Write-Host "  [a] Hepsini sirayla cek" -ForegroundColor Green
 Write-Host "  [q] Cikis" -ForegroundColor Gray
 Write-Host ""
 
 function Capture($file, $label) {
-    $remote = "/sdcard/paranette_ss.png"
-    $local  = "$outDir\$file.png"
+    $remote = "/sdcard/ss_tmp.png"
+    $local  = Join-Path $outDir "$file.png"
 
     Write-Host "  Cekiliyor: $label ... " -NoNewline -ForegroundColor White
-    & $adb shell screencap -p $remote
-    & $adb pull $remote $local 2>$null | Out-Null
-    & $adb shell rm $remote
+
+    # screencap
+    $r1 = & $adb shell screencap -p $remote
+    # pull — stdout'u değişkene al, stderr'i göster
+    $r2 = & $adb pull $remote $local
+    # temizle
+    & $adb shell rm $remote | Out-Null
 
     if (Test-Path $local) {
-        Write-Host "OK  ->  $file.png" -ForegroundColor Green
+        Write-Host "TAMAM" -ForegroundColor Green
+        Write-Host "    -> $local" -ForegroundColor DarkGray
     } else {
-        Write-Host "HATA — Emülatör acik mi?" -ForegroundColor Red
+        Write-Host "HATA" -ForegroundColor Red
+        Write-Host "    adb pull ciktisi: $r2" -ForegroundColor Red
     }
 }
 
 while ($true) {
-    $choice = Read-Host "Secim"
-    $choice = $choice.Trim().ToLower()
-
+    $choice = (Read-Host "Secim").Trim().ToLower()
     if ($choice -eq "q") { break }
 
     if ($choice -eq "a") {
         foreach ($s in $screens) {
             Write-Host ""
-            Write-Host "  Emülatörde '$($s.label)' sayfasina gec, hazir olunca Enter'a bas..." -ForegroundColor Cyan
+            Write-Host "  '$($s.label)' sayfasina gec, hazir olunca Enter'a bas..." -ForegroundColor Cyan
             Read-Host "  (Enter)" | Out-Null
             Capture $s.file $s.label
         }
         Write-Host ""
-        Write-Host "Tum ekran goruntuleri alindi! docs\screenshots\ klasorune kaydedildi." -ForegroundColor Green
+        Write-Host "Bitti! Klasoru ac:" -ForegroundColor Green
+        Start-Process explorer.exe $outDir
         break
     }
 
     $match = $screens | Where-Object { $_.key -eq $choice }
     if ($match) {
         Capture $match.file $match.label
+        Write-Host "  Klasoru ac: $outDir" -ForegroundColor DarkGray
     } else {
         Write-Host "  Gecersiz secim." -ForegroundColor Red
     }
