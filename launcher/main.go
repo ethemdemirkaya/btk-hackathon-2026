@@ -102,9 +102,30 @@ type avdInfo struct {
 	Name string `json:"name"`
 }
 
-// listAVDs: mevcut tüm AVD'leri döner.
-// Önce JSON (--machine) dener, başarısız olursa metin parse eder.
-func listAVDs(flutter string) []avdInfo {
+// findEmulatorBin: ADB yolundan Android SDK emulator binary'sini türetir.
+func findEmulatorBin(adb string) string {
+	// .../platform-tools/adb → .../emulator/emulator
+	sdkDir := filepath.Dir(filepath.Dir(adb))
+	name := "emulator"
+	if runtime.GOOS == "windows" {
+		name = "emulator.exe"
+	}
+	p := filepath.Join(sdkDir, "emulator", name)
+	if _, err := os.Stat(p); err == nil {
+		return p
+	}
+	if found, err := exec.LookPath(name); err == nil {
+		return found
+	}
+	return ""
+}
+
+// listAVDs: mevcut tüm AVD'leri döner (nil = hiç bulunamadı).
+// Yöntem 1: flutter emulators --machine (JSON)
+// Yöntem 2: flutter emulators (metin parse)
+// Yöntem 3: emulator -list-avds (Android SDK doğrudan)
+func listAVDs(flutter, adb string) []avdInfo {
+	// Yöntem 1 — JSON
 	out, err := exec.Command(flutter, "emulators", "--machine").CombinedOutput()
 	if err == nil {
 		var list []avdInfo
@@ -113,6 +134,7 @@ func listAVDs(flutter string) []avdInfo {
 		}
 	}
 
+	// Yöntem 2 — metin parse
 	out, _ = exec.Command(flutter, "emulators").CombinedOutput()
 	var list []avdInfo
 	for _, line := range strings.Split(string(out), "\n") {
@@ -138,12 +160,43 @@ func listAVDs(flutter string) []avdInfo {
 	if len(list) > 0 {
 		return list
 	}
-	return []avdInfo{{ID: "Medium_Phone", Name: "Medium Phone"}}
+
+	// Yöntem 3 — emulator -list-avds (flutter'dan bağımsız, daha güvenilir)
+	if emBin := findEmulatorBin(adb); emBin != "" {
+		out, err = exec.Command(emBin, "-list-avds").Output()
+		if err == nil {
+			for _, line := range strings.Split(string(out), "\n") {
+				id := strings.TrimSpace(line)
+				if id != "" {
+					list = append(list, avdInfo{ID: id, Name: id})
+				}
+			}
+			if len(list) > 0 {
+				return list
+			}
+		}
+	}
+
+	return nil // tümü başarısız — caller manuel giriş ister
 }
 
 // selectAVD: her zaman kullanıcıya AVD listesini gösterir.
-func selectAVD(flutter string, reader *bufio.Reader) avdInfo {
-	avds := listAVDs(flutter)
+// Liste boşsa manuel AVD adı girdirtir.
+func selectAVD(flutter, adb string, reader *bufio.Reader) avdInfo {
+	avds := listAVDs(flutter, adb)
+
+	// Hiç AVD bulunamadı — manuel giriş
+	if len(avds) == 0 {
+		logWarn("AVD listesi alınamadı (flutter/emulator erişim sorunu)")
+		fmt.Printf("  AVD adını manuel girin (örn: Pixel_8a, Medium_Phone): ")
+		line, _ := reader.ReadString('\n')
+		id := strings.TrimSpace(line)
+		if id == "" {
+			id = "Medium_Phone"
+		}
+		logOK(fmt.Sprintf("Manuel AVD: %s", id))
+		return avdInfo{ID: id, Name: id}
+	}
 
 	fmt.Printf("%s%s┌─────────────────────────────────────────────────┐%s\n", bold, cyan, reset)
 	fmt.Printf("%s%s│  EMÜLATÖR SEÇİMİ                                │%s\n", bold, white, reset)
@@ -384,7 +437,7 @@ func main() {
 
 	// ── 3. Android Emülatör ──────────────────────────────────────────────
 	fmt.Printf("%s[3/5] Android Emülatörü...%s\n", bold, reset)
-	selectedAVD := selectAVD(flutter, reader)
+	selectedAVD := selectAVD(flutter, adb, reader)
 	if emulatorReady(adb) {
 		logOK("Emülatör zaten çalışıyor")
 	} else {
