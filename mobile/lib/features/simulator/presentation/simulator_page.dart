@@ -43,6 +43,20 @@ class _SimulatorPageState extends State<SimulatorPage> {
   Map<String, dynamic>? _result;
   String? _calcError;
 
+  // ── Last simulated params (to block re-run without changes) ───────
+  double? _lastSimIncome;
+  double? _lastSimExpense;
+  double? _lastSimInflation;
+  int?    _lastSimMonths;
+
+  bool get _paramsChanged =>
+      _lastSimIncome    != _incomeChangePct  ||
+      _lastSimExpense   != _expenseChangePct ||
+      _lastSimInflation != _inflationRate    ||
+      _lastSimMonths    != _monthsHorizon;
+
+  bool get _canSimulate => !_loading && (_result == null || _paramsChanged);
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +98,14 @@ class _SimulatorPageState extends State<SimulatorPage> {
           'total_card_debt'     : (_current!['total_card_debt']     as num?) ?? 0,
         },
       );
-      setState(() { _result = res.data as Map<String, dynamic>; _loading = false; });
+      setState(() {
+        _result           = res.data as Map<String, dynamic>;
+        _loading          = false;
+        _lastSimIncome    = _incomeChangePct;
+        _lastSimExpense   = _expenseChangePct;
+        _lastSimInflation = _inflationRate;
+        _lastSimMonths    = _monthsHorizon;
+      });
     } on DioException catch (e) {
       final msg = e.response?.data?['message']
           ?? (e.response?.data?['errors'] as Map?)?.values.firstOrNull?.toString()
@@ -124,7 +145,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
                                 onMonthsChanged:  (v) => setState(() => _monthsHorizon    = v),
                               ),
                               const SizedBox(height: 14),
-                              _CalcButton(loading: _loading, onTap: _calculate),
+                              _CalcButton(loading: _loading, onTap: _canSimulate ? _calculate : null),
                               if (_calcError != null) ...[
                                 const SizedBox(height: 12),
                                 _ErrorBanner(message: _calcError!),
@@ -395,7 +416,7 @@ class _SliderRow extends StatelessWidget {
 // ── Calculate button ──────────────────────────────────────────────────
 class _CalcButton extends StatelessWidget {
   final bool loading;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _CalcButton({required this.loading, required this.onTap});
 
   @override
@@ -404,7 +425,7 @@ class _CalcButton extends StatelessWidget {
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: loading ? null : onTap,
+        onPressed: (loading || onTap == null) ? null : onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: _accent,
           foregroundColor: const Color(0xFF051929),
