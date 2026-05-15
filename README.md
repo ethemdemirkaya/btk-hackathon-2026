@@ -6,8 +6,7 @@
 
 [![Laravel](https://img.shields.io/badge/Laravel-13.7-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Gemini](https://img.shields.io/badge/Gemini_AI-1.5_Pro-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
-[![Go](https://img.shields.io/badge/Go-1.22-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev)
+[![Gemini](https://img.shields.io/badge/Gemini_AI-2.5_Pro-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
 
 **BTK Akademi Hackathon 2026**
@@ -18,26 +17,24 @@ Türk bankalarından veri çeken, harcamalarını analiz eden, bütçe/hedef/yat
 
 ---
 
-## Ekran Görüntüleri
+## Mobil Uygulama Ekran Görüntüleri
 
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/01-dashboard.png" width="200"/><br/><sub>Dashboard</sub></td>
-    <td align="center"><img src="docs/screenshots/02-ai-chat.png" width="200"/><br/><sub>AI Finans Asistanı</sub></td>
-    <td align="center"><img src="docs/screenshots/03-transactions.png" width="200"/><br/><sub>İşlemler</sub></td>
-    <td align="center"><img src="docs/screenshots/04-budget.png" width="200"/><br/><sub>Bütçe & Hedefler</sub></td>
+    <td align="center"><img src="docs/screenshots/01-dashboard.png" width="180"/><br/><sub><b>Dashboard</b></sub></td>
+    <td align="center"><img src="docs/screenshots/02-ai-chat.png" width="180"/><br/><sub><b>AI Finans Asistanı</b></sub></td>
+    <td align="center"><img src="docs/screenshots/03-transactions.png" width="180"/><br/><sub><b>İşlemler</b></sub></td>
+    <td align="center"><img src="docs/screenshots/04-budget.png" width="180"/><br/><sub><b>Bütçe & Hedefler</b></sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/05-investments.png" width="200"/><br/><sub>Yatırım Portföyü</sub></td>
-    <td align="center"><img src="docs/screenshots/06-negotiation.png" width="200"/><br/><sub>Müzakere Ajanı</sub></td>
-    <td align="center"><img src="docs/screenshots/07-simulator.png" width="200"/><br/><sub>Karar Simülatörü</sub></td>
-    <td align="center"><img src="docs/screenshots/08-reports.png" width="200"/><br/><sub>Raporlar</sub></td>
+    <td align="center"><img src="docs/screenshots/05-investments.png" width="180"/><br/><sub><b>Yatırım Portföyü</b></sub></td>
+    <td align="center"><img src="docs/screenshots/06-negotiation.png" width="180"/><br/><sub><b>Müzakere Ajanı</b></sub></td>
+    <td align="center"><img src="docs/screenshots/07-simulator.png" width="180"/><br/><sub><b>Karar Simülatörü</b></sub></td>
+    <td align="center"><img src="docs/screenshots/08-reports.png" width="180"/><br/><sub><b>Raporlar</b></sub></td>
   </tr>
 </table>
 </div>
-
-> Ekran görüntüsü eklemek için `docs/screenshots/` klasörüne ilgili isimlerde PNG dosyaları koy.
 
 ---
 
