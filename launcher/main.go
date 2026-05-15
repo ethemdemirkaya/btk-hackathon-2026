@@ -198,6 +198,75 @@ func startBackground(name string, args ...string) *exec.Cmd {
 	return cmd
 }
 
+// tryStartMySQLService: Windows'ta yaygın WAMP/XAMPP servis adlarını dener.
+// wampmanager.exe tepsiden servisleri başlatmak yerine doğrudan Windows servisini kaldırır.
+func tryStartMySQLService() {
+	if runtime.GOOS != "windows" {
+		return
+	}
+	services := []string{
+		"wampmysqld64", "wampmysqld",
+		"mysql", "mysql80", "MySQL80", "MySQL", "xampp_mysql",
+	}
+	for _, svc := range services {
+		out, _ := exec.Command("net", "start", svc).CombinedOutput()
+		msg := strings.ToLower(string(out))
+		if strings.Contains(msg, "successfully") ||
+			strings.Contains(msg, "already") ||
+			strings.Contains(msg, "basariyla") ||
+			strings.Contains(msg, "zaten") {
+			logInfo(fmt.Sprintf("MySQL servisi aktif: %s", svc))
+			return
+		}
+	}
+}
+
+// waitForBoot: boot tamamlanmasını bekler.
+// Donma tespiti: süre aşımında ADB ping'e yanıt yoksa emülatörü kapatıp yeniden başlatır.
+func waitForBoot(adb, flutter string, avd avdInfo) bool {
+	const maxAttempts = 2
+	const bootTimeout = 180 * time.Second
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if attempt > 0 {
+			logWarn("Emülatör yanıt vermiyor — kapatılıp yeniden başlatılıyor...")
+			exec.Command(adb, "emu", "kill").Run() //nolint
+			time.Sleep(4 * time.Second)
+			logStep(fmt.Sprintf("AVD yeniden başlatılıyor: %s", avd.ID))
+			startBackground(flutter, "emulators", "--launch", avd.ID)
+			if !waitUntil(func() bool { return emulatorReady(adb) }, "Emülatör", 90*time.Second) {
+				logWarn("Emülatör yeniden başlatılamadı")
+				return false
+			}
+		}
+
+		deadline := time.Now().Add(bootTimeout)
+		for time.Now().Before(deadline) {
+			out, _ := exec.Command(adb, "shell", "getprop", "sys.boot_completed").Output()
+			if strings.TrimSpace(string(out)) == "1" {
+				fmt.Println()
+				return true
+			}
+			fmt.Printf("\r%s  boot bekleniyor... %3d sn kaldı%s",
+				gray, int(time.Until(deadline).Seconds()), reset)
+			time.Sleep(2 * time.Second)
+		}
+		fmt.Println()
+
+		// Süre doldu — donmuş mu kontrol et
+		if attempt < maxAttempts-1 {
+			pingOut, pingErr := exec.Command(adb, "shell", "echo", "ok").Output()
+			if pingErr != nil || strings.TrimSpace(string(pingOut)) != "ok" {
+				logWarn("Emülatör donmuş görünüyor")
+				continue
+			}
+		}
+		logWarn("Boot zaman aşımı — Flutter yükleniyor...")
+		return false
+	}
+	return false
+}
+
 // ── API bağlantı seçimi ───────────────────────────────────────────────────
 
 func selectAPIHost(reader *bufio.Reader) string {
@@ -276,16 +345,21 @@ func main() {
 	fmt.Printf("%s[1/5] MySQL kontrolü...%s\n", bold, reset)
 	if mysqlReady() {
 		logOK("MySQL zaten çalışıyor (port 3306)")
-	} else if mysql != "" {
-		logStep(fmt.Sprintf("Başlatılıyor: %s", filepath.Base(mysql)))
-		startBackground(mysql)
-		if waitUntil(mysqlReady, "MySQL", 60*time.Second) {
-			logOK("MySQL hazır")
-		} else {
-			logWarn("MySQL 60 saniyede hazır olmadı — devam ediliyor")
-		}
 	} else {
-		logWarn("MySQL yöneticisi bulunamadı. MySQL'in çalıştığından emin olun.")
+		if mysql != "" {
+			logStep(fmt.Sprintf("WAMP başlatılıyor: %s", filepath.Base(mysql)))
+			startBackground(mysql)
+		}
+		// Windows servisini doğrudan başlatmayı dene (wampmanager'dan daha hızlı)
+		logStep("MySQL servisi başlatılıyor...")
+		tryStartMySQLService()
+		if waitUntil(mysqlReady, "MySQL", 90*time.Second) {
+			logOK("MySQL hazır")
+		} else if mysql == "" {
+			logWarn("MySQL bulunamadı. WAMP/XAMPP kurulu ve çalışıyor mu?")
+		} else {
+			logWarn("MySQL 90 saniyede hazır olmadı — devam ediliyor")
+		}
 	}
 	fmt.Println()
 
@@ -310,37 +384,25 @@ func main() {
 
 	// ── 3. Android Emülatör ──────────────────────────────────────────────
 	fmt.Printf("%s[3/5] Android Emülatörü...%s\n", bold, reset)
+	selectedAVD := selectAVD(flutter, reader)
 	if emulatorReady(adb) {
 		logOK("Emülatör zaten çalışıyor")
 	} else {
-		selectedAVD := selectAVD(flutter, reader)
 		logStep(fmt.Sprintf("AVD başlatılıyor: %s (%s)", selectedAVD.ID, selectedAVD.Name))
 		startBackground(flutter, "emulators", "--launch", selectedAVD.ID)
 		if waitUntil(func() bool { return emulatorReady(adb) }, "Emülatör", 120*time.Second) {
 			logOK(fmt.Sprintf("Emülatör hazır: %s", selectedAVD.Name))
 		} else {
-			logWarn("Emülatör 120 saniyede hazır olmadı")
+			logWarn("Emülatör 120 saniyede başlatılamadı")
 		}
 	}
 	fmt.Println()
 
-	// ── 4. Boot tamamlanmasını bekle ─────────────────────────────────────
+	// ── 4. Boot tamamlanmasını bekle (donma tespiti dahil) ───────────────
 	fmt.Printf("%s[4/5] Emülatör boot kontrolü...%s\n", bold, reset)
-	logStep("sys.boot_completed bekleniyor...")
-	bootReady := false
-	for i := 0; i < 60; i++ {
-		out, _ := exec.Command(adb, "wait-for-device", "shell",
-			"getprop", "sys.boot_completed").Output()
-		if strings.TrimSpace(string(out)) == "1" {
-			bootReady = true
-			break
-		}
-		time.Sleep(2 * time.Second)
-	}
-	if bootReady {
+	logStep("sys.boot_completed bekleniyor (donma tespiti aktif)...")
+	if waitForBoot(adb, flutter, selectedAVD) {
 		logOK("Emülatör tamamen boot oldu")
-	} else {
-		logWarn("Boot kontrolü zaman aşımı — Flutter yükleniyor...")
 	}
 	fmt.Println()
 
