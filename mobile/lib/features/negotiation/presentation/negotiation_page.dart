@@ -622,7 +622,11 @@ class _DarkTextField extends StatelessWidget {
                     hintText: hint,
                     hintStyle: const TextStyle(
                         color: _text3, fontSize: 13),
+                    filled: true,
+                    fillColor: Colors.transparent,
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 13),
                     isDense: true,
