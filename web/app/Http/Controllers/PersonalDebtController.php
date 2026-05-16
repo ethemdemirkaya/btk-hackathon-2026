@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\DebtDetectionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -9,7 +11,6 @@ use Illuminate\View\View;
 
 class PersonalDebtController extends Controller
 {
-    // ─── Index ────────────────────────────────────────────────────────────────
     public function index(): View
     {
         $user = auth()->user();
@@ -20,23 +21,16 @@ class PersonalDebtController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Stats
         $givenActive    = $debts->where('direction', 'given')->where('is_settled', false)->sum('amount');
         $receivedActive = $debts->where('direction', 'received')->where('is_settled', false)->sum('amount');
         $settledCount   = $debts->where('is_settled', true)->count();
-        $netPosition    = $givenActive - $receivedActive; // positive = net creditor
-
-        $given    = $debts->where('direction', 'given')->sortBy('is_settled');
-        $received = $debts->where('direction', 'received')->sortBy('is_settled');
+        $netPosition    = $givenActive - $receivedActive;
 
         return view('personal-debts.index', compact(
-            'given', 'received',
-            'givenActive', 'receivedActive',
-            'netPosition', 'settledCount'
+            'debts', 'givenActive', 'receivedActive', 'netPosition', 'settledCount'
         ));
     }
 
-    // ─── Store (standalone, no linked transaction) ────────────────────────────
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -60,5 +54,73 @@ class PersonalDebtController extends Controller
 
         return redirect()->route('personal-debts.index')
             ->with('success', 'Borç kaydı başarıyla oluşturuldu.');
+    }
+
+    public function autoDetect(): JsonResponse
+    {
+        $service = new DebtDetectionService();
+        $userId  = auth()->id();
+
+        return response()->json([
+            'debt_suggestions'      => $service->detectUnconfirmedDebts($userId),
+            'repayment_suggestions' => $service->findRepaymentCandidates($userId),
+        ]);
+    }
+
+    public function confirmDetected(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'contact_name'   => 'required|string|max:120',
+            'amount'         => 'required|numeric|min:0.01',
+            'direction'      => 'required|in:given,received',
+            'note'           => 'nullable|string|max:500',
+            'transaction_id' => 'nullable|string',
+        ]);
+
+        DB::table('personal_debts')->insert([
+            'user_id'          => auth()->id(),
+            'transaction_id'   => $data['transaction_id'] ?? null,
+            'contact_name'     => $data['contact_name'],
+            'amount'           => $data['amount'],
+            'direction'        => $data['direction'],
+            'note'             => $data['note'] ?? null,
+            'is_auto_detected' => true,
+            'is_settled'       => false,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        return response()->json(['message' => 'Borç kaydı oluşturuldu.'], 201);
+    }
+
+    public function markRepayment(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'transaction_id'   => 'required|string',
+            'repayment_amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $debt = DB::table('personal_debts')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (! $debt) {
+            return response()->json(['message' => 'Borç bulunamadı.'], 404);
+        }
+
+        $profit = round(max(0.0, (float) $data['repayment_amount'] - (float) $debt->amount), 2);
+
+        DB::table('personal_debts')
+            ->where('id', $id)
+            ->update([
+                'is_settled'               => true,
+                'settled_at'               => now(),
+                'repayment_transaction_id' => $data['transaction_id'],
+                'profit_amount'            => $profit,
+                'updated_at'               => now(),
+            ]);
+
+        return response()->json(['message' => 'Borç kapatıldı.', 'profit' => $profit]);
     }
 }

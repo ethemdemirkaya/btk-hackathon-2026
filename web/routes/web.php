@@ -71,8 +71,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions/{id}/debt', [TransactionController::class, 'storeDebt'])->name('transactions.debt.store');
     Route::get('/personal-debts', [PersonalDebtController::class, 'index'])->name('personal-debts.index');
     Route::post('/personal-debts', [PersonalDebtController::class, 'store'])->name('personal-debts.store');
+    Route::get('/personal-debts/ai-detect', [PersonalDebtController::class, 'autoDetect'])->name('personal-debts.ai-detect');
+    Route::post('/personal-debts/confirm-detected', [PersonalDebtController::class, 'confirmDetected'])->name('personal-debts.confirm-detected');
     Route::patch('/personal-debts/{id}/settle', [TransactionController::class, 'settleDebt'])->name('personal-debts.settle');
     Route::delete('/personal-debts/{id}', [TransactionController::class, 'destroyDebt'])->name('personal-debts.destroy');
+    Route::post('/personal-debts/{id}/mark-repayment', [PersonalDebtController::class, 'markRepayment'])->name('personal-debts.mark-repayment');
 
     // Calendar
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
