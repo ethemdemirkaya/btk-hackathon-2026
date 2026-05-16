@@ -24,7 +24,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _savingIncome = false;
   bool _biometric = false;
   bool _notifs = true;
-  bool _darkMode = true;
   UserModel? _lastUser;
 
   @override
@@ -237,8 +236,8 @@ class _HeroHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0A1929), Color(0xFF0D2240)],
+        gradient: LinearGradient(
+          colors: [c.heroBgFrom, c.heroBgTo],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

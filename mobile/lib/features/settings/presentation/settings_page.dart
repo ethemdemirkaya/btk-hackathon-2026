@@ -270,8 +270,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [Color(0xFF0D1B2A), Color(0xFF0A1929)],
+                  gradient: LinearGradient(
+                      colors: [c.card, c.heroBgFrom],
                       begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: c.border),
