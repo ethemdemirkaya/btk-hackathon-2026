@@ -62,6 +62,23 @@ class DemoDataController extends Controller
         ['desc' => 'Faiz Geliri',        'merchant' => null, 'min' => 100,  'max' => 800],
     ];
 
+    /**
+     * Realistic EFT/HAVALE/FAST transfer templates — no debt keywords,
+     * detected only by the AI agent based on person names and context.
+     */
+    private const EFT_TRANSFER_TEMPLATES = [
+        // Gönderim (negatif) — AI detects person name, direction=given
+        ['desc' => 'EFT GÖNDER - AHMET YILMAZ',        'sign' => -1, 'min' => 500,  'max' => 3500],
+        ['desc' => 'HAVALE - ZEYNEP KOÇ',              'sign' => -1, 'min' => 300,  'max' => 2000],
+        ['desc' => 'FAST ÖDEME - CAN ÖZTÜRK',          'sign' => -1, 'min' => 200,  'max' => 1500],
+        ['desc' => 'EFT - BURAK DEMİR',                'sign' => -1, 'min' => 800,  'max' => 4000],
+        ['desc' => 'HAVALE GÖNDER - SELİN YILDIZ',     'sign' => -1, 'min' => 1000, 'max' => 5000],
+        // Alış (pozitif) — AI detects person name, direction=received
+        ['desc' => 'EFT GELİŞİ - ALİ ŞAHİN',          'sign' =>  1, 'min' => 400,  'max' => 3000],
+        ['desc' => 'HAVALE GELDİ - FATMA ARSLAN',      'sign' =>  1, 'min' => 300,  'max' => 2500],
+        ['desc' => 'FAST GELİŞİ - MEHMET KAYA',        'sign' =>  1, 'min' => 500,  'max' => 3500],
+    ];
+
     /** Kişisel borç/alacak hareketi şablonları — AI tespiti için gerçekçi veriler */
     private const PERSONAL_DEBT_TEMPLATES = [
         // Ben verdim (negatif tutar)
@@ -433,23 +450,28 @@ class DemoDataController extends Controller
     }
 
     /**
-     * Son monthsBack ay içine 3-5 adet kişisel borç/geri-ödeme işlemi ekler.
-     * Bu işlemler DebtDetectionService'in anahtar kelime taramasına yakalanır.
+     * Adds personal debt transactions in two flavours:
+     * - Keyword-style ("Ahmet'e borç verdim") → caught by keyword scanner
+     * - EFT/HAVALE/FAST-style ("EFT GÖNDER - AHMET YILMAZ") → caught by AI agent
      */
     private function generatePersonalDebtTransactions(Account $account, int $monthsBack): void
     {
-        $now        = Carbon::now();
-        $templates  = self::PERSONAL_DEBT_TEMPLATES;
-        $count      = rand(3, 5);
-        $used       = [];
+        $now = Carbon::now();
 
-        shuffle($templates);
+        // Mix: 2-3 keyword-style + 2-3 EFT-style
+        $kwTemplates  = self::PERSONAL_DEBT_TEMPLATES;
+        $eftTemplates = self::EFT_TRANSFER_TEMPLATES;
 
-        for ($i = 0; $i < $count; $i++) {
-            $tpl    = $templates[$i % count($templates)];
-            $amount = $tpl['sign'] * (rand($tpl['min'] * 100, $tpl['max'] * 100) / 100);
+        shuffle($kwTemplates);
+        shuffle($eftTemplates);
 
-            // Geçmiş aylara rastgele dağıt
+        $allTemplates = array_merge(
+            array_slice($kwTemplates,  0, rand(2, 3)),
+            array_slice($eftTemplates, 0, rand(2, 3)),
+        );
+
+        foreach ($allTemplates as $tpl) {
+            $amount   = $tpl['sign'] * (rand($tpl['min'] * 100, $tpl['max'] * 100) / 100);
             $daysBack = rand(1, $monthsBack * 30);
             $txDate   = $now->copy()->subDays($daysBack);
 

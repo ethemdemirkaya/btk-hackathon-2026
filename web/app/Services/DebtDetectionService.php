@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\User;
+use App\Services\Agents\Specialists\PersonalDebtAiAgent;
 use Illuminate\Support\Facades\DB;
 
 class DebtDetectionService
@@ -109,6 +111,9 @@ class DebtDetectionService
                 'direction'         => $direction,
                 'suggested_contact' => $this->extractContactName($rawDesc),
                 'is_repayment_hint' => $hasRepayment,
+                'source'            => 'keyword',
+                'confidence'        => 'high',
+                'ai_reason'         => null,
             ];
         }
 
@@ -220,6 +225,120 @@ class DebtDetectionService
         }
 
         return $candidates;
+    }
+
+    /**
+     * AI-powered detection pass: finds transfer transactions that look like
+     * personal debt/repayment even without explicit debt keywords.
+     * Uses Gemini Flash to identify person names and intent.
+     * Falls back to empty array if AI is unavailable.
+     */
+    public function detectFromTransfersAi(User $user): array
+    {
+        // Already-linked transaction IDs
+        $linkedTxIds = DB::table('personal_debts')
+            ->where('user_id', $user->id)
+            ->whereNotNull('transaction_id')
+            ->pluck('transaction_id')
+            ->all();
+
+        // Fetch recent transfer-channel, non-merchant transactions
+        $query = DB::table('transactions')
+            ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
+            ->where('accounts.user_id', $user->id)
+            ->where('transactions.posted_at', '>=', now()->subDays(90))
+            ->where('transactions.channel', 'transfer')
+            ->whereNull('transactions.merchant_name');
+
+        if (count($linkedTxIds) > 0) {
+            $query->whereNotIn('transactions.id', $linkedTxIds);
+        }
+
+        $transactions = $query
+            ->orderByDesc('transactions.posted_at')
+            ->get([
+                'transactions.id',
+                'transactions.description',
+                'transactions.amount',
+                'transactions.posted_at',
+                'transactions.currency',
+            ]);
+
+        if ($transactions->isEmpty()) {
+            return [];
+        }
+
+        // Skip obviously institutional transactions
+        $candidates = $transactions->filter(function ($tx) {
+            $desc = mb_strtolower($tx->description ?? '', 'UTF-8');
+            return ! $this->hasKeyword($desc, self::INSTITUTIONAL_PATTERNS);
+        });
+
+        // Exclude transactions already caught by the keyword scanner (dedup)
+        $keywordResults  = $this->detectUnconfirmedDebts($user->id);
+        $keywordTxIds    = array_column($keywordResults, 'transaction_id');
+        $candidates      = $candidates->filter(fn ($tx) => ! in_array($tx->id, $keywordTxIds, true));
+
+        if ($candidates->isEmpty()) {
+            return [];
+        }
+
+        // Limit to 20 per call to stay within token budget
+        $candidates = $candidates->values()->take(20);
+
+        $agentInput = $candidates->map(fn ($tx) => [
+            'id'          => (string) $tx->id,
+            'description' => (string) ($tx->description ?? ''),
+            'amount'      => (float) $tx->amount,
+            'posted_at'   => (string) ($tx->posted_at ?? ''),
+        ])->all();
+
+        try {
+            $agent  = new PersonalDebtAiAgent($user);
+            $result = $agent->run(['transactions' => $agentInput]);
+            $rows   = $result['results'] ?? [];
+
+            $txMap       = $candidates->keyBy('id');
+            $suggestions = [];
+
+            foreach ($rows as $r) {
+                if (empty($r['is_personal_debt'])) {
+                    continue;
+                }
+                // Only surface high/medium confidence results
+                $confidence = $r['confidence'] ?? 'low';
+                if ($confidence === 'low') {
+                    continue;
+                }
+
+                $tx = $txMap->get($r['transaction_id'] ?? '');
+                if (! $tx) {
+                    continue;
+                }
+
+                $txAmount  = (float) $tx->amount;
+                $direction = $r['direction'] ?? ($txAmount < 0 ? 'given' : 'received');
+
+                $suggestions[] = [
+                    'transaction_id'    => $tx->id,
+                    'transaction_date'  => $tx->posted_at,
+                    'description'       => $tx->description,
+                    'amount'            => round(abs($txAmount), 2),
+                    'currency'          => $tx->currency ?? 'TRY',
+                    'direction'         => $direction,
+                    'suggested_contact' => $r['person_name'] ?: null,
+                    'is_repayment_hint' => false,
+                    'source'            => 'ai',
+                    'confidence'        => $confidence,
+                    'ai_reason'         => $r['reason'] ?? null,
+                ];
+            }
+
+            return $suggestions;
+        } catch (\Throwable) {
+            // AI failure is non-fatal — keyword results still surface
+            return [];
+        }
     }
 
     // ── Helpers ────────────────────────────────────────────────────────

@@ -59,11 +59,14 @@ class PersonalDebtController extends Controller
     public function autoDetect(): JsonResponse
     {
         $service = new DebtDetectionService();
-        $userId  = auth()->id();
+        $user    = auth()->user();
+
+        $keywordSuggestions = $service->detectUnconfirmedDebts($user->id);
+        $aiSuggestions      = $service->detectFromTransfersAi($user);
 
         return response()->json([
-            'debt_suggestions'      => $service->detectUnconfirmedDebts($userId),
-            'repayment_suggestions' => $service->findRepaymentCandidates($userId),
+            'debt_suggestions'      => array_merge($keywordSuggestions, $aiSuggestions),
+            'repayment_suggestions' => $service->findRepaymentCandidates($user->id),
         ]);
     }
 

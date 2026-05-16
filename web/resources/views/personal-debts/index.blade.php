@@ -632,25 +632,39 @@ document.querySelectorAll('.btn-delete').forEach(function (btn) {
   });
 
   function buildDebtCard(s) {
-    const div       = document.createElement('div');
-    const isGiven   = s.direction === 'given';
-    const color     = isGiven ? 'success' : 'danger';
-    const dirLabel  = isGiven ? 'Ben verdim (alacaklı)' : 'Ben aldım (borçlu)';
-    const amount    = parseFloat(s.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-    const date      = s.transaction_date ? s.transaction_date.substring(0, 10) : '';
-    div.className   = 'card border';
-    div.innerHTML   =
+    const div        = document.createElement('div');
+    const isGiven    = s.direction === 'given';
+    const color      = isGiven ? 'success' : 'danger';
+    const dirLabel   = isGiven ? 'Ben verdim (alacaklı)' : 'Ben aldım (borçlu)';
+    const amount     = parseFloat(s.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+    const date       = s.transaction_date ? s.transaction_date.substring(0, 10) : '';
+    const isAi       = s.source === 'ai';
+    const confColor  = s.confidence === 'high' ? 'success' : 'warning';
+    const confLabel  = s.confidence === 'high' ? 'Yüksek güven' : 'Orta güven';
+    div.className    = 'card border' + (isAi ? ' border-primary border-opacity-25' : '');
+    div.innerHTML    =
       '<div class="card-body py-3 px-4">' +
         '<div class="d-flex align-items-start justify-content-between gap-3">' +
           '<div class="flex-grow-1">' +
-            '<div class="d-flex align-items-center gap-2 mb-1">' +
+            '<div class="d-flex align-items-center flex-wrap gap-2 mb-1">' +
               '<span class="badge bg-label-' + color + '">' + dirLabel + '</span>' +
+              (isAi
+                ? '<span class="badge bg-label-primary" title="Yapay zeka tespiti">' +
+                    '<i class="icon-base ti tabler-sparkles icon-10px me-1"></i>AI</span>' +
+                  '<span class="badge bg-label-' + confColor + '">' + confLabel + '</span>'
+                : '') +
               (s.is_repayment_hint ? '<span class="badge bg-label-info">Geri ödeme olabilir</span>' : '') +
             '</div>' +
             '<p class="fw-semibold mb-1 text-heading">' + esc(s.description || '—') + '</p>' +
             '<small class="text-muted">' +
-              (s.suggested_contact ? 'Kişi: ' + esc(s.suggested_contact) + ' &middot; ' : '') + date +
+              (s.suggested_contact ? 'Kişi: <strong>' + esc(s.suggested_contact) + '</strong> &middot; ' : '') + date +
             '</small>' +
+            (isAi && s.ai_reason
+              ? '<div class="mt-2 d-flex align-items-start gap-1">' +
+                  '<i class="icon-base ti tabler-brain icon-12px text-primary mt-1 flex-shrink-0"></i>' +
+                  '<small class="text-primary">' + esc(s.ai_reason) + '</small>' +
+                '</div>'
+              : '') +
           '</div>' +
           '<div class="text-end flex-shrink-0">' +
             '<div class="fw-bold text-' + color + ' mb-2">₺' + amount + '</div>' +
