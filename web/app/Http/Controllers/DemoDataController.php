@@ -62,6 +62,23 @@ class DemoDataController extends Controller
         ['desc' => 'Faiz Geliri',        'merchant' => null, 'min' => 100,  'max' => 800],
     ];
 
+    /** Kişisel borç/alacak hareketi şablonları — AI tespiti için gerçekçi veriler */
+    private const PERSONAL_DEBT_TEMPLATES = [
+        // Ben verdim (negatif tutar)
+        ['desc' => "Ahmet'e borç verdim",          'sign' => -1, 'min' => 300,  'max' => 2500],
+        ['desc' => "Can'a ödünç para",              'sign' => -1, 'min' => 500,  'max' => 3000],
+        ['desc' => "Burak için borç attım",         'sign' => -1, 'min' => 200,  'max' => 1500],
+        ['desc' => "Selin'e kira için borç verdim", 'sign' => -1, 'min' => 1000, 'max' => 5000],
+        ['desc' => "Ali borç istedi",               'sign' => -1, 'min' => 150,  'max' => 1200],
+        // Ben aldım (pozitif tutar)
+        ['desc' => "Zeynep'ten ödünç aldım",        'sign' =>  1, 'min' => 200,  'max' => 2000],
+        ['desc' => "Fatma borcumu ödedi",            'sign' =>  1, 'min' => 300,  'max' => 1800],
+        // Geri ödeme (pozitif tutar — repayment detection için)
+        ['desc' => "Ahmet borcunu geri verdi",       'sign' =>  1, 'min' => 300,  'max' => 2500],
+        ['desc' => "Can geri ödeme yaptı",           'sign' =>  1, 'min' => 500,  'max' => 3000],
+        ['desc' => "Burak borç iadesi",              'sign' =>  1, 'min' => 200,  'max' => 1500],
+    ];
+
     public function index(): View
     {
         $existingConnections = BankConnection::with(['bank', 'accounts'])
@@ -165,6 +182,7 @@ class DemoDataController extends Controller
 
                 // İşlemler oluştur (checking hesabı üzerinden)
                 $this->generateTransactions($checkingAccount, $monthlyIncome, $monthsBack, $txPerMonth);
+                $this->generatePersonalDebtTransactions($checkingAccount, $monthsBack);
 
                 // Kredi kartı
                 $cardLimit = (float) (rand(5, 30) * 1000);
@@ -410,6 +428,43 @@ class DemoDataController extends Controller
                 'period'           => $period,
                 'amount'           => (float) (rand(15, 60) * 100),
                 'alert_threshold'  => 80,
+            ]);
+        }
+    }
+
+    /**
+     * Son monthsBack ay içine 3-5 adet kişisel borç/geri-ödeme işlemi ekler.
+     * Bu işlemler DebtDetectionService'in anahtar kelime taramasına yakalanır.
+     */
+    private function generatePersonalDebtTransactions(Account $account, int $monthsBack): void
+    {
+        $now        = Carbon::now();
+        $templates  = self::PERSONAL_DEBT_TEMPLATES;
+        $count      = rand(3, 5);
+        $used       = [];
+
+        shuffle($templates);
+
+        for ($i = 0; $i < $count; $i++) {
+            $tpl    = $templates[$i % count($templates)];
+            $amount = $tpl['sign'] * (rand($tpl['min'] * 100, $tpl['max'] * 100) / 100);
+
+            // Geçmiş aylara rastgele dağıt
+            $daysBack = rand(1, $monthsBack * 30);
+            $txDate   = $now->copy()->subDays($daysBack);
+
+            Transaction::create([
+                'id'            => (string) Str::uuid(),
+                'account_id'    => $account->id,
+                'external_id'   => 'demo_debt_' . Str::random(10),
+                'posted_at'     => $txDate,
+                'amount'        => $amount,
+                'currency'      => 'TRY',
+                'try_amount'    => $amount,
+                'description'   => $tpl['desc'],
+                'merchant_name' => null,
+                'channel'       => 'transfer',
+                'is_recurring'  => false,
             ]);
         }
     }
