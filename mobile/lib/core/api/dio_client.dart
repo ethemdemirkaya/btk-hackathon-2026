@@ -66,10 +66,11 @@ String friendlyError(Object error) {
         return 'Bağlantı zaman aşımına uğradı (${ApiEndpoints.currentHost}:8000).';
       case DioExceptionType.connectionError:
       case DioExceptionType.unknown:
-        return 'Sunucuya bağlanılamadı (${ApiEndpoints.currentHost}:8000).';
+        final detail = error.error?.toString() ?? 'bilinmiyor';
+        return 'Sunucuya bağlanılamadı (${ApiEndpoints.currentHost}:8000)\n$detail';
       default:
         break;
     }
   }
-  return 'Bir hata oluştu. Lütfen tekrar deneyin.';
+  return 'Bir hata oluştu: ${error.toString()}';
 }

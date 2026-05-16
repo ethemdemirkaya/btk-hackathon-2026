@@ -130,11 +130,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     );
     ctrl.dispose();
-    if (newHost != null && newHost.isNotEmpty && mounted) {
-      await AuthStorage.setApiHost(newHost);
+    if (newHost != null && newHost.isNotEmpty) {
       ApiEndpoints.setHost(newHost);
       DioClient.reset();
-      setState(() {});
+      AuthStorage.setApiHost(newHost); // fire-and-forget, no await
+      if (mounted) setState(() {});
     }
   }
 

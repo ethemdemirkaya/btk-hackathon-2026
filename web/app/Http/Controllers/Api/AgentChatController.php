@@ -19,7 +19,7 @@ class AgentChatController extends Controller
 
     public function send(Request $request): JsonResponse
     {
-        set_time_limit(300); // AI pipeline can take up to 5 minutes
+        set_time_limit(300);
 
         $data = $request->validate([
             'message'    => 'required|string|max:2000',
@@ -29,33 +29,37 @@ class AgentChatController extends Controller
         $user      = $request->user();
         $sessionId = $data['session_id'] ?? 'mobile-' . $user->id . '-' . now()->format('Ymd');
 
+        // AgentRun: agent_name required (NOT NULL in schema), use 'finished_at'
         $run = AgentRun::create([
             'user_id'    => $user->id,
-            'session_id' => $sessionId,
+            'agent_name' => 'orchestrator',
             'status'     => 'running',
             'started_at' => now(),
         ]);
 
+        // AgentMessage schema: user_id + session_id (no agent_run_id column)
         AgentMessage::create([
-            'agent_run_id' => $run->id,
-            'role'         => 'user',
-            'content'      => $data['message'],
+            'user_id'    => $user->id,
+            'session_id' => $sessionId,
+            'role'       => 'user',
+            'content'    => $data['message'],
         ]);
 
         try {
             $response = $this->orchestrator->handle($user, $data['message'], $sessionId);
 
             AgentMessage::create([
-                'agent_run_id' => $run->id,
-                'role'         => 'assistant',
-                'content'      => $response['final'] ?? '',
-                'metadata'     => json_encode(['agents_used' => $response['agents_used'] ?? []]),
+                'user_id'    => $user->id,
+                'session_id' => $sessionId,
+                'role'       => 'assistant',
+                'content'    => $response['final'] ?? '',
+                'metadata'   => ['agents_used' => $response['agents_used'] ?? []],
             ]);
 
             $run->update([
-                'status'     => 'completed',
-                'ended_at'   => now(),
-                'duration_ms'=> now()->diffInMilliseconds($run->started_at),
+                'status'      => 'completed',
+                'finished_at' => now(),
+                'duration_ms' => (int) abs($run->started_at->diffInMilliseconds(now())),
             ]);
 
             return response()->json([
@@ -65,7 +69,10 @@ class AgentChatController extends Controller
                 'run_id'      => $run->id,
             ]);
         } catch (\Throwable $e) {
-            $run->update(['status' => 'failed', 'ended_at' => now()]);
+            // Sync attributes so Eloquent doesn't re-send any dirty values from a
+            // previously failed update() attempt (e.g. negative duration_ms).
+            $run->syncOriginal();
+            $run->update(['status' => 'failed', 'finished_at' => now()]);
 
             return response()->json([
                 'error'   => 'Ajan yanıt veremedi.',
@@ -79,27 +86,26 @@ class AgentChatController extends Controller
         $user      = $request->user();
         $sessionId = $request->input('session_id');
 
-        $query = AgentRun::with('messages')
-            ->where('user_id', $user->id)
-            ->orderByDesc('started_at');
+        $query = AgentMessage::where('user_id', $user->id)
+            ->orderBy('created_at');
 
         if ($sessionId) {
             $query->where('session_id', $sessionId);
         }
 
-        $runs = $query->limit(20)->get()->map(fn ($run) => [
-            'run_id'      => $run->id,
-            'session_id'  => $run->session_id,
-            'status'      => $run->status,
-            'started_at'  => $run->started_at?->toIso8601String(),
-            'messages'    => $run->messages->map(fn ($m) => [
-                'role'    => $m->role,
-                'content' => $m->content,
-                'at'      => $m->created_at?->toIso8601String(),
-            ]),
+        $messages = $query->limit(200)->get()->map(fn ($m) => [
+            'role'    => $m->role,
+            'content' => $m->content,
+            'at'      => $m->created_at?->toIso8601String(),
         ]);
 
-        return response()->json(['runs' => $runs]);
+        return response()->json([
+            'runs' => [[
+                'session_id' => $sessionId,
+                'status'     => 'completed',
+                'messages'   => $messages,
+            ]],
+        ]);
     }
 
     public function insights(Request $request): JsonResponse
@@ -139,16 +145,11 @@ class AgentChatController extends Controller
         return response()->json(['message' => 'Öngörü kapatıldı.']);
     }
 
-    /**
-     * Directly run BudgetAdvisor + AnomalyDetector without Gemini intent routing,
-     * persist results as AgentInsight records, and return the refreshed list.
-     */
     public function refreshInsights(Request $request): JsonResponse
     {
         $user  = $request->user();
         $force = $request->boolean('force', false);
 
-        // 1-day cache: skip regeneration unless forced or no fresh insights exist
         $freshExists = AgentInsight::where('user_id', $user->id)
             ->where('is_dismissed', false)
             ->where('created_at', '>=', now()->subDay())
@@ -161,9 +162,8 @@ class AgentChatController extends Controller
         $context = 'Finansal verilerimi analiz et, bütçe durumumu ve olağandışı harcamaları değerlendir.';
         $input   = ['context' => $context];
 
-        // Budget advisor
         try {
-            $budget = (new BudgetAdvisorAgent($user))->run($input);
+            $budget  = (new BudgetAdvisorAgent($user))->run($input);
             $summary = $budget['summary'] ?? null;
             if ($summary) {
                 AgentInsight::create([
@@ -180,10 +180,10 @@ class AgentChatController extends Controller
                 $suggestion = $rec['suggestion'] ?? null;
                 if (! $suggestion) continue;
                 $priority = match (strtolower($rec['priority'] ?? 'medium')) {
-                    'high', 'yüksek'     => 8,
-                    'medium', 'orta'     => 6,
-                    'low', 'düşük'       => 4,
-                    default              => 5,
+                    'high', 'yüksek' => 8,
+                    'medium', 'orta' => 6,
+                    'low', 'düşük'   => 4,
+                    default          => 5,
                 };
                 AgentInsight::create([
                     'user_id'    => $user->id,
@@ -195,11 +195,8 @@ class AgentChatController extends Controller
                     'expires_at' => now()->addDays(7),
                 ]);
             }
-        } catch (\Throwable) {
-            // agent failed — skip silently
-        }
+        } catch (\Throwable) {}
 
-        // Anomaly detector
         try {
             $anomaly = (new AnomalyDetectorAgent($user))->run($input);
             $summary = $anomaly['summary'] ?? null;
@@ -214,11 +211,33 @@ class AgentChatController extends Controller
                     'expires_at' => now()->addDays(3),
                 ]);
             }
-        } catch (\Throwable) {
-            // agent failed — skip silently
-        }
+        } catch (\Throwable) {}
 
-        // Return the refreshed insight list
         return $this->insights($request);
+    }
+
+    public function pageAnalyze(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'page'    => 'required|string|max:100',
+            'context' => 'nullable|array',
+        ]);
+
+        $user = $request->user();
+
+        try {
+            $response = $this->orchestrator->handle(
+                $user,
+                'Şu an ' . $data['page'] . ' sayfasındayım. Bu sayfayla ilgili bana kısa ve öz bir finansal öneri ver.',
+                'page-analyze-' . $user->id,
+            );
+
+            return response()->json(['insight' => $response['final'] ?? '']);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error'   => 'Sayfa analizi yapılamadı.',
+                'details' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 }

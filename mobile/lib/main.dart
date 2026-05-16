@@ -14,10 +14,17 @@ void main() async {
   await initializeDateFormatting('tr_TR', null);
   await CacheStorage.init();
 
-  // Apply any saved API host override (set from the login debug chip).
+  // Apply any saved API host override (set from the login chip).
+  // Only override if the user explicitly saved a different host than the
+  // compile-time --dart-define value; this prevents stale IPs from old
+  // sessions blocking fresh installs.
+  final compiledHost = const String.fromEnvironment('API_HOST', defaultValue: '');
   final savedHost = await AuthStorage.getApiHost();
-  if (savedHost != null && savedHost.isNotEmpty) {
+  if (savedHost != null && savedHost.isNotEmpty && savedHost != compiledHost) {
     ApiEndpoints.setHost(savedHost);
+  } else if (compiledHost.isNotEmpty) {
+    ApiEndpoints.setHost(compiledHost);
+    await AuthStorage.setApiHost(compiledHost);
   }
 
   runApp(const ProviderScope(child: ParanetteApp()));
