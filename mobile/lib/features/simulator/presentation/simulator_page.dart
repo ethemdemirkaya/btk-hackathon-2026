@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../core/api/api_endpoints.dart';
@@ -81,6 +82,22 @@ class _SimulatorPageState extends State<SimulatorPage> {
     }
   }
 
+  Future<void> _calculateWithModal() async {
+    if (_current == null || !_canSimulate) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _SimulationLoadingModal(),
+    );
+
+    await _calculate();
+
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+  }
+
   Future<void> _calculate() async {
     if (_current == null) return;
     setState(() { _loading = true; _calcError = null; _result = null; });
@@ -145,7 +162,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
                                 onMonthsChanged:  (v) => setState(() => _monthsHorizon    = v),
                               ),
                               const SizedBox(height: 14),
-                              _CalcButton(loading: _loading, onTap: _canSimulate ? _calculate : null),
+                              _CalcButton(loading: _loading, onTap: _canSimulate ? _calculateWithModal : null),
                               if (_calcError != null) ...[
                                 const SizedBox(height: 12),
                                 _ErrorBanner(message: _calcError!),
@@ -903,6 +920,134 @@ class _ProjectionChart extends StatelessWidget {
             ),
           );
         }),
+      ),
+    );
+  }
+}
+
+// ── Simülasyon Yükleme Modalı ─────────────────────────────────────────────────
+class _SimulationLoadingModal extends StatefulWidget {
+  const _SimulationLoadingModal();
+
+  @override
+  State<_SimulationLoadingModal> createState() =>
+      _SimulationLoadingModalState();
+}
+
+class _SimulationLoadingModalState extends State<_SimulationLoadingModal>
+    with SingleTickerProviderStateMixin {
+
+  static const _messages = [
+    'Gelir akışları analiz ediliyor...',
+    'Harcama kalıpları inceleniyor...',
+    'Enflasyon etkisi hesaplanıyor...',
+    'Monte Carlo simülasyonu çalıştırılıyor...',
+    'Nakit akışı projeksiyonu oluşturuluyor...',
+    'Finansal risk faktörleri değerlendiriliyor...',
+    'Bütçe uyum skoru hesaplanıyor...',
+    'Senaryo karşılaştırması yapılıyor...',
+    'Tasarruf optimizasyonu analiz ediliyor...',
+    'Borç yönetimi simülasyonu tamamlanıyor...',
+    'AI değerlendirmesi için veri hazırlanıyor...',
+    'Gemini 1.5 Pro modeli çağrılıyor...',
+    'Finansal öngörüler derleniyor...',
+    'Sonuçlar hazırlanıyor...',
+  ];
+
+  int _msgIndex = 0;
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 380),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+    _ctrl.forward();
+
+    _timer = Timer.periodic(const Duration(milliseconds: 1900), (_) {
+      if (!mounted) return;
+      _ctrl.reverse().then((_) {
+        if (!mounted) return;
+        setState(() => _msgIndex = (_msgIndex + 1) % _messages.length);
+        _ctrl.forward();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+              color: _accent.withValues(alpha: 0.3), width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 60, height: 60,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: _accent.withValues(alpha: 0.2),
+                    strokeWidth: 3,
+                    value: 1,
+                  ),
+                  const CircularProgressIndicator(
+                    color: _accent,
+                    strokeWidth: 3,
+                  ),
+                  const Icon(Icons.auto_awesome,
+                      size: 20, color: _accent),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            const Text(
+              'AI Simülasyonu Çalışıyor',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _text1,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 36,
+              child: FadeTransition(
+                opacity: _fade,
+                child: Text(
+                  _messages[_msgIndex],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: _text2,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

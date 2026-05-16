@@ -123,7 +123,12 @@ class PersonalDebtsPage extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
+                        // ── AI Tespit Butonu ──────────────────
+                        _AiDetectButton(
+                          onDetected: () => ref.invalidate(_personalDebtsProvider),
+                        ),
+                        const SizedBox(height: 12),
                         ...debts.map((d) => _DebtCard(
                               debt: d as Map<String, dynamic>,
                               onSettle: () => _settle(
@@ -742,6 +747,499 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
   }
 }
 
+// ── AI Borç Tespit Butonu + Bottom Sheet ─────────────────────────────────
+class _AiDetectButton extends StatefulWidget {
+  final VoidCallback onDetected;
+  const _AiDetectButton({required this.onDetected});
+
+  @override
+  State<_AiDetectButton> createState() => _AiDetectButtonState();
+}
+
+class _AiDetectButtonState extends State<_AiDetectButton> {
+  bool _loading = false;
+
+  Future<void> _scan() async {
+    setState(() => _loading = true);
+    try {
+      final res = await DioClient.instance
+          .get(ApiEndpoints.personalDebtsAutoDetect);
+      final data = res.data as Map<String, dynamic>;
+      final debts = (data['debt_suggestions'] as List?) ?? [];
+      final repayments = (data['repayment_suggestions'] as List?) ?? [];
+
+      if (!mounted) return;
+
+      if (debts.isEmpty && repayments.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Son 90 günde tespit edilecek borç hareketi bulunamadı.'),
+          backgroundColor: Color(0xFF0D1B2A),
+        ));
+        return;
+      }
+
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: const Color(0xFF0D1B2A),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        builder: (_) => _DetectionSheet(
+          debtSuggestions: debts.cast<Map<String, dynamic>>(),
+          repaymentSuggestions: repayments.cast<Map<String, dynamic>>(),
+          onChanged: widget.onDetected,
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Tespit sırasında hata oluştu.'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _loading ? null : _scan,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: _accent.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: _loading
+                  ? const Padding(
+                      padding: EdgeInsets.all(7),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 1.5, color: _accent),
+                    )
+                  : const Icon(Icons.auto_awesome,
+                      size: 16, color: _accent),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('AI Borç Tespiti',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _text1)),
+                  Text('Hareketlerde borç/geri ödeme ara',
+                      style: TextStyle(fontSize: 11, color: _text3)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 18, color: _text3),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Tespit Sonuçları Bottom Sheet ────────────────────────────────────────────
+class _DetectionSheet extends StatefulWidget {
+  final List<Map<String, dynamic>> debtSuggestions;
+  final List<Map<String, dynamic>> repaymentSuggestions;
+  final VoidCallback onChanged;
+
+  const _DetectionSheet({
+    required this.debtSuggestions,
+    required this.repaymentSuggestions,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DetectionSheet> createState() => _DetectionSheetState();
+}
+
+class _DetectionSheetState extends State<_DetectionSheet> {
+  final Set<int> _dismissedDebts = {};
+  final Set<int> _dismissedRepayments = {};
+
+  String _fmt(double v) =>
+      '₺${v.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+
+  Future<void> _confirmDebt(int idx) async {
+    final s = widget.debtSuggestions[idx];
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.personalDebtsConfirm,
+        data: {
+          'contact_name':   s['suggested_contact'] ?? 'Bilinmiyor',
+          'amount':         s['amount'],
+          'direction':      s['direction'],
+          'note':           s['description'],
+          'transaction_id': s['transaction_id'],
+        },
+      );
+      setState(() => _dismissedDebts.add(idx));
+      widget.onChanged();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Borç kaydedildi.'),
+            backgroundColor: Color(0xFF0DD9A0)));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _confirmRepayment(int idx) async {
+    final s = widget.repaymentSuggestions[idx];
+    final debtId = (s['debt_id'] as num).toInt();
+    try {
+      final res = await DioClient.instance.post(
+        ApiEndpoints.personalDebtMarkRepayment(debtId),
+        data: {
+          'transaction_id':   s['transaction_id'],
+          'repayment_amount': s['repayment_amount'],
+        },
+      );
+      setState(() => _dismissedRepayments.add(idx));
+      widget.onChanged();
+      final profit = (res.data['profit'] as num?)?.toDouble() ?? 0;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(profit > 0
+              ? '${_fmt(profit)} kar ile borç kapatıldı!'
+              : 'Borç kapatıldı.'),
+          backgroundColor:
+              profit > 0 ? const Color(0xFF0DD9A0) : const Color(0xFF0D1B2A),
+        ));
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final debts = widget.debtSuggestions
+        .asMap()
+        .entries
+        .where((e) => !_dismissedDebts.contains(e.key))
+        .toList();
+    final repayments = widget.repaymentSuggestions
+        .asMap()
+        .entries
+        .where((e) => !_dismissedRepayments.contains(e.key))
+        .toList();
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      maxChildSize: 0.92,
+      builder: (_, ctrl) => ListView(
+        controller: ctrl,
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        children: [
+          Center(
+            child: Container(
+              width: 36, height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                  color: const Color(0xFF1A2940),
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const Text('AI Borç Tespiti',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFE8F4FF))),
+          const SizedBox(height: 4),
+          Text('${debts.length + repayments.length} öneri bulundu',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF4A6478))),
+          const SizedBox(height: 20),
+
+          // ── Borç Önerileri ────────────────────────────────────────────
+          if (debts.isNotEmpty) ...[
+            const Text('Yeni Borç Önerileri',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8BA4BC))),
+            const SizedBox(height: 10),
+            ...debts.map((e) => _DebtSuggestionCard(
+                  suggestion: e.value,
+                  onConfirm: () => _confirmDebt(e.key),
+                  onDismiss: () =>
+                      setState(() => _dismissedDebts.add(e.key)),
+                )),
+            const SizedBox(height: 16),
+          ],
+
+          // ── Geri Ödeme Önerileri ──────────────────────────────────────
+          if (repayments.isNotEmpty) ...[
+            const Text('Geri Ödeme Önerileri',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8BA4BC))),
+            const SizedBox(height: 10),
+            ...repayments.map((e) => _RepaymentSuggestionCard(
+                  suggestion: e.value,
+                  onConfirm: () => _confirmRepayment(e.key),
+                  onDismiss: () =>
+                      setState(() => _dismissedRepayments.add(e.key)),
+                )),
+          ],
+
+          if (debts.isEmpty && repayments.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Center(
+                child: Text('Tüm öneriler işlendi.',
+                    style: TextStyle(color: Color(0xFF4A6478))),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebtSuggestionCard extends StatelessWidget {
+  final Map<String, dynamic> suggestion;
+  final VoidCallback onConfirm;
+  final VoidCallback onDismiss;
+  const _DebtSuggestionCard(
+      {required this.suggestion,
+      required this.onConfirm,
+      required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = (suggestion['amount'] as num?)?.toDouble() ?? 0;
+    final dir = suggestion['direction'] as String? ?? 'given';
+    final isGiven = dir == 'given';
+    final color = isGiven ? const Color(0xFF0DD9A0) : const Color(0xFFFF4D6D);
+    final label = isGiven ? 'Verdiğim borç' : 'Aldığım borç';
+    final desc = suggestion['description'] as String? ?? '';
+    final contact = suggestion['suggested_contact'] as String?;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF060D18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color)),
+            ),
+            const Spacer(),
+            Text('₺${amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: color)),
+          ]),
+          if (desc.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(desc,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 12, color: Color(0xFF8BA4BC))),
+          ],
+          if (contact != null) ...[
+            const SizedBox(height: 4),
+            Text('Kişi: $contact',
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF4A6478))),
+          ],
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onDismiss,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF4A6478),
+                  side: const BorderSide(color: Color(0xFF1A2940)),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Atla', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onConfirm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: const Color(0xFF051929),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Borç Ekle',
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+class _RepaymentSuggestionCard extends StatelessWidget {
+  final Map<String, dynamic> suggestion;
+  final VoidCallback onConfirm;
+  final VoidCallback onDismiss;
+  const _RepaymentSuggestionCard(
+      {required this.suggestion,
+      required this.onConfirm,
+      required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final debtAmount = (suggestion['debt_amount'] as num?)?.toDouble() ?? 0;
+    final repayAmount = (suggestion['repayment_amount'] as num?)?.toDouble() ?? 0;
+    final profit = (suggestion['profit'] as num?)?.toDouble() ?? 0;
+    final contact = suggestion['debt_contact'] as String? ?? 'Bilinmiyor';
+    final desc = suggestion['description'] as String? ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF060D18),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: const Color(0xFF00D4FF).withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$contact geri ödüyor mu?',
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFE8F4FF))),
+          const SizedBox(height: 8),
+          Row(children: [
+            _InfoChip('Borç', '₺${debtAmount.toStringAsFixed(2)}',
+                const Color(0xFFFF4D6D)),
+            const SizedBox(width: 8),
+            _InfoChip('Gelen', '₺${repayAmount.toStringAsFixed(2)}',
+                const Color(0xFF0DD9A0)),
+            if (profit > 0) ...[
+              const SizedBox(width: 8),
+              _InfoChip('Kar', '+₺${profit.toStringAsFixed(2)}',
+                  const Color(0xFFF59E0B)),
+            ],
+          ]),
+          if (desc.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(desc,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF4A6478))),
+          ],
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onDismiss,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF4A6478),
+                  side: const BorderSide(color: Color(0xFF1A2940)),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Hayır',
+                    style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onConfirm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00D4FF),
+                  foregroundColor: const Color(0xFF051929),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Evet, Kapat',
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _InfoChip(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Column(
+        children: [
+          Text(value,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 10, color: Color(0xFF4A6478))),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _TypeBtn ─────────────────────────────────────────────────────────────────
 class _TypeBtn extends StatelessWidget {
   final String label;
   final bool selected;

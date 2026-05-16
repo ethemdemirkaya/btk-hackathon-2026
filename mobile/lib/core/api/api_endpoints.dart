@@ -51,9 +51,12 @@ class ApiEndpoints {
   static String goalSuggest(int id) => '/goals/$id/suggest';
 
   // Personal debts
-  static const personalDebts = '/personal-debts';
-  static String personalDebt(int id) => '/personal-debts/$id';
-  static String personalDebtSettle(int id) => '/personal-debts/$id/settle';
+  static const personalDebts              = '/personal-debts';
+  static const personalDebtsAutoDetect    = '/personal-debts/auto-detect';
+  static const personalDebtsConfirm       = '/personal-debts/confirm-detected';
+  static String personalDebt(int id)             => '/personal-debts/$id';
+  static String personalDebtSettle(int id)        => '/personal-debts/$id/settle';
+  static String personalDebtMarkRepayment(int id) => '/personal-debts/$id/mark-repayment';
 
   // Investments
   static const investments = '/investments';
