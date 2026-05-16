@@ -127,8 +127,8 @@
 
 {{-- ── Debt List Card ──────────────────────────────────────────────────────── --}}
 <div class="card">
-  <div class="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap pb-0">
-    <ul class="nav nav-tabs card-header-tabs" id="debtFilterTabs">
+  <div class="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap">
+    <ul class="nav nav-tabs card-header-tabs mb-0" id="debtFilterTabs">
       <li class="nav-item">
         <button class="nav-link active" type="button" data-filter="all">
           Tümü
@@ -166,7 +166,7 @@
       @foreach($debts as $debt)
       @php
         $initials = collect(explode(' ', $debt->contact_name))
-                      ->filter()->map(fn($w) => strtoupper($w[0]))->take(2)->implode('');
+                      ->filter()->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1, 'UTF-8'), 'UTF-8'))->take(2)->implode('');
         $isGiven  = $debt->direction === 'given';
         $color    = $debt->is_settled ? 'secondary' : ($isGiven ? 'success' : 'danger');
       @endphp
