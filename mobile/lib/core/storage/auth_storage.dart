@@ -104,6 +104,19 @@ class AuthStorage {
     await prefs.remove(_prefKeyPin);
   }
 
+  // ── API host override (for physical-device testing) ─────────────────
+  static const _prefKeyApiHost = 'api_host_override';
+
+  static Future<String?> getApiHost() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_prefKeyApiHost);
+  }
+
+  static Future<void> setApiHost(String host) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefKeyApiHost, host);
+  }
+
   // ── Notifications pref (local only) ──────────────────────────────────
   static Future<bool> isNotificationsEnabled() async {
     final prefs = await SharedPreferences.getInstance();

@@ -59,12 +59,16 @@ String friendlyError(Object error) {
     if (status == 404) return 'Kayıt bulunamadı.';
     if (status == 422) return 'Girilen bilgileri kontrol edin.';
     if (status != null && status >= 500) return 'Sunucu hatası. Lütfen tekrar deneyin.';
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
-      return 'Bağlantı zaman aşımına uğradı.';
-    }
-    if (error.type == DioExceptionType.connectionError) {
-      return 'İnternet bağlantınızı kontrol edin.';
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Bağlantı zaman aşımına uğradı (${ApiEndpoints.currentHost}:8000).';
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
+        return 'Sunucuya bağlanılamadı (${ApiEndpoints.currentHost}:8000).';
+      default:
+        break;
     }
   }
   return 'Bir hata oluştu. Lütfen tekrar deneyin.';

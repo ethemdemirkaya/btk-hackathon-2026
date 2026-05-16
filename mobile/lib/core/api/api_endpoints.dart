@@ -1,9 +1,17 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const _host =
+  // Mutable so the user can change it at runtime from the login debug chip.
+  // Falls back to 10.0.2.2 (Android emulator → host localhost).
+  static String _host =
       String.fromEnvironment('API_HOST', defaultValue: '10.0.2.2');
-  static const baseUrl = 'http://$_host:8000/api/v1';
+
+  static String get currentHost => _host;
+  static String get baseUrl => 'http://$_host:8000/api/v1';
+
+  static void setHost(String host) {
+    _host = host.trim().isEmpty ? '10.0.2.2' : host.trim();
+  }
 
   // Auth
   static const authMe = '/auth/me';

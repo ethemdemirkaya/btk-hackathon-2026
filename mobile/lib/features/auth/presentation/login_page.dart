@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/storage/auth_storage.dart';
 import '../../../core/theme/colors.dart';
@@ -75,6 +77,65 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _showApiConfigDialog() async {
+    final c = context.appColors;
+    final ctrl = TextEditingController(text: ApiEndpoints.currentHost);
+    final newHost = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: c.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('API Sunucu Adresi',
+            style: TextStyle(color: c.text1, fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Emülatör: 10.0.2.2\nFiziksel cihaz: bilgisayarın LAN IP\'si',
+                style: TextStyle(fontSize: 12, color: c.text3, height: 1.5)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              style: TextStyle(color: c.text1, fontFamily: 'monospace'),
+              decoration: InputDecoration(
+                hintText: '10.0.2.2 veya 192.168.x.x',
+                hintStyle: TextStyle(color: c.text3),
+                filled: true,
+                fillColor: c.bg,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: c.border)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: c.border)),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('İptal', style: TextStyle(color: c.text2))),
+          TextButton(
+              onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+              child: const Text('Kaydet',
+                  style: TextStyle(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w700))),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (newHost != null && newHost.isNotEmpty && mounted) {
+      await AuthStorage.setApiHost(newHost);
+      ApiEndpoints.setHost(newHost);
+      DioClient.reset();
+      setState(() {});
     }
   }
 
@@ -324,6 +385,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ],
                 ),
                 const SizedBox(height: 24),
+
+                // ── Debug: API host chip (only in debug builds) ───────
+                if (kDebugMode)
+                  Center(
+                    child: GestureDetector(
+                      onTap: _showApiConfigDialog,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: c.card,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: c.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.dns_outlined,
+                                size: 13, color: c.text3),
+                            const SizedBox(width: 5),
+                            Text(
+                              'API: ${ApiEndpoints.currentHost}:8000',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: c.text3,
+                                  fontFamily: 'monospace'),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.edit_outlined,
+                                size: 11, color: c.text3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
