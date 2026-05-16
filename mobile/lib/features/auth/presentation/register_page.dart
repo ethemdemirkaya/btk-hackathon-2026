@@ -69,7 +69,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       );
       if (!mounted) return;
       ref.read(authProvider.notifier).setAuthenticated(result.user);
-      context.go('/dashboard');
+      context.go('/pin-setup', extra: <String, dynamic>{'mandatory': true});
     } on DioException catch (e) {
       if (!mounted) return;
       if (e.response?.statusCode == 422) {

@@ -50,10 +50,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         deviceName: deviceName,
       );
       if (!mounted) return;
-      ref.read(authProvider.notifier).setAuthenticated(result.user);
       final hasPin = await AuthStorage.hasPin();
       if (!mounted) return;
-      context.go(hasPin ? '/dashboard' : '/pin-setup');
+      if (hasPin) {
+        ref.read(pendingUserProvider.notifier).state = result.user;
+        context.go('/pin-login');
+      } else {
+        ref.read(authProvider.notifier).setAuthenticated(result.user);
+        context.go('/pin-setup');
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       if (e.response?.statusCode == 422) {

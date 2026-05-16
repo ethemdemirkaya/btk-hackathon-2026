@@ -60,7 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (loading) return '/splash';
 
-      const publicRoutes = ['/splash', '/onboarding', '/login', '/register', '/pin-login', '/pin-setup'];
+      const publicRoutes = ['/splash', '/onboarding', '/login', '/register', '/pin-login'];
       final isPublic = publicRoutes.contains(loc);
 
       if (!authed && !isPublic) return '/login';
@@ -74,8 +74,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login',      builder: (_, __) => const LoginPage()),
       GoRoute(path: '/register',   builder: (_, __) => const RegisterPage()),
       GoRoute(path: '/pin-login',  builder: (_, __) => const PinLoginPage()),
-      GoRoute(path: '/pin-setup',  builder: (_, state) =>
-          PinSetupPage(isChange: state.extra == true)),
+      GoRoute(path: '/pin-setup', builder: (_, state) {
+        final extra = state.extra;
+        final isChange = extra == true ||
+            (extra is Map<String, dynamic> && extra['isChange'] == true);
+        final mandatory = extra is Map<String, dynamic> &&
+            extra['mandatory'] == true;
+        return PinSetupPage(isChange: isChange, mandatory: mandatory);
+      }),
 
       // ── Shell (drawer always mounted) ────────────────────────────
       ShellRoute(

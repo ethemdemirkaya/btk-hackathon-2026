@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/storage/auth_storage.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
@@ -30,6 +31,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final user = ref.read(authProvider).user;
     _incomeCtrl.text = user?.monthlyIncome.toStringAsFixed(0) ?? '';
     _fetchUser();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final bio = await AuthStorage.isBiometricEnabled();
+    final notifs = await AuthStorage.isNotificationsEnabled();
+    if (mounted) setState(() { _biometric = bio; _notifs = notifs; });
   }
 
   @override
@@ -171,7 +179,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     fontWeight: FontWeight.w700,
                                     color: c.text1)),
                             const Spacer(),
-                            const SizedBox(width: 40),
+                            _IconBtn(
+                              icon: Icons.edit_outlined,
+                              onTap: () => _showEditSheet(context),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -278,7 +289,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       icon: Icons.fingerprint,
                       label: 'Biyometrik giriş',
                       value: _biometric,
-                      onChanged: (v) => setState(() => _biometric = v),
+                      onChanged: (v) {
+                        setState(() => _biometric = v);
+                        AuthStorage.setBiometricEnabled(v);
+                      },
+                    ),
+                    _TapRow(
+                      icon: Icons.dialpad_outlined,
+                      label: 'PIN Değiştir',
+                      onTap: () => context.push('/pin-setup', extra: true),
                     ),
                     _TapRow(
                       icon: Icons.lock_outline,
@@ -303,7 +322,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       icon: Icons.notifications_outlined,
                       label: 'Bildirimler',
                       value: _notifs,
-                      onChanged: (v) => setState(() => _notifs = v),
+                      onChanged: (v) {
+                        setState(() => _notifs = v);
+                        AuthStorage.setNotificationsEnabled(v);
+                      },
                     ),
                     _TapRow(
                       icon: Icons.language_outlined,
@@ -364,6 +386,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showEditSheet(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditProfileSheet(
+        user: ref.read(authProvider).user,
+        onSaved: _fetchUser,
       ),
     );
   }
@@ -805,6 +839,197 @@ class _SettingsCard extends StatelessWidget {
 
           return const SizedBox.shrink();
         }),
+      ),
+    );
+  }
+}
+
+// ── Edit profile sheet ────────────────────────────────────────────────
+
+class _EditProfileSheet extends ConsumerStatefulWidget {
+  final UserModel? user;
+  final VoidCallback onSaved;
+  const _EditProfileSheet({required this.user, required this.onSaved});
+
+  @override
+  ConsumerState<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _phoneCtrl;
+  late final TextEditingController _birthCtrl;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl  = TextEditingController(text: widget.user?.name ?? '');
+    _phoneCtrl = TextEditingController(text: widget.user?.phone ?? '');
+    _birthCtrl = TextEditingController(text: widget.user?.birthDate ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _birthCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    DateTime initial;
+    try {
+      initial = _birthCtrl.text.isNotEmpty
+          ? DateTime.parse(_birthCtrl.text)
+          : DateTime(1990);
+    } catch (_) {
+      initial = DateTime(1990);
+    }
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && mounted) {
+      final y = picked.year.toString();
+      final m = picked.month.toString().padLeft(2, '0');
+      final d = picked.day.toString().padLeft(2, '0');
+      setState(() => _birthCtrl.text = '$y-$m-$d');
+    }
+  }
+
+  Future<void> _submit() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      _snack('Ad soyad boş bırakılamaz.'); return;
+    }
+    setState(() => _saving = true);
+    try {
+      final data = <String, dynamic>{'name': name};
+      final phone = _phoneCtrl.text.trim();
+      final birth = _birthCtrl.text.trim();
+      if (phone.isNotEmpty) data['phone'] = phone;
+      if (birth.isNotEmpty) data['birth_date'] = birth;
+      await DioClient.instance.patch(ApiEndpoints.authPatchMe(), data: data);
+      if (!mounted) return;
+      Navigator.pop(context);
+      widget.onSaved();
+    } catch (_) {
+      _snack('Güncelleme başarısız.');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 18, 20, 22 + bottom),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 38, height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                  color: c.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Profili Düzenle',
+              style: TextStyle(
+                  fontSize: 17, fontWeight: FontWeight.w700, color: c.text1)),
+          const SizedBox(height: 18),
+          _SheetField(ctrl: _nameCtrl, hint: 'Ad Soyad', icon: Icons.person_outline),
+          const SizedBox(height: 10),
+          _SheetField(ctrl: _phoneCtrl, hint: 'Telefon', icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _pickDate,
+            child: AbsorbPointer(
+              child: _SheetField(ctrl: _birthCtrl, hint: 'Doğum Tarihi (YYYY-AA-GG)',
+                  icon: Icons.cake_outlined),
+            ),
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: const Color(0xFF051929),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+                minimumSize: Size.zero,
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFF051929)))
+                  : const Text('Kaydet',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SheetField extends StatelessWidget {
+  final TextEditingController ctrl;
+  final String hint;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  const _SheetField(
+      {required this.ctrl,
+      required this.hint,
+      required this.icon,
+      this.keyboardType});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Container(
+      decoration: BoxDecoration(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.border),
+      ),
+      child: TextField(
+        controller: ctrl,
+        keyboardType: keyboardType,
+        style: TextStyle(fontSize: 14, color: c.text1),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: hint,
+          hintStyle: TextStyle(fontSize: 13, color: c.text3),
+          prefixIcon: Icon(icon, size: 18, color: c.text3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          isDense: true,
+        ),
       ),
     );
   }

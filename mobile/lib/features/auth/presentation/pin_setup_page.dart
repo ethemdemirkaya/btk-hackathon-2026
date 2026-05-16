@@ -11,7 +11,8 @@ enum _Step { enter, confirm }
 
 class PinSetupPage extends ConsumerStatefulWidget {
   final bool isChange;
-  const PinSetupPage({super.key, this.isChange = false});
+  final bool mandatory;
+  const PinSetupPage({super.key, this.isChange = false, this.mandatory = false});
 
   @override
   ConsumerState<PinSetupPage> createState() => _PinSetupPageState();
@@ -204,7 +205,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
               ),
             ),
 
-            if (!widget.isChange)
+            if (!widget.isChange && !widget.mandatory)
               TextButton(
                 onPressed: _skip,
                 child: Text('Şimdi değil, atla',
