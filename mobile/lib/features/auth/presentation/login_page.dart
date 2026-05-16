@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -386,9 +385,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── Debug: API host chip (only in debug builds) ───────
-                if (kDebugMode)
-                  Center(
+                // ── API host chip — tap to change server IP ───────────
+                Center(
                     child: GestureDetector(
                       onTap: _showApiConfigDialog,
                       child: Container(
