@@ -39,6 +39,26 @@ Color _colorForName(String name) {
   return _catColorPalette[h % _catColorPalette.length];
 }
 
+// ── Predefined categories (used as local fallback) ────────────────────
+class _CatOption {
+  final String name;
+  final IconData icon;
+  const _CatOption(this.name, this.icon);
+}
+
+const _kPredefinedCats = [
+  _CatOption('Giyim', Icons.checkroom_outlined),
+  _CatOption('Market', Icons.local_grocery_store_outlined),
+  _CatOption('Sağlık', Icons.health_and_safety_outlined),
+  _CatOption('Teknoloji', Icons.computer_outlined),
+  _CatOption('Hobi', Icons.sports_esports_outlined),
+  _CatOption('Eğlence', Icons.movie_outlined),
+  _CatOption('Ulaşım', Icons.directions_car_outlined),
+  _CatOption('Yemek', Icons.restaurant_outlined),
+  _CatOption('Fatura', Icons.receipt_outlined),
+  _CatOption('Diğer', Icons.category_outlined),
+];
+
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
 
@@ -107,7 +127,6 @@ class BudgetsPage extends ConsumerWidget {
                       padding:
                           const EdgeInsets.fromLTRB(20, 16, 20, 100),
                       children: [
-                        // Hero card
                         _HeroCard(
                           totalSpent: totalSpent,
                           totalLimit: totalLimit,
@@ -116,14 +135,10 @@ class BudgetsPage extends ConsumerWidget {
                           budgetCount: budgets.length,
                         ),
                         const SizedBox(height: 12),
-
-                        // AI suggest button
                         _AiSuggestButton(
                           onTap: () => _showAiSuggest(context, ref),
                         ),
                         const SizedBox(height: 16),
-
-                        // Budget list
                         ...budgets.map((b) => Padding(
                               padding: const EdgeInsets.only(bottom: 10),
                               child: _BudgetCard(
@@ -132,8 +147,6 @@ class BudgetsPage extends ConsumerWidget {
                                     _showBudgetForm(context, ref, b),
                               ),
                             )),
-
-                        // Dashed add button
                         _DashedAddButton(
                           label: 'Yeni bütçe ekle',
                           onTap: () => _showBudgetForm(context, ref, null),
@@ -152,19 +165,8 @@ class BudgetsPage extends ConsumerWidget {
 
   String _monthLabel() {
     const months = [
-      '',
-      'Ocak',
-      'Şubat',
-      'Mart',
-      'Nisan',
-      'Mayıs',
-      'Haziran',
-      'Temmuz',
-      'Ağustos',
-      'Eylül',
-      'Ekim',
-      'Kasım',
-      'Aralık'
+      '', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
     ];
     final now = DateTime.now();
     return '${months[now.month]} ${now.year}';
@@ -294,8 +296,7 @@ class _HeroCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded,
-                          size: 12, color: c.warning),
+                      Icon(Icons.warning_amber_rounded, size: 12, color: c.warning),
                       const SizedBox(width: 4),
                       Text('$overCount bütçe aşıldı',
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.warning)),
@@ -322,8 +323,7 @@ class _AiSuggestButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: c.card,
           borderRadius: BorderRadius.circular(20),
@@ -337,11 +337,9 @@ class _AiSuggestButton extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.accent.withValues(alpha: 0.15),
-                border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
               ),
-              child: const Icon(Icons.auto_awesome,
-                  size: 18, color: AppColors.accent),
+              child: const Icon(Icons.auto_awesome, size: 18, color: AppColors.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -381,11 +379,7 @@ class _DashedAddButton extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: c.border,
-            style: BorderStyle.solid,
-            width: 1.5,
-          ),
+          border: Border.all(color: c.border, style: BorderStyle.solid, width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -429,10 +423,7 @@ class _ScoreRing extends StatelessWidget {
             children: [
               Text(
                 '${value.clamp(0, 999).toStringAsFixed(0)}%',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: c.text1),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1),
               ),
               Text('kullanıldı',
                   style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: c.text3)),
@@ -518,7 +509,6 @@ class _BudgetCard extends StatelessWidget {
     final catColor = _colorForName(catName);
     final remaining = limit - spent;
 
-    // Progress color: accent < 80%, warning 80-99%, red ≥ 100%
     final progressColor = pct >= 100
         ? c.negative
         : pct >= 80
@@ -538,7 +528,6 @@ class _BudgetCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                // Category bubble
                 Container(
                   width: 42,
                   height: 42,
@@ -549,10 +538,7 @@ class _BudgetCard extends StatelessWidget {
                   child: Center(
                     child: Text(
                       catName.isNotEmpty ? catName[0].toUpperCase() : '?',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: catColor),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: catColor),
                     ),
                   ),
                 ),
@@ -576,20 +562,15 @@ class _BudgetCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Percentage badge
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: progressColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '%${pct.toStringAsFixed(0)}',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: progressColor),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: progressColor),
                   ),
                 ),
               ],
@@ -600,8 +581,7 @@ class _BudgetCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: (pct / 100).clamp(0, 1),
                 backgroundColor: progressColor.withValues(alpha: 0.1),
-                valueColor:
-                    AlwaysStoppedAnimation(progressColor),
+                valueColor: AlwaysStoppedAnimation(progressColor),
                 minHeight: 6,
               ),
             ),
@@ -635,6 +615,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
   bool _loading = true;
   bool _applying = false;
   List<Map<String, dynamic>> _suggestions = [];
+  final Set<int> _selectedIndices = {};
   String? _error;
 
   @override
@@ -645,13 +626,15 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
 
   Future<void> _load() async {
     try {
-      final res =
-          await DioClient.instance.post(ApiEndpoints.budgetsAiSuggest);
+      final res = await DioClient.instance.post(ApiEndpoints.budgetsAiSuggest);
       final data = res.data as Map<String, dynamic>;
+      final suggestions = (data['suggestions'] as List? ?? [])
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
       setState(() {
-        _suggestions = (data['suggestions'] as List? ?? [])
-            .map((e) => e as Map<String, dynamic>)
-            .toList();
+        _suggestions = suggestions;
+        // Select all by default
+        _selectedIndices.addAll(List.generate(suggestions.length, (i) => i));
         _loading = false;
       });
     } on DioException catch (e) {
@@ -663,10 +646,12 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
   }
 
   Future<void> _apply() async {
+    if (_selectedIndices.isEmpty) return;
     setState(() => _applying = true);
     try {
+      final selected = _selectedIndices.map((i) => _suggestions[i]).toList();
       final payload = {
-        'suggestions': _suggestions
+        'suggestions': selected
             .map((s) => {
                   'category_id': s['category_id'],
                   'amount': (s['suggested'] as num?)?.toDouble() ?? 0,
@@ -679,8 +664,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? 'Uygulanamadı.';
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } finally {
       if (mounted) setState(() => _applying = false);
@@ -701,10 +685,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
             margin: const EdgeInsets.symmetric(vertical: 12),
             width: 40,
             height: 4,
-            decoration: BoxDecoration(
-              color: c.border,
-              borderRadius: BorderRadius.circular(2),
-            ),
+            decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(2)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -712,8 +693,30 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
               children: [
                 const Icon(Icons.auto_awesome, color: AppColors.accent),
                 const SizedBox(width: 8),
-                Text('AI Bütçe Önerisi',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
+                Expanded(
+                  child: Text('AI Bütçe Önerisi',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
+                ),
+                if (!_loading && _error == null && _suggestions.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      if (_selectedIndices.length == _suggestions.length) {
+                        _selectedIndices.clear();
+                      } else {
+                        _selectedIndices.addAll(
+                            List.generate(_suggestions.length, (i) => i));
+                      }
+                    }),
+                    child: Text(
+                      _selectedIndices.length == _suggestions.length
+                          ? 'Tümünü kaldır'
+                          : 'Tümünü seç',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accent),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -727,87 +730,106 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(_error!,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text2),
+                              style: TextStyle(fontSize: 14, color: c.text2),
                               textAlign: TextAlign.center),
                         ),
                       )
                     : ListView.builder(
                         controller: ctrl,
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         itemCount: _suggestions.length,
                         itemBuilder: (_, i) {
                           final s = _suggestions[i];
                           final amount =
-                              (s['suggested'] as num?)
-                                      ?.toDouble() ??
-                                  0;
-                          final catName =
-                              s['category_name'] as String? ?? '';
+                              (s['suggested'] as num?)?.toDouble() ?? 0;
+                          final catName = s['category_name'] as String? ?? '';
                           final catColor = _colorForName(catName);
-                          return Container(
-                            margin:
-                                const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: c.card,
-                              borderRadius:
-                                  BorderRadius.circular(16),
-                              border: Border.all(color: c.border),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: catColor
-                                        .withValues(alpha: 0.13),
-                                    borderRadius:
-                                        BorderRadius.circular(8),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      catName.isNotEmpty
-                                          ? catName[0].toUpperCase()
-                                          : '?',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: catColor),
+                          final isSelected = _selectedIndices.contains(i);
+                          return GestureDetector(
+                            onTap: () => setState(() {
+                              if (isSelected) {
+                                _selectedIndices.remove(i);
+                              } else {
+                                _selectedIndices.add(i);
+                              }
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.accent.withValues(alpha: 0.06)
+                                    : c.card,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.accent.withValues(alpha: 0.5)
+                                      : c.border,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: catColor.withValues(alpha: 0.13),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        catName.isNotEmpty
+                                            ? catName[0].toUpperCase()
+                                            : '?',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w700,
+                                            color: catColor),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(catName,
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: c.text1)),
-                                      if ((s['reason'] as String?)
-                                              ?.isNotEmpty ==
-                                          true)
-                                        Text(s['reason'] as String,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(catName,
                                             style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                                color: c.text3)),
-                                    ],
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: c.text1)),
+                                        if ((s['reason'] as String?)
+                                                ?.isNotEmpty ==
+                                            true)
+                                          Text(s['reason'] as String,
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: c.text3)),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                    AppFormatters.currencyCompact(
-                                        amount),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    AppFormatters.currencyCompact(amount),
                                     style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.accent)),
-                              ],
+                                        color: AppColors.accent),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    isSelected
+                                        ? Icons.check_circle_rounded
+                                        : Icons.radio_button_unchecked,
+                                    size: 20,
+                                    color: isSelected
+                                        ? AppColors.accent
+                                        : c.text3,
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -815,15 +837,17 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
           ),
           if (!_loading && _error == null)
             Padding(
-              padding: EdgeInsets.fromLTRB(24, 8, 24,
-                  24 + MediaQuery.of(context).viewInsets.bottom),
+              padding: EdgeInsets.fromLTRB(
+                  24, 8, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _applying ? null : _apply,
+                  onPressed: (_applying || _selectedIndices.isEmpty) ? null : _apply,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
+                    disabledBackgroundColor:
+                        AppColors.accent.withValues(alpha: 0.3),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
@@ -833,10 +857,15 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF051929)))
+                              strokeWidth: 2, color: Color(0xFF051929)))
                       : const Icon(Icons.check),
-                  label: const Text('Tümünü Uygula'),
+                  label: Text(
+                    _selectedIndices.isEmpty
+                        ? 'Kategori Seçin'
+                        : _selectedIndices.length == _suggestions.length
+                            ? 'Tümünü Uygula (${_suggestions.length})'
+                            : '${_selectedIndices.length} Öneriyi Uygula',
+                  ),
                 ),
               ),
             ),
@@ -861,45 +890,72 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
   final _amountCtrl = TextEditingController();
   final _alertCtrl = TextEditingController(text: '80');
   int? _categoryId;
-  String _categoryName = 'Kategori Seçin';
-  List<Map<String, dynamic>> _categories = [];
+  String _categoryName = '';
+  List<Map<String, dynamic>> _apiCategories = [];
   bool _loading = false;
-  bool _loadingCats = true;
 
   bool get _isEdit => widget.existing != null;
+  bool get _hasCategory => _categoryName.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     final e = widget.existing;
     if (e != null) {
-      _amountCtrl.text =
-          (e['amount'] as num?)?.toStringAsFixed(2) ?? '';
-      _alertCtrl.text =
-          (e['alert_threshold'] as num?)?.toString() ?? '80';
+      _amountCtrl.text = (e['amount'] as num?)?.toStringAsFixed(2) ?? '';
+      _alertCtrl.text = (e['alert_threshold'] as num?)?.toString() ?? '80';
       final cat = e['category'] as Map<String, dynamic>?;
       if (cat != null) {
         _categoryId = (cat['id'] as num?)?.toInt();
-        _categoryName = cat['name'] as String? ?? 'Kategori';
+        _categoryName = cat['name'] as String? ?? '';
       }
     }
-    _loadCategories();
+    _loadApiCategories();
   }
 
-  Future<void> _loadCategories() async {
+  Future<void> _loadApiCategories() async {
     try {
       final res = await DioClient.instance
           .get('/categories', queryParameters: {'flat': true});
       final list =
           (res.data as Map<String, dynamic>)['categories'] as List? ?? [];
-      setState(() {
-        _categories =
-            list.map((c) => c as Map<String, dynamic>).toList();
-        _loadingCats = false;
-      });
+      if (mounted) {
+        setState(() {
+          _apiCategories = list.map((c) => c as Map<String, dynamic>).toList();
+        });
+      }
     } catch (_) {
-      setState(() => _loadingCats = false);
+      // API unavailable — predefined categories will be used as fallback
     }
+  }
+
+  // Returns the API-backed category_id if name matches, otherwise null
+  int? _resolveId(String name) {
+    final match = _apiCategories.where(
+      (c) => (c['name'] as String?)?.toLowerCase() == name.toLowerCase(),
+    ).firstOrNull;
+    return match != null ? (match['id'] as num?)?.toInt() : null;
+  }
+
+  void _openCategoryPicker() {
+    final c = context.appColors;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: c.card,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _CategoryPickerSheet(
+        apiCategories: _apiCategories,
+        currentName: _categoryName,
+        onSelect: (id, name) {
+          setState(() {
+            _categoryId = id ?? _resolveId(name);
+            _categoryName = name;
+          });
+        },
+      ),
+    );
   }
 
   @override
@@ -911,37 +967,35 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    if (_categoryId == null) {
+    if (!_hasCategory) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Kategori seçin')));
       return;
     }
     setState(() => _loading = true);
     final now = DateTime.now();
-    final period =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final period = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     try {
-      final payload = {
-        'category_id': _categoryId,
-        'amount':
-            double.parse(_amountCtrl.text.replaceAll(',', '.')),
+      final payload = <String, dynamic>{
+        'amount': double.parse(_amountCtrl.text.replaceAll(',', '.')),
         'alert_threshold': int.tryParse(_alertCtrl.text) ?? 80,
         'period': period,
+        'category_name': _categoryName,
       };
+      if (_categoryId != null) payload['category_id'] = _categoryId;
+
       if (_isEdit) {
         final id = (widget.existing!['id'] as num).toInt();
         await DioClient.instance.put('/budgets/$id', data: payload);
       } else {
-        await DioClient.instance
-            .post(ApiEndpoints.budgets, data: payload);
+        await DioClient.instance.post(ApiEndpoints.budgets, data: payload);
       }
       widget.onSaved();
       if (mounted) Navigator.pop(context);
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? 'Kaydedilemedi.';
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(msg)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -964,53 +1018,90 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
               Text(_isEdit ? 'Bütçe Düzenle' : 'Bütçe Ekle',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               const SizedBox(height: 20),
-              _loadingCats
-                  ? const LinearProgressIndicator(color: AppColors.accent)
-                  : DropdownButtonFormField<int>(
-                      initialValue: _categoryId,
-                      dropdownColor: c.card,
-                      decoration:
-                          const InputDecoration(labelText: 'Kategori'),
-                      hint: Text(_categoryName,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3)),
-                      items: _categories
-                          .map((cat) => DropdownMenuItem<int>(
-                                value: (cat['id'] as num).toInt(),
-                                child: Text(cat['name'] as String),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        setState(() {
-                          _categoryId = v;
-                          _categoryName = (_categories.firstWhere(
-                                  (cat) =>
-                                      (cat['id'] as num).toInt() ==
-                                      v,
-                                  orElse: () => {'name': ''})['name'] as String?) ?? '';
-                        });
-                      },
+
+              // Category selector button
+              GestureDetector(
+                onTap: _openCategoryPicker,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: _hasCategory
+                        ? _colorForName(_categoryName).withValues(alpha: 0.08)
+                        : c.bg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _hasCategory
+                          ? _colorForName(_categoryName).withValues(alpha: 0.5)
+                          : c.border,
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      if (_hasCategory) ...[
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: _colorForName(_categoryName)
+                                .withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              _categoryName[0].toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _colorForName(_categoryName),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                      ] else ...[
+                        Icon(Icons.category_outlined, size: 18, color: c.text3),
+                        const SizedBox(width: 10),
+                      ],
+                      Expanded(
+                        child: Text(
+                          _hasCategory ? _categoryName : 'Kategori Seçin',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: _hasCategory
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: _hasCategory ? c.text1 : c.text3,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 20, color: c.text3),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: _amountCtrl,
                 decoration: const InputDecoration(
                     labelText: 'Aylık Bütçe (₺)',
                     prefixIcon: Icon(Icons.attach_money)),
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
                 ],
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return 'Tutar gerekli';
-                  }
+                  if (v == null || v.trim().isEmpty) return 'Tutar gerekli';
                   final n = double.tryParse(v.replaceAll(',', '.'));
-                  if (n == null || n <= 0) { return 'Geçerli tutar girin'; }
+                  if (n == null || n <= 0) return 'Geçerli tutar girin';
                   return null;
                 },
               ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: _alertCtrl,
                 decoration: const InputDecoration(
@@ -1018,18 +1109,15 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                     prefixIcon: Icon(Icons.notifications_outlined),
                     hintText: '80'),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n < 1 || n > 100) {
-                    return '1-100 arası girin';
-                  }
+                  if (n == null || n < 1 || n > 100) return '1-100 arası girin';
                   return null;
                 },
               ),
               const SizedBox(height: 20),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -1046,8 +1134,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF051929)),
+                              strokeWidth: 2, color: Color(0xFF051929)),
                         )
                       : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
                 ),
@@ -1056,6 +1143,179 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Category Picker Sheet ─────────────────────────────────────────────
+class _CategoryPickerSheet extends StatefulWidget {
+  final List<Map<String, dynamic>> apiCategories;
+  final String currentName;
+  final void Function(int? id, String name) onSelect;
+
+  const _CategoryPickerSheet({
+    required this.apiCategories,
+    required this.currentName,
+    required this.onSelect,
+  });
+
+  @override
+  State<_CategoryPickerSheet> createState() => _CategoryPickerSheetState();
+}
+
+class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
+  bool _showCustomField = false;
+  final _customCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _customCtrl.dispose();
+    super.dispose();
+  }
+
+  int? _idForName(String name) {
+    final match = widget.apiCategories.where(
+      (c) => (c['name'] as String?)?.toLowerCase() == name.toLowerCase(),
+    ).firstOrNull;
+    return match != null ? (match['id'] as num?)?.toInt() : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 36,
+          height: 4,
+          margin: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+              color: c.border, borderRadius: BorderRadius.circular(999)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Kategori Seç',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: c.text1)),
+          ),
+        ),
+        Flexible(
+          child: GridView.builder(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 1.15,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: _kPredefinedCats.length,
+            itemBuilder: (_, i) {
+              final cat = _kPredefinedCats[i];
+              final isSelected = widget.currentName == cat.name ||
+                  (_showCustomField && cat.name == 'Diğer');
+              final catColor = _colorForName(cat.name);
+              return GestureDetector(
+                onTap: () {
+                  if (cat.name == 'Diğer') {
+                    setState(() => _showCustomField = !_showCustomField);
+                  } else {
+                    widget.onSelect(_idForName(cat.name), cat.name);
+                    Navigator.of(context).pop();
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? catColor.withValues(alpha: 0.15)
+                        : c.bg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? catColor : c.border,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(cat.icon,
+                          size: 26,
+                          color: isSelected ? catColor : c.text2),
+                      const SizedBox(height: 6),
+                      Text(
+                        cat.name,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected ? catColor : c.text1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (_showCustomField) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: TextField(
+              controller: _customCtrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Kategori adını yazın…',
+                hintStyle: TextStyle(color: c.text3),
+                filled: true,
+                fillColor: c.bg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: c.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: AppColors.accent, width: 1.5),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final name = _customCtrl.text.trim();
+                  if (name.isNotEmpty) {
+                    widget.onSelect(_idForName(name), name);
+                    Navigator.of(context).pop();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: const Color(0xFF051929),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Seç'),
+              ),
+            ),
+          ),
+        ],
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+      ],
     );
   }
 }
