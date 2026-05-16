@@ -26,7 +26,7 @@ final _periodProvider = StateProvider<int?>((ref) => 1);
 final _transactionListProvider =
     FutureProvider.autoDispose<TransactionPage>((ref) async {
   final api = ref.watch(_transactionsApiProvider);
-  return api.getTransactions(type: null, perPage: 200);
+  return api.getTransactions(type: null, perPage: 50);
 });
 
 const _categoryIcons = <String, IconData>{
@@ -175,7 +175,10 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 period: selectedPeriod,
               ),
               loading: () => const _SummaryBarSkeleton(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, __) => _SummaryBar(
+                items: const [],
+                period: selectedPeriod,
+              ),
             ),
             const SizedBox(height: 10),
             _FilterChipsRow(
