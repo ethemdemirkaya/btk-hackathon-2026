@@ -134,8 +134,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final c = context.appColors;
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     final user = ref.watch(authProvider).user ?? _lastUser;
-    final name = user?.name ?? 'Kullanıcı';
-    final email = user?.email ?? '';
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: c.bg,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.accent),
+        ),
+      );
+    }
+
+    final name = user.name;
+    final email = user.email;
     final initials = name
         .split(RegExp(r'\s+'))
         .where((w) => w.isNotEmpty)
@@ -156,7 +166,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               name: name,
               email: email,
               initials: initials.isEmpty ? 'P' : initials,
-              monthlyIncome: user?.monthlyIncome ?? 0,
+              monthlyIncome: user.monthlyIncome,
             ),
             const SizedBox(height: 16),
             _SectionLabel('FİNANSAL'),
@@ -555,7 +565,7 @@ class _IncomeCard extends StatelessWidget {
 
 // ── Account card ──────────────────────────────────────────────────────
 class _AccountCard extends StatelessWidget {
-  final UserModel? user;
+  final UserModel user;
   final String email;
   const _AccountCard({required this.user, required this.email});
 
@@ -581,17 +591,17 @@ class _AccountCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.tag,
               label: 'Üye No',
-              value: user?.id != null ? '#${user!.id}' : '—',
+              value: '#${user.id}',
             ),
             _InfoRow(
               icon: Icons.phone_outlined,
               label: 'Telefon',
-              value: (user?.phone ?? '').isEmpty ? '—' : user!.phone!,
+              value: (user.phone ?? '').isEmpty ? '—' : user.phone!,
             ),
             _InfoRow(
               icon: Icons.cake_outlined,
               label: 'Doğum tarihi',
-              value: (user?.birthDate ?? '').isEmpty ? '—' : user!.birthDate!,
+              value: (user.birthDate ?? '').isEmpty ? '—' : user.birthDate!,
             ),
           ],
         ),

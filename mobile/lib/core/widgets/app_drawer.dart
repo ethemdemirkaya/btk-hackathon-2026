@@ -322,8 +322,9 @@ class _DrawerItem extends StatelessWidget {
     final isActive = current.startsWith(route);
     return InkWell(
       onTap: () {
+        final router = GoRouter.of(context);
         Navigator.of(context).pop();
-        context.push(route);
+        router.push(route);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
