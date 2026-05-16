@@ -115,10 +115,15 @@ Route::prefix('v1')->group(function () {
         Route::get('health-score', [HealthScoreController::class, 'show']);
 
         // Personal Debts
-        Route::get   ('personal-debts',              [PersonalDebtController::class, 'index']);
-        Route::post  ('personal-debts',              [PersonalDebtController::class, 'store']);
-        Route::patch ('personal-debts/{id}/settle',  [PersonalDebtController::class, 'settle']);
-        Route::delete('personal-debts/{id}',         [PersonalDebtController::class, 'destroy']);
+        Route::get   ('personal-debts',                              [PersonalDebtController::class, 'index']);
+        Route::post  ('personal-debts',                              [PersonalDebtController::class, 'store']);
+        Route::patch ('personal-debts/{id}',                         [PersonalDebtController::class, 'update']);
+        Route::patch ('personal-debts/{id}/settle',                  [PersonalDebtController::class, 'settle']);
+        Route::delete('personal-debts/{id}',                         [PersonalDebtController::class, 'destroy']);
+        // AI borç tespiti
+        Route::get   ('personal-debts/auto-detect',                  [PersonalDebtController::class, 'autoDetect']);
+        Route::post  ('personal-debts/confirm-detected',             [PersonalDebtController::class, 'confirmDetected']);
+        Route::post  ('personal-debts/{id}/mark-repayment',          [PersonalDebtController::class, 'markRepayment']);
 
         // Investments / Portfolio
         Route::get   ('investments/live-rates', [InvestmentController::class, 'liveRates']);

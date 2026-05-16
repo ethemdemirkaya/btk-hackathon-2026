@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             ExchangeRateSeeder::class,
             HealthScoreSeeder::class,
             DemoUsersSeeder::class,
+            PersonalDebtSeeder::class,
         ]);
     }
 }
