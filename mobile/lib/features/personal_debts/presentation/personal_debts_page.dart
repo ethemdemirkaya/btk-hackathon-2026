@@ -429,9 +429,17 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
           onChanged: widget.onDetected,
         ),
       );
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Tespit sırasında hata oluştu.'), backgroundColor: _neg));
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String?;
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(msg ?? 'Tespit sırasında hata oluştu.'),
+        backgroundColor: _neg,
+      ));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Tespit sırasında hata oluştu: $e'),
+        backgroundColor: _neg,
+      ));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -506,7 +514,9 @@ class _DebtTile extends StatelessWidget {
     final autoDetect = _b(debt['is_auto_detected']);
     final color      = isBorrowed ? _neg : _pos;
     final label      = isBorrowed ? 'Borcum var' : 'Alacağım var';
-    final initial    = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial    = name.isNotEmpty
+        ? String.fromCharCode(name.runes.first).toUpperCase()
+        : '?';
 
     return Dismissible(
       key: ValueKey(_i(debt['id'])),
@@ -956,25 +966,44 @@ class _DetectionSheetState extends State<_DetectionSheet> {
       widget.onChanged();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Borç kaydedildi.'), backgroundColor: _pos));
-    } catch (_) {}
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String?;
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(msg ?? 'Borç kaydedilemedi.'), backgroundColor: _neg));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Borç kaydedilemedi.'), backgroundColor: _neg));
+    }
   }
 
   Future<void> _confirmRepayment(int idx) async {
-    final s = widget.repaymentSuggestions[idx];
+    final s      = widget.repaymentSuggestions[idx];
     final debtId = _i(s['debt_id']);
     try {
       final res = await DioClient.instance.post(
         ApiEndpoints.personalDebtMarkRepayment(debtId),
-        data: {'transaction_id': s['transaction_id'], 'repayment_amount': s['repayment_amount']},
+        data: {
+          'transaction_id':   s['transaction_id'],
+          'repayment_amount': s['repayment_amount'],
+        },
       );
       setState(() => _rDismissed.add(idx));
       widget.onChanged();
       final profit = _d(res.data['profit']);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(profit > 0 ? '${_fmt(profit)} kar ile borç kapatıldı!' : 'Borç kapatıldı.'),
+        content: Text(profit > 0
+            ? '${_fmt(profit)} kar ile borç kapatıldı!'
+            : 'Borç kapatıldı.'),
         backgroundColor: profit > 0 ? _pos : _card,
       ));
-    } catch (_) {}
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String?;
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(msg ?? 'Geri ödeme kaydedilemedi.'), backgroundColor: _neg));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Geri ödeme kaydedilemedi.'), backgroundColor: _neg));
+    }
   }
 
   @override
