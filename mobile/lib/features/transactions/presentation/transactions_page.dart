@@ -19,6 +19,7 @@ final _transactionsApiProvider = Provider<TransactionsApi>((ref) {
 final _filterTypeProvider = StateProvider<String?>((ref) => null);
 final _searchQueryProvider = StateProvider<String>((ref) => '');
 final _selectedFilterProvider = StateProvider<String?>((ref) => null);
+final _periodProvider = StateProvider<int?>((ref) => 1);
 
 final _transactionListProvider =
     FutureProvider.autoDispose<TransactionPage>((ref) async {
@@ -105,7 +106,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final asyncData = ref.watch(_transactionListProvider);
     final selectedType = ref.watch(_filterTypeProvider);
     final selectedFilter = ref.watch(_selectedFilterProvider);
+    final selectedPeriod = ref.watch(_periodProvider);
     final query = ref.watch(_searchQueryProvider);
+
+    final filteredCount = asyncData.whenOrNull(
+      data: (page) =>
+          _applyFilters(page.data, query, selectedFilter, selectedPeriod)
+              .length,
+    );
 
     return Scaffold(
       backgroundColor: c.bg,
@@ -114,7 +122,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Header(
-              asyncData: asyncData,
+              filteredCount: filteredCount,
+              selectedPeriod: selectedPeriod,
               searchExpanded: _searchExpanded,
               searchCtrl: _searchCtrl,
               onHamburger: () => shellScaffoldKey.currentState?.openDrawer(),
@@ -134,7 +143,9 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             ),
             const SizedBox(height: 10),
             asyncData.when(
-              data: (page) => _SummaryBar(items: page.data),
+              data: (page) => _SummaryBar(
+                items: _applyPeriodFilter(page.data, selectedPeriod),
+              ),
               loading: () => const _SummaryBarSkeleton(),
               error: (_, __) => const SizedBox.shrink(),
             ),
@@ -151,6 +162,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 ref.read(_filterTypeProvider.notifier).state = null;
               },
             ),
+            const SizedBox(height: 6),
+            _PeriodChipsRow(
+              selectedPeriod: selectedPeriod,
+              onPeriodChanged: (v) =>
+                  ref.read(_periodProvider.notifier).state = v,
+            ),
             const SizedBox(height: 10),
             Expanded(
               child: RefreshIndicator(
@@ -165,8 +182,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                     onRetry: () => ref.invalidate(_transactionListProvider),
                   ),
                   data: (page) {
-                    final filtered =
-                        _applyFilters(page.data, query, selectedFilter);
+                    final filtered = _applyFilters(
+                        page.data, query, selectedFilter, selectedPeriod);
                     if (filtered.isEmpty) {
                       return _EmptyState(
                         onClear: () {
@@ -176,6 +193,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                           ref
                               .read(_selectedFilterProvider.notifier)
                               .state = null;
+                          ref.read(_periodProvider.notifier).state = 1;
                         },
                       );
                     }
@@ -187,28 +205,30 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Yakında eklenecek'),
-            duration: Duration(seconds: 2),
-          ),
-        ),
-        backgroundColor: AppColors.accent,
-        foregroundColor: const Color(0xFF051929),
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 22),
-      ),
     );
+  }
+
+  List<TransactionModel> _applyPeriodFilter(
+      List<TransactionModel> items, int? period) {
+    if (period == null) return items;
+    final now = DateTime.now();
+    int month = now.month - period;
+    int year = now.year;
+    while (month <= 0) {
+      month += 12;
+      year--;
+    }
+    final cutoff = DateTime(year, month, now.day);
+    return items.where((t) => t.postedAt.isAfter(cutoff)).toList();
   }
 
   List<TransactionModel> _applyFilters(
     List<TransactionModel> items,
     String query,
     String? extFilter,
+    int? period,
   ) {
-    var result = items;
+    var result = _applyPeriodFilter(items, period);
     if (query.isNotEmpty) {
       final q = query.toLowerCase();
       result = result.where((t) {
@@ -225,11 +245,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     }
     return result;
   }
-
 }
 
 class _Header extends StatelessWidget {
-  final AsyncValue<TransactionPage> asyncData;
+  final int? filteredCount;
+  final int? selectedPeriod;
   final bool searchExpanded;
   final TextEditingController searchCtrl;
   final VoidCallback onHamburger;
@@ -238,7 +258,8 @@ class _Header extends StatelessWidget {
   final VoidCallback onSearchClear;
 
   const _Header({
-    required this.asyncData,
+    required this.filteredCount,
+    required this.selectedPeriod,
     required this.searchExpanded,
     required this.searchCtrl,
     required this.onHamburger,
@@ -247,18 +268,18 @@ class _Header extends StatelessWidget {
     required this.onSearchClear,
   });
 
-  String _subtitle(AsyncValue<TransactionPage> data) {
-    final now = DateTime.now();
-    const months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-    ];
-    final monthStr = '${months[now.month - 1]} ${now.year}';
-    return data.when(
-      data: (p) => '${p.data.length} işlem · $monthStr',
-      loading: () => monthStr,
-      error: (_, __) => monthStr,
-    );
+  String _subtitle() {
+    final String periodStr;
+    if (selectedPeriod == null) {
+      periodStr = 'Tüm Zamanlar';
+    } else if (selectedPeriod! >= 12) {
+      final years = selectedPeriod! ~/ 12;
+      periodStr = 'Son $years Yıl';
+    } else {
+      periodStr = 'Son $selectedPeriod Ay';
+    }
+    if (filteredCount == null) return periodStr;
+    return '$filteredCount işlem · $periodStr';
   }
 
   @override
@@ -282,7 +303,7 @@ class _Header extends StatelessWidget {
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: c.text1),
                     ),
                     Text(
-                      _subtitle(asyncData),
+                      _subtitle(),
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
                     ),
                   ],
@@ -709,6 +730,90 @@ class _PillChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PeriodChipsRow extends StatelessWidget {
+  final int? selectedPeriod;
+  final ValueChanged<int?> onPeriodChanged;
+
+  const _PeriodChipsRow({
+    required this.selectedPeriod,
+    required this.onPeriodChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    const periods = [
+      (1, '1 Aylık'),
+      (2, '2 Aylık'),
+      (3, '3 Aylık'),
+      (6, '6 Aylık'),
+      (12, '1 Yıllık'),
+      (24, '2 Yıllık'),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_month_outlined, size: 13, color: c.text3),
+          const SizedBox(width: 8),
+          for (int i = 0; i < periods.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            _PeriodChip(
+              label: periods[i].$2,
+              selected: selectedPeriod == periods[i].$1,
+              onTap: () => onPeriodChanged(periods[i].$1),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PeriodChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PeriodChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        height: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent.withValues(alpha: 0.18) : c.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.accent : c.border,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? AppColors.accent : c.text2,
+            ),
+          ),
         ),
       ),
     );
@@ -1263,4 +1368,3 @@ class _AmountDisplay extends StatelessWidget {
     );
   }
 }
-
