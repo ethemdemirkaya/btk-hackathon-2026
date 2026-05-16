@@ -6,6 +6,24 @@ use Illuminate\Support\Facades\DB;
 
 class DebtDetectionService
 {
+    /**
+     * Descriptions that are clearly institutional/bank transactions — never personal debts.
+     * Checked against both detection and repayment matching.
+     */
+    private const INSTITUTIONAL_PATTERNS = [
+        'kredi taksit', 'kredisi taksit', 'taksit ödemesi',
+        'ihtiyaç kredisi', 'konut kredisi', 'taşıt kredisi', 'araç kredisi',
+        'kredi kartı ödemesi', 'kart ödemesi', 'kart borcu',
+        'otomatik ödeme', 'düzenli ödeme', 'otomatik talimat',
+        'fatura ödemesi', 'elektrik faturası', 'doğalgaz faturası',
+        'su faturası', 'internet faturası', 'telefon faturası',
+        'netflix', 'spotify', 'youtube', 'amazon', 'apple',
+        'sigorta', 'kasko', 'aidat', 'apartman aidatı',
+        'maaş ödemesi', 'maaş', 'sgk', 'vergi',
+        'havale masrafı', 'işlem ücreti', 'komisyon',
+        'atm nakit', 'nakit çekim',
+    ];
+
     private const DEBT_KEYWORDS = [
         // Core Turkish
         'borç', 'borc', 'ödünç', 'odunc',
@@ -58,12 +76,24 @@ class DebtDetectionService
         $suggestions = [];
 
         foreach ($transactions as $tx) {
-            $desc = mb_strtolower($tx->description ?? $tx->merchant_name ?? '', 'UTF-8');
+            $rawDesc = $tx->description ?? $tx->merchant_name ?? '';
+            $desc    = mb_strtolower($rawDesc, 'UTF-8');
+
+            // Hard-skip institutional/bank transactions — never personal debts
+            if ($this->hasKeyword($desc, self::INSTITUTIONAL_PATTERNS)) {
+                continue;
+            }
+
+            // Skip if merchant is set (POS/merchant transactions are not personal)
+            if (! empty($tx->merchant_name)) {
+                continue;
+            }
 
             $hasDebt      = $this->hasKeyword($desc, self::DEBT_KEYWORDS);
             $hasRepayment = $this->hasKeyword($desc, self::REPAYMENT_KEYWORDS);
 
-            if (! $hasDebt && ! $hasRepayment) {
+            // Must match at least a debt keyword (repayment-only hint goes to repayment section)
+            if (! $hasDebt) {
                 continue;
             }
 
@@ -73,11 +103,11 @@ class DebtDetectionService
             $suggestions[] = [
                 'transaction_id'    => $tx->id,
                 'transaction_date'  => $tx->posted_at,
-                'description'       => $tx->description ?? $tx->merchant_name,
+                'description'       => $rawDesc,
                 'amount'            => round(abs($txAmount), 2),
                 'currency'          => $tx->currency ?? 'TRY',
                 'direction'         => $direction,
-                'suggested_contact' => $this->extractContactName($tx->description ?? $tx->merchant_name ?? ''),
+                'suggested_contact' => $this->extractContactName($rawDesc),
                 'is_repayment_hint' => $hasRepayment,
             ];
         }
@@ -126,9 +156,20 @@ class DebtDetectionService
         $seen       = [];  // avoid duplicate (debt_id, tx_id) pairs
 
         foreach ($transactions as $tx) {
+            $rawDesc   = $tx->description ?? $tx->merchant_name ?? '';
+            $txDesc    = mb_strtolower($rawDesc, 'UTF-8');
             $txAmount  = (float) $tx->amount;
             $absAmount = abs($txAmount);
-            $txDesc    = mb_strtolower($tx->description ?? '', 'UTF-8');
+
+            // Hard-skip institutional transactions — loan installments, bills, etc.
+            if ($this->hasKeyword($txDesc, self::INSTITUTIONAL_PATTERNS)) {
+                continue;
+            }
+
+            // Skip merchant POS transactions (shops, restaurants, etc.)
+            if (! empty($tx->merchant_name)) {
+                continue;
+            }
 
             foreach ($openDebts as $debt) {
                 $pairKey = $debt->id . '_' . $tx->id;
@@ -146,18 +187,17 @@ class DebtDetectionService
 
                 $debtAmount = (float) $debt->amount;
 
-                // Match if repayment amount is ≥ 80% of debt amount
-                if ($absAmount < $debtAmount * 0.80) {
+                // Amount must be between 80% and 200% of the original debt
+                if ($absAmount < $debtAmount * 0.80 || $absAmount > $debtAmount * 2.0) {
                     continue;
                 }
 
-                // Bonus confidence: description mentions the contact's name or repayment keywords
-                $contactLower    = mb_strtolower($debt->contact_name ?? '', 'UTF-8');
-                $nameMatch       = $contactLower && str_contains($txDesc, $contactLower);
+                // Require EITHER contact name match OR repayment keyword in description
+                $contactLower     = mb_strtolower($debt->contact_name ?? '', 'UTF-8');
+                $nameMatch        = $contactLower !== '' && mb_strpos($txDesc, $contactLower, 0, 'UTF-8') !== false;
                 $repaymentKeyword = $this->hasKeyword($txDesc, self::REPAYMENT_KEYWORDS);
 
-                // Skip if no keyword/name match AND amount is ≥ 3× the debt (likely unrelated)
-                if (! $nameMatch && ! $repaymentKeyword && $absAmount > $debtAmount * 3) {
+                if (! $nameMatch && ! $repaymentKeyword) {
                     continue;
                 }
 
@@ -170,7 +210,7 @@ class DebtDetectionService
                     'debt_direction'   => $debt->direction,
                     'transaction_id'   => $tx->id,
                     'transaction_date' => $tx->posted_at,
-                    'description'      => $tx->description ?? $tx->merchant_name,
+                    'description'      => $rawDesc,
                     'repayment_amount' => $absAmount,
                     'profit'           => $profit,
                 ];
