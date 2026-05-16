@@ -10,6 +10,27 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
+// ── JSON parse helpers (DB facade returns decimals as strings) ────────
+double _d(dynamic v) {
+  if (v == null) return 0.0;
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString()) ?? 0.0;
+}
+
+int _i(dynamic v) {
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString()) ?? 0;
+}
+
+bool _b(dynamic v) {
+  if (v == null) return false;
+  if (v is bool) return v;
+  if (v is int) return v != 0;
+  return v.toString() == '1' || v.toString() == 'true';
+}
+
 // ── Design tokens ────────────────────────────────────────────────────
 const _scaffoldBg = Color(0xFF060D18);
 const _cardBg     = Color(0xFF0D1B2A);
@@ -89,13 +110,8 @@ class PersonalDebtsPage extends ConsumerWidget {
                       );
                     }
 
-                    final iOwe =
-                        (summary?['i_owe'] as num?)?.toDouble() ??
-                            0;
-                    final owedToMe =
-                        (summary?['owed_to_me'] as num?)
-                                ?.toDouble() ??
-                            0;
+                    final iOwe = _d(summary?['i_owe']);
+                    final owedToMe = _d(summary?['owed_to_me']);
 
                     return ListView(
                       padding: const EdgeInsets.fromLTRB(
@@ -134,7 +150,7 @@ class PersonalDebtsPage extends ConsumerWidget {
                               onSettle: () => _settle(
                                   context,
                                   ref,
-                                  (d['id'] as num).toInt()),
+                                  _i(d['id'])),
                               onEdit: () =>
                                   _showForm(context, ref, d),
                             )),
@@ -309,11 +325,11 @@ class _DebtCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isBorrowed = debt['type'] == 'borrowed';
-    final amount = (debt['amount'] as num?)?.toDouble() ?? 0;
+    final amount = _d(debt['amount']);
     final name = debt['counterparty_name'] as String? ?? 'Bilinmiyor';
     final description = debt['description'] as String?;
     final dueDate = debt['due_date'] as String?;
-    final isSettled = debt['is_settled'] as bool? ?? false;
+    final isSettled = _b(debt['is_settled']);
     final color = isBorrowed ? _negative : _positive;
     final label = isBorrowed ? 'Borç' : 'Alacak';
     final avatarLetter =
@@ -514,8 +530,7 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
     final e = widget.existing;
     if (e != null) {
       _nameCtrl.text = e['counterparty_name'] as String? ?? '';
-      _amountCtrl.text =
-          (e['amount'] as num?)?.toStringAsFixed(2) ?? '';
+      _amountCtrl.text = _d(e['amount']).toStringAsFixed(2);
       _descCtrl.text = e['description'] as String? ?? '';
       _type = e['type'] as String? ?? 'borrowed';
       final dd = e['due_date'] as String?;
@@ -557,7 +572,7 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
               _dueDate!.toIso8601String().split('T').first,
       };
       if (_isEdit) {
-        final id = (widget.existing!['id'] as num).toInt();
+        final id = _i(widget.existing!['id']);
         await DioClient.instance
             .put(ApiEndpoints.personalDebt(id), data: payload);
       } else {
@@ -902,7 +917,7 @@ class _DetectionSheetState extends State<_DetectionSheet> {
 
   Future<void> _confirmRepayment(int idx) async {
     final s = widget.repaymentSuggestions[idx];
-    final debtId = (s['debt_id'] as num).toInt();
+    final debtId = _i(s['debt_id']);
     try {
       final res = await DioClient.instance.post(
         ApiEndpoints.personalDebtMarkRepayment(debtId),
@@ -913,7 +928,7 @@ class _DetectionSheetState extends State<_DetectionSheet> {
       );
       setState(() => _dismissedRepayments.add(idx));
       widget.onChanged();
-      final profit = (res.data['profit'] as num?)?.toDouble() ?? 0;
+      final profit = _d(res.data['profit']);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(profit > 0
@@ -1024,7 +1039,7 @@ class _DebtSuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amount = (suggestion['amount'] as num?)?.toDouble() ?? 0;
+    final amount = _d(suggestion['amount']);
     final dir = suggestion['direction'] as String? ?? 'given';
     final isGiven = dir == 'given';
     final color = isGiven ? const Color(0xFF0DD9A0) : const Color(0xFFFF4D6D);
@@ -1126,9 +1141,9 @@ class _RepaymentSuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final debtAmount = (suggestion['debt_amount'] as num?)?.toDouble() ?? 0;
-    final repayAmount = (suggestion['repayment_amount'] as num?)?.toDouble() ?? 0;
-    final profit = (suggestion['profit'] as num?)?.toDouble() ?? 0;
+    final debtAmount = _d(suggestion['debt_amount']);
+    final repayAmount = _d(suggestion['repayment_amount']);
+    final profit = _d(suggestion['profit']);
     final contact = suggestion['debt_contact'] as String? ?? 'Bilinmiyor';
     final desc = suggestion['description'] as String? ?? '';
 
