@@ -1092,9 +1092,17 @@ class _SuggestionCard extends StatelessWidget {
       final desc    = suggestion['description'] as String? ?? '';
       final contact = suggestion['suggested_contact'] as String?;
 
+      final source     = suggestion['source'] as String? ?? 'keyword';
+      final confidence = suggestion['confidence'] as String? ?? 'high';
+      final aiReason   = suggestion['ai_reason'] as String?;
+
       return _cardWrap(color, [
         Row(children: [
           _badge(label, color),
+          if (source == 'ai') ...[
+            const SizedBox(width: 6),
+            _aiBadge(confidence),
+          ],
           const Spacer(),
           Text('₺${amount.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
@@ -1107,6 +1115,15 @@ class _SuggestionCard extends StatelessWidget {
         if (contact != null) ...[
           const SizedBox(height: 4),
           Text('Kişi: $contact', style: const TextStyle(fontSize: 11, color: _text3)),
+        ],
+        if (source == 'ai' && aiReason != null && aiReason.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(children: [
+            const Icon(Icons.auto_awesome, size: 11, color: _purple),
+            const SizedBox(width: 4),
+            Expanded(child: Text(aiReason, maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: _purple))),
+          ]),
         ],
         const SizedBox(height: 12),
         _actionRow(color, 'Atla', 'Borç Ekle', onDismiss, onConfirm),
@@ -1160,6 +1177,24 @@ class _SuggestionCard extends StatelessWidget {
     child: Text(label,
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
   );
+
+  Widget _aiBadge(String confidence) {
+    final color = confidence == 'high' ? _pos : _warn;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+          color: _purple.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(5)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.auto_awesome, size: 9, color: _purple),
+        const SizedBox(width: 3),
+        Text('AI · ${confidence == 'high' ? 'Yüksek' : 'Orta'}',
+            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: _purple)),
+        const SizedBox(width: 3),
+        Container(width: 5, height: 5,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      ]),
+    );
+  }
 
   Widget _amountChip(String label, double val, Color color) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
