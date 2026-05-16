@@ -334,35 +334,53 @@
     .trigger-pill:hover { border-color: #7367F0; color: #7367F0; background: rgba(115,103,240,.06); }
     .trigger-pill i { font-size: 12px; }
 
-    .command-bar {
-      display: flex; align-items: flex-end;
+    /* ── Input composer (Vuexy-aligned) ─────────────────────────────── */
+    .composer-wrap {
       background: var(--bs-secondary-bg);
-      border: 2px solid var(--bs-border-color);
+      border: 1.5px solid var(--bs-border-color);
       border-radius: 16px; overflow: hidden;
       transition: border-color .18s, box-shadow .18s;
     }
-    .command-bar:focus-within {
+    .composer-wrap:focus-within {
       border-color: #7367F0;
       box-shadow: 0 0 0 3px rgba(115,103,240,.12);
     }
-    .command-bar textarea {
-      flex: 1; border: none !important; box-shadow: none !important;
+    .composer-textarea {
+      display: block; width: 100%;
+      border: none !important; outline: none !important; box-shadow: none !important;
       background: transparent !important; resize: none; overflow-y: auto;
-      font-size: .92rem; padding: .8rem 1rem .8rem 1.1rem; line-height: 1.5;
-      max-height: 130px; min-height: 46px; color: var(--bs-body-color);
+      font-size: .92rem; line-height: 1.6; color: var(--bs-body-color);
+      padding: .9rem 1.15rem .55rem;
+      min-height: 46px; max-height: 130px;
     }
-    .command-bar textarea::placeholder { color: var(--bs-secondary-color); }
-    .command-bar textarea:focus { outline: none; }
+    .composer-textarea::placeholder { color: var(--bs-secondary-color); opacity: 1; }
+    .composer-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .32rem .55rem .4rem .75rem;
+      border-top: 1px solid var(--bs-border-color);
+    }
+    .composer-icon-btn {
+      width: 30px; height: 30px; border-radius: 8px;
+      border: none; background: transparent; padding: 0;
+      color: var(--bs-secondary-color);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background .15s, color .15s; font-size: 15px;
+    }
+    .composer-icon-btn:hover:not(:disabled) { background: rgba(115,103,240,.10); color: #7367F0; }
+    .composer-icon-btn:disabled { opacity: .30; cursor: not-allowed; }
+    .char-badge { font-size: .65rem; color: var(--bs-secondary-color); margin-left: .2rem; transition: color .15s; }
+    .char-badge.near-limit { color: #ff9f43; }
     .cmd-send {
-      border-radius: 0 14px 14px 0; padding: .6rem 1.1rem;
-      border: none; cursor: pointer; flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
       background: linear-gradient(135deg, #7367F0 0%, #9180f4 100%);
-      color: #fff; font-size: .82rem; font-weight: 600;
+      color: #fff; border: none; border-radius: 10px;
+      padding: .45rem 1rem .45rem .85rem;
+      font-size: .82rem; font-weight: 600; white-space: nowrap;
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: .35rem;
       transition: opacity .14s, transform .1s;
-      display: flex; align-items: center; gap: .3rem;
     }
-    .cmd-send:hover:not(:disabled) { opacity: .88; transform: scale(1.03); }
-    .cmd-send:disabled { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); cursor: not-allowed; transform: none; }
+    .cmd-send:hover:not(:disabled) { opacity: .88; transform: scale(1.02); }
+    .cmd-send:disabled { background: var(--bs-tertiary-bg); color: var(--bs-secondary-color); cursor: not-allowed; transform: none; }
 
     .chat-bottom-hint {
       font-size: .65rem; color: var(--bs-secondary-color);
@@ -637,13 +655,24 @@
           </span>
         </div>
 
-        <div class="command-bar">
-          <textarea id="cmd-input" rows="1"
+        <div class="composer-wrap">
+          <textarea id="cmd-input" class="composer-textarea" rows="1"
             placeholder="Bir şeyler sor… (örn: hedef koy, bütçe analizi yap)"
             autocomplete="off"></textarea>
-          <button class="cmd-send" id="cmd-send" type="button">
-            <i class="ti tabler-arrow-up" style="font-size:15px;"></i>Gönder
-          </button>
+          <div class="composer-footer">
+            <div class="d-flex align-items-center gap-1">
+              <button class="composer-icon-btn" type="button" title="Dosya ekle" disabled>
+                <i class="ti tabler-paperclip"></i>
+              </button>
+              <button class="composer-icon-btn" type="button" title="Emoji" disabled>
+                <i class="ti tabler-mood-smile"></i>
+              </button>
+              <span id="char-badge" class="char-badge"></span>
+            </div>
+            <button class="cmd-send" id="cmd-send" type="button">
+              <i class="ti tabler-arrow-up" style="font-size:14px;"></i>Gönder
+            </button>
+          </div>
         </div>
         <div class="chat-bottom-hint">
           Enter ile gönder &nbsp;·&nbsp; Shift+Enter yeni satır
@@ -812,12 +841,18 @@
       chatLeft?.classList.toggle('collapsed');
     });
 
-    // ── Auto-resize textarea ──────────────────────────────────────────────
-    const cmdInput = document.getElementById('cmd-input');
+    // ── Auto-resize textarea + char count ────────────────────────────────
+    const cmdInput    = document.getElementById('cmd-input');
+    const charBadgeEl = document.getElementById('char-badge');
     if (cmdInput) {
       cmdInput.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+        const len = this.value.length;
+        if (charBadgeEl) {
+          charBadgeEl.textContent = len > 0 ? len + ' k' : '';
+          charBadgeEl.classList.toggle('near-limit', len > 400);
+        }
       });
     }
 
