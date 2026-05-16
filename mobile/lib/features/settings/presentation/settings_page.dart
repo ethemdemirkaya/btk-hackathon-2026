@@ -8,17 +8,37 @@ import '../../../core/api/dio_client.dart';
 import '../../../core/storage/auth_storage.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/theme_provider.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────
 final _settingsStatsProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-  final res  = await DioClient.instance.get(ApiEndpoints.dashboard);
-  final data = res.data as Map<String, dynamic>;
-  return {
-    'score':      (data['health_score']      as num?)?.toInt() ?? 0,
-    'goal_count': (data['active_goals_count'] as num?)?.toInt()
-                  ?? (data['goals'] as List?)?.length ?? 0,
-    'days':       (data['days_since_joined']  as num?)?.toInt() ?? 0,
-  };
+  final results = await Future.wait([
+    DioClient.instance.get(ApiEndpoints.dashboard),
+    DioClient.instance.get(ApiEndpoints.goals),
+    DioClient.instance.get(ApiEndpoints.authMe),
+  ]);
+  final dash = results[0].data as Map<String, dynamic>;
+  final hsObj = dash['health_score'];
+  final score = hsObj is Map<String, dynamic>
+      ? (hsObj['score'] as num?)?.toInt() ?? 0
+      : (dash['summary']?['health_score'] as num?)?.toInt() ?? 0;
+  final goalsData = results[1].data;
+  int goalCount = 0;
+  if (goalsData is List) {
+    goalCount = goalsData.length;
+  } else if (goalsData is Map<String, dynamic>) {
+    final list = (goalsData['goals'] as List?) ?? (goalsData['data'] as List?) ?? [];
+    goalCount = list.length;
+  }
+  int days = 0;
+  final meData = results[2].data;
+  if (meData is Map<String, dynamic>) {
+    final createdAt = meData['user']?['created_at'] as String?;
+    if (createdAt != null) {
+      try { days = DateTime.now().difference(DateTime.parse(createdAt)).inDays; } catch (_) {}
+    }
+  }
+  return {'score': score, 'goal_count': goalCount, 'days': days};
 });
 
 final _securityProvider = FutureProvider.autoDispose<Map<String, bool>>((ref) async {
@@ -415,6 +435,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               ],
             )),
+
+            // ── Appearance ───────────────────────────────────────────
+            _SectionHeader('Görünüm'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _SettingsCard(children: [
+                _SwitchRow(
+                  icon: Icons.dark_mode_outlined,
+                  label: 'Karanlık mod',
+                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                  onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+                ),
+              ]),
+            ),
 
             // ── Account ───────────────────────────────────────────────
             _SectionHeader('Hesap'),

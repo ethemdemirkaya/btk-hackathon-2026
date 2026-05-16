@@ -254,7 +254,9 @@ class _HeroHeader extends StatelessWidget {
           Row(
             children: [
               GestureDetector(
-                onTap: () => shellScaffoldKey.currentState?.openDrawer(),
+                onTap: () {
+                  if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+                },
                 child: Container(
                   width: 40,
                   height: 40,
@@ -263,7 +265,7 @@ class _HeroHeader extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: _cardBorder),
                   ),
-                  child: const Icon(Icons.menu, size: 18, color: _text2),
+                  child: const Icon(Icons.arrow_back_ios_new, size: 16, color: _text2),
                 ),
               ),
               const Spacer(),
