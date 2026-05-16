@@ -324,7 +324,9 @@ class _DrawerItem extends StatelessWidget {
       onTap: () {
         final router = GoRouter.of(context);
         Navigator.of(context).pop();
-        router.push(route);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          router.push(route);
+        });
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
