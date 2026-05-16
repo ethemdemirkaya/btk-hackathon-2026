@@ -1,9 +1,4 @@
 <div align="center">
-
-<br/>
-
-<img src="docs/screenshots/logo.png" width="88" alt="Paranette Logo"/>
-
 # Paranette
 
 ### Yapay Zeka Destekli Kişisel Finans Asistanı
