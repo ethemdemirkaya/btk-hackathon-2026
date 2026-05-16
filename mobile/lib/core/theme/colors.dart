@@ -112,3 +112,98 @@ class AppColors {
     }
   }
 }
+
+// ── Theme-aware design tokens (registered as ThemeExtension) ──────────────
+class AppColorTokens extends ThemeExtension<AppColorTokens> {
+  final Color bg;
+  final Color card;
+  final Color border;
+  final Color heroBgFrom;
+  final Color heroBgTo;
+  final Color text1;
+  final Color text2;
+  final Color text3;
+  final Color positive;
+  final Color negative;
+  final Color warning;
+
+  const AppColorTokens({
+    required this.bg,
+    required this.card,
+    required this.border,
+    required this.heroBgFrom,
+    required this.heroBgTo,
+    required this.text1,
+    required this.text2,
+    required this.text3,
+    required this.positive,
+    required this.negative,
+    required this.warning,
+  });
+
+  static const dark = AppColorTokens(
+    bg:         Color(0xFF060D18),
+    card:       Color(0xFF0D1B2A),
+    border:     Color(0xFF1A2940),
+    heroBgFrom: Color(0xFF0A1929),
+    heroBgTo:   Color(0xFF0D2240),
+    text1:      Color(0xFFE8F4FF),
+    text2:      Color(0xFF8BA4BC),
+    text3:      Color(0xFF4A6478),
+    positive:   Color(0xFF0DD9A0),
+    negative:   Color(0xFFFF4D6D),
+    warning:    Color(0xFFF59E0B),
+  );
+
+  static const light = AppColorTokens(
+    bg:         Color(0xFFF2F5F9),
+    card:       Color(0xFFFFFFFF),
+    border:     Color(0xFFE2E8F0),
+    heroBgFrom: Color(0xFFE8F0FA),
+    heroBgTo:   Color(0xFFD0E2F5),
+    text1:      Color(0xFF0A2540),
+    text2:      Color(0xFF4A5870),
+    text3:      Color(0xFF8899AA),
+    positive:   Color(0xFF008F66),
+    negative:   Color(0xFFE53E5C),
+    warning:    Color(0xFFD97706),
+  );
+
+  @override
+  AppColorTokens copyWith({
+    Color? bg, Color? card, Color? border,
+    Color? heroBgFrom, Color? heroBgTo,
+    Color? text1, Color? text2, Color? text3,
+    Color? positive, Color? negative, Color? warning,
+  }) => AppColorTokens(
+    bg:         bg         ?? this.bg,
+    card:       card       ?? this.card,
+    border:     border     ?? this.border,
+    heroBgFrom: heroBgFrom ?? this.heroBgFrom,
+    heroBgTo:   heroBgTo   ?? this.heroBgTo,
+    text1:      text1      ?? this.text1,
+    text2:      text2      ?? this.text2,
+    text3:      text3      ?? this.text3,
+    positive:   positive   ?? this.positive,
+    negative:   negative   ?? this.negative,
+    warning:    warning    ?? this.warning,
+  );
+
+  @override
+  AppColorTokens lerp(ThemeExtension<AppColorTokens>? other, double t) {
+    if (other is! AppColorTokens) return this;
+    return AppColorTokens(
+      bg:         Color.lerp(bg,         other.bg,         t)!,
+      card:       Color.lerp(card,       other.card,       t)!,
+      border:     Color.lerp(border,     other.border,     t)!,
+      heroBgFrom: Color.lerp(heroBgFrom, other.heroBgFrom, t)!,
+      heroBgTo:   Color.lerp(heroBgTo,   other.heroBgTo,   t)!,
+      text1:      Color.lerp(text1,      other.text1,      t)!,
+      text2:      Color.lerp(text2,      other.text2,      t)!,
+      text3:      Color.lerp(text3,      other.text3,      t)!,
+      positive:   Color.lerp(positive,   other.positive,   t)!,
+      negative:   Color.lerp(negative,   other.negative,   t)!,
+      warning:    Color.lerp(warning,    other.warning,    t)!,
+    );
+  }
+}

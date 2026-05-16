@@ -3,23 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0); // ignore: unused_element
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B); // ignore: unused_element
 
 final _cardsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -32,18 +23,19 @@ class CardsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_cardsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
             _Header(title: 'Kartlarım', subtitle: 'Kredi kartı özeti'),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_cardsProvider),
                 child: async.when(
@@ -119,6 +111,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -130,12 +123,12 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child:
-                  const Icon(Icons.menu, size: 20, color: _text2),
+                  Icon(Icons.menu, size: 20, color: c.text2),
             ),
           ),
           const SizedBox(width: 12),
@@ -144,10 +137,10 @@ class _Header extends StatelessWidget {
             children: [
               Text(title,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
-                      color: _text1,
+                      color: c.text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: c.text3)),
             ],
           ),
           const Spacer(),
@@ -166,35 +159,36 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final used = limit > 0 ? debt / limit * 100 : 0.0;
     final available = limit - debt;
 
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Toplam borç',
+          Text('Toplam borç',
               style:
-                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
           const SizedBox(height: 6),
           Text(
             AppFormatters.currencyCompact(debt),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.03 * 32,
-                color: _text1),
+                color: c.text1),
           ),
           const SizedBox(height: 4),
           Text(
             '${used.toStringAsFixed(0)}% limit kullanımı · ${AppFormatters.currencyCompact(available)} kullanılabilir',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
           ),
         ],
       ),
@@ -310,8 +304,9 @@ class _PhysicalCard extends StatelessWidget {
     final month    = card['expiry_month']?.toString().padLeft(2, '0') ?? '??';
     final year     = card['expiry_year']?.toString() ?? '??';
 
+    final c          = context.appColors;
     final colors     = _gradientForSlug(bankSlug, colorIndex);
-    final usageColor = pct > 0.8 ? _negative : Colors.white;
+    final usageColor = pct > 0.8 ? c.negative : Colors.white;
 
     return Container(
       decoration: BoxDecoration(
@@ -525,12 +520,13 @@ class _CardStat extends StatelessWidget {
 class _AddCardButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: _cardBorder,
+            color: c.border,
             style: BorderStyle.solid,
             width: 1.5),
       ),
@@ -542,14 +538,14 @@ class _AddCardButton extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _cardBorder, width: 1.5),
+              border: Border.all(color: c.border, width: 1.5),
             ),
-            child: const Icon(Icons.add,
-                size: 20, color: _text3),
+            child: Icon(Icons.add,
+                size: 20, color: c.text3),
           ),
           const SizedBox(width: 12),
-          const Text('Kart ekle',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
+          Text('Kart ekle',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text3)),
         ],
       ),
     );

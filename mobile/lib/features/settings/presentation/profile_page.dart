@@ -4,21 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../shared/providers/theme_provider.dart';
 
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _warning    = Color(0xFFF59E0B);
-const _negative   = Color(0xFFFF4D6D);
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -77,7 +69,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final raw = _incomeCtrl.text.replaceAll(',', '.').replaceAll('.', '').trim();
     final income = double.tryParse(raw);
     if (income == null || income < 0) {
-      _snack('Geçerli bir tutar girin.', _negative);
+      _snack('Geçerli bir tutar girin.', AppColors.negative);
       return;
     }
     setState(() => _savingIncome = true);
@@ -86,34 +78,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ApiEndpoints.authPatchMe(),
         data: {'monthly_income': income},
       );
-      _snack('Aylık gelir güncellendi.', _positive);
+      _snack('Aylık gelir güncellendi.', AppColors.positive);
       await _refreshUser();
     } catch (_) {
-      _snack('Kayıt başarısız. Tekrar deneyin.', _negative);
+      _snack('Kayıt başarısız. Tekrar deneyin.', AppColors.negative);
     } finally {
       if (mounted) setState(() => _savingIncome = false);
     }
   }
 
   Future<void> _logout() async {
+    final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _cardBg,
+        backgroundColor: c.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Çıkış yap?',
-            style: TextStyle(color: _text1, fontWeight: FontWeight.w700)),
-        content: const Text('Hesabınızdan çıkmak istediğinize emin misiniz?',
-            style: TextStyle(color: _text2, fontSize: 13)),
+        title: Text('Çıkış yap?',
+            style: TextStyle(color: c.text1, fontWeight: FontWeight.w700)),
+        content: Text('Hesabınızdan çıkmak istediğinize emin misiniz?',
+            style: TextStyle(color: c.text2, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal', style: TextStyle(color: _text2)),
+            child: Text('İptal', style: TextStyle(color: c.text2)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Çıkış yap',
-                style: TextStyle(color: _negative, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: AppColors.negative, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -139,6 +132,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     final user = ref.watch(authProvider).user ?? _lastUser;
     final name = user?.name ?? 'Kullanıcı';
     final email = user?.email ?? '';
@@ -150,10 +145,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         .join();
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: RefreshIndicator(
-        color: _accent,
-        backgroundColor: _cardBg,
+        color: AppColors.accent,
+        backgroundColor: c.card,
         onRefresh: _refreshUser,
         child: ListView(
           padding: EdgeInsets.zero,
@@ -184,9 +179,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 20),
             _SectionLabel('TERCİHLER'),
             _PreferencesCard(
-              darkMode: _darkMode,
+              darkMode: isDark,
               notifications: _notifs,
-              onDark: (v) => setState(() => _darkMode = v),
+              onDark: (_) => ref.read(themeModeProvider.notifier).toggle(),
               onNotifications: (v) => setState(() => _notifs = v),
             ),
             const SizedBox(height: 20),
@@ -198,11 +193,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: _LogoutButton(onTap: _logout),
             ),
             const SizedBox(height: 14),
-            const Center(
+            Center(
               child: Text('Paranette · v1.0.0',
                   style: TextStyle(
                       fontSize: 11,
-                      color: _text3,
+                      color: c.text3,
                       fontWeight: FontWeight.w500)),
             ),
             const SizedBox(height: 32),
@@ -238,15 +233,16 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
           colors: [Color(0xFF0A1929), Color(0xFF0D2240)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border(bottom: BorderSide(color: _cardBorder)),
+        border: Border(bottom: BorderSide(color: c.border)),
       ),
       child: Column(
         children: [
@@ -261,19 +257,19 @@ class _HeroHeader extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _cardBg.withValues(alpha: 0.6),
+                    color: c.card.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: c.border),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new, size: 16, color: _text2),
+                  child: Icon(Icons.arrow_back_ios_new, size: 16, color: c.text2),
                 ),
               ),
               const Spacer(),
-              const Text('Profilim',
+              Text('Profilim',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _text1)),
+                      color: c.text1)),
               const Spacer(),
               const SizedBox(width: 40),
             ],
@@ -290,7 +286,7 @@ class _HeroHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      _accent.withValues(alpha: 0.7),
+                      AppColors.accent.withValues(alpha: 0.7),
                       const Color(0xFFC99B5B).withValues(alpha: 0.7),
                     ],
                   ),
@@ -301,7 +297,7 @@ class _HeroHeader extends StatelessWidget {
                 height: 92,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _scaffoldBg,
+                  color: c.bg,
                 ),
                 child: Center(
                   child: Text(
@@ -309,7 +305,7 @@ class _HeroHeader extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: _accent,
+                      color: AppColors.accent,
                     ),
                   ),
                 ),
@@ -322,8 +318,8 @@ class _HeroHeader extends StatelessWidget {
                   height: 26,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _positive,
-                    border: Border.all(color: _scaffoldBg, width: 2),
+                    color: AppColors.positive,
+                    border: Border.all(color: c.bg, width: 2),
                   ),
                   child: const Icon(Icons.check, size: 14, color: Colors.white),
                 ),
@@ -333,23 +329,23 @@ class _HeroHeader extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             name,
-            style: const TextStyle(
-                fontSize: 22, fontWeight: FontWeight.w700, color: _text1),
+            style: TextStyle(
+                fontSize: 22, fontWeight: FontWeight.w700, color: c.text1),
           ),
           const SizedBox(height: 4),
           Text(
             email.isEmpty ? '—' : email,
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w400, color: _text3),
+            style: TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w400, color: c.text3),
           ),
           const SizedBox(height: 18),
           // Inline stats
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
-              color: _cardBg.withValues(alpha: 0.7),
+              color: c.card.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -357,13 +353,13 @@ class _HeroHeader extends StatelessWidget {
                 _Stat(
                   label: 'Aylık gelir',
                   value: AppFormatters.currencyCompact(monthlyIncome),
-                  color: _accent,
+                  color: AppColors.accent,
                 ),
-                Container(width: 1, height: 28, color: _cardBorder),
+                Container(width: 1, height: 28, color: c.border),
                 _Stat(
                   label: 'Üyelik',
                   value: 'Premium',
-                  color: _warning,
+                  color: AppColors.warning,
                 ),
               ],
             ),
@@ -383,6 +379,7 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -391,10 +388,10 @@ class _Stat extends StatelessWidget {
                 fontSize: 14, fontWeight: FontWeight.w700, color: color)),
         const SizedBox(height: 2),
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: _text3,
+                color: c.text3,
                 letterSpacing: 0.4)),
       ],
     );
@@ -408,13 +405,14 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
       child: Text(label,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: _text3,
+              color: c.text3,
               letterSpacing: 1.2)),
     );
   }
@@ -433,14 +431,15 @@ class _IncomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,14 +450,14 @@ class _IncomeCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _accent.withValues(alpha: 0.12),
+                    color: AppColors.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.payments_outlined,
-                      color: _accent, size: 18),
+                      color: AppColors.accent, size: 18),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -466,10 +465,10 @@ class _IncomeCard extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _text1)),
-                      SizedBox(height: 2),
+                              color: c.text1)),
+                      const SizedBox(height: 2),
                       Text('Bütçe analizleri için temel',
-                          style: TextStyle(fontSize: 11, color: _text3)),
+                          style: TextStyle(fontSize: 11, color: c.text3)),
                     ],
                   ),
                 ),
@@ -481,16 +480,16 @@ class _IncomeCard extends StatelessWidget {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: _scaffoldBg,
+                      color: c.bg,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _cardBorder),
+                      border: Border.all(color: c.border),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
                         const Text('₺',
                             style: TextStyle(
-                                color: _accent,
+                                color: AppColors.accent,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
@@ -503,17 +502,17 @@ class _IncomeCard extends StatelessWidget {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: _text1),
-                            decoration: const InputDecoration(
+                                color: c.text1),
+                            decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: '0',
-                              hintStyle: TextStyle(color: _text3),
+                              hintStyle: TextStyle(color: c.text3),
                               isDense: true,
                               contentPadding:
-                                  EdgeInsets.symmetric(vertical: 12),
+                                  const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),
@@ -527,7 +526,7 @@ class _IncomeCard extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: saving ? null : onSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _accent,
+                      backgroundColor: AppColors.accent,
                       foregroundColor: const Color(0xFF051929),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
@@ -563,13 +562,14 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -615,13 +615,14 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         border: isFirst
             ? null
-            : const Border(top: BorderSide(color: _cardBorder)),
+            : Border(top: BorderSide(color: c.border)),
       ),
       child: Row(
         children: [
@@ -629,23 +630,23 @@ class _InfoRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: _cardBorder.withValues(alpha: 0.5),
+              color: c.border.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 15, color: _text2),
+            child: Icon(icon, size: 15, color: c.text2),
           ),
           const SizedBox(width: 12),
           Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: _text2)),
+                  color: c.text2)),
           const Spacer(),
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: _text1)),
+                  color: c.text1)),
         ],
       ),
     );
@@ -666,21 +667,22 @@ class _SecurityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
             _SettingRow(
               icon: Icons.lock_outline,
               label: 'Şifre değiştir',
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: _text3),
+              trailing: Icon(Icons.chevron_right,
+                  size: 18, color: c.text3),
               onTap: onChangePassword,
               isFirst: true,
             ),
@@ -690,9 +692,9 @@ class _SecurityCard extends StatelessWidget {
               trailing: Switch(
                 value: biometric,
                 onChanged: onBiometric,
-                activeThumbColor: _accent,
-                inactiveThumbColor: _text3,
-                inactiveTrackColor: _cardBorder,
+                activeThumbColor: AppColors.accent,
+                inactiveThumbColor: c.text3,
+                inactiveTrackColor: c.border,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
@@ -718,13 +720,14 @@ class _PreferencesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -734,9 +737,9 @@ class _PreferencesCard extends StatelessWidget {
               trailing: Switch(
                 value: darkMode,
                 onChanged: onDark,
-                activeThumbColor: _accent,
-                inactiveThumbColor: _text3,
-                inactiveTrackColor: _cardBorder,
+                activeThumbColor: AppColors.accent,
+                inactiveThumbColor: c.text3,
+                inactiveTrackColor: c.border,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               isFirst: true,
@@ -747,19 +750,19 @@ class _PreferencesCard extends StatelessWidget {
               trailing: Switch(
                 value: notifications,
                 onChanged: onNotifications,
-                activeThumbColor: _accent,
-                inactiveThumbColor: _text3,
-                inactiveTrackColor: _cardBorder,
+                activeThumbColor: AppColors.accent,
+                inactiveThumbColor: c.text3,
+                inactiveTrackColor: c.border,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
             _SettingRow(
               icon: Icons.language_outlined,
               label: 'Dil',
-              trailing: const Text('Türkçe',
+              trailing: Text('Türkçe',
                   style: TextStyle(
                       fontSize: 12,
-                      color: _text2,
+                      color: c.text2,
                       fontWeight: FontWeight.w500)),
               onTap: () {},
             ),
@@ -773,36 +776,37 @@ class _PreferencesCard extends StatelessWidget {
 class _AboutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
             _SettingRow(
               icon: Icons.help_outline,
               label: 'Yardım & Destek',
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: _text3),
+              trailing: Icon(Icons.chevron_right,
+                  size: 18, color: c.text3),
               onTap: () {},
               isFirst: true,
             ),
             _SettingRow(
               icon: Icons.privacy_tip_outlined,
               label: 'Gizlilik politikası',
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: _text3),
+              trailing: Icon(Icons.chevron_right,
+                  size: 18, color: c.text3),
               onTap: () {},
             ),
             _SettingRow(
               icon: Icons.description_outlined,
               label: 'Kullanım koşulları',
-              trailing: const Icon(Icons.chevron_right,
-                  size: 18, color: _text3),
+              trailing: Icon(Icons.chevron_right,
+                  size: 18, color: c.text3),
               onTap: () {},
             ),
           ],
@@ -829,6 +833,7 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -837,7 +842,7 @@ class _SettingRow extends StatelessWidget {
         decoration: BoxDecoration(
           border: isFirst
               ? null
-              : const Border(top: BorderSide(color: _cardBorder)),
+              : Border(top: BorderSide(color: c.border)),
         ),
         child: Row(
           children: [
@@ -845,18 +850,18 @@ class _SettingRow extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: _cardBorder.withValues(alpha: 0.5),
+                color: c.border.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 16, color: _text2),
+              child: Icon(icon, size: 16, color: c.text2),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: _text1)),
+                      color: c.text1)),
             ),
             trailing,
           ],
@@ -879,8 +884,8 @@ class _LogoutButton extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: _negative,
-          side: BorderSide(color: _negative.withValues(alpha: 0.4)),
+          foregroundColor: AppColors.negative,
+          side: BorderSide(color: AppColors.negative.withValues(alpha: 0.4)),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
         ),
@@ -965,12 +970,13 @@ class _PasswordSheetState extends State<_PasswordSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(20, 18, 20, 22 + bottom),
-      decoration: const BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -982,16 +988,16 @@ class _PasswordSheetState extends State<_PasswordSheet> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 18),
               decoration: BoxDecoration(
-                color: _cardBorder,
+                color: c.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const Text('Şifre Değiştir',
+          Text('Şifre Değiştir',
               style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: _text1)),
+                  color: c.text1)),
           const SizedBox(height: 18),
           _PwField(
             controller: _currentCtrl,
@@ -1020,7 +1026,7 @@ class _PasswordSheetState extends State<_PasswordSheet> {
             child: ElevatedButton(
               onPressed: _saving ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
+                backgroundColor: AppColors.accent,
                 foregroundColor: const Color(0xFF051929),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
@@ -1058,20 +1064,21 @@ class _PwField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       decoration: BoxDecoration(
-        color: _scaffoldBg,
+        color: c.bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: TextField(
         controller: controller,
         obscureText: !show,
-        style: const TextStyle(fontSize: 14, color: _text1),
+        style: TextStyle(fontSize: 14, color: c.text1),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: label,
-          hintStyle: const TextStyle(fontSize: 13, color: _text3),
+          hintStyle: TextStyle(fontSize: 13, color: c.text3),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           isDense: true,
@@ -1080,7 +1087,7 @@ class _PwField extends StatelessWidget {
             child: Icon(
               show ? Icons.visibility_off_outlined : Icons.visibility_outlined,
               size: 18,
-              color: _text3,
+              color: c.text3,
             ),
           ),
         ),

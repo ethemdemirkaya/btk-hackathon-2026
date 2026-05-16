@@ -9,6 +9,8 @@ import '../../../core/storage/auth_storage.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
+import '../../../core/theme/context_extensions.dart';
+import '../../../core/theme/colors.dart';
 
 // ── Providers ─────────────────────────────────────────────────────────
 final _settingsStatsProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -47,17 +49,6 @@ final _securityProvider = FutureProvider.autoDispose<Map<String, bool>>((ref) as
   final notifs   = await AuthStorage.isNotificationsEnabled();
   return {'hasPin': hasPin, 'biometric': biometric, 'notifs': notifs};
 });
-
-// ── Design tokens ──────────────────────────────────────────────────────
-const _bg     = Color(0xFF060D18);
-const _card   = Color(0xFF0D1B2A);
-const _border = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1  = Color(0xFFE8F4FF);
-const _text2  = Color(0xFF8BA4BC);
-const _text3  = Color(0xFF4A6478);
-const _neg    = Color(0xFFFF4D6D);
-const _pos    = Color(0xFF0DD9A0);
 
 const _quickActions = [
   (icon: Icons.receipt_long_outlined,   label: 'Fiş çek',   color: Color(0xFF00D4FF), route: '/receipts'),
@@ -153,9 +144,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showPinOptions() {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
-      backgroundColor: _card,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => Padding(
@@ -164,10 +156,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(width: 36, height: 4,
-                decoration: BoxDecoration(color: _border, borderRadius: BorderRadius.circular(2))),
+                decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
-            const Text('PIN Ayarları',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1)),
+            Text('PIN Ayarları',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c.text1)),
             const SizedBox(height: 20),
             _BottomSheetRow(
               icon: Icons.refresh_outlined,
@@ -198,10 +190,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   // ── Password change ────────────────────────────────────────────────
   void _changePassword() {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _card,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => _ChangePasswordSheet(
@@ -212,23 +205,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   // ── Logout ─────────────────────────────────────────────────────────
   Future<void> _logout() async {
+    final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _card,
+        backgroundColor: c.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Çıkış Yap',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
-        content: const Text('Hesabınızdan çıkmak istiyor musunuz?',
-            style: TextStyle(fontSize: 14, color: _text2)),
+        title: Text('Çıkış Yap',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
+        content: Text('Hesabınızdan çıkmak istiyor musunuz?',
+            style: TextStyle(fontSize: 14, color: c.text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('İptal', style: TextStyle(color: _text2))),
+              child: Text('İptal', style: TextStyle(color: c.text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: _neg,
+                backgroundColor: c.negative,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: const Text('Çıkış Yap',
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -246,15 +240,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _snack(String msg, {required bool isError}) {
+    final c = context.appColors;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? _neg : _pos,
+      backgroundColor: isError ? c.negative : c.positive,
       behavior: SnackBarBehavior.floating,
     ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final user    = ref.watch(authProvider).user;
     final name    = user?.name ?? 'Kullanıcı';
     final email   = user?.email ?? '';
@@ -263,7 +259,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '').join();
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 48),
@@ -278,7 +274,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       colors: [Color(0xFF0D1B2A), Color(0xFF0A1929)],
                       begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _border),
+                  border: Border.all(color: c.border),
                 ),
                 child: Row(
                   children: [
@@ -299,18 +295,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name, style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w700, color: _text1)),
+                        Text(name, style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w700, color: c.text1)),
                         const SizedBox(height: 2),
-                        Text(email, style: const TextStyle(
-                            fontSize: 11, color: _text3)),
+                        Text(email, style: TextStyle(
+                            fontSize: 11, color: c.text3)),
                         const SizedBox(height: 5),
                         RichText(text: TextSpan(
-                          style: const TextStyle(fontSize: 11, color: _text3),
+                          style: TextStyle(fontSize: 11, color: c.text3),
                           children: [
                             const TextSpan(text: 'Gelir: '),
                             TextSpan(text: AppFormatters.currencyCompact(income),
-                                style: const TextStyle(color: _text1, fontWeight: FontWeight.w600)),
+                                style: TextStyle(color: c.text1, fontWeight: FontWeight.w600)),
                           ],
                         )),
                       ],
@@ -320,9 +316,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       child: Container(
                         width: 36, height: 36,
                         decoration: BoxDecoration(
-                            color: _bg, borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _border)),
-                        child: const Icon(Icons.edit_outlined, size: 16, color: _text2),
+                            color: c.bg, borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: c.border)),
+                        child: Icon(Icons.edit_outlined, size: 16, color: c.text2),
                       ),
                     ),
                   ],
@@ -336,11 +332,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: ref.watch(_settingsStatsProvider).when(
                 loading: () => Row(children: List.generate(3, (_) => Expanded(
                   child: Container(margin: const EdgeInsets.only(right: 8), height: 60,
-                      decoration: BoxDecoration(color: _card,
-                          borderRadius: BorderRadius.circular(16), border: Border.all(color: _border))),
+                      decoration: BoxDecoration(color: c.card,
+                          borderRadius: BorderRadius.circular(16), border: Border.all(color: c.border))),
                 ))),
-                error: (_, __) => _statsRow('—', '—', '—'),
-                data: (s) => _statsRow(s['score'].toString(), s['goal_count'].toString(), s['days'].toString()),
+                error: (_, __) => _statsRow('—', '—', '—', c),
+                data: (s) => _statsRow(s['score'].toString(), s['goal_count'].toString(), s['days'].toString(), c),
               ),
             ),
 
@@ -360,9 +356,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     child: Container(
                       width: 88,
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                      decoration: BoxDecoration(color: _card,
+                      decoration: BoxDecoration(color: c.card,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: _border)),
+                          border: Border.all(color: c.border)),
                       child: Column(children: [
                         Container(width: 36, height: 36,
                           decoration: BoxDecoration(
@@ -371,7 +367,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                           child: Icon(a.icon, size: 18, color: a.color)),
                         const SizedBox(height: 8),
                         Text(a.label, textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 11, color: _text2)),
+                            style: TextStyle(fontSize: 11, color: c.text2)),
                       ]),
                     ),
                   );
@@ -384,7 +380,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ref.watch(_securityProvider).when(
-                loading: () => _cardSkeleton(height: 140),
+                loading: () => _cardSkeleton(height: 140, c: c),
                 error: (_, __) => const SizedBox(),
                 data: (sec) => _SettingsCard(children: [
                   _SwitchRow(
@@ -406,10 +402,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         ? Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                                color: _pos.withValues(alpha: 0.12),
+                                color: c.positive.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6)),
-                            child: const Text('Aktif',
-                                style: TextStyle(fontSize: 10, color: _pos, fontWeight: FontWeight.w600)))
+                            child: Text('Aktif',
+                                style: TextStyle(fontSize: 10, color: c.positive, fontWeight: FontWeight.w600)))
                         : null,
                     onTap: () => _onPinTap(sec['hasPin'] ?? false),
                   ),
@@ -474,7 +470,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               padding: const EdgeInsets.only(top: 24),
               child: Center(
                 child: Text('Paranette v1.2 · TEKNOFEST 2026',
-                    style: TextStyle(fontSize: 10, color: _text3.withValues(alpha: 0.6))),
+                    style: TextStyle(fontSize: 10, color: c.text3.withValues(alpha: 0.6))),
               ),
             ),
           ],
@@ -483,21 +479,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  Widget _statsRow(String score, String goals, String days) {
+  Widget _statsRow(String score, String goals, String days, AppColorTokens c) {
     return Row(children: [
-      Expanded(child: _StatChip(value: score, label: 'SKOR', color: _accent)),
+      Expanded(child: _StatChip(value: score, label: 'SKOR', color: AppColors.accent)),
       const SizedBox(width: 8),
-      Expanded(child: _StatChip(value: goals, label: 'HEDEF', color: _text1)),
+      Expanded(child: _StatChip(value: goals, label: 'HEDEF', color: c.text1)),
       const SizedBox(width: 8),
-      Expanded(child: _StatChip(value: days, label: 'GÜN', color: _text1)),
+      Expanded(child: _StatChip(value: days, label: 'GÜN', color: c.text1)),
     ]);
   }
 
-  Widget _cardSkeleton({required double height}) => Container(
+  Widget _cardSkeleton({required double height, required AppColorTokens c}) => Container(
     height: height,
     decoration: BoxDecoration(
-        color: _card, borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border)),
+        color: c.card, borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.border)),
   );
 }
 
@@ -556,32 +552,34 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   }
 
   void _snack(String msg, {required bool isError}) {
+    final c = context.appColors;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? const Color(0xFFFF4D6D) : const Color(0xFF0DD9A0),
+      backgroundColor: isError ? c.negative : c.positive,
     ));
   }
 
-  InputDecoration _deco(String label, {required bool obscure, required VoidCallback onToggle}) =>
+  InputDecoration _deco(String label, {required bool obscure, required VoidCallback onToggle, required AppColorTokens c}) =>
       InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: _text3, fontSize: 13),
-        filled: true, fillColor: _bg,
+        labelStyle: TextStyle(color: c.text3, fontSize: 13),
+        filled: true, fillColor: c.bg,
         suffixIcon: IconButton(
           icon: Icon(obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              size: 18, color: _text3),
+              size: 18, color: c.text3),
           onPressed: onToggle,
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _border)),
+            borderSide: BorderSide(color: c.border)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _border)),
+            borderSide: BorderSide(color: c.border)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _accent, width: 1.5)),
+            borderSide: const BorderSide(color: AppColors.accent, width: 1.5)),
       );
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + bottom),
@@ -589,32 +587,32 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 36, height: 4,
-              decoration: BoxDecoration(color: _border, borderRadius: BorderRadius.circular(2))),
+              decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
-          const Text('Şifre Değiştir',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _text1)),
+          Text('Şifre Değiştir',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: c.text1)),
           const SizedBox(height: 20),
           TextField(
             controller: _currentCtrl,
             obscureText: _obscure1,
-            style: const TextStyle(color: _text1, fontSize: 14),
-            decoration: _deco('Mevcut Şifre',
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: _deco('Mevcut Şifre', c: c,
                 obscure: _obscure1, onToggle: () => setState(() => _obscure1 = !_obscure1)),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _newCtrl,
             obscureText: _obscure2,
-            style: const TextStyle(color: _text1, fontSize: 14),
-            decoration: _deco('Yeni Şifre',
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: _deco('Yeni Şifre', c: c,
                 obscure: _obscure2, onToggle: () => setState(() => _obscure2 = !_obscure2)),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _confirmCtrl,
             obscureText: _obscure3,
-            style: const TextStyle(color: _text1, fontSize: 14),
-            decoration: _deco('Yeni Şifre (Tekrar)',
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: _deco('Yeni Şifre (Tekrar)', c: c,
                 obscure: _obscure3, onToggle: () => setState(() => _obscure3 = !_obscure3)),
           ),
           const SizedBox(height: 20),
@@ -623,7 +621,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
             child: ElevatedButton(
               onPressed: _loading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent, foregroundColor: const Color(0xFF051929),
+                backgroundColor: AppColors.accent, foregroundColor: const Color(0xFF051929),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -644,24 +642,30 @@ class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader(this.title);
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(22, 24, 20, 10),
-    child: Text(title,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-            color: _text3, letterSpacing: 0.6)),
-  );
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 24, 20, 10),
+      child: Text(title,
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+              color: c.text3, letterSpacing: 0.6)),
+    );
+  }
 }
 
 class _SettingsCard extends StatelessWidget {
   final List<Widget> children;
   const _SettingsCard({required this.children});
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-        color: _card, borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border)),
-    child: Column(children: children),
-  );
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Container(
+      decoration: BoxDecoration(
+          color: c.card, borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: c.border)),
+      child: Column(children: children),
+    );
+  }
 }
 
 class _TileRow extends StatelessWidget {
@@ -679,35 +683,36 @@ class _TileRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: _border))),
+        decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: c.border))),
         child: Row(children: [
           Container(
             width: 34, height: 34,
             decoration: BoxDecoration(
-              color: danger ? _neg.withValues(alpha: 0.1) : _bg,
+              color: danger ? c.negative.withValues(alpha: 0.1) : c.bg,
               borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: _border),
+              border: Border.all(color: c.border),
             ),
-            child: Icon(icon, size: 15, color: danger ? _neg : _text2),
+            child: Icon(icon, size: 15, color: danger ? c.negative : c.text2),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
-                  color: danger ? _neg : _text1)),
+                  color: danger ? c.negative : c.text1)),
               if (subtitle != null)
-                Text(subtitle!, style: const TextStyle(fontSize: 11, color: _text3)),
+                Text(subtitle!, style: TextStyle(fontSize: 11, color: c.text3)),
             ],
           )),
           if (trailing != null) ...[trailing!, const SizedBox(width: 4)],
           Icon(Icons.chevron_right, size: 14,
-              color: danger ? _neg.withValues(alpha: 0.5) : _text3),
+              color: danger ? c.negative.withValues(alpha: 0.5) : c.text3),
         ]),
       ),
     );
@@ -724,27 +729,28 @@ class _SwitchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: _border))),
+      decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: c.border))),
       child: Row(children: [
         Container(
           width: 34, height: 34,
-          decoration: BoxDecoration(color: _bg,
-              borderRadius: BorderRadius.circular(9), border: Border.all(color: _border)),
-          child: Icon(icon, size: 15, color: _text2),
+          decoration: BoxDecoration(color: c.bg,
+              borderRadius: BorderRadius.circular(9), border: Border.all(color: c.border)),
+          child: Icon(icon, size: 15, color: c.text2),
         ),
         const SizedBox(width: 12),
         Expanded(child: Text(label,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1))),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text1))),
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: _accent,
-          activeTrackColor: _accent.withValues(alpha: 0.25),
-          inactiveThumbColor: _text3,
-          inactiveTrackColor: _border,
+          activeColor: AppColors.accent,
+          activeTrackColor: AppColors.accent.withValues(alpha: 0.25),
+          inactiveThumbColor: c.text3,
+          inactiveTrackColor: c.border,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ]),
@@ -758,17 +764,20 @@ class _StatChip extends StatelessWidget {
   const _StatChip({required this.value, required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    decoration: BoxDecoration(color: _card,
-        borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)),
-    child: Column(children: [
-      Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
-      const SizedBox(height: 3),
-      Text(label, style: const TextStyle(
-          fontSize: 9, fontWeight: FontWeight.w600, color: _text3, letterSpacing: 0.8)),
-    ]),
-  );
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(color: c.card,
+          borderRadius: BorderRadius.circular(16), border: Border.all(color: c.border)),
+      child: Column(children: [
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color)),
+        const SizedBox(height: 3),
+        Text(label, style: TextStyle(
+            fontSize: 9, fontWeight: FontWeight.w600, color: c.text3, letterSpacing: 0.8)),
+      ]),
+    );
+  }
 }
 
 class _BottomSheetRow extends StatelessWidget {
@@ -780,11 +789,14 @@ class _BottomSheetRow extends StatelessWidget {
       this.danger = false, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon, color: danger ? _neg : _text2, size: 20),
-    title: Text(label, style: TextStyle(
-        fontSize: 14, color: danger ? _neg : _text1, fontWeight: FontWeight.w500)),
-    onTap: onTap,
-    contentPadding: EdgeInsets.zero,
-  );
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return ListTile(
+      leading: Icon(icon, color: danger ? c.negative : c.text2, size: 20),
+      title: Text(label, style: TextStyle(
+          fontSize: 14, color: danger ? c.negative : c.text1, fontWeight: FontWeight.w500)),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
 }

@@ -3,23 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D); // ignore: unused_element
-const _warning    = Color(0xFFF59E0B); // ignore: unused_element
 
 final _loansProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -54,10 +45,11 @@ class LoansPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_loansProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -65,8 +57,8 @@ class LoansPage extends ConsumerWidget {
                 title: 'Krediler', subtitle: 'Kredi takibi'),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_loansProvider),
                 child: async.when(
@@ -156,6 +148,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -167,12 +160,12 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child:
-                  const Icon(Icons.menu, size: 20, color: _text2),
+                  Icon(Icons.menu, size: 20, color: c.text2),
             ),
           ),
           const SizedBox(width: 12),
@@ -181,10 +174,10 @@ class _Header extends StatelessWidget {
             children: [
               Text(title,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
-                      color: _text1,
+                      color: c.text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: c.text3)),
             ],
           ),
           const Spacer(),
@@ -208,27 +201,28 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Toplam kredi borcu',
+          Text('Toplam kredi borcu',
               style:
-                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
           const SizedBox(height: 6),
           Text(
             AppFormatters.currencyCompact(totalBalance),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.03 * 34,
-                color: _text1),
+                color: c.text1),
           ),
           const SizedBox(height: 10),
           Row(
@@ -238,23 +232,23 @@ class _HeroCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _accent.withValues(alpha: 0.12),
+                  color: AppColors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: _accent.withValues(alpha: 0.25)),
+                      color: AppColors.accent.withValues(alpha: 0.25)),
                 ),
                 child: Text(
                   '$loanCount aktif kredi',
                   style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: _accent),
+                      color: AppColors.accent),
                 ),
               ),
               const SizedBox(width: 10),
               Text(
                 '30 günde ${AppFormatters.currencyCompact(monthlyTotal)} taksit',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
               ),
             ],
           ),
@@ -271,6 +265,7 @@ class _LoanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final type = loan['type'] as String? ?? 'personal';
     final label = _loanTypeMap[type] ?? type;
     final balance =
@@ -300,9 +295,9 @@ class _LoanCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,34 +334,34 @@ class _LoanCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(bankName.isNotEmpty ? bankName : label,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _text1)),
+                                color: c.text1)),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color:
-                                _cardBorder.withValues(alpha: 0.5),
+                                c.border.withValues(alpha: 0.5),
                             borderRadius:
                                 BorderRadius.circular(6),
                           ),
                           child: Text(label,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
-                                  color: _text3)),
+                                  color: c.text3)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text('%${rate.toStringAsFixed(1)} faiz',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: _text3)),
+                            color: c.text3)),
                   ],
                 ),
               ),
@@ -377,16 +372,16 @@ class _LoanCard extends StatelessWidget {
           // Outstanding amount (large, bold)
           Text(
             AppFormatters.currencyCompact(balance),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.02 * 26,
-                color: _text1),
+                color: c.text1),
           ),
           const SizedBox(height: 4),
           Text(
             '$remaining taksit kaldı · Aylık ${AppFormatters.currencyCompact(nextAmount)}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
           ),
           const SizedBox(height: 14),
 
@@ -396,9 +391,9 @@ class _LoanCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               backgroundColor:
-                  _positive.withValues(alpha: 0.1),
+                  c.positive.withValues(alpha: 0.1),
               valueColor:
-                  const AlwaysStoppedAnimation(_positive),
+                  AlwaysStoppedAnimation(c.positive),
               minHeight: 6,
             ),
           ),
@@ -409,17 +404,17 @@ class _LoanCard extends StatelessWidget {
             children: [
               Text(
                 '%${(progress * 100).toStringAsFixed(0)} ödendi',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: _positive),
+                    color: c.positive),
               ),
               Text(
                 '$total taksit',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: _text3),
+                    color: c.text3),
               ),
             ],
           ),
@@ -431,9 +426,9 @@ class _LoanCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: _scaffoldBg,
+                color: c.bg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child: Row(
                 mainAxisAlignment:
@@ -443,30 +438,30 @@ class _LoanCard extends StatelessWidget {
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
                     children: [
-                      const Text('SONRAKI TAKSİT',
+                      Text('SONRAKI TAKSİT',
                           style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: _text3,
+                              color: c.text3,
                               letterSpacing: 0.8)),
                       const SizedBox(height: 3),
                       Text(
                         nextDate != null
                             ? AppFormatters.dateFromIso(nextDate)
                             : '—',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: _text1),
+                            color: c.text1),
                       ),
                     ],
                   ),
                   Text(
                     AppFormatters.currencyCompact(nextAmount),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: _text1),
+                        color: c.text1),
                   ),
                 ],
               ),
@@ -490,8 +485,8 @@ class _LoanCard extends StatelessWidget {
                 ghost: true,
               ),
               const Spacer(),
-              const Icon(Icons.chevron_right,
-                  size: 16, color: _text3),
+              Icon(Icons.chevron_right,
+                  size: 16, color: c.text3),
             ],
           ),
         ],
@@ -515,30 +510,31 @@ class _ActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
             horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: ghost ? Colors.transparent : _cardBorder,
+          color: ghost ? Colors.transparent : c.border,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
               color:
-                  ghost ? _cardBorder : Colors.transparent),
+                  ghost ? c.border : Colors.transparent),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon,
                 size: 13,
-                color: ghost ? _text3 : _text2),
+                color: ghost ? c.text3 : c.text2),
             const SizedBox(width: 4),
             Text(label,
                 style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: ghost ? _text3 : _text2)),
+                    color: ghost ? c.text3 : c.text2)),
           ],
         ),
       ),
@@ -550,6 +546,7 @@ class _ActionBtn extends StatelessWidget {
 class _DashedAddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: () {},
       child: Container(
@@ -557,7 +554,7 @@ class _DashedAddButton extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           border: Border.all(
-              color: _cardBorder,
+              color: c.border,
               width: 1.5,
               style: BorderStyle.solid),
           borderRadius: BorderRadius.circular(20),
@@ -565,13 +562,13 @@ class _DashedAddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 18, color: _text3),
+            Icon(Icons.add, size: 18, color: c.text3),
             const SizedBox(width: 8),
-            const Text('Yeni kredi ekle',
+            Text('Yeni kredi ekle',
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: _text3)),
+                    color: c.text3)),
           ],
         ),
       ),

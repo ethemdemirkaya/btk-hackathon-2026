@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -13,33 +15,20 @@ import '../../../shared/providers/auth_provider.dart';
 import '../domain/dashboard_models.dart';
 import '../domain/dashboard_repository.dart';
 
-// ── Design tokens ──────────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
-const _heroBgFrom = Color(0xFF0A1929);
-const _heroBgTo   = Color(0xFF0D2240);
-
 // ── Dashboard page ─────────────────────────────────────────────────────────
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final dashboard = ref.watch(dashboardProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: RefreshIndicator(
-        color: _accent,
-        backgroundColor: _cardBg,
+        color: AppColors.accent,
+        backgroundColor: c.card,
         onRefresh: () async => ref.invalidate(dashboardProvider),
         child: CustomScrollView(
           slivers: [
@@ -88,6 +77,7 @@ class _DashboardSkeleton extends StatelessWidget {
 class _GreetingHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final user = ref.watch(authProvider).user;
     final hour = DateTime.now().hour;
     final greeting =
@@ -120,11 +110,11 @@ class _GreetingHeader extends ConsumerWidget {
               children: [
                 Text(
                   greeting,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                 ),
                 Text(
                   firstName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c.text1),
                 ),
               ],
             ),
@@ -172,17 +162,18 @@ class _HeaderIconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
-        child: Icon(icon, size: 18, color: _text2),
+        child: Icon(icon, size: 18, color: c.text2),
       ),
     );
   }
@@ -322,18 +313,19 @@ class _HeroBalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         height: 180,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_heroBgFrom, _heroBgTo],
+          gradient: LinearGradient(
+            colors: [c.heroBgFrom, c.heroBgTo],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Stack(
           children: [
@@ -346,7 +338,7 @@ class _HeroBalanceCard extends StatelessWidget {
                 width: 3,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [_accent, Color(0xFF0066FF)],
+                    colors: [AppColors.accent, Color(0xFF0066FF)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -367,7 +359,7 @@ class _HeroBalanceCard extends StatelessWidget {
                     children: [
                       Text(
                         'Toplam Varlık',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2, letterSpacing: 0.6),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text2, letterSpacing: 0.6),
                       ),
                       GestureDetector(
                         onTap: onToggleHide,
@@ -376,7 +368,7 @@ class _HeroBalanceCard extends StatelessWidget {
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
                           size: 18,
-                          color: _text2,
+                          color: c.text2,
                         ),
                       ),
                     ],
@@ -384,10 +376,10 @@ class _HeroBalanceCard extends StatelessWidget {
                   // Balance amount
                   Text(
                     hide ? '••••••' : AppFormatters.currency(summary.netWorth),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
-                      color: _text1,
+                      color: c.text1,
                       letterSpacing: -0.8,
                     ),
                   ),
@@ -401,36 +393,36 @@ class _HeroBalanceCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         'geçen aya göre',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                       ),
                     ],
                   ),
                   // Bottom row: banks + last update
                   Row(
                     children: [
-                      const Icon(Icons.account_balance_outlined,
-                          size: 13, color: _text3),
+                      Icon(Icons.account_balance_outlined,
+                          size: 13, color: c.text3),
                       const SizedBox(width: 5),
                       Text(
                         '3 banka bağlı',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                       ),
                       const SizedBox(width: 12),
                       Container(
                         width: 3,
                         height: 3,
-                        decoration: const BoxDecoration(
-                          color: _text3,
+                        decoration: BoxDecoration(
+                          color: c.text3,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.access_time_outlined,
-                          size: 11, color: _text3),
+                      Icon(Icons.access_time_outlined,
+                          size: 11, color: c.text3),
                       const SizedBox(width: 4),
                       Text(
                         'Son güncelleme: bugün',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                       ),
                     ],
                   ),
@@ -452,7 +444,8 @@ class _ChangePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isPositive ? _positive : _negative;
+    final c = context.appColors;
+    final color = isPositive ? c.positive : c.negative;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -490,10 +483,11 @@ class _QuickStatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final items = [
       _StatItem(
         icon: Icons.arrow_downward_rounded,
-        iconColor: _positive,
+        iconColor: c.positive,
         label: 'Gelir',
         value: hide
             ? '••••'
@@ -502,7 +496,7 @@ class _QuickStatsGrid extends StatelessWidget {
       ),
       _StatItem(
         icon: Icons.arrow_upward_rounded,
-        iconColor: _negative,
+        iconColor: c.negative,
         label: 'Gider',
         value: hide
             ? '••••'
@@ -511,7 +505,7 @@ class _QuickStatsGrid extends StatelessWidget {
       ),
       _StatItem(
         icon: Icons.savings_outlined,
-        iconColor: _accent,
+        iconColor: AppColors.accent,
         label: 'Tasarruf',
         value: hide
             ? '••••'
@@ -520,7 +514,7 @@ class _QuickStatsGrid extends StatelessWidget {
       ),
       _StatItem(
         icon: Icons.psychology_outlined,
-        iconColor: _warning,
+        iconColor: c.warning,
         label: 'AI Skoru',
         value: '${summary.healthScore}',
         onTap: () => context.push('/health-score'),
@@ -566,14 +560,15 @@ class _QuickStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: item.onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -594,10 +589,10 @@ class _QuickStatCard extends StatelessWidget {
                 children: [
                   Text(
                     item.value,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: _text1,
+                      color: c.text1,
                       letterSpacing: -0.3,
                     ),
                     maxLines: 1,
@@ -606,9 +601,9 @@ class _QuickStatCard extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     item.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: _text3,
+                      color: c.text3,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -644,6 +639,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -651,7 +647,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
           child: Text(
             'Hızlı Erişim',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.text1),
           ),
         ),
         SizedBox(
@@ -674,11 +670,11 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? _accent.withValues(alpha: 0.15)
-                        : _cardBg,
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : c.card,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: isActive ? _accent : _cardBorder,
+                      color: isActive ? AppColors.accent : c.border,
                     ),
                   ),
                   child: Row(
@@ -687,7 +683,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                       Icon(
                         chip.icon,
                         size: 14,
-                        color: isActive ? _accent : _text2,
+                        color: isActive ? AppColors.accent : c.text2,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -695,7 +691,7 @@ class _QuickAccessSectionState extends State<_QuickAccessSection> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isActive ? _accent : _text2,
+                          color: isActive ? AppColors.accent : c.text2,
                         ),
                       ),
                     ],
@@ -726,6 +722,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: Row(
@@ -733,14 +730,14 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.text1),
           ),
           if (action != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
                 action!,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text2),
               ),
             ),
         ],
@@ -754,12 +751,6 @@ class _HealthScoreCard extends StatelessWidget {
   final int score;
   const _HealthScoreCard({required this.score});
 
-  Color get _color {
-    if (score >= 80) return _positive;
-    if (score >= 60) return _warning;
-    return _negative;
-  }
-
   String get _label {
     if (score >= 80) return 'İyi gidiyorsun!';
     if (score >= 60) return 'Finansal durumun iyi, geliştirilebilir.';
@@ -768,6 +759,8 @@ class _HealthScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
+    final scoreColor = score >= 80 ? c.positive : score >= 60 ? c.warning : c.negative;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
@@ -775,9 +768,9 @@ class _HealthScoreCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: _cardBg,
+            color: c.card,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _cardBorder),
+            border: Border.all(color: c.border),
           ),
           child: Row(
             children: [
@@ -789,13 +782,13 @@ class _HealthScoreCard extends StatelessWidget {
                   children: [
                     CircularProgressIndicator(
                       value: score / 100,
-                      backgroundColor: _color.withValues(alpha: 0.15),
-                      valueColor: AlwaysStoppedAnimation(_color),
+                      backgroundColor: scoreColor.withValues(alpha: 0.15),
+                      valueColor: AlwaysStoppedAnimation(scoreColor),
                       strokeWidth: 7,
                     ),
                     Text(
                       '$score',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _color),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: scoreColor),
                     ),
                   ],
                 ),
@@ -807,30 +800,30 @@ class _HealthScoreCard extends StatelessWidget {
                   children: [
                     Text(
                       'Finansal Sağlık',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _label,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.5),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text2, height: 1.5),
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _positive.withValues(alpha: 0.15),
+                        color: c.positive.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_upward,
-                              size: 10, color: _positive),
+                          Icon(Icons.arrow_upward,
+                              size: 10, color: c.positive),
                           const SizedBox(width: 2),
                           Text(
                             '+3 son 30 gün',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _positive),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.positive),
                           ),
                         ],
                       ),
@@ -838,7 +831,7 @@ class _HealthScoreCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, size: 18, color: _text3),
+              Icon(Icons.chevron_right, size: 18, color: c.text3),
             ],
           ),
         ),
@@ -854,6 +847,7 @@ class _CashFlowChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     if (cashFlow.isEmpty) return const SizedBox();
     final maxVal = cashFlow
         .expand((e) => [e.income, e.expenses])
@@ -865,9 +859,9 @@ class _CashFlowChart extends StatelessWidget {
         height: 180,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -882,13 +876,13 @@ class _CashFlowChart extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           toY: p.income,
-                          color: _accent,
+                          color: AppColors.accent,
                           width: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         BarChartRodData(
                           toY: p.expenses,
-                          color: _negative.withValues(alpha: 0.8),
+                          color: c.negative.withValues(alpha: 0.8),
                           width: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -914,7 +908,7 @@ class _CashFlowChart extends StatelessWidget {
                           final parts = period.split('-');
                           return Text(
                             parts.length > 1 ? parts[1] : period,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                           );
                         },
                       ),
@@ -927,10 +921,10 @@ class _CashFlowChart extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ChartLegend(color: _accent, label: 'Gelir'),
+                _ChartLegend(color: AppColors.accent, label: 'Gelir'),
                 const SizedBox(width: 16),
                 _ChartLegend(
-                    color: _negative.withValues(alpha: 0.8), label: 'Gider'),
+                    color: c.negative.withValues(alpha: 0.8), label: 'Gider'),
               ],
             ),
           ],
@@ -947,6 +941,7 @@ class _ChartLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Row(
       children: [
         Container(
@@ -957,7 +952,7 @@ class _ChartLegend extends StatelessWidget {
         ),
         const SizedBox(width: 5),
         Text(label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
       ],
     );
   }
@@ -971,14 +966,15 @@ class _AiInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
-            color: _heroBgFrom,
-            border: Border.all(color: _cardBorder),
+            color: c.heroBgFrom,
+            border: Border.all(color: c.border),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Stack(
@@ -989,7 +985,7 @@ class _AiInsightCard extends StatelessWidget {
                 top: 0,
                 bottom: 0,
                 width: 3,
-                child: Container(color: _accent),
+                child: Container(color: AppColors.accent),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -1003,7 +999,7 @@ class _AiInsightCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _accent.withValues(alpha: 0.12),
+                      color: AppColors.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -1013,16 +1009,16 @@ class _AiInsightCard extends StatelessWidget {
                           '✦',
                           style: TextStyle(
                             fontSize: 10,
-                            color: _accent,
+                            color: AppColors.accent,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        const Text(
                           'AI Önerisi',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: _accent,
+                            color: AppColors.accent,
                           ),
                         ),
                       ],
@@ -1031,7 +1027,7 @@ class _AiInsightCard extends StatelessWidget {
                   const Spacer(),
                   GestureDetector(
                     onTap: onDismiss,
-                    child: const Icon(Icons.close, size: 16, color: _text3),
+                    child: Icon(Icons.close, size: 16, color: c.text3),
                   ),
                 ],
               ),
@@ -1039,13 +1035,13 @@ class _AiInsightCard extends StatelessWidget {
               // Title
               Text(
                 alert.title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1),
               ),
               const SizedBox(height: 4),
               // Body
               Text(
                 alert.body,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2, height: 1.5),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text2, height: 1.5),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1055,20 +1051,20 @@ class _AiInsightCard extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => context.push('/chat'),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Sohbet et',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: _accent,
+                            color: AppColors.accent,
                           ),
                         ),
-                        const SizedBox(width: 3),
-                        const Icon(Icons.arrow_forward,
-                            size: 12, color: _accent),
+                        SizedBox(width: 3),
+                        Icon(Icons.arrow_forward,
+                            size: 12, color: AppColors.accent),
                       ],
                     ),
                   ),
@@ -1077,7 +1073,7 @@ class _AiInsightCard extends StatelessWidget {
                     onTap: onDismiss,
                     child: Text(
                       'Sonra',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                     ),
                   ),
                 ],
@@ -1100,11 +1096,12 @@ class _AiInsightBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final (color, icon) = switch (insight.type) {
       'alert'   => (const Color(0xFFFF4D6D), Icons.warning_amber_rounded),
       'warning' => (const Color(0xFFF59E0B), Icons.info_outline),
       'tip'     => (const Color(0xFF0DD9A0), Icons.lightbulb_outline),
-      _         => (_accent,                 Icons.auto_awesome),
+      _         => (AppColors.accent,        Icons.auto_awesome),
     };
 
     return Padding(
@@ -1140,8 +1137,8 @@ class _AiInsightBanner extends StatelessWidget {
                     Text(insight.body,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 12, color: _text2, height: 1.4)),
+                        style: TextStyle(
+                            fontSize: 12, color: c.text2, height: 1.4)),
                   ],
                 ],
               ),
@@ -1159,7 +1156,7 @@ class _BudgetCard extends StatelessWidget {
   const _BudgetCard({required this.items});
 
   static const _categoryColors = [
-    _accent,
+    AppColors.accent,
     Color(0xFFA78BFA),
     Color(0xFFFF5C7C),
     Color(0xFFFFC857),
@@ -1167,14 +1164,15 @@ class _BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: items.take(3).toList().asMap().entries.map((entry) {
@@ -1192,7 +1190,7 @@ class _BudgetCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           item.category,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text1),
                         ),
                       ),
                       Text(
@@ -1200,7 +1198,7 @@ class _BudgetCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: item.overBudget ? _negative : _text2,
+                          color: item.overBudget ? c.negative : c.text2,
                         ),
                       ),
                     ],
@@ -1212,7 +1210,7 @@ class _BudgetCard extends StatelessWidget {
                       value: pct,
                       backgroundColor: color.withValues(alpha: 0.12),
                       valueColor: AlwaysStoppedAnimation(
-                          item.overBudget ? _negative : color),
+                          item.overBudget ? c.negative : color),
                       minHeight: 5,
                     ),
                   ),
@@ -1232,15 +1230,16 @@ class _CategorySpendCard extends StatelessWidget {
   const _CategorySpendCard({required this.items});
 
   static const _colors = [
-    _accent,
+    AppColors.accent,
     Color(0xFFA78BFA),
-    _negative,
-    _warning,
+    Color(0xFFFF4D6D),
+    Color(0xFFF59E0B),
     Color(0xFF6FB1FC),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final top = items.take(4).toList();
     final total = top.fold(0.0, (s, e) => s + e.amount);
 
@@ -1249,9 +1248,9 @@ class _CategorySpendCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -1291,19 +1290,19 @@ class _CategorySpendCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.category,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text1),
                       ),
                     ),
                     Text(
                       '%${pct.toStringAsFixed(0)}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                     ),
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 72,
                       child: Text(
                         AppFormatters.currencyCompact(item.amount),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text1),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text1),
                         textAlign: TextAlign.right,
                       ),
                     ),
@@ -1325,6 +1324,7 @@ class _InflationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isAbove = inflation.diff > 0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1333,9 +1333,9 @@ class _InflationCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _cardBg,
+            color: c.card,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _cardBorder),
+            border: Border.all(color: c.border),
           ),
           child: Row(
             children: [
@@ -1343,10 +1343,10 @@ class _InflationCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _warning.withValues(alpha: 0.12),
+                  color: c.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.trending_up, size: 20, color: _warning),
+                child: Icon(Icons.trending_up, size: 20, color: c.warning),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1355,19 +1355,19 @@ class _InflationCard extends StatelessWidget {
                   children: [
                     Text(
                       'Senin enflasyonun',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
                         Text(
                           '%${inflation.personalRate.toStringAsFixed(1)}',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1, letterSpacing: -0.36),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1, letterSpacing: -0.36),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'vs TÜFE %${inflation.tufeRate.toStringAsFixed(1)}',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                         ),
                       ],
                     ),

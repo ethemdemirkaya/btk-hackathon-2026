@@ -8,6 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
@@ -16,17 +18,6 @@ import '../../../core/widgets/loading_skeleton.dart';
 // Safe num parser — handles both num and String values from the API
 double _toNum(dynamic v) =>
     v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0.0;
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 final _reportProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
@@ -105,10 +96,11 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final async = ref.watch(_reportProvider(_monthKey));
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -124,12 +116,12 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+                        border: Border.all(color: c.border),
                       ),
-                      child: const Icon(Icons.menu,
-                          size: 18, color: _text2),
+                      child: Icon(Icons.menu,
+                          size: 18, color: c.text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -137,10 +129,10 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Raporlar',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
-                        const Text('Aylık ve yıllık özet',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
+                        Text('Raporlar',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
+                        Text('Aylık ve yıllık özet',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3)),
                       ],
                     ),
                   ),
@@ -155,8 +147,8 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_reportProvider(_monthKey)),
                 child: async.when(
@@ -190,24 +182,25 @@ class _MonthSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _NavBtn(icon: Icons.chevron_left, onTap: onPrev),
             Text(AppFormatters.dateMonth(month),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: _text1)),
+                    color: c.text1)),
             _NavBtn(
                 icon: Icons.chevron_right,
                 onTap: onNext,
@@ -228,21 +221,22 @@ class _NavBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: _scaffoldBg,
+          color: c.bg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Icon(icon,
             size: 18,
             color: disabled
-                ? _text3
-                : _text2),
+                ? c.text3
+                : c.text2),
       ),
     );
   }
@@ -260,6 +254,7 @@ class _ReportBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final income  = _toNum(data['income']);
     final expense = _toNum(data['expense']);
     final net     = _toNum(data['net_flow']);
@@ -287,27 +282,27 @@ class _ReportBody extends StatelessWidget {
                 child: _SummaryCard(
                     'Gelir',
                     income,
-                    _positive)),
+                    c.positive)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Gider',
                     expense,
-                    _negative)),
+                    c.negative)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Net',
                     net,
                     net >= 0
-                        ? _positive
-                        : _negative)),
+                        ? c.positive
+                        : c.negative)),
             const SizedBox(width: 8),
             Expanded(
                 child: _SummaryCard(
                     'Tasarruf',
                     savingsRate.toDouble(),
-                    _accent,
+                    AppColors.accent,
                     isPercent: true)),
           ],
         ),
@@ -317,30 +312,30 @@ class _ReportBody extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (cashFlow.isNotEmpty) ...[
-          const Text('6 Aylık Nakit Akışı',
+          Text('6 Aylık Nakit Akışı',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: _text3,
+                  color: c.text3,
                   letterSpacing: 0.5)),
           const SizedBox(height: 12),
           _CashFlowChart(cashFlow: cashFlow),
           const SizedBox(height: 16),
         ],
         if (categories.isNotEmpty) ...[
-          const Text('Harcama Kategorileri',
+          Text('Harcama Kategorileri',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: _text3,
+                  color: c.text3,
                   letterSpacing: 0.5)),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: categories.asMap().entries.map((entry) {
@@ -362,19 +357,19 @@ class _ReportBody extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (topMerchants.isNotEmpty) ...[
-          const Text('En Çok Harcanan Yerler',
+          Text('En Çok Harcanan Yerler',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: _text3,
+                  color: c.text3,
                   letterSpacing: 0.5)),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: topMerchants
@@ -389,9 +384,9 @@ class _ReportBody extends StatelessWidget {
                       vertical: 10),
                   decoration: BoxDecoration(
                     border: entry.key > 0
-                        ? const Border(
+                        ? Border(
                             top: BorderSide(
-                                color: _cardBorder))
+                                color: c.border))
                         : null,
                   ),
                   child: Row(
@@ -400,7 +395,7 @@ class _ReportBody extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: _accent
+                          color: AppColors.accent
                               .withValues(alpha: 0.10),
                           borderRadius:
                               BorderRadius.circular(10),
@@ -414,7 +409,7 @@ class _ReportBody extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: _accent,
+                              color: AppColors.accent,
                             ),
                           ),
                         ),
@@ -429,24 +424,24 @@ class _ReportBody extends StatelessWidget {
                                 merch['merchant_name']
                                         as String? ??
                                     '',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
-                                    color: _text1)),
+                                    color: c.text1)),
                             Text('${merch['cnt']} işlem',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _text3)),
+                                    color: c.text3)),
                           ],
                         ),
                       ),
                       Text(
                         AppFormatters.currency(_toNum(merch['total'])),
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: _text1),
+                            color: c.text1),
                       ),
                     ],
                   ),
@@ -462,8 +457,8 @@ class _ReportBody extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onDownloadPdf,
             style: OutlinedButton.styleFrom(
-              foregroundColor: _accent,
-              side: const BorderSide(color: _accent),
+              foregroundColor: AppColors.accent,
+              side: const BorderSide(color: AppColors.accent),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
@@ -473,7 +468,7 @@ class _ReportBody extends StatelessWidget {
                     height: 16,
                     child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: _accent))
+                        color: AppColors.accent))
                 : const Icon(Icons.download_outlined, size: 18),
             label: Text(
                 pdfLoading ? 'İndiriliyor...' : 'PDF İndir',
@@ -496,21 +491,22 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w400,
-                  color: _text3)),
+                  color: c.text3)),
           const SizedBox(height: 6),
           Text(
             isPercent
@@ -532,20 +528,21 @@ class _HealthScoreCard extends StatelessWidget {
   final int score;
   const _HealthScoreCard({required this.score});
 
-  Color get _color {
-    if (score >= 80) return _positive;
-    if (score >= 60) return _warning;
-    return _negative;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
+    final color = score >= 80
+        ? c.positive
+        : score >= 60
+            ? c.warning
+            : c.negative;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -553,7 +550,7 @@ class _HealthScoreCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -562,7 +559,7 @@ class _HealthScoreCard extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: _color),
+                    color: color),
               ),
             ),
           ),
@@ -570,8 +567,8 @@ class _HealthScoreCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Finansal Sağlık Skoru',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2)),
+              Text('Finansal Sağlık Skoru',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text2)),
               Text(
                 score >= 80
                     ? 'Mükemmel'
@@ -581,7 +578,7 @@ class _HealthScoreCard extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: _color),
+                    color: color),
               ),
             ],
           ),
@@ -597,6 +594,7 @@ class _CashFlowChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final maxVal = cashFlow.fold(0.0, (prev, row) {
       final inc = _toNum(row['income']);
       final exp = _toNum(row['expense']);
@@ -607,9 +605,9 @@ class _CashFlowChart extends StatelessWidget {
       height: 180,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: BarChart(
         BarChartData(
@@ -635,10 +633,10 @@ class _CashFlowChart extends StatelessWidget {
                   final parts = month.split('-');
                   return Text(
                     parts.length == 2 ? parts[1] : month,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w400,
-                        color: _text3),
+                        color: c.text3),
                   );
                 },
               ),
@@ -656,14 +654,14 @@ class _CashFlowChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: inc,
-                  color: _positive
+                  color: c.positive
                       .withValues(alpha: 0.8),
                   width: 10,
                   borderRadius: BorderRadius.circular(3),
                 ),
                 BarChartRodData(
                   toY: exp,
-                  color: _negative
+                  color: c.negative
                       .withValues(alpha: 0.8),
                   width: 10,
                   borderRadius: BorderRadius.circular(3),
@@ -689,6 +687,7 @@ class _CategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final fraction = maxTotal > 0
         ? (total / maxTotal.toDouble()).clamp(0.0, 1.0)
         : 0.0;
@@ -701,17 +700,17 @@ class _CategoryRow extends StatelessWidget {
             Expanded(
               child: Text(
                 name.isEmpty ? 'Diğer' : name,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w400, color: _text2),
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w400, color: c.text2),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
               AppFormatters.currencyCompact(total),
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: _text1),
+                  color: c.text1),
             ),
           ],
         ),
@@ -720,9 +719,9 @@ class _CategoryRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: fraction,
-            backgroundColor: _cardBorder,
+            backgroundColor: c.border,
             valueColor: const AlwaysStoppedAnimation(
-                _accent),
+                AppColors.accent),
             minHeight: 5,
           ),
         ),

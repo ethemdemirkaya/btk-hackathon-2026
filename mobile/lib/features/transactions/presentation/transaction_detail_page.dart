@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../shared/providers/dio_provider.dart';
 import '../data/transactions_api.dart';
 import '../domain/transaction_model.dart';
-
-// ── Design tokens ─────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Category helpers (mirrors transactions_page) ──────────────────────
 const _categoryIcons = <String, IconData>{
@@ -64,7 +54,7 @@ Color _colorForCategory(String name) {
   for (final key in _categoryColors.keys) {
     if (lower.contains(key)) return _categoryColors[key]!;
   }
-  return _accent;
+  return AppColors.accent;
 }
 
 String _channelLabel(String channel) {
@@ -101,10 +91,11 @@ class TransactionDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_transactionDetailProvider(id));
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -152,6 +143,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -162,18 +154,18 @@ class _TopBar extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.arrow_back_ios_new, size: 16, color: _text2),
+              child: Icon(Icons.arrow_back_ios_new, size: 16, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Text(
               'İşlem Detayı',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text1),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1),
             ),
           ),
           if (onCopy != null)
@@ -183,11 +175,11 @@ class _TopBar extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _cardBg,
+                  color: c.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _cardBorder),
+                  border: Border.all(color: c.border),
                 ),
-                child: const Icon(Icons.copy_outlined, size: 16, color: _text2),
+                child: Icon(Icons.copy_outlined, size: 16, color: c.text2),
               ),
             ),
         ],
@@ -203,9 +195,10 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     final catColor = _colorForCategory(t.category.name);
-    final amountColor = t.isExpense ? _negative : _positive;
+    final amountColor = t.isExpense ? c.negative : c.positive;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -239,13 +232,14 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         children: [
@@ -265,7 +259,7 @@ class _HeroCard extends StatelessWidget {
           // Merchant / description
           Text(
             t.merchantName ?? t.description,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text1),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -301,7 +295,7 @@ class _HeroCard extends StatelessWidget {
           // Date + time
           Text(
             AppFormatters.dateTime(t.postedAt),
-            style: const TextStyle(fontSize: 13, color: _text3),
+            style: TextStyle(fontSize: 13, color: c.text3),
           ),
           const SizedBox(height: 16),
 
@@ -309,18 +303,18 @@ class _HeroCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.08),
+              color: AppColors.accent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _accent.withValues(alpha: 0.2)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(_channelIcon(t.channel), size: 14, color: _accent),
+                Icon(_channelIcon(t.channel), size: 14, color: AppColors.accent),
                 const SizedBox(width: 6),
                 Text(
                   _channelLabel(t.channel),
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: _accent),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.accent),
                 ),
               ],
             ),
@@ -338,6 +332,7 @@ class _DetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     final rows = <_RowData>[
       _RowData('Açıklama', t.description),
@@ -347,16 +342,16 @@ class _DetailsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         children: [
           for (int i = 0; i < rows.length; i++) ...[
             _DetailRow(label: rows[i].label, value: rows[i].value),
             if (i < rows.length - 1)
-              const Divider(height: 1, color: _cardBorder, indent: 16, endIndent: 16),
+              Divider(height: 1, color: c.border, indent: 16, endIndent: 16),
           ],
         ],
       ),
@@ -377,12 +372,13 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: _text3)),
+          Text(label, style: TextStyle(fontSize: 13, color: c.text3)),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
@@ -390,7 +386,7 @@ class _DetailRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: _text1,
+                color: c.text1,
               ),
               textAlign: TextAlign.end,
             ),
@@ -408,6 +404,7 @@ class _InstallmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     final current = t.installmentNo ?? 1;
     final total = t.installmentTotal ?? 1;
@@ -416,25 +413,25 @@ class _InstallmentCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.credit_card_outlined, size: 16, color: _accent),
+              const Icon(Icons.credit_card_outlined, size: 16, color: AppColors.accent),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Taksit Bilgisi',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text2),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.text2),
               ),
               const Spacer(),
               Text(
                 '$current / $total',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _text1),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: c.text1),
               ),
             ],
           ),
@@ -444,14 +441,14 @@ class _InstallmentCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: _cardBorder,
-              valueColor: const AlwaysStoppedAnimation<Color>(_accent),
+              backgroundColor: c.border,
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             '$current. taksit ödendi · ${total - current} taksit kaldı',
-            style: const TextStyle(fontSize: 11, color: _text3),
+            style: TextStyle(fontSize: 11, color: c.text3),
           ),
         ],
       ),
@@ -466,8 +463,9 @@ class _AnomalyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final severity = score > 0.85 ? 'Yüksek Risk' : 'Olağandışı';
-    final color = score > 0.85 ? _negative : _warning;
+    final color = score > 0.85 ? c.negative : c.warning;
 
     return Container(
       padding: const EdgeInsets.all(16),

@@ -4,23 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Providers ─────────────────────────────────────────────────────────
 final _fxAlertsProvider =
@@ -74,6 +64,7 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final alertsAsync = ref.watch(_fxAlertsProvider);
     final ratesAsync = ref.watch(_fxRatesProvider);
 
@@ -87,10 +78,10 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: _scaffoldBg,
+          backgroundColor: c.bg,
           floatingActionButton: FloatingActionButton(
             onPressed: () => _showAddAlarm(context),
-            backgroundColor: _accent,
+            backgroundColor: AppColors.accent,
             foregroundColor: const Color(0xFF051929),
             elevation: 0,
             shape: const CircleBorder(),
@@ -111,16 +102,16 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _cardBg,
+                            color: c.card,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _cardBorder),
+                            border: Border.all(color: c.border),
                           ),
-                          child: const Icon(Icons.menu,
-                              size: 18, color: _text2),
+                          child: Icon(Icons.menu,
+                              size: 18, color: c.text2),
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -128,10 +119,10 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                                 style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
-                                    color: _text1)),
+                                    color: c.text1)),
                             Text('Güncel kurlar',
                                 style: TextStyle(
-                                    fontSize: 12, color: _text3)),
+                                    fontSize: 12, color: c.text3)),
                           ],
                         ),
                       ),
@@ -145,12 +136,12 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: _cardBg,
+                            color: c.card,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _cardBorder),
+                            border: Border.all(color: c.border),
                           ),
-                          child: const Icon(Icons.refresh,
-                              size: 18, color: _text2),
+                          child: Icon(Icons.refresh,
+                              size: 18, color: c.text2),
                         ),
                       ),
                     ],
@@ -198,11 +189,11 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
-                            color: _cardBg,
+                            color: c.card,
                             borderRadius:
                                 BorderRadius.circular(14),
                             border: Border.all(
-                                color: _cardBorder),
+                                color: c.border),
                           ),
                           child: Column(
                             crossAxisAlignment:
@@ -210,20 +201,20 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                             children: [
                               Text(
                                 _liveRateLabels[sym] ?? sym,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 10,
-                                    color: _text3),
+                                    color: c.text3),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 sym == 'XAU'
                                     ? '₺${rate.toStringAsFixed(0)}'
                                     : '₺${rate.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 15,
                                     fontWeight:
                                         FontWeight.w700,
-                                    color: _text1),
+                                    color: c.text1),
                               ),
                               const SizedBox(height: 2),
                               Row(
@@ -234,8 +225,8 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                                         : Icons.arrow_drop_down,
                                     size: 14,
                                     color: isUp
-                                        ? _negative
-                                        : _positive,
+                                        ? c.negative
+                                        : c.positive,
                                   ),
                                   Text(
                                     '${change.abs().toStringAsFixed(2)}%',
@@ -244,8 +235,8 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                                         fontWeight:
                                             FontWeight.w600,
                                         color: isUp
-                                            ? _negative
-                                            : _positive),
+                                            ? c.negative
+                                            : c.positive),
                                   ),
                                 ],
                               ),
@@ -262,8 +253,8 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
             // ── Alerts list ──────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async {
                   ref.invalidate(_fxAlertsProvider);
                   ref.invalidate(_fxRatesProvider);
@@ -338,9 +329,9 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 32, vertical: 24),
                 decoration: BoxDecoration(
-                  color: _cardBg,
+                  color: c.card,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _cardBorder),
+                  border: Border.all(color: c.border),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.4),
@@ -351,19 +342,19 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 34,
                       height: 34,
                       child: CircularProgressIndicator(
-                        color: _accent, strokeWidth: 2.5),
+                        color: AppColors.accent, strokeWidth: 2.5),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Yenileniyor...',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: _text1,
+                        color: c.text1,
                       ),
                     ),
                   ],
@@ -376,10 +367,11 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
   }
 
   void _showAddAlarm(BuildContext context) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -409,6 +401,7 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final currency = alert['currency'] as String? ?? '';
     // Backend uses 'condition' (above/below) and 'threshold'
     final condition =
@@ -419,7 +412,7 @@ class _AlertCard extends StatelessWidget {
         alert['is_triggered'] as bool? ?? false;
 
     final isAbove = condition == 'above';
-    final dirColor = isAbove ? _negative : _positive;
+    final dirColor = isAbove ? c.negative : c.positive;
     final dirIcon = isAbove
         ? Icons.arrow_upward_rounded
         : Icons.arrow_downward_rounded;
@@ -430,12 +423,12 @@ class _AlertCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color: isTriggered
-                ? _warning.withValues(alpha: 0.3)
-                : _cardBorder),
+                ? c.warning.withValues(alpha: 0.3)
+                : c.border),
       ),
       child: Row(
         children: [
@@ -456,15 +449,15 @@ class _AlertCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(currency,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: _text1)),
+                            color: c.text1)),
                     const SizedBox(width: 6),
                     Text(
                       '₺${threshold.toStringAsFixed(2)} $dirLabel',
-                      style: const TextStyle(
-                          fontSize: 12, color: _text2),
+                      style: TextStyle(
+                          fontSize: 12, color: c.text2),
                     ),
                   ],
                 ),
@@ -473,17 +466,17 @@ class _AlertCard extends StatelessWidget {
                   children: [
                     Text(
                       _currencyLabels[currency] ?? currency,
-                      style: const TextStyle(
-                          fontSize: 11, color: _text3),
+                      style: TextStyle(
+                          fontSize: 11, color: c.text3),
                     ),
                     if (currentRate != null) ...[
-                      const Text(' · ',
+                      Text(' · ',
                           style: TextStyle(
-                              fontSize: 11, color: _text3)),
+                              fontSize: 11, color: c.text3)),
                       Text(
                         'Şu an: ₺${currentRate!.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 11, color: _text3),
+                        style: TextStyle(
+                            fontSize: 11, color: c.text3),
                       ),
                     ],
                   ],
@@ -501,16 +494,16 @@ class _AlertCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _warning.withValues(alpha: 0.12),
+                    color: c.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: _warning.withValues(alpha: 0.3)),
+                        color: c.warning.withValues(alpha: 0.3)),
                   ),
-                  child: const Text('Tetiklendi',
+                  child: Text('Tetiklendi',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: _warning)),
+                          color: c.warning)),
                 )
               else
                 Container(
@@ -519,21 +512,21 @@ class _AlertCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _accent.withValues(alpha: 0.08),
+                    color: AppColors.accent.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text('Bekliyor',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: _accent)),
+                          color: AppColors.accent)),
                 ),
               GestureDetector(
                 onTap: onDelete,
-                child: const Icon(
+                child: Icon(
                     Icons.delete_outline,
                     size: 18,
-                    color: _negative),
+                    color: c.negative),
               ),
             ],
           ),
@@ -595,29 +588,32 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
     }
   }
 
-  InputDecoration _deco(String label, {IconData? icon}) =>
-      InputDecoration(
-        labelText: label,
-        labelStyle:
-            const TextStyle(color: _text3, fontSize: 13),
-        prefixIcon:
-            icon != null ? Icon(icon, size: 18, color: _text3) : null,
-        filled: true,
-        fillColor: _scaffoldBg,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: _accent, width: 1.5)),
-      );
+  InputDecoration _deco(String label, {IconData? icon}) {
+    final c = context.appColors;
+    return InputDecoration(
+      labelText: label,
+      labelStyle:
+          TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon:
+          icon != null ? Icon(icon, size: 18, color: c.text3) : null,
+      filled: true,
+      fillColor: c.bg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppColors.accent, width: 1.5)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
@@ -631,32 +627,32 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                  color: _cardBorder,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text('Kur Alarmı Ekle',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
+                        color: c.text1)),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close,
-                    color: _text2, size: 20),
+                icon: Icon(Icons.close,
+                    color: c.text2, size: 20),
               ),
             ],
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _currency,
-            dropdownColor: _cardBg,
-            style: const TextStyle(
-                color: _text1, fontSize: 14),
+            dropdownColor: c.card,
+            style: TextStyle(
+                color: c.text1, fontSize: 14),
             decoration: _deco('Döviz / Varlık'),
             items: _currencies
                 .map((c) => DropdownMenuItem(
@@ -674,7 +670,7 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
               _DirBtn(
                 label: 'Üzerine çıkarsa',
                 selected: _condition == 'above',
-                color: _negative,
+                color: c.negative,
                 icon: Icons.arrow_upward,
                 onTap: () =>
                     setState(() => _condition = 'above'),
@@ -683,7 +679,7 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
               _DirBtn(
                 label: 'Altına inerse',
                 selected: _condition == 'below',
-                color: _positive,
+                color: c.positive,
                 icon: Icons.arrow_downward,
                 onTap: () =>
                     setState(() => _condition = 'below'),
@@ -693,8 +689,8 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
           const SizedBox(height: 12),
           TextField(
             controller: _rateCtrl,
-            style: const TextStyle(
-                color: _text1, fontSize: 14),
+            style: TextStyle(
+                color: c.text1, fontSize: 14),
             decoration: _deco('Hedef Kur (₺)',
                 icon: Icons.attach_money),
             keyboardType:
@@ -712,7 +708,7 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
             child: ElevatedButton.icon(
               onPressed: _loading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
+                backgroundColor: AppColors.accent,
                 foregroundColor: const Color(0xFF051929),
                 padding:
                     const EdgeInsets.symmetric(vertical: 14),
@@ -756,6 +752,7 @@ class _DirBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -765,19 +762,19 @@ class _DirBtn extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? color.withValues(alpha: 0.12)
-                : _scaffoldBg,
+                : c.bg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 color: selected
                     ? color.withValues(alpha: 0.4)
-                    : _cardBorder),
+                    : c.border),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon,
                   size: 14,
-                  color: selected ? color : _text3),
+                  color: selected ? color : c.text3),
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
@@ -785,7 +782,7 @@ class _DirBtn extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? color : _text3),
+                      color: selected ? color : c.text3),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

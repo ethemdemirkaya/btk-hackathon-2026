@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -9,17 +11,6 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../../../shared/providers/dio_provider.dart';
 import '../data/transactions_api.dart';
 import '../domain/transaction_model.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 final _transactionsApiProvider = Provider<TransactionsApi>((ref) {
   return TransactionsApi(ref.watch(dioProvider));
@@ -79,14 +70,14 @@ Color _colorForCategory(String name) {
   for (final key in _categoryColors.keys) {
     if (lower.contains(key)) return _categoryColors[key]!;
   }
-  final palette = [
-    _accent,
-    const Color(0xFFA78BFA),
-    _positive,
-    _warning,
-    const Color(0xFF6FB1FC),
-    _negative,
-    const Color(0xFFC99B5B),
+  const palette = [
+    AppColors.accent,
+    Color(0xFFA78BFA),
+    Color(0xFF0DD9A0),
+    Color(0xFFF59E0B),
+    Color(0xFF6FB1FC),
+    Color(0xFFFF4D6D),
+    Color(0xFFC99B5B),
   ];
   return palette[name.codeUnitAt(0) % palette.length];
 }
@@ -110,13 +101,14 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final asyncData = ref.watch(_transactionListProvider);
     final selectedType = ref.watch(_filterTypeProvider);
     final selectedFilter = ref.watch(_selectedFilterProvider);
     final query = ref.watch(_searchQueryProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,8 +154,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             const SizedBox(height: 10),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_transactionListProvider),
                 child: asyncData.when(
@@ -202,7 +194,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             duration: Duration(seconds: 2),
           ),
         ),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 4,
         shape: const CircleBorder(),
@@ -271,6 +263,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Column(
@@ -286,11 +279,11 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'İşlemler',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: _text1),
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: c.text1),
                     ),
                     Text(
                       _subtitle(asyncData),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
                     ),
                   ],
                 ),
@@ -324,17 +317,18 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
-        child: Icon(icon, size: 18, color: _text2),
+        child: Icon(icon, size: 18, color: c.text2),
       ),
     );
   }
@@ -352,27 +346,28 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Row(
         children: [
           const SizedBox(width: 14),
-          const Icon(Icons.search, size: 18, color: _text3),
+          Icon(Icons.search, size: 18, color: c.text3),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
               autofocus: true,
               onChanged: onChanged,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text1),
-              decoration: const InputDecoration(
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text1),
+              decoration: InputDecoration(
                 hintText: 'Merchant, açıklama ara…',
-                hintStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3),
+                hintStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -384,9 +379,9 @@ class _SearchBar extends StatelessWidget {
           if (controller.text.isNotEmpty)
             GestureDetector(
               onTap: onClear,
-              child: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Icon(Icons.close, size: 16, color: _text3),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Icon(Icons.close, size: 16, color: c.text3),
               ),
             ),
         ],
@@ -408,6 +403,7 @@ class _SummaryBarState extends State<_SummaryBar> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final income = widget.items
         .where((t) => t.isIncome)
         .fold(0.0, (s, t) => s + t.tryAmount);
@@ -425,9 +421,9 @@ class _SummaryBarState extends State<_SummaryBar> {
           curve: Curves.easeInOut,
           padding: EdgeInsets.all(_expanded ? 16 : 14),
           decoration: BoxDecoration(
-            color: _cardBg,
+            color: c.card,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _cardBorder),
+            border: Border.all(color: c.border),
           ),
           child: Column(
             children: [
@@ -436,20 +432,20 @@ class _SummaryBarState extends State<_SummaryBar> {
                   _SummaryCell(
                     label: 'Gelir',
                     value: '+${AppFormatters.currencyCompact(income)}',
-                    valueColor: _positive,
+                    valueColor: c.positive,
                   ),
                   _VertDivider(),
                   _SummaryCell(
                     label: 'Gider',
                     value: '−${AppFormatters.currencyCompact(expense)}',
-                    valueColor: _negative,
+                    valueColor: c.negative,
                   ),
                   _VertDivider(),
                   _SummaryCell(
                     label: 'Net',
                     value:
                         '${net >= 0 ? '+' : ''}${AppFormatters.currencyCompact(net)}',
-                    valueColor: _accent,
+                    valueColor: AppColors.accent,
                   ),
                   const SizedBox(width: 4),
                   Icon(
@@ -457,7 +453,7 @@ class _SummaryBarState extends State<_SummaryBar> {
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
                     size: 16,
-                    color: _text3,
+                    color: c.text3,
                   ),
                 ],
               ),
@@ -478,14 +474,15 @@ class _SummaryBarSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 58,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
       ),
     );
@@ -504,13 +501,14 @@ class _SummaryCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
           ),
           const SizedBox(height: 2),
           Text(
@@ -530,10 +528,11 @@ class _SummaryCell extends StatelessWidget {
 class _VertDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       width: 1,
       height: 30,
-      color: _cardBorder,
+      color: c.border,
       margin: const EdgeInsets.symmetric(horizontal: 10),
     );
   }
@@ -545,6 +544,7 @@ class _MiniBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final now = DateTime.now();
     final days = List.generate(7, (i) {
       final d = now.subtract(Duration(days: 6 - i));
@@ -581,18 +581,18 @@ class _MiniBarChart extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
                   color: ratio > 0.7
-                      ? _negative.withValues(alpha: 0.7)
-                      : _accent.withValues(alpha: 0.4),
+                      ? c.negative.withValues(alpha: 0.7)
+                      : AppColors.accent.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 dayLabels[dayOfWeek],
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w500,
-                  color: _text3,
+                  color: c.text3,
                 ),
               ),
             ],
@@ -681,6 +681,7 @@ class _PillChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -688,23 +689,23 @@ class _PillChip extends StatelessWidget {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
-          color: selected ? _accent.withValues(alpha: 0.18) : _cardBg,
+          color: selected ? AppColors.accent.withValues(alpha: 0.18) : c.card,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? _accent : _cardBorder,
+            color: selected ? AppColors.accent : c.border,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: selected ? _accent : _text3),
+            Icon(icon, size: 12, color: selected ? AppColors.accent : c.text3),
             const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? _accent : _text1,
+                color: selected ? AppColors.accent : c.text1,
               ),
             ),
           ],
@@ -719,6 +720,7 @@ class _TransactionSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
       itemCount: 3,
@@ -731,9 +733,9 @@ class _TransactionSkeleton extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: List.generate(
@@ -780,6 +782,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -788,25 +791,25 @@ class _EmptyState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               shape: BoxShape.circle,
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.receipt_long_outlined,
               size: 30,
-              color: _text3,
+              color: c.text3,
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'İşlem bulunamadı',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _text1),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.text1),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Filtreni değiştirip tekrar dene',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
           ),
           const SizedBox(height: 20),
           GestureDetector(
@@ -815,13 +818,13 @@ class _EmptyState extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Text(
+              child: Text(
                 'Filtreleri temizle',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text1),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text1),
               ),
             ),
           ),
@@ -846,6 +849,7 @@ class _GroupedList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final grouped = _group();
     final keys = grouped.keys.toList();
 
@@ -868,10 +872,10 @@ class _GroupedList extends StatelessWidget {
                   Expanded(
                     child: Text(
                       key.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: _text3,
+                        color: c.text3,
                         letterSpacing: 0.9,
                       ),
                     ),
@@ -881,7 +885,7 @@ class _GroupedList extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: dailyNet >= 0 ? _positive : _text3,
+                      color: dailyNet >= 0 ? c.positive : c.text3,
                     ),
                   ),
                 ],
@@ -889,9 +893,9 @@ class _GroupedList extends StatelessWidget {
             ),
             Container(
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child: Column(
                 children: txns.asMap().entries.map((e) {
@@ -920,6 +924,7 @@ class _TransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     final isAnomaly = (t.anomalyScore ?? 0) > 0.7;
     final catColor = _colorForCategory(t.category.name);
@@ -929,7 +934,7 @@ class _TransactionRow extends StatelessWidget {
       key: ValueKey(t.id),
       background: _SwipeBg(
         alignment: Alignment.centerLeft,
-        color: _negative,
+        color: c.negative,
         icon: Icons.delete_outline_rounded,
         label: 'Sil?',
       ),
@@ -957,10 +962,10 @@ class _TransactionRow extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isAnomaly
-                ? _warning.withValues(alpha: 0.05)
+                ? c.warning.withValues(alpha: 0.05)
                 : Colors.transparent,
             border: showTopBorder
-                ? Border(top: BorderSide(color: _cardBorder))
+                ? Border(top: BorderSide(color: c.border))
                 : null,
             borderRadius: !showTopBorder
                 ? const BorderRadius.vertical(top: Radius.circular(20))
@@ -974,7 +979,7 @@ class _TransactionRow extends StatelessWidget {
                 margin: const EdgeInsets.only(left: 0),
                 decoration: BoxDecoration(
                   color: isAnomaly
-                      ? _warning
+                      ? c.warning
                       : catColor.withValues(alpha: 0.7),
                   borderRadius: showTopBorder
                       ? BorderRadius.zero
@@ -1072,21 +1077,23 @@ class _CategoryIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
+    final effectiveColor = isAnomaly ? c.warning : color;
     return Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: (isAnomaly ? _warning : color).withValues(alpha: 0.14),
+        color: effectiveColor.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(13),
         border: Border.all(
-          color: (isAnomaly ? _warning : color).withValues(alpha: 0.3),
+          color: effectiveColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
       child: Icon(
         isAnomaly ? Icons.warning_amber_rounded : icon,
         size: 19,
-        color: isAnomaly ? _warning : color,
+        color: effectiveColor,
       ),
     );
   }
@@ -1099,6 +1106,7 @@ class _RowInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1111,16 +1119,16 @@ class _RowInfo extends StatelessWidget {
                 t.merchantName ?? t.description,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: _text1,
+                  color: c.text1,
                 ),
               ),
             ),
             if (isAnomaly) ...[
               const SizedBox(width: 4),
-              const Icon(Icons.bolt_rounded, size: 13, color: _warning),
+              Icon(Icons.bolt_rounded, size: 13, color: c.warning),
             ],
           ],
         ),
@@ -1129,7 +1137,7 @@ class _RowInfo extends StatelessWidget {
           children: [
             Text(
               AppFormatters.time(t.postedAt),
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
             ),
             if (t.channel != 'other') ...[
               _Dot(),
@@ -1152,12 +1160,13 @@ class _RowInfo extends StatelessWidget {
 class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       width: 2,
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 5),
-      decoration: const BoxDecoration(
-        color: _text3,
+      decoration: BoxDecoration(
+        color: c.text3,
         shape: BoxShape.circle,
       ),
     );
@@ -1177,16 +1186,17 @@ class _ChannelChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final data = _channelData[channel];
     if (data == null) return const SizedBox.shrink();
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(data.$1, size: 10, color: _text3),
+        Icon(data.$1, size: 10, color: c.text3),
         const SizedBox(width: 3),
         Text(
           data.$2,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text3),
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: c.text3),
         ),
       ],
     );
@@ -1229,6 +1239,7 @@ class _AmountDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final t = transaction;
     final isExpense = t.isExpense;
     return Column(
@@ -1240,13 +1251,13 @@ class _AmountDisplay extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: isExpense ? _negative : _positive,
+            color: isExpense ? c.negative : c.positive,
           ),
         ),
         if (t.channel == 'credit_card' || t.isInstallment)
-          const Text(
+          Text(
             '₺',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text3),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: c.text3),
           ),
       ],
     );

@@ -2,22 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Provider ─────────────────────────────────────────────────────────
 final _subscriptionsProvider =
@@ -47,6 +39,7 @@ const _subColors = [
 
 Future<void> _showAddSubscriptionSheet(
     BuildContext context, WidgetRef ref) async {
+  final c = context.appColors;
   final nameCtrl = TextEditingController();
   final amountCtrl = TextEditingController();
   String billingCycle = 'monthly';
@@ -55,7 +48,7 @@ Future<void> _showAddSubscriptionSheet(
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: _cardBg,
+    backgroundColor: c.card,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (ctx) => StatefulBuilder(
@@ -75,49 +68,48 @@ Future<void> _showAddSubscriptionSheet(
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                    color: _cardBorder,
+                    color: c.border,
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
             Row(children: [
-              const Expanded(
+              Expanded(
                   child: Text('Abonelik Ekle',
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: _text1))),
+                          color: c.text1))),
               IconButton(
                   onPressed: () => Navigator.pop(ctx),
-                  icon:
-                      const Icon(Icons.close, color: _text2, size: 20)),
+                  icon: Icon(Icons.close, color: c.text2, size: 20)),
             ]),
             const SizedBox(height: 16),
-            _darkField(nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
+            _darkField(ctx, nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
             const SizedBox(height: 12),
-            _darkField(amountCtrl, 'Tutar (₺/ay)', Icons.attach_money,
+            _darkField(ctx, amountCtrl, 'Tutar (₺/ay)', Icons.attach_money,
                 prefix: '₺ ',
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true)),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: billingCycle,
-              dropdownColor: _cardBg,
-              style: const TextStyle(color: _text1, fontSize: 14),
+              dropdownColor: c.card,
+              style: TextStyle(color: c.text1, fontSize: 14),
               decoration: InputDecoration(
                 labelText: 'Fatura Döngüsü',
-                labelStyle: const TextStyle(color: _text3, fontSize: 13),
+                labelStyle: TextStyle(color: c.text3, fontSize: 13),
                 filled: true,
-                fillColor: _scaffoldBg,
+                fillColor: c.bg,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _cardBorder)),
+                    borderSide: BorderSide(color: c.border)),
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: _cardBorder)),
+                    borderSide: BorderSide(color: c.border)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
-                        const BorderSide(color: _accent, width: 1.5)),
+                        const BorderSide(color: AppColors.accent, width: 1.5)),
               ),
               items: const [
                 DropdownMenuItem(value: 'weekly', child: Text('Haftalık')),
@@ -157,7 +149,7 @@ Future<void> _showAddSubscriptionSheet(
                         }
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: const Color(0xFF051929),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -181,29 +173,33 @@ Future<void> _showAddSubscriptionSheet(
 }
 
 Widget _darkField(
-    TextEditingController ctrl, String label, IconData icon,
+    BuildContext context,
+    TextEditingController ctrl,
+    String label,
+    IconData icon,
     {String? prefix, TextInputType? keyboardType}) {
+  final c = context.appColors;
   return TextField(
     controller: ctrl,
     keyboardType: keyboardType,
-    style: const TextStyle(color: _text1, fontSize: 14),
+    style: TextStyle(color: c.text1, fontSize: 14),
     decoration: InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: _text3, fontSize: 13),
-      prefixIcon: Icon(icon, size: 18, color: _text3),
+      labelStyle: TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon: Icon(icon, size: 18, color: c.text3),
       prefixText: prefix,
-      prefixStyle: const TextStyle(color: _text2),
+      prefixStyle: TextStyle(color: c.text2),
       filled: true,
-      fillColor: _scaffoldBg,
+      fillColor: c.bg,
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _cardBorder)),
+          borderSide: BorderSide(color: c.border)),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _cardBorder)),
+          borderSide: BorderSide(color: c.border)),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _accent, width: 1.5)),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.5)),
     ),
   );
 }
@@ -214,13 +210,14 @@ class SubscriptionsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_subscriptionsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSubscriptionSheet(context, ref),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -231,20 +228,20 @@ class SubscriptionsPage extends ConsumerWidget {
           children: [
             // ── Header ──────────────────────────────────────────────
             async.when(
-              loading: () => _buildHeader('Yükleniyor…'),
-              error: (_, __) => _buildHeader(''),
+              loading: () => _buildHeader(context, 'Yükleniyor…'),
+              error: (_, __) => _buildHeader(context, ''),
               data: (data) {
                 final total =
                     (data['total_monthly'] as num?)?.toDouble() ?? 0;
-                return _buildHeader(
+                return _buildHeader(context,
                     'Aylık ${AppFormatters.currencyCompact(total)}');
               },
             ),
             // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_subscriptionsProvider),
                 child: async.when(
@@ -283,10 +280,10 @@ class SubscriptionsPage extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: _cardBg,
+                              color: c.card,
                               borderRadius: BorderRadius.circular(20),
                               border:
-                                  Border.all(color: _cardBorder),
+                                  Border.all(color: c.border),
                             ),
                             child: Row(
                               crossAxisAlignment:
@@ -297,29 +294,29 @@ class SubscriptionsPage extends ConsumerWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'AYLIK TOPLAM',
                                         style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w600,
-                                            color: _text3,
+                                            color: c.text3,
                                             letterSpacing: 0.8),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         AppFormatters.currencyCompact(totalMonthly),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 32,
                                             fontWeight: FontWeight.w800,
-                                            color: _text1,
+                                            color: c.text1,
                                             letterSpacing: -0.5),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         'Yıllık ${AppFormatters.currencyCompact(totalMonthly * 12)} · ${subs.length} aktif',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 12,
-                                            color: _text3),
+                                            color: c.text3),
                                       ),
                                     ],
                                   ),
@@ -328,16 +325,16 @@ class SubscriptionsPage extends ConsumerWidget {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: _accent.withValues(alpha: 0.1),
+                                    color: AppColors.accent.withValues(alpha: 0.1),
                                     borderRadius:
                                         BorderRadius.circular(14),
                                     border: Border.all(
-                                        color: _accent.withValues(alpha: 0.2)),
+                                        color: AppColors.accent.withValues(alpha: 0.2)),
                                   ),
                                   child: const Icon(
                                       Icons.subscriptions_outlined,
                                       size: 22,
-                                      color: _accent),
+                                      color: AppColors.accent),
                                 ),
                               ],
                             ),
@@ -345,14 +342,14 @@ class SubscriptionsPage extends ConsumerWidget {
                         ),
                         // ── Active subs ──────────────────────────
                         if (subs.isNotEmpty) ...[
-                          const Padding(
+                          Padding(
                             padding:
-                                EdgeInsets.fromLTRB(20, 24, 20, 10),
+                                const EdgeInsets.fromLTRB(20, 24, 20, 10),
                             child: Text('Aktif Abonelikler',
                                 style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: _text3,
+                                    color: c.text3,
                                     letterSpacing: 0.6)),
                           ),
                           Padding(
@@ -376,14 +373,14 @@ class SubscriptionsPage extends ConsumerWidget {
                         ],
                         // ── Candidates ───────────────────────────
                         if (candidates.isNotEmpty) ...[
-                          const Padding(
+                          Padding(
                             padding:
-                                EdgeInsets.fromLTRB(20, 16, 20, 10),
+                                const EdgeInsets.fromLTRB(20, 16, 20, 10),
                             child: Text('Tespit Edilenler',
                                 style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: _text3,
+                                    color: c.text3,
                                     letterSpacing: 0.6)),
                           ),
                           Padding(
@@ -391,12 +388,12 @@ class SubscriptionsPage extends ConsumerWidget {
                                 horizontal: 20),
                             child: Column(
                               children: candidates
-                                  .map((c) => Padding(
+                                  .map((cand) => Padding(
                                         padding:
                                             const EdgeInsets.only(
                                                 bottom: 8),
                                         child:
-                                            _CandidateCard(candidate: c),
+                                            _CandidateCard(candidate: cand),
                                       ))
                                   .toList(),
                             ),
@@ -414,7 +411,8 @@ class SubscriptionsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(String subtitle) {
+  Widget _buildHeader(BuildContext context, String subtitle) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -425,11 +423,11 @@ class SubscriptionsPage extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 18, color: _text2),
+              child: Icon(Icons.menu, size: 18, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
@@ -437,13 +435,13 @@ class SubscriptionsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Abonelikler',
+                Text('Abonelikler',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
+                        color: c.text1)),
                 Text(subtitle,
-                    style: const TextStyle(fontSize: 12, color: _text3)),
+                    style: TextStyle(fontSize: 12, color: c.text3)),
               ],
             ),
           ),
@@ -462,6 +460,7 @@ class _SubCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final name = sub['name'] as String? ?? 'S';
     final amount =
         (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0;
@@ -480,9 +479,9 @@ class _SubCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Row(
         children: [
@@ -512,14 +511,14 @@ class _SubCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(name,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _text1)),
+                              color: c.text1)),
                     ),
                     if (aiDetected)
                       const Icon(Icons.auto_awesome,
-                          size: 12, color: _accent),
+                          size: 12, color: AppColors.accent),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -528,7 +527,7 @@ class _SubCard extends StatelessWidget {
                     Text(
                       '${_cycleLabels[cycle] ?? cycle}${nextBilling != null ? ' · ${AppFormatters.dateShort(DateTime.parse(nextBilling))}' : ''}',
                       style:
-                          const TextStyle(fontSize: 11, color: _text3),
+                          TextStyle(fontSize: 11, color: c.text3),
                     ),
                     if (isCancel) ...[
                       const SizedBox(width: 6),
@@ -536,16 +535,16 @@ class _SubCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
-                          color: _warning.withValues(alpha: 0.12),
+                          color: c.warning.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                              color: _warning.withValues(alpha: 0.3)),
+                              color: c.warning.withValues(alpha: 0.3)),
                         ),
-                        child: const Text('İptal Adayı',
+                        child: Text('İptal Adayı',
                             style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: _warning)),
+                                color: c.warning)),
                       ),
                     ],
                   ],
@@ -559,13 +558,13 @@ class _SubCard extends StatelessWidget {
             children: [
               Text(
                 AppFormatters.currencyCompact(amount),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: _text1),
+                    color: c.text1),
               ),
-              const Text('/ay',
-                  style: TextStyle(fontSize: 11, color: _text3)),
+              Text('/ay',
+                  style: TextStyle(fontSize: 11, color: c.text3)),
             ],
           ),
         ],
@@ -581,6 +580,7 @@ class _CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final name = candidate['name'] as String? ?? '';
     final amount = (candidate['amount'] as num?)?.toDouble() ?? 0;
     final confidence =
@@ -589,9 +589,9 @@ class _CandidateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _accent.withValues(alpha: 0.04),
+        color: AppColors.accent.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _accent.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
@@ -599,11 +599,11 @@ class _CandidateCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.1),
+              color: AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.auto_awesome,
-                size: 20, color: _accent),
+                size: 20, color: AppColors.accent),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -611,23 +611,23 @@ class _CandidateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _text1)),
+                        color: c.text1)),
                 Text(
                   'Olasılık: %${(confidence * 100).toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 11, color: _text3),
+                  style: TextStyle(fontSize: 11, color: c.text3),
                 ),
               ],
             ),
           ),
           Text(
             AppFormatters.currencyCompact(amount),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: _text1),
+                color: c.text1),
           ),
         ],
       ),

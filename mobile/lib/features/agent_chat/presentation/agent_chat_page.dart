@@ -7,17 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
 
 // ── Starters ─────────────────────────────────────────────────────────
 const _starters = [
@@ -268,8 +260,9 @@ class _AgentChatPageState extends State<AgentChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -372,13 +365,14 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: _scaffoldBg,
+      decoration: BoxDecoration(
+        color: c.bg,
         border: Border(
-            bottom: BorderSide(color: _cardBorder)),
+            bottom: BorderSide(color: c.border)),
       ),
       child: Row(
         children: [
@@ -401,7 +395,7 @@ class _Header extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                    color: _accent.withValues(alpha: 0.25),
+                    color: AppColors.accent.withValues(alpha: 0.25),
                     blurRadius: 12,
                     spreadRadius: 1),
               ],
@@ -410,7 +404,7 @@ class _Header extends StatelessWidget {
                 size: 16, color: Color(0xFF051929)),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -418,16 +412,16 @@ class _Header extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
-                SizedBox(height: 2),
+                        color: c.text1)),
+                const SizedBox(height: 2),
                 Row(
                   children: [
-                    _OnlineDot(),
-                    SizedBox(width: 4),
+                    const _OnlineDot(),
+                    const SizedBox(width: 4),
                     Text('Çok-ajanlı sistem',
                         style: TextStyle(
                             fontSize: 11,
-                            color: _accent)),
+                            color: AppColors.accent)),
                   ],
                 ),
               ],
@@ -445,13 +439,15 @@ class _Header extends StatelessWidget {
 class _OnlineDot extends StatelessWidget {
   const _OnlineDot();
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Container(
         width: 6,
         height: 6,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _positive),
-      );
+            color: c.positive));
+  }
 }
 
 class _IconBtn extends StatelessWidget {
@@ -461,19 +457,19 @@ class _IconBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(12),
-          border:
-              Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Icon(icon,
-            size: 16, color: _text2),
+            size: 16, color: c.text2),
       ),
     );
   }
@@ -511,16 +507,17 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final label = _stageLabels[widget.stage] ?? '';
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       padding:
           const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: _accent.withValues(alpha: 0.08),
+        color: AppColors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: _accent.withValues(alpha: 0.25)),
+            color: AppColors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
@@ -533,17 +530,17 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
             child: Icon(
               _stageIcon(widget.stage),
               size: 16,
-              color: _accent,
+              color: AppColors.accent,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: _accent,
+                color: AppColors.accent,
               ),
             ),
           ),
@@ -557,8 +554,8 @@ class _AgentStatusBarState extends State<_AgentStatusBar>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active
-                      ? _accent
-                      : _accent.withValues(alpha: 0.2),
+                      ? AppColors.accent
+                      : AppColors.accent.withValues(alpha: 0.2),
                 ),
               );
             }),
@@ -633,19 +630,19 @@ class _SmallChip extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: _accent.withValues(alpha: 0.10),
+        color: AppColors.accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: _accent.withValues(alpha: 0.20)),
+            color: AppColors.accent.withValues(alpha: 0.20)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: _accent),
+          Icon(icon, size: 10, color: AppColors.accent),
           const SizedBox(width: 4),
           Text(label,
               style: const TextStyle(
-                  color: _accent,
+                  color: AppColors.accent,
                   fontSize: 10,
                   fontWeight: FontWeight.w500)),
         ],
@@ -663,6 +660,7 @@ class _QuickActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final actions = agentsUsed
         .where((a) => _agentRoutes.containsKey(a))
         .map((a) => _agentRoutes[a]!)
@@ -684,28 +682,28 @@ class _QuickActionRow extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 7),
                         decoration: BoxDecoration(
-                          color: _cardBg,
+                          color: c.card,
                           borderRadius:
                               BorderRadius.circular(20),
                           border: Border.all(
-                              color: _cardBorder),
+                              color: c.border),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(action.$2,
                                 size: 13,
-                                color: _accent),
+                                color: AppColors.accent),
                             const SizedBox(width: 6),
                             Text(action.$1,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: _text1)),
+                                    color: c.text1)),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_forward_ios,
+                            Icon(Icons.arrow_forward_ios,
                                 size: 10,
-                                color: _text3),
+                                color: c.text3),
                           ],
                         ),
                       ),
@@ -725,6 +723,7 @@ class _EmptyChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
       children: [
@@ -742,7 +741,7 @@ class _EmptyChat extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                      color: _accent.withValues(alpha: 0.25),
+                      color: AppColors.accent.withValues(alpha: 0.25),
                       blurRadius: 24,
                       spreadRadius: 2),
                 ],
@@ -751,24 +750,24 @@ class _EmptyChat extends StatelessWidget {
                   size: 34, color: Color(0xFF051929)),
             ),
             const SizedBox(height: 18),
-            const Text('Merhaba',
+            Text('Merhaba',
                 style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
-                    color: _text1,
+                    color: c.text1,
                     letterSpacing: -0.5)),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Finansal verilerine bakıp aksiyonlar önerebilirim.\nUzman ajanlarım ile birlikte çalışıyorum.',
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: _text3,
+                  color: c.text3,
                   height: 1.5),
             ),
             const SizedBox(height: 16),
-            Wrap(
+            const Wrap(
               alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 6,
@@ -793,11 +792,11 @@ class _EmptyChat extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 28),
-        const Text('Hızlı başlangıç',
+        Text('Hızlı başlangıç',
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: _text3)),
+                color: c.text3)),
         const SizedBox(height: 10),
         ..._starters.map((s) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -806,10 +805,10 @@ class _EmptyChat extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: _cardBg,
+                    color: c.card,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: _cardBorder),
+                        color: c.border),
                   ),
                   child: Row(
                     children: [
@@ -817,25 +816,25 @@ class _EmptyChat extends StatelessWidget {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: _accent.withValues(alpha: 0.10),
+                          color: AppColors.accent.withValues(alpha: 0.10),
                           borderRadius:
                               BorderRadius.circular(10),
                         ),
                         child: Icon(s.icon,
                             size: 18,
-                            color: _accent),
+                            color: AppColors.accent),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(s.text,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: _text1)),
+                                color: c.text1)),
                       ),
-                      const Icon(Icons.arrow_forward_ios,
+                      Icon(Icons.arrow_forward_ios,
                           size: 14,
-                          color: _text3),
+                          color: c.text3),
                     ],
                   ),
                 ),
@@ -853,6 +852,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isUser = msg.role == 'user';
 
     return Padding(
@@ -876,13 +876,13 @@ class _MessageBubble extends StatelessWidget {
                       bottomRight: Radius.circular(4),
                     ),
                     border: Border.all(
-                        color: _accent.withValues(alpha: 0.2)),
+                        color: AppColors.accent.withValues(alpha: 0.2)),
                   ),
                   child: Text(msg.content,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: _text1,
+                          color: c.text1,
                           height: 1.45)),
                 ),
               ),
@@ -901,7 +901,7 @@ class _MessageBubble extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(4),
                           topRight: Radius.circular(20),
@@ -909,25 +909,25 @@ class _MessageBubble extends StatelessWidget {
                           bottomRight: Radius.circular(20),
                         ),
                         border: Border.all(
-                            color: _cardBorder),
+                            color: c.border),
                       ),
                       child: MarkdownBody(
                         data: msg.content,
                         styleSheet: MarkdownStyleSheet(
-                          p: const TextStyle(
+                          p: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
-                              color: _text1,
+                              color: c.text1,
                               height: 1.5),
                           strong: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _accent),
+                              color: AppColors.accent),
                           code: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: _accent,
-                              backgroundColor: _accent
+                              color: AppColors.accent,
+                              backgroundColor: AppColors.accent
                                   .withValues(alpha: 0.10)),
                         ),
                       ),
@@ -992,6 +992,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1003,7 +1004,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
             padding: const EdgeInsets.symmetric(
                 horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(20),
@@ -1011,7 +1012,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                 bottomRight: Radius.circular(20),
               ),
               border: Border.all(
-                  color: _cardBorder),
+                  color: c.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1045,9 +1046,9 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                           child: Container(
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: _text2,
+                              color: c.text2,
                             ),
                           ),
                         ),
@@ -1120,14 +1121,15 @@ class _InputAreaState extends State<_InputArea>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return AnimatedBuilder(
       animation: _glowAnim,
       builder: (_, child) => Container(
         padding: EdgeInsets.fromLTRB(14, 10, 14, 10 + bottom),
-        decoration: const BoxDecoration(
-          color: _scaffoldBg,
-          border: Border(top: BorderSide(color: _cardBorder, width: 0.5)),
+        decoration: BoxDecoration(
+          color: c.bg,
+          border: Border(top: BorderSide(color: c.border, width: 0.5)),
         ),
         child: child,
       ),
@@ -1138,14 +1140,14 @@ class _InputAreaState extends State<_InputArea>
           borderRadius: BorderRadius.circular(26),
           border: Border.all(
             color: _focused
-                ? _accent.withValues(alpha: 0.55)
-                : _cardBorder,
+                ? AppColors.accent.withValues(alpha: 0.55)
+                : c.border,
             width: 1,
           ),
           boxShadow: _focused
               ? [
                   BoxShadow(
-                    color: _accent.withValues(alpha: 0.16),
+                    color: AppColors.accent.withValues(alpha: 0.16),
                     blurRadius: 18,
                     spreadRadius: -2,
                   )
@@ -1173,18 +1175,18 @@ class _InputAreaState extends State<_InputArea>
                   minLines: 1,
                   textInputAction: TextInputAction.send,
                   onSubmitted: widget.enabled ? widget.onSend : null,
-                  cursorColor: _accent,
-                  style: const TextStyle(
+                  cursorColor: AppColors.accent,
+                  style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: _text1,
+                      color: c.text1,
                       height: 1.35),
                   decoration: InputDecoration(
                     hintText: widget.enabled
                         ? 'Mesajını yaz…'
                         : 'Ajanlar çalışıyor…',
                     hintStyle: TextStyle(
-                        color: _text3.withValues(alpha: 0.9),
+                        color: c.text3.withValues(alpha: 0.9),
                         fontSize: 15,
                         fontWeight: FontWeight.w400),
                     filled: true,
@@ -1214,7 +1216,7 @@ class _InputAreaState extends State<_InputArea>
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.2,
-                          color: _accent,
+                          color: AppColors.accent,
                         ),
                       ),
                     )
@@ -1263,10 +1265,11 @@ class _InputAreaState extends State<_InputArea>
   }
 
   void _showQuickActions(BuildContext context) {
+    final c = context.appColors;
     FocusScope.of(context).unfocus();
     showModalBottomSheet(
       context: context,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1283,7 +1286,7 @@ class _InputAreaState extends State<_InputArea>
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 14),
                   decoration: BoxDecoration(
-                    color: _cardBorder,
+                    color: c.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1325,6 +1328,7 @@ class _ChatIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final enabled = onTap != null;
     return Material(
       color: Colors.transparent,
@@ -1339,7 +1343,7 @@ class _ChatIconButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 22,
-            color: enabled ? _text2 : _text3,
+            color: enabled ? c.text2 : c.text3,
           ),
         ),
       ),
@@ -1370,23 +1374,23 @@ class _QuickActionTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.10),
+                color: AppColors.accent.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 18, color: _accent),
+              child: Icon(icon, size: 18, color: AppColors.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: _text1,
+                  color: context.appColors.text1,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: _text3),
+            Icon(Icons.chevron_right, size: 18, color: context.appColors.text3),
           ],
         ),
       ),
@@ -1434,6 +1438,7 @@ class _HistorySheetState extends State<_HistorySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: widget.onClose,
       child: Container(
@@ -1446,9 +1451,9 @@ class _HistorySheetState extends State<_HistorySheet> {
               constraints: BoxConstraints(
                   maxHeight:
                       MediaQuery.of(context).size.height * 0.72),
-              decoration: const BoxDecoration(
-                color: _cardBg,
-                borderRadius: BorderRadius.vertical(
+              decoration: BoxDecoration(
+                color: c.card,
+                borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24)),
               ),
               child: Column(
@@ -1460,7 +1465,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: _cardBorder,
+                      color: c.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1470,19 +1475,19 @@ class _HistorySheetState extends State<_HistorySheet> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: const Text('Geçmiş sohbetler',
+                          child: Text('Geçmiş sohbetler',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: _text1)),
+                                  color: c.text1)),
                         ),
                         GestureDetector(
                           onTap: () => setState(() {
                             _future = _loadHistory();
                           }),
-                          child: const Icon(Icons.refresh,
+                          child: Icon(Icons.refresh,
                               size: 18,
-                              color: _text3),
+                              color: c.text3),
                         ),
                       ],
                     ),
@@ -1496,28 +1501,28 @@ class _HistorySheetState extends State<_HistorySheet> {
                           return const Center(
                               child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: _accent));
+                                  color: AppColors.accent));
                         }
                         if (snap.hasError || !snap.hasData) {
-                          return const Padding(
-                            padding: EdgeInsets.all(24),
+                          return Padding(
+                            padding: const EdgeInsets.all(24),
                             child: Text(
                                 'Geçmiş yüklenemedi.',
                                 style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _text3)),
+                                    color: c.text3)),
                           );
                         }
                         final runs = snap.data!;
                         if (runs.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.all(24),
+                          return Padding(
+                            padding: const EdgeInsets.all(24),
                             child: Text('Henüz sohbet yok.',
                                 style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _text3)),
+                                    color: c.text3)),
                           );
                         }
                         return ListView.builder(
@@ -1530,12 +1535,12 @@ class _HistorySheetState extends State<_HistorySheet> {
                             return Container(
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? _accent.withValues(alpha: 0.08)
+                                    ? AppColors.accent.withValues(alpha: 0.08)
                                     : Colors.transparent,
                                 border: i > 0
-                                    ? const Border(
+                                    ? Border(
                                         top: BorderSide(
-                                            color: _cardBorder))
+                                            color: c.border))
                                     : null,
                               ),
                               child: InkWell(
@@ -1567,7 +1572,7 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                         const BoxDecoration(
                                                       shape: BoxShape
                                                           .circle,
-                                                      color: _accent,
+                                                      color: AppColors.accent,
                                                     ),
                                                   ),
                                                 Expanded(
@@ -1577,10 +1582,10 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                       overflow:
                                                           TextOverflow
                                                               .ellipsis,
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                           fontSize: 14,
                                                           fontWeight: FontWeight.w600,
-                                                          color: _text1)),
+                                                          color: c.text1)),
                                                 ),
                                               ],
                                             ),
@@ -1590,10 +1595,10 @@ class _HistorySheetState extends State<_HistorySheet> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow
                                                     .ellipsis,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w400,
-                                                    color: _text3)),
+                                                    color: c.text3)),
                                           ],
                                         ),
                                       ),
@@ -1627,11 +1632,12 @@ class _StatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     Color color;
     switch (status) {
-      case 'completed': color = _positive; break;
-      case 'failed':    color = _negative; break;
-      default:          color = _accent;
+      case 'completed': color = c.positive; break;
+      case 'failed':    color = c.negative; break;
+      default:          color = AppColors.accent;
     }
     return Container(
       width: 8,

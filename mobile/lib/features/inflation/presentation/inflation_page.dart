@@ -3,22 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Provider ─────────────────────────────────────────────────────────
 final _inflationProvider =
@@ -63,10 +53,10 @@ IconData _iconForSlug(String slug) =>
 String _nameForSlug(String slug) =>
     _categoryNames[slug] ?? slug;
 
-Color _rateColor(double rate) {
-  if (rate > 50) return _negative;
-  if (rate > 35) return _warning;
-  return _positive;
+Color _rateColor(double rate, AppColorTokens c) {
+  if (rate > 50) return c.negative;
+  if (rate > 35) return c.warning;
+  return c.positive;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────
@@ -75,10 +65,11 @@ class InflationPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_inflationProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: async.when(
           loading: () => _LoadingSkeleton(),
@@ -104,8 +95,8 @@ class InflationPage extends ConsumerWidget {
                     [];
 
             return RefreshIndicator(
-              color: _accent,
-              backgroundColor: _cardBg,
+              color: AppColors.accent,
+              backgroundColor: c.card,
               onRefresh: () async =>
                   ref.invalidate(_inflationProvider),
               child: ListView(
@@ -177,6 +168,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -188,16 +180,16 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu,
-                  size: 18, color: _text2),
+              child: Icon(Icons.menu,
+                  size: 18, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -205,10 +197,10 @@ class _Header extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
+                        color: c.text1)),
                 Text('Kişisel TÜFE',
                     style: TextStyle(
-                        fontSize: 12, color: _text3)),
+                        fontSize: 12, color: c.text3)),
               ],
             ),
           ),
@@ -230,9 +222,10 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isAbove = diff > 0;
     final badgeColor =
-        isAbove ? _negative : _positive;
+        isAbove ? c.negative : c.positive;
     final absStr = diff.abs().toStringAsFixed(1);
     final badgeText = isAbove
         ? 'TÜFEden $absStr puan üstte'
@@ -243,19 +236,19 @@ class _HeroCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'KİŞİSEL ENFLASYON ORANINIZ',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: _text3,
+                  color: c.text3,
                   letterSpacing: 0.8),
             ),
             const SizedBox(height: 10),
@@ -264,7 +257,7 @@ class _HeroCard extends StatelessWidget {
               style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.w800,
-                  color: _rateColor(personal),
+                  color: _rateColor(personal, c),
                   letterSpacing: -1),
             ),
             const SizedBox(height: 12),
@@ -320,23 +313,23 @@ class _PeriodChip extends StatelessWidget {
             padding: const EdgeInsets.symmetric(
                 horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.08),
+              color: AppColors.accent.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: _accent.withValues(alpha: 0.2)),
+                  color: AppColors.accent.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.calendar_today_outlined,
-                    size: 11, color: _accent),
+                    size: 11, color: AppColors.accent),
                 const SizedBox(width: 5),
                 Text(
                   period,
                   style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _accent),
+                      color: AppColors.accent),
                 ),
               ],
             ),
@@ -359,6 +352,7 @@ class _ComparisonRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -367,7 +361,7 @@ class _ComparisonRow extends StatelessWidget {
             child: _RateCard(
               label: 'Kişisel Oranım',
               rate: personal,
-              color: _rateColor(personal),
+              color: _rateColor(personal, c),
               icon: Icons.person_outline,
             ),
           ),
@@ -399,11 +393,12 @@ class _RateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(
           vertical: 16, horizontal: 14),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
             color: color.withValues(alpha: 0.25)),
@@ -416,8 +411,8 @@ class _RateCard extends StatelessWidget {
               Icon(icon, size: 13, color: color),
               const SizedBox(width: 5),
               Text(label,
-                  style: const TextStyle(
-                      fontSize: 11, color: _text3)),
+                  style: TextStyle(
+                      fontSize: 11, color: c.text3)),
             ],
           ),
           const SizedBox(height: 8),
@@ -441,14 +436,15 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: _text3,
+            color: c.text3,
             letterSpacing: 1.2),
       ),
     );
@@ -464,6 +460,7 @@ class _BreakdownList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final maxContrib = items
         .map((e) =>
             (e['contribution'] as num?)?.toDouble() ?? 0)
@@ -473,9 +470,9 @@ class _BreakdownList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: items.asMap().entries.map((entry) {
@@ -500,9 +497,9 @@ class _BreakdownList extends StatelessWidget {
                   14, 12, 14, 12),
               decoration: BoxDecoration(
                 border: i > 0
-                    ? const Border(
+                    ? Border(
                         top: BorderSide(
-                            color: Color(0xFF1A2940)))
+                            color: c.border))
                     : null,
               ),
               child: Column(
@@ -515,7 +512,7 @@ class _BreakdownList extends StatelessWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: _rateColor(rate)
+                          color: _rateColor(rate, c)
                               .withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(9),
@@ -523,16 +520,16 @@ class _BreakdownList extends StatelessWidget {
                         child: Icon(
                             _iconForSlug(slug),
                             size: 16,
-                            color: _rateColor(rate)),
+                            color: _rateColor(rate, c)),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _nameForSlug(slug),
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: _text1),
+                              color: c.text1),
                         ),
                       ),
                       Container(
@@ -540,15 +537,15 @@ class _BreakdownList extends StatelessWidget {
                             const EdgeInsets.symmetric(
                                 horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _scaffoldBg,
+                          color: c.bg,
                           borderRadius:
                               BorderRadius.circular(6),
                         ),
                         child: Text(
                           '%${weight.toStringAsFixed(1)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 10,
-                              color: _text3),
+                              color: c.text3),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -557,7 +554,7 @@ class _BreakdownList extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: _rateColor(rate)),
+                            color: _rateColor(rate, c)),
                       ),
                     ],
                   ),
@@ -568,9 +565,9 @@ class _BreakdownList extends StatelessWidget {
                       value: fillRatio.toDouble(),
                       minHeight: 4,
                       backgroundColor:
-                          _cardBorder.withValues(alpha: 0.6),
+                          c.border.withValues(alpha: 0.6),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        _rateColor(rate)
+                        _rateColor(rate, c)
                             .withValues(alpha: 0.7),
                       ),
                     ),
@@ -578,8 +575,8 @@ class _BreakdownList extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Katkı: ${contribution.toStringAsFixed(2)} puan',
-                    style: const TextStyle(
-                        fontSize: 11, color: _text3),
+                    style: TextStyle(
+                        fontSize: 11, color: c.text3),
                   ),
                 ],
               ),
@@ -615,15 +612,16 @@ class _TopImpactCard extends StatelessWidget {
     final rate =
         (top['tuik_rate'] as num?)?.toDouble() ?? 0;
 
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: _warning.withValues(alpha: 0.3)),
+              color: c.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -631,34 +629,34 @@ class _TopImpactCard extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: _warning.withValues(alpha: 0.12),
+                color: c.warning.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_iconForSlug(slug),
-                  size: 20, color: _warning),
+                  size: 20, color: c.warning),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Bütçende en çok etkilenen',
                     style: TextStyle(
-                        fontSize: 11, color: _text3),
+                        fontSize: 11, color: c.text3),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     _nameForSlug(slug),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _text1),
+                        color: c.text1),
                   ),
                   Text(
                     '%${rate.toStringAsFixed(1)} · ${contribution.toStringAsFixed(2)} puan katkı',
-                    style: const TextStyle(
-                        fontSize: 11, color: _warning),
+                    style: TextStyle(
+                        fontSize: 11, color: c.warning),
                   ),
                 ],
               ),
@@ -676,6 +674,7 @@ class _AiInsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
       child: GestureDetector(
@@ -683,10 +682,10 @@ class _AiInsightCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _cardBg,
+            color: c.card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: _accent.withValues(alpha: 0.2)),
+                color: AppColors.accent.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -694,14 +693,14 @@ class _AiInsightCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: _accent.withValues(alpha: 0.1),
+                  color: AppColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.auto_awesome,
-                    size: 20, color: _accent),
+                    size: 20, color: AppColors.accent),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -710,18 +709,18 @@ class _AiInsightCard extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: _text1),
+                          color: c.text1),
                     ),
                     Text(
                       'Enflasyonunuzu nasıl düşürebilirsiniz?',
                       style: TextStyle(
-                          fontSize: 11, color: _text3),
+                          fontSize: 11, color: c.text3),
                     ),
                   ],
                 ),
               ),
               const Icon(Icons.arrow_forward_ios,
-                  size: 13, color: _accent),
+                  size: 13, color: AppColors.accent),
             ],
           ),
         ),

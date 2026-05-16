@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../domain/auth_repository.dart';
@@ -27,15 +29,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _kvkk = false;
   bool _loading = false;
   Map<String, String> _fieldErrors = {};
-
-  static const _bg = Color(0xFF060D18);
-  static const _accent = Color(0xFF00D4FF);
-  static const _textPrimary = Color(0xFFE8F4FF);
-  static const _textSecondary = Color(0xFF8BA4BC);
-  static const _textTertiary = Color(0xFF4A6478);
-  static const _cardBg = Color(0xFF0D1B2A);
-  static const _border = Color(0xFF1A2940);
-  static const _negative = Color(0xFFFF4D6D);
 
   @override
   void dispose() {
@@ -99,6 +92,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   InputDecoration _fieldDecoration({
     required String label,
     required IconData prefixIcon,
+    required Color text2,
+    required Color text3,
+    required Color card,
+    required Color border,
+    required Color negative,
     Widget? suffixIcon,
     String? errorText,
     String? hintText,
@@ -107,44 +105,45 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     return InputDecoration(
       labelText: label,
       hintText: hintText,
-      hintStyle: const TextStyle(color: _textTertiary, fontSize: 14),
-      labelStyle: const TextStyle(color: _textTertiary, fontSize: 14),
+      hintStyle: TextStyle(color: text3, fontSize: 14),
+      labelStyle: TextStyle(color: text3, fontSize: 14),
       errorText: errorText,
-      prefixIcon: Icon(prefixIcon, color: _textTertiary, size: 20),
+      prefixIcon: Icon(prefixIcon, color: text3, size: 20),
       prefixText: prefixText,
-      prefixStyle: const TextStyle(
-        color: _textSecondary,
+      prefixStyle: TextStyle(
+        color: text2,
         fontSize: 15,
         fontWeight: FontWeight.w500,
       ),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: _cardBg,
+      fillColor: card,
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _border, width: 1),
+        borderSide: BorderSide(color: border, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _accent, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _negative, width: 1),
+        borderSide: BorderSide(color: negative, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: _negative, width: 1.5),
+        borderSide: BorderSide(color: negative, width: 1.5),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -159,19 +158,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _border, width: 1),
+                        border: Border.all(color: c.border, width: 1),
                       ),
-                      child: const Icon(Icons.arrow_back_rounded,
-                          color: _textSecondary, size: 20),
+                      child: Icon(Icons.arrow_back_rounded,
+                          color: c.text2, size: 20),
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Text(
+                  Text(
                     'Hesap Oluştur',
                     style: TextStyle(
-                      color: _textPrimary,
+                      color: c.text1,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.3,
@@ -189,10 +188,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Finansa yeni bir bakış açısı',
                         style: TextStyle(
-                          color: _textSecondary,
+                          color: c.text2,
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           height: 1.5,
@@ -202,11 +201,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       TextFormField(
                         controller: _nameCtrl,
                         textInputAction: TextInputAction.next,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'Ad Soyad',
                           prefixIcon: Icons.person_outlined,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           errorText: _fieldErrors['name'],
                         ),
                         validator: (v) => AppValidators.required(v, 'Ad soyad'),
@@ -216,11 +219,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'E-posta',
                           prefixIcon: Icons.email_outlined,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           errorText: _fieldErrors['email'],
                         ),
                         validator: AppValidators.email,
@@ -230,18 +237,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         controller: _passwordCtrl,
                         obscureText: _obscure,
                         textInputAction: TextInputAction.next,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'Şifre',
                           prefixIcon: Icons.lock_outlined,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           errorText: _fieldErrors['password'],
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscure
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
-                              color: _textTertiary,
+                              color: c.text3,
                               size: 20,
                             ),
                             onPressed: () =>
@@ -255,18 +266,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         controller: _passwordConfCtrl,
                         obscureText: _obscureConf,
                         textInputAction: TextInputAction.next,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'Şifre Tekrar',
                           prefixIcon: Icons.lock_outlined,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           errorText: _fieldErrors['password_confirmation'],
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscureConf
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
-                              color: _textTertiary,
+                              color: c.text3,
                               size: 20,
                             ),
                             onPressed: () =>
@@ -282,11 +297,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         textInputAction: TextInputAction.next,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'Aylık Gelir',
                           prefixIcon: Icons.attach_money_rounded,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           prefixText: '₺ ',
                           errorText: _fieldErrors['monthly_income'],
                         ),
@@ -298,11 +317,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         controller: _phoneCtrl,
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.done,
-                        style:
-                            const TextStyle(color: _textPrimary, fontSize: 15),
+                        style: TextStyle(color: c.text1, fontSize: 15),
                         decoration: _fieldDecoration(
                           label: 'Telefon (opsiyonel)',
                           prefixIcon: Icons.phone_outlined,
+                          text2: c.text2,
+                          text3: c.text3,
+                          card: c.card,
+                          border: c.border,
+                          negative: c.negative,
                           hintText: '05XX XXX XX XX',
                           errorText: _fieldErrors['phone'],
                         ),
@@ -314,10 +337,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: _cardBg,
+                            color: c.card,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _kvkk ? _accent.withValues(alpha:0.4) : _border,
+                              color: _kvkk ? AppColors.accent.withValues(alpha: 0.4) : c.border,
                               width: 1,
                             ),
                           ),
@@ -330,10 +353,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 margin: const EdgeInsets.only(top: 1),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(6),
-                                  color:
-                                      _kvkk ? _accent : Colors.transparent,
+                                  color: _kvkk ? AppColors.accent : Colors.transparent,
                                   border: Border.all(
-                                    color: _kvkk ? _accent : _border,
+                                    color: _kvkk ? AppColors.accent : c.border,
                                     width: 1.5,
                                   ),
                                 ),
@@ -344,11 +366,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                     : null,
                               ),
                               const SizedBox(width: 12),
-                              const Expanded(
+                              Expanded(
                                 child: Text(
                                   'KVKK kapsamında kişisel verilerimin işlenmesini kabul ediyorum.',
                                   style: TextStyle(
-                                    color: _textSecondary,
+                                    color: c.text2,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                     height: 1.5,
@@ -365,8 +387,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         child: ElevatedButton(
                           onPressed: (_loading || !_kvkk) ? null : _register,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _accent,
-                            disabledBackgroundColor: _accent.withValues(alpha:0.3),
+                            backgroundColor: AppColors.accent,
+                            disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.3),
                             foregroundColor: const Color(0xFF051929),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -397,10 +419,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
+                          Text(
                             'Zaten hesabın var mı?',
                             style: TextStyle(
-                              color: _textSecondary,
+                              color: c.text2,
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
@@ -408,7 +430,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           TextButton(
                             onPressed: () => context.go('/login'),
                             style: TextButton.styleFrom(
-                              foregroundColor: _accent,
+                              foregroundColor: AppColors.accent,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                             ),

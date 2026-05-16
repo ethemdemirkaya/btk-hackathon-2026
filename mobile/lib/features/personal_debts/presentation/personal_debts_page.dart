@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 
@@ -29,17 +31,7 @@ bool _b(dynamic v) {
   return v.toString() == '1' || v.toString() == 'true';
 }
 
-// ── Design tokens ─────────────────────────────────────────────────────
-const _bg      = Color(0xFF060D18);
-const _card    = Color(0xFF0D1B2A);
-const _border  = Color(0xFF1A2940);
-const _accent  = Color(0xFF00D4FF);
-const _text1   = Color(0xFFE8F4FF);
-const _text2   = Color(0xFF8BA4BC);
-const _text3   = Color(0xFF4A6478);
-const _pos     = Color(0xFF0DD9A0);
-const _neg     = Color(0xFFFF4D6D);
-const _warn    = Color(0xFFF59E0B);
+// ── Local constants (not in AppColorTokens) ───────────────────────────
 const _purple  = Color(0xFFA78BFA);
 
 // ── Provider ──────────────────────────────────────────────────────────
@@ -66,10 +58,11 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
   void _refresh() => ref.invalidate(_debtsProvider);
 
   void _showForm(Map<String, dynamic>? existing) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _card,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _DebtFormSheet(
@@ -80,22 +73,23 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
   }
 
   Future<void> _settle(int id, String name) async {
+    final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _card,
+        backgroundColor: c.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Borcu Kapat',
-            style: TextStyle(color: _text1, fontSize: 17, fontWeight: FontWeight.w700)),
+        title: Text('Borcu Kapat',
+            style: TextStyle(color: c.text1, fontSize: 17, fontWeight: FontWeight.w700)),
         content: Text('$name ile olan borcu kapatmak istiyor musunuz?',
-            style: const TextStyle(color: _text2, fontSize: 14)),
+            style: TextStyle(color: c.text2, fontSize: 14)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
-              child: const Text('İptal', style: TextStyle(color: _text2))),
+              child: Text('İptal', style: TextStyle(color: c.text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: _pos, foregroundColor: Colors.black,
+                backgroundColor: c.positive, foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: const Text('Kapat', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
@@ -119,11 +113,12 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(null),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -131,12 +126,12 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          color: _accent,
-          backgroundColor: _card,
+          color: AppColors.accent,
+          backgroundColor: c.card,
           onRefresh: () async => _refresh(),
           child: ref.watch(_debtsProvider).when(
             loading: () => const Center(
-                child: CircularProgressIndicator(color: _accent, strokeWidth: 2)),
+                child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2)),
             error: (e, __) => _ErrorView(message: e.toString(), onRetry: _refresh),
             data: (data) {
               final allDebts = (data['debts'] as List? ?? [])
@@ -190,6 +185,7 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
   }
 
   Widget _buildHeader(Map<String, dynamic> summary, int total) {
+    final c = context.appColors;
     final iOwe    = _d(summary['i_owe']);
     final owedToMe = _d(summary['owed_to_me']);
     final net     = owedToMe - iOwe;
@@ -205,20 +201,20 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
               onTap: () => shellScaffoldKey.currentState?.openDrawer(),
               child: Container(
                 width: 40, height: 40,
-                decoration: BoxDecoration(color: _card,
+                decoration: BoxDecoration(color: c.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border)),
-                child: const Icon(Icons.menu, size: 18, color: _text2),
+                    border: Border.all(color: c.border)),
+                child: Icon(Icons.menu, size: 18, color: c.text2),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Kişisel Borçlar',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text1)),
+                Text('Kişisel Borçlar',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1)),
                 Text('$total kayıt',
-                    style: const TextStyle(fontSize: 12, color: _text3)),
+                    style: TextStyle(fontSize: 12, color: c.text3)),
               ],
             )),
           ]),
@@ -238,8 +234,8 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                   color: net >= 0
-                      ? _pos.withValues(alpha: 0.25)
-                      : _neg.withValues(alpha: 0.25)),
+                      ? c.positive.withValues(alpha: 0.25)
+                      : c.negative.withValues(alpha: 0.25)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,16 +244,16 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (net >= 0 ? _pos : _neg).withValues(alpha: 0.12),
+                      color: (net >= 0 ? c.positive : c.negative).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Icon(net >= 0 ? Icons.trending_up : Icons.trending_down,
-                          size: 12, color: net >= 0 ? _pos : _neg),
+                          size: 12, color: net >= 0 ? c.positive : c.negative),
                       const SizedBox(width: 4),
                       Text(net >= 0 ? 'Net Alacak' : 'Net Borç',
                           style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                              color: net >= 0 ? _pos : _neg)),
+                              color: net >= 0 ? c.positive : c.negative)),
                     ]),
                   ),
                 ]),
@@ -265,16 +261,16 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
                 Text(AppFormatters.currencyCompact(net.abs()),
                     style: TextStyle(
                         fontSize: 28, fontWeight: FontWeight.w800,
-                        color: net >= 0 ? _pos : _neg,
+                        color: net >= 0 ? c.positive : c.negative,
                         letterSpacing: -0.5)),
                 const SizedBox(height: 16),
                 Row(children: [
                   Expanded(child: _MiniStat(
-                      label: 'Verilecek', value: iOwe, color: _neg,
+                      label: 'Verilecek', value: iOwe, color: c.negative,
                       icon: Icons.arrow_upward_rounded)),
                   const SizedBox(width: 12),
                   Expanded(child: _MiniStat(
-                      label: 'Alınacak', value: owedToMe, color: _pos,
+                      label: 'Alınacak', value: owedToMe, color: c.positive,
                       icon: Icons.arrow_downward_rounded)),
                 ]),
               ],
@@ -303,6 +299,7 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
       ]),
     );
   }
+
 }
 
 // ── Mini stat inside hero card ─────────────────────────────────────────
@@ -316,6 +313,7 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -337,7 +335,7 @@ class _MiniStat extends StatelessWidget {
           children: [
             Text(AppFormatters.currencyCompact(value),
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
-            Text(label, style: const TextStyle(fontSize: 10, color: _text3)),
+            Text(label, style: TextStyle(fontSize: 10, color: c.text3)),
           ],
         )),
       ]),
@@ -356,31 +354,32 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _accent.withValues(alpha: 0.12) : _card,
+          color: selected ? AppColors.accent.withValues(alpha: 0.12) : c.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: selected ? _accent.withValues(alpha: 0.5) : _border),
+              color: selected ? AppColors.accent.withValues(alpha: 0.5) : c.border),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Text(label, style: TextStyle(
               fontSize: 12, fontWeight: FontWeight.w600,
-              color: selected ? _accent : _text2)),
+              color: selected ? AppColors.accent : c.text2)),
           const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
             decoration: BoxDecoration(
-              color: selected ? _accent.withValues(alpha: 0.2) : _border,
+              color: selected ? AppColors.accent.withValues(alpha: 0.2) : c.border,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text('$count', style: TextStyle(
                 fontSize: 10, fontWeight: FontWeight.w700,
-                color: selected ? _accent : _text3)),
+                color: selected ? AppColors.accent : c.text3)),
           ),
         ]),
       ),
@@ -410,9 +409,9 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
 
       if (!mounted) return;
       if (debts.isEmpty && repayments.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Son 90 günde tespit edilecek borç hareketi bulunamadı.'),
-          backgroundColor: _card,
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Son 90 günde tespit edilecek borç hareketi bulunamadı.'),
+          backgroundColor: context.appColors.card,
         ));
         return;
       }
@@ -420,7 +419,7 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
       await showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: _card,
+        backgroundColor: context.appColors.card,
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
         builder: (_) => _DetectionSheet(
@@ -433,12 +432,12 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
       final msg = e.response?.data?['message'] as String?;
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(msg ?? 'Tespit sırasında hata oluştu.'),
-        backgroundColor: _neg,
+        backgroundColor: context.appColors.negative,
       ));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Tespit sırasında hata oluştu: $e'),
-        backgroundColor: _neg,
+        backgroundColor: context.appColors.negative,
       ));
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -447,13 +446,14 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: _loading ? null : _scan,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [_purple.withValues(alpha: 0.12), _accent.withValues(alpha: 0.06)],
+            colors: [_purple.withValues(alpha: 0.12), AppColors.accent.withValues(alpha: 0.06)],
             begin: Alignment.centerLeft, end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -474,10 +474,10 @@ class _AiDetectBannerState extends State<_AiDetectBanner> {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('AI Borç Tespiti',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _text1)),
-              const Text('Hareketlerde borç / geri ödeme ara',
-                  style: TextStyle(fontSize: 11, color: _text3)),
+              Text('AI Borç Tespiti',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: c.text1)),
+              Text('Hareketlerde borç / geri ödeme ara',
+                  style: TextStyle(fontSize: 11, color: c.text3)),
             ],
           )),
           Container(
@@ -506,13 +506,14 @@ class _DebtTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isBorrowed = debt['type'] == 'borrowed';
     final amount     = _d(debt['amount']);
     final name       = debt['counterparty_name'] as String? ?? 'Bilinmiyor';
     final desc       = debt['description'] as String?;
     final isSettled  = _b(debt['is_settled']);
     final autoDetect = _b(debt['is_auto_detected']);
-    final color      = isBorrowed ? _neg : _pos;
+    final color      = isBorrowed ? c.negative : c.positive;
     final label      = isBorrowed ? 'Borcum var' : 'Alacağım var';
     final initial    = name.isNotEmpty
         ? String.fromCharCode(name.runes.first).toUpperCase()
@@ -525,19 +526,19 @@ class _DebtTile extends StatelessWidget {
       background: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-            color: _neg.withValues(alpha: 0.15),
+            color: c.negative.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20)),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete_outline, color: _neg),
+        child: Icon(Icons.delete_outline, color: c.negative),
       ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: _card,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: isSettled ? _border : color.withValues(alpha: 0.2)),
+              color: isSettled ? c.border : color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -552,13 +553,13 @@ class _DebtTile extends StatelessWidget {
                       width: 48, height: 48,
                       decoration: BoxDecoration(
                         color: isSettled
-                            ? _text3.withValues(alpha: 0.1)
+                            ? c.text3.withValues(alpha: 0.1)
                             : color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Center(child: Text(initial,
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                              color: isSettled ? _text3 : color))),
+                              color: isSettled ? c.text3 : color))),
                     ),
                     if (autoDetect)
                       Positioned(right: 0, top: 0,
@@ -566,7 +567,7 @@ class _DebtTile extends StatelessWidget {
                           width: 16, height: 16,
                           decoration: BoxDecoration(
                               color: _purple, shape: BoxShape.circle,
-                              border: Border.all(color: _card, width: 1.5)),
+                              border: Border.all(color: c.card, width: 1.5)),
                           child: const Icon(Icons.auto_awesome, size: 9, color: Colors.white),
                         ),
                       ),
@@ -580,10 +581,10 @@ class _DebtTile extends StatelessWidget {
                       Row(children: [
                         Expanded(child: Text(name,
                             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
-                                color: isSettled ? _text2 : _text1))),
+                                color: isSettled ? c.text2 : c.text1))),
                         Text(AppFormatters.currencyCompact(amount),
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
-                                color: isSettled ? _text3 : color)),
+                                color: isSettled ? c.text3 : color)),
                       ]),
                       const SizedBox(height: 4),
                       Row(children: [
@@ -591,7 +592,7 @@ class _DebtTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: isSettled
-                                ? _text3.withValues(alpha: 0.08)
+                                ? c.text3.withValues(alpha: 0.08)
                                 : color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -599,7 +600,7 @@ class _DebtTile extends StatelessWidget {
                             isSettled ? 'Kapatıldı' : label,
                             style: TextStyle(
                                 fontSize: 10, fontWeight: FontWeight.w600,
-                                color: isSettled ? _text3 : color),
+                                color: isSettled ? c.text3 : color),
                           ),
                         ),
                         if (autoDetect) ...[
@@ -619,7 +620,7 @@ class _DebtTile extends StatelessWidget {
                       if (desc != null && desc.isNotEmpty) ...[
                         const SizedBox(height: 6),
                         Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: _text3)),
+                            style: TextStyle(fontSize: 12, color: c.text3)),
                       ],
                     ],
                   )),
@@ -629,21 +630,21 @@ class _DebtTile extends StatelessWidget {
 
             // Action buttons (only for active debts)
             if (!isSettled) ...[
-              Container(height: 1, color: _border),
+              Container(height: 1, color: c.border),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
                 child: Row(children: [
                   Expanded(child: _ActionBtn(
                     label: 'Düzenle',
                     icon: Icons.edit_outlined,
-                    color: _text2,
+                    color: c.text2,
                     onTap: onEdit,
                   )),
-                  Container(width: 1, height: 40, color: _border),
+                  Container(width: 1, height: 40, color: c.border),
                   Expanded(child: _ActionBtn(
                     label: 'Kapat',
                     icon: Icons.check_circle_outline,
-                    color: _pos,
+                    color: c.positive,
                     onTap: onSettle,
                   )),
                 ]),
@@ -686,6 +687,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final (icon, title, sub) = switch (filter) {
       _Filter.active  => (Icons.handshake_outlined, 'Aktif borç yok', 'Harika! Şu an takip edilecek borç bulunmuyor.'),
       _Filter.settled => (Icons.check_circle_outline, 'Kapatılan borç yok', 'Henüz kapatılmış bir borç kaydı yok.'),
@@ -699,17 +701,17 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 80, height: 80,
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.08),
+              color: AppColors.accent.withValues(alpha: 0.08),
               shape: BoxShape.circle,
-              border: Border.all(color: _accent.withValues(alpha: 0.2)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
             ),
-            child: Icon(icon, size: 36, color: _accent.withValues(alpha: 0.6)),
+            child: Icon(icon, size: 36, color: AppColors.accent.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 20),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1)),
+          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c.text1)),
           const SizedBox(height: 8),
           Text(sub, textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: _text3, height: 1.5)),
+              style: TextStyle(fontSize: 13, color: c.text3, height: 1.5)),
           if (filter != _Filter.settled) ...[
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -717,7 +719,7 @@ class _EmptyState extends StatelessWidget {
               icon: const Icon(Icons.add, size: 16),
               label: const Text('Borç Ekle'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent, foregroundColor: const Color(0xFF051929),
+                backgroundColor: AppColors.accent, foregroundColor: const Color(0xFF051929),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -736,18 +738,21 @@ class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message, required this.onRetry});
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.error_outline, color: _neg, size: 48),
-      const SizedBox(height: 12),
-      const Text('Hata oluştu', style: TextStyle(color: _text1, fontSize: 16)),
-      const SizedBox(height: 16),
-      ElevatedButton(onPressed: onRetry,
-        style: ElevatedButton.styleFrom(backgroundColor: _accent,
-            foregroundColor: const Color(0xFF051929)),
-        child: const Text('Yeniden dene')),
-    ]),
-  );
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.error_outline, color: c.negative, size: 48),
+        const SizedBox(height: 12),
+        Text('Hata oluştu', style: TextStyle(color: c.text1, fontSize: 16)),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: onRetry,
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent,
+              foregroundColor: const Color(0xFF051929)),
+          child: const Text('Yeniden dene')),
+      ]),
+    );
+  }
 }
 
 // ── Debt Form Sheet ────────────────────────────────────────────────────
@@ -815,23 +820,27 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
   }
 
   void _snack(String msg) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(msg), backgroundColor: _neg));
+      .showSnackBar(SnackBar(content: Text(msg), backgroundColor: context.appColors.negative));
 
-  InputDecoration _deco(String label, {IconData? icon}) => InputDecoration(
-    labelText: label,
-    labelStyle: const TextStyle(color: _text3, fontSize: 13),
-    prefixIcon: icon != null ? Icon(icon, size: 18, color: _text3) : null,
-    filled: true, fillColor: _bg,
-    border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _border)),
-    enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _border)),
-    focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _accent, width: 1.5)),
-  );
+  InputDecoration _deco(String label, {IconData? icon}) {
+    final c = context.appColors;
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon: icon != null ? Icon(icon, size: 18, color: c.text3) : null,
+      filled: true, fillColor: c.bg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.accent, width: 1.5)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + bottom),
@@ -841,34 +850,34 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(child: Container(width: 36, height: 4,
-                decoration: BoxDecoration(color: _border, borderRadius: BorderRadius.circular(2)))),
+                decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 16),
             Text(_isEdit ? 'Borç Düzenle' : 'Yeni Borç Ekle',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text1)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1)),
             const SizedBox(height: 6),
             Text(_isEdit ? 'Borç bilgilerini güncelleyin' : 'Borç veya alacak kaydı oluşturun',
-                style: const TextStyle(fontSize: 12, color: _text3)),
+                style: TextStyle(fontSize: 12, color: c.text3)),
             const SizedBox(height: 20),
 
             // Type selector
             Row(children: [
-              _TypePill(label: 'Borçluyum', selected: _type == 'borrowed', color: _neg,
+              _TypePill(label: 'Borçluyum', selected: _type == 'borrowed', color: c.negative,
                   onTap: () => setState(() => _type = 'borrowed')),
               const SizedBox(width: 8),
-              _TypePill(label: 'Alacaklıyım', selected: _type == 'lent', color: _pos,
+              _TypePill(label: 'Alacaklıyım', selected: _type == 'lent', color: c.positive,
                   onTap: () => setState(() => _type = 'lent')),
             ]),
             const SizedBox(height: 16),
 
             TextFormField(
               controller: _nameCtrl,
-              style: const TextStyle(color: _text1, fontSize: 14),
+              style: TextStyle(color: c.text1, fontSize: 14),
               decoration: _deco('Kişi Adı', icon: Icons.person_outline),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _amountCtrl,
-              style: const TextStyle(color: _text1, fontSize: 14),
+              style: TextStyle(color: c.text1, fontSize: 14),
               decoration: _deco('Tutar (₺)', icon: Icons.attach_money),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))],
@@ -876,7 +885,7 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _descCtrl,
-              style: const TextStyle(color: _text1, fontSize: 14),
+              style: TextStyle(color: c.text1, fontSize: 14),
               decoration: _deco('Açıklama (opsiyonel)', icon: Icons.notes_outlined),
               maxLines: 2,
             ),
@@ -887,7 +896,7 @@ class _DebtFormSheetState extends State<_DebtFormSheet> {
               child: ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent, foregroundColor: const Color(0xFF051929),
+                  backgroundColor: AppColors.accent, foregroundColor: const Color(0xFF051929),
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -914,23 +923,26 @@ class _TypePill extends StatelessWidget {
       required this.color, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : _bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? color.withValues(alpha: 0.45) : _border),
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.12) : c.bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? color.withValues(alpha: 0.45) : c.border),
+          ),
+          child: Center(child: Text(label,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                  color: selected ? color : c.text3))),
         ),
-        child: Center(child: Text(label,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                color: selected ? color : _text3))),
       ),
-    ),
-  );
+    );
+  }
 }
 
 // ── Detection Sheet ────────────────────────────────────────────────────
@@ -964,15 +976,15 @@ class _DetectionSheetState extends State<_DetectionSheet> {
       });
       setState(() => _dDismissed.add(idx));
       widget.onChanged();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Borç kaydedildi.'), backgroundColor: _pos));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Borç kaydedildi.'), backgroundColor: context.appColors.positive));
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String?;
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(msg ?? 'Borç kaydedilemedi.'), backgroundColor: _neg));
+          content: Text(msg ?? 'Borç kaydedilemedi.'), backgroundColor: context.appColors.negative));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Borç kaydedilemedi.'), backgroundColor: _neg));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Borç kaydedilemedi.'), backgroundColor: context.appColors.negative));
     }
   }
 
@@ -994,20 +1006,21 @@ class _DetectionSheetState extends State<_DetectionSheet> {
         content: Text(profit > 0
             ? '${_fmt(profit)} kar ile borç kapatıldı!'
             : 'Borç kapatıldı.'),
-        backgroundColor: profit > 0 ? _pos : _card,
+        backgroundColor: profit > 0 ? context.appColors.positive : context.appColors.card,
       ));
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String?;
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(msg ?? 'Geri ödeme kaydedilemedi.'), backgroundColor: _neg));
+          content: Text(msg ?? 'Geri ödeme kaydedilemedi.'), backgroundColor: context.appColors.negative));
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Geri ödeme kaydedilemedi.'), backgroundColor: _neg));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Geri ödeme kaydedilemedi.'), backgroundColor: context.appColors.negative));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final debts = widget.debtSuggestions.asMap().entries
         .where((e) => !_dDismissed.contains(e.key)).toList();
     final repayments = widget.repaymentSuggestions.asMap().entries
@@ -1023,7 +1036,7 @@ class _DetectionSheetState extends State<_DetectionSheet> {
         children: [
           Center(child: Container(width: 36, height: 4,
               margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(color: _border, borderRadius: BorderRadius.circular(2)))),
+              decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(2)))),
 
           Row(children: [
             Container(width: 36, height: 36,
@@ -1032,17 +1045,17 @@ class _DetectionSheetState extends State<_DetectionSheet> {
                 child: const Icon(Icons.auto_awesome, size: 18, color: _purple)),
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('AI Borç Tespiti',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _text1)),
+              Text('AI Borç Tespiti',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c.text1)),
               Text('${debts.length + repayments.length} öneri bulundu',
-                  style: const TextStyle(fontSize: 11, color: _text3)),
+                  style: TextStyle(fontSize: 11, color: c.text3)),
             ])),
           ]),
           const SizedBox(height: 20),
 
           if (debts.isNotEmpty) ...[
-            const Text('Yeni Borç Önerileri',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _text3, letterSpacing: 0.5)),
+            Text('Yeni Borç Önerileri',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.text3, letterSpacing: 0.5)),
             const SizedBox(height: 10),
             ...debts.map((e) => _SuggestionCard(
               suggestion: e.value,
@@ -1053,8 +1066,8 @@ class _DetectionSheetState extends State<_DetectionSheet> {
             const SizedBox(height: 16),
           ],
           if (repayments.isNotEmpty) ...[
-            const Text('Geri Ödeme Önerileri',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _text3, letterSpacing: 0.5)),
+            Text('Geri Ödeme Önerileri',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.text3, letterSpacing: 0.5)),
             const SizedBox(height: 10),
             ...repayments.map((e) => _SuggestionCard(
               suggestion: e.value,
@@ -1064,9 +1077,9 @@ class _DetectionSheetState extends State<_DetectionSheet> {
             )),
           ],
           if (debts.isEmpty && repayments.isEmpty)
-            const Center(child: Padding(
-              padding: EdgeInsets.only(top: 40),
-              child: Text('Tüm öneriler işlendi.', style: TextStyle(color: _text3)),
+            Center(child: Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Text('Tüm öneriler işlendi.', style: TextStyle(color: c.text3)),
             )),
         ],
       ),
@@ -1084,10 +1097,11 @@ class _SuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     if (isDebt) {
       final amount  = _d(suggestion['amount']);
       final dir     = suggestion['direction'] as String? ?? 'given';
-      final color   = dir == 'given' ? _pos : _neg;
+      final color   = dir == 'given' ? c.positive : c.negative;
       final label   = dir == 'given' ? 'Verdiğim borç' : 'Aldığım borç';
       final desc    = suggestion['description'] as String? ?? '';
       final contact = suggestion['suggested_contact'] as String?;
@@ -1096,12 +1110,12 @@ class _SuggestionCard extends StatelessWidget {
       final confidence = suggestion['confidence'] as String? ?? 'high';
       final aiReason   = suggestion['ai_reason'] as String?;
 
-      return _cardWrap(color, [
+      return _cardWrap(context, color, [
         Row(children: [
           _badge(label, color),
           if (source == 'ai') ...[
             const SizedBox(width: 6),
-            _aiBadge(confidence),
+            _aiBadge(context, confidence),
           ],
           const Spacer(),
           Text('₺${amount.toStringAsFixed(2)}',
@@ -1110,11 +1124,11 @@ class _SuggestionCard extends StatelessWidget {
         if (desc.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: _text2)),
+              style: TextStyle(fontSize: 12, color: c.text2)),
         ],
         if (contact != null) ...[
           const SizedBox(height: 4),
-          Text('Kişi: $contact', style: const TextStyle(fontSize: 11, color: _text3)),
+          Text('Kişi: $contact', style: TextStyle(fontSize: 11, color: c.text3)),
         ],
         if (source == 'ai' && aiReason != null && aiReason.isNotEmpty) ...[
           const SizedBox(height: 6),
@@ -1126,7 +1140,7 @@ class _SuggestionCard extends StatelessWidget {
           ]),
         ],
         const SizedBox(height: 12),
-        _actionRow(color, 'Atla', 'Borç Ekle', onDismiss, onConfirm),
+        _actionRow(context, color, 'Atla', 'Borç Ekle', onDismiss, onConfirm),
       ]);
     } else {
       final debtAmt  = _d(suggestion['debt_amount']);
@@ -1135,35 +1149,35 @@ class _SuggestionCard extends StatelessWidget {
       final contact  = suggestion['debt_contact'] as String? ?? '';
       final desc     = suggestion['description'] as String? ?? '';
 
-      return _cardWrap(_accent, [
+      return _cardWrap(context, AppColors.accent, [
         Text('$contact geri ödüyor mu?',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _text1)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.text1)),
         const SizedBox(height: 10),
         Row(children: [
-          _amountChip('Borç', debtAmt, _neg),
+          _amountChip(context, 'Borç', debtAmt, c.negative),
           const SizedBox(width: 8),
-          _amountChip('Gelen', repayAmt, _pos),
+          _amountChip(context, 'Gelen', repayAmt, c.positive),
           if (profit > 0) ...[
             const SizedBox(width: 8),
-            _amountChip('Kar', profit, _warn),
+            _amountChip(context, 'Kar', profit, c.warning),
           ],
         ]),
         if (desc.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: _text3)),
+              style: TextStyle(fontSize: 11, color: c.text3)),
         ],
         const SizedBox(height: 12),
-        _actionRow(_accent, 'Hayır', 'Evet, Kapat', onDismiss, onConfirm),
+        _actionRow(context, AppColors.accent, 'Hayır', 'Evet, Kapat', onDismiss, onConfirm),
       ]);
     }
   }
 
-  Widget _cardWrap(Color color, List<Widget> children) => Container(
+  Widget _cardWrap(BuildContext context, Color color, List<Widget> children) => Container(
     margin: const EdgeInsets.only(bottom: 10),
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: _bg,
+      color: context.appColors.bg,
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: color.withValues(alpha: 0.2)),
     ),
@@ -1178,8 +1192,9 @@ class _SuggestionCard extends StatelessWidget {
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
   );
 
-  Widget _aiBadge(String confidence) {
-    final color = confidence == 'high' ? _pos : _warn;
+  Widget _aiBadge(BuildContext context, String confidence) {
+    final c = context.appColors;
+    final color = confidence == 'high' ? c.positive : c.warning;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -1196,38 +1211,40 @@ class _SuggestionCard extends StatelessWidget {
     );
   }
 
-  Widget _amountChip(String label, double val, Color color) => Container(
+  Widget _amountChip(BuildContext context, String label, double val, Color color) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
     decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
     child: Column(children: [
       Text('₺${val.toStringAsFixed(2)}',
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-      Text(label, style: const TextStyle(fontSize: 9, color: _text3)),
+      Text(label, style: TextStyle(fontSize: 9, color: context.appColors.text3)),
     ]),
   );
 
-  Widget _actionRow(Color confirmColor, String skipLabel, String confirmLabel,
-      VoidCallback onSkip, VoidCallback onConfirm) =>
-      Row(children: [
-        Expanded(child: OutlinedButton(
-          onPressed: onSkip,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: _text3, side: const BorderSide(color: _border),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: Text(skipLabel, style: const TextStyle(fontSize: 12)),
-        )),
-        const SizedBox(width: 8),
-        Expanded(child: ElevatedButton(
-          onPressed: onConfirm,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: confirmColor, foregroundColor: const Color(0xFF051929),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: Text(confirmLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-        )),
-      ]);
+  Widget _actionRow(BuildContext context, Color confirmColor, String skipLabel, String confirmLabel,
+      VoidCallback onSkip, VoidCallback onConfirm) {
+    final c = context.appColors;
+    return Row(children: [
+      Expanded(child: OutlinedButton(
+        onPressed: onSkip,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.text3, side: BorderSide(color: c.border),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(skipLabel, style: const TextStyle(fontSize: 12)),
+      )),
+      const SizedBox(width: 8),
+      Expanded(child: ElevatedButton(
+        onPressed: onConfirm,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: confirmColor, foregroundColor: const Color(0xFF051929),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(confirmLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+      )),
+    ]);
+  }
 }

@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -36,17 +38,6 @@ IconData _iconForGoal(String name) {
   return Icons.flag_outlined;
 }
 
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _warning    = Color(0xFFF59E0B);
-
 class GoalsPage extends ConsumerStatefulWidget {
   const GoalsPage({super.key});
 
@@ -59,13 +50,14 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final async = ref.watch(_goalsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showGoalForm(context, null),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -77,8 +69,8 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
             _Header(title: 'Hedefler', subtitle: 'Tasarruf hedeflerin'),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async => ref.invalidate(_goalsProvider),
                 child: async.when(
                   loading: () => const SkeletonListView(),
@@ -155,7 +147,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                 vertical: 32),
                             child: Text(
                               'Bu kategoride hedef yok.',
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3),
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -194,10 +186,11 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
 
   void _showGoalForm(
       BuildContext context, Map<String, dynamic>? existing) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -210,10 +203,11 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
 
   void _showAddFunds(
       BuildContext context, int goalId, String goalName) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -234,6 +228,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -244,11 +239,11 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 20, color: _text2),
+              child: Icon(Icons.menu, size: 20, color: c.text2),
             ),
           ),
           const SizedBox(width: 12),
@@ -256,9 +251,9 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text1)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: c.text1)),
               Text(subtitle,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3)),
             ],
           ),
           const Spacer(),
@@ -278,11 +273,12 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -291,13 +287,13 @@ class _HeroCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.12),
+              color: AppColors.accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: _accent.withValues(alpha: 0.25)),
+                  color: AppColors.accent.withValues(alpha: 0.25)),
             ),
             child: const Icon(Icons.flag_outlined,
-                size: 26, color: _accent),
+                size: 26, color: AppColors.accent),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -306,16 +302,16 @@ class _HeroCard extends StatelessWidget {
               children: [
                 Text(
                   '$activeCount aktif hedef · ${AppFormatters.currencyCompact(totalSaved)} biriktirildi',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text2),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text2),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   AppFormatters.currencyCompact(totalSaved),
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.56),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: c.text1, letterSpacing: -0.56),
                 ),
                 const SizedBox(height: 4),
                 Text('Toplam birikim',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
               ],
             ),
           ),
@@ -334,6 +330,7 @@ class _DashedAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -341,7 +338,7 @@ class _DashedAddButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _cardBorder,
+            color: c.border,
             style: BorderStyle.solid,
             width: 1.5,
           ),
@@ -349,10 +346,10 @@ class _DashedAddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 18, color: _text3),
+            Icon(Icons.add, size: 18, color: c.text3),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text3)),
           ],
         ),
       ),
@@ -378,12 +375,13 @@ class _SegmentedToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Row(
         children: options.map((o) {
@@ -396,12 +394,12 @@ class _SegmentedToggle extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: active
-                      ? _accent.withValues(alpha: 0.15)
+                      ? AppColors.accent.withValues(alpha: 0.15)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   border: active
                       ? Border.all(
-                          color: _accent.withValues(alpha: 0.3))
+                          color: AppColors.accent.withValues(alpha: 0.3))
                       : null,
                 ),
                 child: Text(
@@ -410,7 +408,7 @@ class _SegmentedToggle extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                    color: active ? _accent : _text3,
+                    color: active ? AppColors.accent : c.text3,
                   ),
                 ),
               ),
@@ -432,6 +430,7 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final name = goal['name'] as String? ?? '';
     final pct =
         (goal['progress_pct'] as num?)?.toDouble() ?? 0;
@@ -470,9 +469,9 @@ class _GoalCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,11 +484,11 @@ class _GoalCard extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: _accent.withValues(alpha: 0.12),
+                    color: AppColors.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Icon(_iconForGoal(name),
-                      size: 22, color: _accent),
+                      size: 22, color: AppColors.accent),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -497,16 +496,16 @@ class _GoalCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1)),
                       const SizedBox(height: 2),
                       Text(
                         '${AppFormatters.currencyCompact(target)} hedef',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                       ),
                       if (deadlineText.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(deadlineText,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
                       ],
                     ],
                   ),
@@ -522,16 +521,16 @@ class _GoalCard extends StatelessWidget {
                         value: (pct / 100).clamp(0.0, 1.0),
                         strokeWidth: 5,
                         backgroundColor:
-                            _accent.withValues(alpha: 0.12),
+                            AppColors.accent.withValues(alpha: 0.12),
                         valueColor: const AlwaysStoppedAnimation(
-                            _accent),
+                            AppColors.accent),
                       ),
                       Text(
                         '%${pct.toStringAsFixed(0)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: _text1),
+                            color: c.text1),
                       ),
                     ],
                   ),
@@ -546,9 +545,9 @@ class _GoalCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: (pct / 100).clamp(0, 1),
                 backgroundColor:
-                    _accent.withValues(alpha: 0.1),
+                    AppColors.accent.withValues(alpha: 0.1),
                 valueColor:
-                    const AlwaysStoppedAnimation(_accent),
+                    const AlwaysStoppedAnimation(AppColors.accent),
                 minHeight: 6,
               ),
             ),
@@ -560,19 +559,19 @@ class _GoalCard extends StatelessWidget {
               children: [
                 Text(
                   '${AppFormatters.currencyCompact(current)} / ${AppFormatters.currencyCompact(target)}',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                 ),
                 if (monthsLeft != null)
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _cardBorder,
+                      color: c.border,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '$monthsLeft ay kaldı',
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: _text2),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: c.text2),
                     ),
                   ),
               ],
@@ -589,7 +588,7 @@ class _GoalCard extends StatelessWidget {
                         : Icons.warning_amber_rounded,
                     size: 14,
                     color:
-                        onTrack ? _positive : _warning,
+                        onTrack ? c.positive : c.warning,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -597,7 +596,7 @@ class _GoalCard extends StatelessWidget {
                       onTrack
                           ? 'Hedefe ulaşma yolundasın'
                           : '${AppFormatters.currencyCompact(monthlyNeeded)}/ay gerekli',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text2),
                     ),
                   ),
                   GestureDetector(
@@ -606,18 +605,18 @@ class _GoalCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: _accent.withValues(alpha: 0.12),
+                        color: AppColors.accent.withValues(alpha: 0.12),
                         borderRadius:
                             BorderRadius.circular(10),
                         border: Border.all(
                             color:
-                                _accent.withValues(alpha: 0.3)),
+                                AppColors.accent.withValues(alpha: 0.3)),
                       ),
-                      child: Text('Para Ekle',
-                          style: const TextStyle(
+                      child: const Text('Para Ekle',
+                          style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: _accent)),
+                              color: AppColors.accent)),
                     ),
                   ),
                 ],
@@ -686,6 +685,7 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
@@ -694,10 +694,10 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Katkı Ekle',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
           const SizedBox(height: 4),
           Text(widget.goalName,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3)),
           const SizedBox(height: 20),
           TextField(
             controller: _amountCtrl,
@@ -718,7 +718,7 @@ class _AddFundsSheetState extends State<_AddFundsSheet> {
             child: ElevatedButton(
               onPressed: _loading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
+                backgroundColor: AppColors.accent,
                 foregroundColor: const Color(0xFF051929),
                 padding:
                     const EdgeInsets.symmetric(vertical: 14),
@@ -835,6 +835,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
@@ -846,7 +847,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Hedef Düzenle' : 'Hedef Ekle',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameCtrl,
@@ -927,7 +928,7 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(
                         vertical: 14),

@@ -4,20 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 final _healthProvider =
     FutureProvider.autoDispose<_HealthData>((ref) async {
@@ -68,14 +59,15 @@ class HealthScorePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_healthProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: RefreshIndicator(
-          color: _accent,
-          backgroundColor: _cardBg,
+          color: AppColors.accent,
+          backgroundColor: c.card,
           onRefresh: () async => ref.invalidate(_healthProvider),
           child: async.when(
             loading: () => const SkeletonListView(),
@@ -91,6 +83,7 @@ class HealthScorePage extends ConsumerWidget {
   }
 
   Widget _body(BuildContext context, WidgetRef ref, _HealthData data) {
+    final c = context.appColors;
     // Compute trend delta (last vs first)
     final delta = data.trend.length >= 2
         ? data.trend.last - data.trend.first
@@ -110,12 +103,11 @@ class HealthScorePage extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _cardBg,
+                    color: c.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: c.border),
                   ),
-                  child:
-                      const Icon(Icons.menu, size: 18, color: _text2),
+                  child: Icon(Icons.menu, size: 18, color: c.text2),
                 ),
               ),
               const SizedBox(width: 14),
@@ -123,16 +115,16 @@ class HealthScorePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Finansal Sağlık Skoru',
+                    Text('Finansal Sağlık Skoru',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: _text1)),
+                            color: c.text1)),
                     Text(_calcLabel(data.calculatedAt),
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: _text3)),
+                            color: c.text3)),
                   ],
                 ),
               ),
@@ -142,12 +134,12 @@ class HealthScorePage extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _cardBg,
+                    color: c.card,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: c.border),
                   ),
-                  child: const Icon(Icons.refresh,
-                      size: 17, color: _text2),
+                  child: Icon(Icons.refresh,
+                      size: 17, color: c.text2),
                 ),
               ),
             ],
@@ -160,9 +152,9 @@ class HealthScorePage extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: [
@@ -176,7 +168,7 @@ class HealthScorePage extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: (delta > 0 ? _positive : _negative)
+                          color: (delta > 0 ? c.positive : c.negative)
                               .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -188,14 +180,14 @@ class HealthScorePage extends ConsumerWidget {
                                     ? Icons.arrow_upward
                                     : Icons.arrow_downward,
                                 size: 12,
-                                color: delta > 0 ? _positive : _negative),
+                                color: delta > 0 ? c.positive : c.negative),
                             const SizedBox(width: 3),
                             Text(
                               '${delta > 0 ? '+' : ''}$delta',
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: delta > 0 ? _positive : _negative),
+                                  color: delta > 0 ? c.positive : c.negative),
                             ),
                           ],
                         ),
@@ -203,10 +195,10 @@ class HealthScorePage extends ConsumerWidget {
                       const SizedBox(width: 8),
                     ],
                     Text(_periodLabel(data.trend.length),
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: _text3)),
+                            color: c.text3)),
                   ],
                 ),
               ],
@@ -221,9 +213,9 @@ class HealthScorePage extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,17 +223,17 @@ class HealthScorePage extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Skor geçmişi',
+                      Text('Skor geçmişi',
                           style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: _text3)),
+                              color: c.text3)),
                       Text(
                         '${data.trend.first} → ${data.trend.last}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: _text3),
+                            color: c.text3),
                       ),
                     ],
                   ),
@@ -258,13 +250,13 @@ class HealthScorePage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 4, bottom: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
                 child: Text('Bileşenler',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: _text3,
+                        color: c.text3,
                         letterSpacing: 0.5)),
               ),
               _ComponentCard(
@@ -272,7 +264,7 @@ class HealthScorePage extends ConsumerWidget {
                 weight: 30,
                 value: data.debtRatio.toDouble(),
                 hint: _debtRatioHint(data.debtRatio),
-                color: _accent,
+                color: AppColors.accent,
               ),
               const SizedBox(height: 10),
               _ComponentCard(
@@ -288,7 +280,7 @@ class HealthScorePage extends ConsumerWidget {
                 weight: 25,
                 value: data.emergencyFund.toDouble(),
                 hint: _emergencyHint(data.emergencyFund),
-                color: _warning,
+                color: c.warning,
               ),
               const SizedBox(height: 10),
               _ComponentCard(
@@ -296,7 +288,7 @@ class HealthScorePage extends ConsumerWidget {
                 weight: 15,
                 value: data.consistency.toDouble(),
                 hint: _consistencyHint(data.consistency),
-                color: _positive,
+                color: c.positive,
               ),
             ],
           ),
@@ -313,7 +305,7 @@ class HealthScorePage extends ConsumerWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => context.push('/chat'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
@@ -332,8 +324,8 @@ class HealthScorePage extends ConsumerWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => context.push('/simulator'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _accent,
-                    side: const BorderSide(color: _cardBorder),
+                    foregroundColor: AppColors.accent,
+                    side: BorderSide(color: c.border),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
@@ -351,14 +343,14 @@ class HealthScorePage extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.bolt_outlined, size: 11, color: _text3),
+              Icon(Icons.bolt_outlined, size: 11, color: c.text3),
               const SizedBox(width: 4),
-              const Text(
+              Text(
                 'Skor her sayfa açılışında yeniden hesaplanır',
                 style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: _text3),
+                    color: c.text3),
               ),
             ],
           ),
@@ -418,6 +410,7 @@ class _ScoreGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return SizedBox(
       width: 180,
       height: 180,
@@ -429,17 +422,17 @@ class _ScoreGauge extends StatelessWidget {
             children: [
               Text(
                 value.toStringAsFixed(0),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w800,
-                    color: _text1,
+                    color: c.text1,
                     height: 1.0),
               ),
               const SizedBox(height: 4),
               Text(_label(value),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12,
-                      color: _text2,
+                      color: c.text2,
                       fontWeight: FontWeight.w500)),
             ],
           ),
@@ -470,16 +463,16 @@ class _GaugePainter extends CustomPainter {
         center,
         radius,
         Paint()
-          ..color = _cardBorder
+          ..color = const Color(0xFF1A2940)
           ..style = PaintingStyle.stroke
           ..strokeWidth = stroke
           ..strokeCap = StrokeCap.round);
 
     final fillColor = value < 40
-        ? _negative
+        ? const Color(0xFFFF4D6D)
         : value < 70
-            ? _warning
-            : _positive;
+            ? const Color(0xFFF59E0B)
+            : const Color(0xFF0DD9A0);
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -550,13 +543,13 @@ class _SparklinePainter extends CustomPainter {
     canvas.drawPath(
         fillPath,
         Paint()
-          ..color = _accent.withValues(alpha: 0.08)
+          ..color = AppColors.accent.withValues(alpha: 0.08)
           ..style = PaintingStyle.fill);
 
     canvas.drawPath(
         path,
         Paint()
-          ..color = _accent
+          ..color = AppColors.accent
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
           ..strokeCap = StrokeCap.round
@@ -584,12 +577,13 @@ class _ComponentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,32 +598,32 @@ class _ComponentCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(label,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: _text1)),
+                                color: c.text1)),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _cardBorder,
+                            color: c.border,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text('%$weight',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
-                                  color: _text3)),
+                                  color: c.text3)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(hint,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: _text2,
+                            color: c.text2,
                             height: 1.5)),
                   ],
                 ),

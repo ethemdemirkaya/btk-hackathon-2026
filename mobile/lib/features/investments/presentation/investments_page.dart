@@ -2,23 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B); // ignore: unused_element
 
 final _investmentsProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
@@ -123,16 +114,17 @@ class _InvestmentsPageState
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final async = ref.watch(_investmentsProvider);
     final liveRatesAsync = ref.watch(_liveRatesProvider);
     final liveRatesMap = liveRatesAsync.valueOrNull?['rates']
         as Map<String, dynamic>?;
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -150,8 +142,8 @@ class _InvestmentsPageState
               _LiveRatesStrip(rates: liveRatesMap),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_investmentsProvider),
                 child: async.when(
@@ -258,15 +250,15 @@ class _InvestmentsPageState
                                           vertical: 6),
                                   decoration: BoxDecoration(
                                     color: active
-                                        ? _accent
-                                        : _cardBg,
+                                        ? AppColors.accent
+                                        : c.card,
                                     borderRadius:
                                         BorderRadius.circular(
                                             999),
                                     border: Border.all(
                                         color: active
-                                            ? _accent
-                                            : _cardBorder),
+                                            ? AppColors.accent
+                                            : c.border),
                                   ),
                                   child: Text(
                                     _filterLabels[i],
@@ -275,7 +267,7 @@ class _InvestmentsPageState
                                         fontWeight: FontWeight.w400).copyWith(
                                             color: active
                                                 ? const Color(0xFF051929)
-                                                : _text2,
+                                                : c.text2,
                                             fontWeight: active
                                                 ? FontWeight.w600
                                                 : FontWeight.w400),
@@ -331,10 +323,11 @@ class _InvestmentsPageState
   }
 
   void _showAddSheet(BuildContext context) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -345,26 +338,27 @@ class _InvestmentsPageState
 
   Future<void> _deleteAsset(
       BuildContext context, Map<String, dynamic> asset) async {
+    final c = context.appColors;
     final id = (asset['id'] as num?)?.toInt();
     if (id == null) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _cardBg,
+        backgroundColor: c.card,
         title: Text('Varlığı sil',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600).copyWith(color: _text1)),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600).copyWith(color: c.text1)),
         content: Text(
             'Bu yatırım kaydı silinecek. Devam edilsin mi?',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: _text2)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: c.text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text('İptal',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: _text2))),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).copyWith(color: c.text2))),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-                backgroundColor: _negative),
+                backgroundColor: c.negative),
             child: const Text('Sil',
                 style: TextStyle(color: Colors.white)),
           ),
@@ -396,6 +390,7 @@ class _LiveRatesStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final items = _shown.where((s) => rates.containsKey(s)).toList();
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -413,9 +408,9 @@ class _LiveRatesStrip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,16 +420,16 @@ class _LiveRatesStrip extends StatelessWidget {
                       Container(
                         width: 5,
                         height: 5,
-                        decoration: const BoxDecoration(
-                          color: _positive,
+                        decoration: BoxDecoration(
+                          color: c.positive,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         _labels[sym] ?? sym,
-                        style: const TextStyle(
-                            fontSize: 9, color: _text3),
+                        style: TextStyle(
+                            fontSize: 9, color: c.text3),
                       ),
                     ],
                   ),
@@ -443,10 +438,10 @@ class _LiveRatesStrip extends StatelessWidget {
                     sym == 'XAU'
                         ? '₺${rate.toStringAsFixed(0)}'
                         : '₺${rate.toStringAsFixed(2)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: _text1),
+                        color: c.text1),
                   ),
                 ],
               ),
@@ -466,6 +461,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -477,12 +473,12 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
               child:
-                  const Icon(Icons.menu, size: 20, color: _text2),
+                  Icon(Icons.menu, size: 20, color: c.text2),
             ),
           ),
           const SizedBox(width: 12),
@@ -491,10 +487,10 @@ class _Header extends StatelessWidget {
             children: [
               Text(title,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600).copyWith(
-                      color: _text1,
+                      color: c.text1,
                       fontWeight: FontWeight.w700)),
               Text(subtitle,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: _text3)),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400).copyWith(color: c.text3)),
             ],
           ),
           const Spacer(),
@@ -518,14 +514,15 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isPositive = totalGain >= 0;
-    final gainColor = isPositive ? _positive : _negative;
+    final gainColor = isPositive ? c.positive : c.negative;
 
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -533,15 +530,15 @@ class _HeroCard extends StatelessWidget {
         children: [
           Text('Toplam portföy değeri',
               style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w500).copyWith(color: _text3)),
+                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w500).copyWith(color: c.text3)),
           const SizedBox(height: 6),
           Text(
             AppFormatters.currencyCompact(totalVal),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.03 * 34,
-                color: _text1),
+                color: c.text1),
           ),
           const SizedBox(height: 12),
           Row(
@@ -591,9 +588,9 @@ class _HeroCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('toplam K/Z',
+              Text('toplam K/Z',
                   style:
-                      TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                      TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
             ],
           ),
         ],
@@ -611,22 +608,23 @@ class _AllocationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final entries = allocation.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Varlık dağılımı',
+          Text('Varlık dağılımı',
               style:
-                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                  TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
           const SizedBox(height: 12),
           // Horizontal stacked bar
           ClipRRect(
@@ -671,10 +669,10 @@ class _AllocationCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(style.label,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text2)),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text2)),
                   const SizedBox(width: 4),
                   Text('%${pct.toStringAsFixed(0)}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
                 ],
               );
             }).toList(),
@@ -694,6 +692,7 @@ class _DashedAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -701,7 +700,7 @@ class _DashedAddButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _cardBorder,
+            color: c.border,
             style: BorderStyle.solid,
             width: 1.5,
           ),
@@ -709,10 +708,10 @@ class _DashedAddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 18, color: _text3),
+            Icon(Icons.add, size: 18, color: c.text3),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text3)),
           ],
         ),
       ),
@@ -724,12 +723,13 @@ class _DashedAddButton extends StatelessWidget {
 class _AlarmsShortcut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Row(
         children: [
@@ -745,7 +745,7 @@ class _AlarmsShortcut extends StatelessWidget {
                 size: 20, color: Color(0xFFC99B5B)),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -753,16 +753,16 @@ class _AlarmsShortcut extends StatelessWidget {
                     style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _text1)),
-                SizedBox(height: 2),
+                        color: c.text1)),
+                const SizedBox(height: 2),
                 Text('3 aktif alarm',
                     style: TextStyle(
-                        fontSize: 11, color: _text3)),
+                        fontSize: 11, color: c.text3)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right,
-              size: 16, color: _text3),
+          Icon(Icons.chevron_right,
+              size: 16, color: c.text3),
         ],
       ),
     );
@@ -779,6 +779,7 @@ class _AssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final assetType =
         asset['asset_type'] as String? ?? 'other';
     final cat = _category(assetType);
@@ -798,7 +799,7 @@ class _AssetCard extends StatelessWidget {
     final gainPct =
         (asset['gain_loss_pct'] as num?)?.toDouble() ?? 0;
     final isPositive = gainPct >= 0;
-    final changeColor = isPositive ? _positive : _negative;
+    final changeColor = isPositive ? c.positive : c.negative;
 
     final symbol = assetType.length <= 3
         ? assetType.toUpperCase()
@@ -817,7 +818,7 @@ class _AssetCard extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: _negative,
+          color: c.negative,
           borderRadius: BorderRadius.circular(20),
         ),
         child:
@@ -826,9 +827,9 @@ class _AssetCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -853,19 +854,19 @@ class _AssetCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: _text1)),
+                          color: c.text1)),
                   const SizedBox(height: 3),
                   Row(
                     children: [
                       Text(
                         '${quantity.toStringAsFixed(quantity % 1 == 0 ? 0 : 4)} × ${AppFormatters.currencyCompact(currentPrice)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: _text3),
+                            color: c.text3),
                       ),
                       if (liveRate != null) ...[
                         const SizedBox(width: 6),
@@ -873,7 +874,7 @@ class _AssetCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _positive.withValues(alpha: 0.1),
+                            color: c.positive.withValues(alpha: 0.1),
                             borderRadius:
                                 BorderRadius.circular(4),
                           ),
@@ -883,8 +884,8 @@ class _AssetCard extends StatelessWidget {
                               Container(
                                 width: 5,
                                 height: 5,
-                                decoration: const BoxDecoration(
-                                  color: _positive,
+                                decoration: BoxDecoration(
+                                  color: c.positive,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -892,10 +893,10 @@ class _AssetCard extends StatelessWidget {
                               Text(
                                 AppFormatters.currencyCompact(
                                     liveRate!),
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
-                                    color: _positive),
+                                    color: c.positive),
                               ),
                             ],
                           ),
@@ -911,10 +912,10 @@ class _AssetCard extends StatelessWidget {
               children: [
                 Text(
                   AppFormatters.currencyCompact(currentVal),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _text1),
+                      color: c.text1),
                 ),
                 const SizedBox(height: 3),
                 Container(
@@ -1012,6 +1013,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -1026,12 +1028,12 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Yeni Varlık Ekle',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+              Text('Yeni Varlık Ekle',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _assetType,
-                dropdownColor: _cardBg,
+                dropdownColor: c.card,
                 decoration: const InputDecoration(
                     labelText: 'Varlık Türü'),
                 items: _assetTypes
@@ -1102,7 +1104,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
                   decoration: const InputDecoration(
                       labelText: 'Alış Tarihi'),
                   child: Text(AppFormatters.dateShort(_buyDate),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text1)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text1)),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1116,7 +1118,7 @@ class _AssetFormSheetState extends State<_AssetFormSheet> {
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accent,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: const Color(0xFF051929),
                   padding:
                       const EdgeInsets.symmetric(vertical: 14),

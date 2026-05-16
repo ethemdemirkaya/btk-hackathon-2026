@@ -4,24 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Provider ─────────────────────────────────────────────────────────
 final _billsProvider =
@@ -70,13 +60,14 @@ class BillsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_billsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showBillForm(context, ref, null),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -87,23 +78,23 @@ class BillsPage extends ConsumerWidget {
           children: [
             // ── Header ──────────────────────────────────────────────
             async.when(
-              loading: () => _buildHeader('Yükleniyor…'),
-              error: (_, __) => _buildHeader(''),
+              loading: () => _buildHeader(context, 'Yükleniyor…'),
+              error: (_, __) => _buildHeader(context, ''),
               data: (data) {
                 final bills =
                     (data['bills'] as List? ?? [])
                         .cast<Map<String, dynamic>>();
                 final unpaid =
                     bills.where((b) => b['status'] != 'paid').length;
-                return _buildHeader(
+                return _buildHeader(context,
                     'Bu ay $unpaid ödenmemiş');
               },
             ),
             // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_billsProvider),
                 child: async.when(
@@ -159,7 +150,7 @@ class BillsPage extends ConsumerWidget {
                                   value:
                                       AppFormatters.currencyCompact(pendingTotal),
                                   icon: Icons.pending_outlined,
-                                  color: _warning,
+                                  color: c.warning,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -170,7 +161,7 @@ class BillsPage extends ConsumerWidget {
                                       AppFormatters.currencyCompact(totalMonthly),
                                   icon:
                                       Icons.calendar_month_outlined,
-                                  color: _accent,
+                                  color: AppColors.accent,
                                 ),
                               ),
                             ],
@@ -214,7 +205,8 @@ class BillsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(String subtitle) {
+  Widget _buildHeader(BuildContext context, String subtitle) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -225,11 +217,11 @@ class BillsPage extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 18, color: _text2),
+              child: Icon(Icons.menu, size: 18, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
@@ -237,14 +229,14 @@ class BillsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Faturalar',
+                Text('Faturalar',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
+                        color: c.text1)),
                 Text(subtitle,
-                    style: const TextStyle(
-                        fontSize: 12, color: _text3)),
+                    style: TextStyle(
+                        fontSize: 12, color: c.text3)),
               ],
             ),
           ),
@@ -256,10 +248,11 @@ class BillsPage extends ConsumerWidget {
 
   void _showBillForm(BuildContext context, WidgetRef ref,
       Map<String, dynamic>? existing) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -272,24 +265,25 @@ class BillsPage extends ConsumerWidget {
 
   Future<void> _deleteBill(
       BuildContext context, WidgetRef ref, int id) async {
+    final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _cardBg,
-        title: const Text('Faturayı Sil',
-            style: TextStyle(color: _text1)),
-        content: const Text(
+        backgroundColor: c.card,
+        title: Text('Faturayı Sil',
+            style: TextStyle(color: c.text1)),
+        content: Text(
             'Bu faturayı silmek istediğinize emin misiniz?',
-            style: TextStyle(color: _text2)),
+            style: TextStyle(color: c.text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('İptal',
-                  style: TextStyle(color: _text2))),
+              child: Text('İptal',
+                  style: TextStyle(color: c.text2))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Sil',
-                  style: TextStyle(color: _negative))),
+              child: Text('Sil',
+                  style: TextStyle(color: c.negative))),
         ],
       ),
     );
@@ -316,11 +310,12 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
@@ -340,8 +335,8 @@ class _StatChip extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: const TextStyle(
-                      fontSize: 10, color: _text3)),
+                  style: TextStyle(
+                      fontSize: 10, color: c.text3)),
               Text(value,
                   style: TextStyle(
                       fontSize: 14,
@@ -367,6 +362,7 @@ class _BillCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final type = bill['type'] as String? ?? 'other';
     final icon = _billTypeIcons[type] ?? Icons.receipt;
     final iconColor =
@@ -380,15 +376,15 @@ class _BillCard extends StatelessWidget {
     String statusLabel;
     switch (status) {
       case 'paid':
-        statusColor = _positive;
+        statusColor = c.positive;
         statusLabel = 'Ödendi';
         break;
       case 'late':
-        statusColor = _negative;
+        statusColor = c.negative;
         statusLabel = 'Gecikti';
         break;
       default:
-        statusColor = _warning;
+        statusColor = c.warning;
         statusLabel = 'Yaklaşıyor';
     }
 
@@ -398,9 +394,9 @@ class _BillCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -423,16 +419,16 @@ class _BillCard extends StatelessWidget {
                     bill['name'] as String? ??
                         _billTypeLabels[type] ??
                         type,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _text1),
+                        color: c.text1),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${bill['provider'] ?? ''}${dueDay != null ? " · Her ayın $dueDay'i" : ''}',
-                    style: const TextStyle(
-                        fontSize: 11, color: _text3),
+                    style: TextStyle(
+                        fontSize: 11, color: c.text3),
                   ),
                 ],
               ),
@@ -442,10 +438,10 @@ class _BillCard extends StatelessWidget {
               children: [
                 Text(
                   AppFormatters.currencyCompact(amount),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: _text1),
+                      color: c.text1),
                 ),
                 const SizedBox(height: 4),
                 Container(
@@ -453,13 +449,13 @@ class _BillCard extends StatelessWidget {
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: (isAutopay
-                            ? _positive
+                            ? c.positive
                             : statusColor)
                         .withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
                         color: (isAutopay
-                                ? _positive
+                                ? c.positive
                                 : statusColor)
                             .withValues(alpha: 0.25)),
                   ),
@@ -469,7 +465,7 @@ class _BillCard extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isAutopay
-                            ? _positive
+                            ? c.positive
                             : statusColor),
                   ),
                 ),
@@ -563,28 +559,31 @@ class _BillFormSheetState extends State<_BillFormSheet> {
     }
   }
 
-  InputDecoration _deco(String label, {IconData? icon}) =>
-      InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: _text3, fontSize: 13),
-        prefixIcon:
-            icon != null ? Icon(icon, size: 18, color: _text3) : null,
-        filled: true,
-        fillColor: _scaffoldBg,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: _accent, width: 1.5)),
-      );
+  InputDecoration _deco(BuildContext context, String label, {IconData? icon}) {
+    final c = context.appColors;
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon:
+          icon != null ? Icon(icon, size: 18, color: c.text3) : null,
+      filled: true,
+      fillColor: c.bg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppColors.accent, width: 1.5)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
@@ -601,22 +600,22 @@ class _BillFormSheetState extends State<_BillFormSheet> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                      color: _cardBorder,
+                      color: c.border,
                       borderRadius: BorderRadius.circular(2)),
                 ),
               ),
               Text(_isEdit ? 'Fatura Düzenle' : 'Fatura Ekle',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _text1)),
+                      color: c.text1)),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
                 value: _type,
-                dropdownColor: _cardBg,
-                style: const TextStyle(
-                    color: _text1, fontSize: 14),
-                decoration: _deco('Tür'),
+                dropdownColor: c.card,
+                style: TextStyle(
+                    color: c.text1, fontSize: 14),
+                decoration: _deco(context, 'Tür'),
                 items: _billTypeLabels.entries
                     .map((e) => DropdownMenuItem(
                         value: e.key,
@@ -628,9 +627,9 @@ class _BillFormSheetState extends State<_BillFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nameCtrl,
-                style: const TextStyle(
-                    color: _text1, fontSize: 14),
-                decoration: _deco('Fatura Adı'),
+                style: TextStyle(
+                    color: c.text1, fontSize: 14),
+                decoration: _deco(context, 'Fatura Adı'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty)
                         ? 'Ad gerekli'
@@ -639,10 +638,10 @@ class _BillFormSheetState extends State<_BillFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _providerCtrl,
-                style: const TextStyle(
-                    color: _text1, fontSize: 14),
+                style: TextStyle(
+                    color: c.text1, fontSize: 14),
                 decoration:
-                    _deco('Sağlayıcı (opsiyonel)'),
+                    _deco(context, 'Sağlayıcı (opsiyonel)'),
               ),
               const SizedBox(height: 12),
               Row(
@@ -650,9 +649,9 @@ class _BillFormSheetState extends State<_BillFormSheet> {
                   Expanded(
                     child: TextFormField(
                       controller: _amountCtrl,
-                      style: const TextStyle(
-                          color: _text1, fontSize: 14),
-                      decoration: _deco('Son Tutar (₺)',
+                      style: TextStyle(
+                          color: c.text1, fontSize: 14),
+                      decoration: _deco(context, 'Son Tutar (₺)',
                           icon: Icons.attach_money),
                       keyboardType:
                           const TextInputType.numberWithOptions(
@@ -678,10 +677,10 @@ class _BillFormSheetState extends State<_BillFormSheet> {
                   Expanded(
                     child: TextFormField(
                       controller: _dueDayCtrl,
-                      style: const TextStyle(
-                          color: _text1, fontSize: 14),
+                      style: TextStyle(
+                          color: c.text1, fontSize: 14),
                       decoration:
-                          _deco('Vade Günü (1-31)'),
+                          _deco(context, 'Vade Günü (1-31)'),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter
@@ -703,20 +702,20 @@ class _BillFormSheetState extends State<_BillFormSheet> {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: _scaffoldBg,
+                  color: c.bg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _cardBorder),
+                  border: Border.all(color: c.border),
                 ),
                 child: SwitchListTile(
                   contentPadding:
                       const EdgeInsets.symmetric(
                           horizontal: 12),
-                  title: const Text('Otomatik Ödeme',
+                  title: Text('Otomatik Ödeme',
                       style: TextStyle(
                           fontSize: 14,
-                          color: _text1)),
+                          color: c.text1)),
                   value: _autopay,
-                  activeThumbColor: _accent,
+                  activeThumbColor: AppColors.accent,
                   onChanged: (v) =>
                       setState(() => _autopay = v),
                 ),
@@ -727,7 +726,7 @@ class _BillFormSheetState extends State<_BillFormSheet> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor:
                         const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(

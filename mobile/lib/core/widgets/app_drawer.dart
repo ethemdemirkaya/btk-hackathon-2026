@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/providers/auth_provider.dart';
-
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
+import '../theme/colors.dart';
+import '../theme/context_extensions.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final loc = GoRouterState.of(context).matchedLocation;
     final user = ref.watch(authProvider).user;
     final name = user?.name ?? 'Kullanıcı';
@@ -25,7 +22,7 @@ class AppDrawer extends ConsumerWidget {
         .join();
 
     return Drawer(
-      backgroundColor: const Color(0xFF0A1929),
+      backgroundColor: c.heroBgFrom,
       child: SafeArea(
         child: Column(
           children: [
@@ -33,15 +30,15 @@ class AppDrawer extends ConsumerWidget {
             Container(
               padding:
                   const EdgeInsets.fromLTRB(20, 20, 20, 18),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF0A1929), Color(0xFF0D2240)],
+                  colors: [c.heroBgFrom, c.heroBgTo],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 border: Border(
                     bottom: BorderSide(
-                        color: _cardBorder, width: 1)),
+                        color: c.border, width: 1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,8 +53,8 @@ class AppDrawer extends ConsumerWidget {
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: [
-                              Color(0xFF00D4FF),
-                              Color(0xFFC99B5B)
+                              AppColors.accent,
+                              AppColors.gold,
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -81,15 +78,15 @@ class AppDrawer extends ConsumerWidget {
                               CrossAxisAlignment.start,
                           children: [
                             Text(name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: _text1)),
+                                    color: c.text1)),
                             Text(email.isEmpty ? 'Paranette' : email,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: _text3)),
+                                    color: c.text3)),
                           ],
                         ),
                       ),
@@ -101,15 +98,15 @@ class AppDrawer extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _accent.withValues(alpha: 0.10),
+                      color: AppColors.accent.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                          color: _accent.withValues(alpha: 0.25)),
+                          color: AppColors.accent.withValues(alpha: 0.25)),
                     ),
                     child: const Text(
                       'BTK Akademi Hackathon 2026',
                       style: TextStyle(
-                          color: _accent,
+                          color: AppColors.accent,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3),
@@ -232,10 +229,10 @@ class AppDrawer extends ConsumerWidget {
             ),
             // Bottom: settings + profile
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                     top: BorderSide(
-                        color: _cardBorder, width: 1)),
+                        color: c.border, width: 1)),
               ),
               child: Column(
                 children: [
@@ -274,6 +271,7 @@ class _DrawerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -281,8 +279,8 @@ class _DrawerSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
           child: Text(
             title.toUpperCase(),
-            style: const TextStyle(
-              color: _text3,
+            style: TextStyle(
+              color: c.text3,
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.8,
@@ -294,7 +292,7 @@ class _DrawerSection extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 12),
           child: Divider(
-              color: _cardBorder,
+              color: c.border,
               height: 8,
               thickness: 1),
         ),
@@ -320,6 +318,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final isActive = current.startsWith(route);
     return InkWell(
       onTap: () {
@@ -335,13 +334,13 @@ class _DrawerItem extends StatelessWidget {
                 horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isActive
-              ? _accent.withValues(alpha: 0.10)
+              ? AppColors.accent.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isActive
               ? const Border(
                   left: BorderSide(
-                      color: _accent, width: 3))
+                      color: AppColors.accent, width: 3))
               : null,
         ),
         child: Row(
@@ -352,16 +351,14 @@ class _DrawerItem extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: isActive
-                    ? _accent.withValues(alpha: 0.12)
-                    : _cardBorder.withValues(alpha: 0.5),
+                    ? AppColors.accent.withValues(alpha: 0.12)
+                    : c.border.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
                 size: 16,
-                color: isActive
-                    ? _accent
-                    : _text2,
+                color: isActive ? AppColors.accent : c.text2,
               ),
             ),
             const SizedBox(width: 12),
@@ -373,9 +370,7 @@ class _DrawerItem extends StatelessWidget {
                   fontWeight: isActive
                       ? FontWeight.w600
                       : FontWeight.w400,
-                  color: isActive
-                      ? _accent
-                      : _text1,
+                  color: isActive ? AppColors.accent : c.text1,
                 ),
               ),
             ),

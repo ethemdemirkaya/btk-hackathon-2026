@@ -3,18 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/storage/auth_storage.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../shared/providers/auth_provider.dart';
-
-// ── Design tokens ─────────────────────────────────────────────────────
-const _bg     = Color(0xFF060D18);
-const _cardBg = Color(0xFF0D1B2A);
-const _border = Color(0xFF1A2940);
-const _accent = Color(0xFF00D4FF);
-const _text1  = Color(0xFFE8F4FF);
-const _text2  = Color(0xFF8BA4BC);
-const _text3  = Color(0xFF4A6478);
-const _neg    = Color(0xFFFF4D6D);
-const _pos    = Color(0xFF0DD9A0);
 
 enum _Step { enter, confirm }
 
@@ -79,7 +70,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(widget.isChange ? 'PIN güncellendi.' : 'PIN kuruldu.'),
-          backgroundColor: _pos,
+          backgroundColor: context.appColors.positive,
         ));
         context.go('/dashboard');
       } else {
@@ -104,14 +95,15 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: c.bg,
       appBar: widget.isChange
           ? AppBar(
-              backgroundColor: _bg,
+              backgroundColor: c.bg,
               elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: _text2),
+                icon: Icon(Icons.arrow_back, color: c.text2),
                 onPressed: () => context.pop(),
               ),
             )
@@ -126,16 +118,16 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.1),
+                color: AppColors.accent.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: _accent.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
               ),
               child: Icon(
                 _step == _Step.enter
                     ? Icons.lock_outline
                     : Icons.lock_open_outlined,
                 size: 32,
-                color: _accent,
+                color: AppColors.accent,
               ),
             ),
             const SizedBox(height: 20),
@@ -146,15 +138,15 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
                 key: ValueKey(_step),
                 children: [
                   Text(_title,
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w700, color: _text1)),
+                      style: TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.w700, color: c.text1)),
                   const SizedBox(height: 6),
                   Text(_subtitle,
-                      style: const TextStyle(fontSize: 13, color: _text2)),
+                      style: TextStyle(fontSize: 13, color: c.text2)),
                   if (_mismatch) ...[
                     const SizedBox(height: 8),
-                    const Text('PIN kodları eşleşmedi, tekrar deneyin.',
-                        style: TextStyle(fontSize: 12, color: _neg)),
+                    Text('PIN kodları eşleşmedi, tekrar deneyin.',
+                        style: TextStyle(fontSize: 12, color: c.negative)),
                   ],
                 ],
               ),
@@ -173,7 +165,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(6, (i) {
                   final filled = i < _entered.length;
-                  final color  = _mismatch ? _neg : _accent;
+                  final color  = _mismatch ? c.negative : AppColors.accent;
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 9),
                     width: 14, height: 14,
@@ -181,7 +173,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
                       shape: BoxShape.circle,
                       color: filled ? color : Colors.transparent,
                       border: Border.all(
-                          color: filled ? color : _border, width: 2),
+                          color: filled ? color : c.border, width: 2),
                     ),
                   );
                 }),
@@ -205,7 +197,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: row.map((k) => _buildKey(k)).toList(),
+                        children: row.map((k) => _buildKey(k, c)).toList(),
                       ),
                     ),
                 ],
@@ -215,8 +207,8 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
             if (!widget.isChange)
               TextButton(
                 onPressed: _skip,
-                child: const Text('Şimdi değil, atla',
-                    style: TextStyle(fontSize: 13, color: _text3)),
+                child: Text('Şimdi değil, atla',
+                    style: TextStyle(fontSize: 13, color: c.text3)),
               ),
             const SizedBox(height: 24),
           ],
@@ -225,19 +217,23 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
     );
   }
 
-  Widget _buildKey(String key) {
+  Widget _buildKey(String key, AppColorTokens c) {
     if (key == 'del') {
       return _KeyBtn(
         onTap: _onBackspace,
-        child: const Icon(Icons.backspace_outlined, size: 22, color: _text2),
+        card: c.card,
+        border: c.border,
+        child: Icon(Icons.backspace_outlined, size: 22, color: c.text2),
       );
     }
     if (key.isEmpty) return const SizedBox(width: 80, height: 64);
     return _KeyBtn(
       onTap: () => _onKey(key),
+      card: c.card,
+      border: c.border,
       child: Text(key,
-          style: const TextStyle(
-              fontSize: 24, fontWeight: FontWeight.w400, color: _text1)),
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.w400, color: c.text1)),
     );
   }
 }
@@ -245,7 +241,14 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage>
 class _KeyBtn extends StatelessWidget {
   final VoidCallback onTap;
   final Widget child;
-  const _KeyBtn({required this.onTap, required this.child});
+  final Color card;
+  final Color border;
+  const _KeyBtn({
+    required this.onTap,
+    required this.child,
+    required this.card,
+    required this.border,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -254,9 +257,9 @@ class _KeyBtn extends StatelessWidget {
       child: Container(
         width: 80, height: 64,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
+          border: Border.all(color: border),
         ),
         child: Center(child: child),
       ),

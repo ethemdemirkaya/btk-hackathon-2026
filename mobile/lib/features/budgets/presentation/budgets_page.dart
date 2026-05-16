@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
@@ -37,29 +39,19 @@ Color _colorForName(String name) {
   return _catColorPalette[h % _catColorPalette.length];
 }
 
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
-
 class BudgetsPage extends ConsumerWidget {
   const BudgetsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_budgetsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showBudgetForm(context, ref, null),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         shape: const CircleBorder(),
@@ -74,8 +66,8 @@ class BudgetsPage extends ConsumerWidget {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async => ref.invalidate(_budgetsProvider),
                 child: async.when(
                   loading: () => const SkeletonListView(),
@@ -180,10 +172,11 @@ class BudgetsPage extends ConsumerWidget {
 
   void _showBudgetForm(
       BuildContext context, WidgetRef ref, Map<String, dynamic>? existing) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _BudgetFormSheet(
@@ -194,10 +187,11 @@ class BudgetsPage extends ConsumerWidget {
   }
 
   void _showAiSuggest(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AiSuggestSheet(
@@ -215,6 +209,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Row(
@@ -225,11 +220,11 @@ class _Header extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 20, color: _text2),
+              child: Icon(Icons.menu, size: 20, color: c.text2),
             ),
           ),
           const SizedBox(width: 12),
@@ -237,9 +232,9 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: _text1)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: c.text1)),
               Text(subtitle,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3)),
             ],
           ),
           const Spacer(),
@@ -267,11 +262,12 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -283,26 +279,26 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Bu ay toplam bütçe',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
                 const SizedBox(height: 6),
                 Text(
                   AppFormatters.currencyCompact(totalSpent),
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: _text1, letterSpacing: -0.52),
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: c.text1, letterSpacing: -0.52),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$budgetCount kategoride ${AppFormatters.currencyCompact(totalLimit)} harcandı',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: _text3),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: c.text3),
                 ),
                 if (overCount > 0) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded,
-                          size: 12, color: _warning),
+                      Icon(Icons.warning_amber_rounded,
+                          size: 12, color: c.warning),
                       const SizedBox(width: 4),
                       Text('$overCount bütçe aşıldı',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _warning)),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.warning)),
                     ],
                   ),
                 ],
@@ -322,15 +318,16 @@ class _AiSuggestButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _accent.withValues(alpha: 0.4)),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
@@ -339,12 +336,12 @@ class _AiSuggestButton extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _accent.withValues(alpha: 0.15),
+                color: AppColors.accent.withValues(alpha: 0.15),
                 border: Border.all(
-                    color: _accent.withValues(alpha: 0.3)),
+                    color: AppColors.accent.withValues(alpha: 0.3)),
               ),
               child: const Icon(Icons.auto_awesome,
-                  size: 18, color: _accent),
+                  size: 18, color: AppColors.accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -352,16 +349,16 @@ class _AiSuggestButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('AI bütçe önerisi al',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1)),
                   const SizedBox(height: 2),
                   Text(
                     'Harcama örüntüne göre kategori bazlı limitler',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 16, color: _text2),
+            Icon(Icons.chevron_right, size: 16, color: c.text2),
           ],
         ),
       ),
@@ -377,6 +374,7 @@ class _DashedAddButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -384,7 +382,7 @@ class _DashedAddButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: _cardBorder,
+            color: c.border,
             style: BorderStyle.solid,
             width: 1.5,
           ),
@@ -392,10 +390,10 @@ class _DashedAddButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 18, color: _text3),
+            Icon(Icons.add, size: 18, color: c.text3),
             const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _text3)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text3)),
           ],
         ),
       ),
@@ -410,26 +408,34 @@ class _ScoreRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     const double size = 90;
     const double stroke = 9;
     return SizedBox(
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _RingPainter(value: value, stroke: stroke),
+        painter: _RingPainter(
+          value: value,
+          stroke: stroke,
+          trackColor: c.border,
+          negativeColor: c.negative,
+          warningColor: c.warning,
+          accentColor: AppColors.accent,
+        ),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '${value.clamp(0, 999).toStringAsFixed(0)}%',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: _text1),
+                    color: c.text1),
               ),
               Text('kullanıldı',
-                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: _text3)),
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: c.text3)),
             ],
           ),
         ),
@@ -441,24 +447,35 @@ class _ScoreRing extends StatelessWidget {
 class _RingPainter extends CustomPainter {
   final double value;
   final double stroke;
-  const _RingPainter({required this.value, required this.stroke});
+  final Color trackColor;
+  final Color negativeColor;
+  final Color warningColor;
+  final Color accentColor;
+  const _RingPainter({
+    required this.value,
+    required this.stroke,
+    required this.trackColor,
+    required this.negativeColor,
+    required this.warningColor,
+    required this.accentColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - stroke) / 2;
     final trackPaint = Paint()
-      ..color = _cardBorder
+      ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, radius, trackPaint);
 
     final fillColor = value > 100
-        ? _negative
+        ? negativeColor
         : value >= 80
-            ? _warning
-            : _accent;
+            ? warningColor
+            : accentColor;
     final valuePaint = Paint()
       ..color = fillColor
       ..style = PaintingStyle.stroke
@@ -475,7 +492,12 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.value != value;
+  bool shouldRepaint(_RingPainter old) =>
+      old.value != value ||
+      old.trackColor != trackColor ||
+      old.negativeColor != negativeColor ||
+      old.warningColor != warningColor ||
+      old.accentColor != accentColor;
 }
 
 // ── Budget Card ──────────────────────────────────────────────────────
@@ -486,6 +508,7 @@ class _BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final pct = (budget['pct'] as num?)?.toDouble() ?? 0;
     final over = budget['over_budget'] as bool? ?? false;
     final spent = (budget['spent'] as num?)?.toDouble() ?? 0;
@@ -497,19 +520,19 @@ class _BudgetCard extends StatelessWidget {
 
     // Progress color: accent < 80%, warning 80-99%, red ≥ 100%
     final progressColor = pct >= 100
-        ? _negative
+        ? c.negative
         : pct >= 80
-            ? _warning
-            : _accent;
+            ? c.warning
+            : AppColors.accent;
 
     return GestureDetector(
       onTap: onEdit,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -539,16 +562,16 @@ class _BudgetCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(catName,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1)),
                       const SizedBox(height: 3),
                       over
                           ? Text(
                               '${AppFormatters.currencyCompact(spent - limit)} aşıldı',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _negative),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.negative),
                             )
                           : Text(
                               'Kalan ${AppFormatters.currencyCompact(remaining)}',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3),
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3),
                             ),
                     ],
                   ),
@@ -587,9 +610,9 @@ class _BudgetCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(AppFormatters.currencyCompact(spent),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
                 Text(AppFormatters.currencyCompact(limit),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _text3)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.text3)),
               ],
             ),
           ],
@@ -666,6 +689,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       maxChildSize: 0.95,
@@ -678,7 +702,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: _cardBorder,
+              color: c.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -686,10 +710,10 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome, color: _accent),
+                const Icon(Icons.auto_awesome, color: AppColors.accent),
                 const SizedBox(width: 8),
                 Text('AI Bütçe Önerisi',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               ],
             ),
           ),
@@ -697,13 +721,13 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
           Expanded(
             child: _loading
                 ? const Center(
-                    child: CircularProgressIndicator(color: _accent))
+                    child: CircularProgressIndicator(color: AppColors.accent))
                 : _error != null
                     ? Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(_error!,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text2),
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text2),
                               textAlign: TextAlign.center),
                         ),
                       )
@@ -726,10 +750,10 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                 const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: _cardBg,
+                              color: c.card,
                               borderRadius:
                                   BorderRadius.circular(16),
-                              border: Border.all(color: _cardBorder),
+                              border: Border.all(color: c.border),
                             ),
                             child: Row(
                               children: [
@@ -761,18 +785,18 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(catName,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
-                                              color: _text1)),
+                                              color: c.text1)),
                                       if ((s['reason'] as String?)
                                               ?.isNotEmpty ==
                                           true)
                                         Text(s['reason'] as String,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w500,
-                                                color: _text3)),
+                                                color: c.text3)),
                                     ],
                                   ),
                                 ),
@@ -782,7 +806,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                     style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: _accent)),
+                                        color: AppColors.accent)),
                               ],
                             ),
                           );
@@ -798,7 +822,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                 child: ElevatedButton.icon(
                   onPressed: _applying ? null : _apply,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -926,6 +950,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
@@ -937,29 +962,29 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_isEdit ? 'Bütçe Düzenle' : 'Bütçe Ekle',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: _text1)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               const SizedBox(height: 20),
               _loadingCats
-                  ? const LinearProgressIndicator(color: _accent)
+                  ? const LinearProgressIndicator(color: AppColors.accent)
                   : DropdownButtonFormField<int>(
                       initialValue: _categoryId,
-                      dropdownColor: _cardBg,
+                      dropdownColor: c.card,
                       decoration:
                           const InputDecoration(labelText: 'Kategori'),
                       hint: Text(_categoryName,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: _text3)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3)),
                       items: _categories
-                          .map((c) => DropdownMenuItem<int>(
-                                value: (c['id'] as num).toInt(),
-                                child: Text(c['name'] as String),
+                          .map((cat) => DropdownMenuItem<int>(
+                                value: (cat['id'] as num).toInt(),
+                                child: Text(cat['name'] as String),
                               ))
                           .toList(),
                       onChanged: (v) {
                         setState(() {
                           _categoryId = v;
                           _categoryName = (_categories.firstWhere(
-                                  (c) =>
-                                      (c['id'] as num).toInt() ==
+                                  (cat) =>
+                                      (cat['id'] as num).toInt() ==
                                       v,
                                   orElse: () => {'name': ''})['name'] as String?) ?? '';
                         });
@@ -1010,7 +1035,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

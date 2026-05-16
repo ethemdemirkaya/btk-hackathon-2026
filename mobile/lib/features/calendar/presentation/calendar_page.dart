@@ -2,19 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _negative   = Color(0xFFFF4D6D);
 
 final _calendarProvider = FutureProvider.autoDispose
     .family<Map<String, dynamic>, String>((ref, month) async {
@@ -95,10 +88,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final async = ref.watch(_calendarProvider(_monthKey));
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -114,12 +108,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+                        border: Border.all(color: c.border),
                       ),
-                      child: const Icon(Icons.menu,
-                          size: 18, color: _text2),
+                      child: Icon(Icons.menu,
+                          size: 18, color: c.text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -128,15 +122,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Finansal Takvim',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: _text1)),
+                                color: c.text1)),
                         Text('Tüm ödeme ve vadeler',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
-                                color: _text3)),
+                                color: c.text3)),
                       ],
                     ),
                   ),
@@ -169,13 +163,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                           horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: active
-                            ? _accent
-                            : _cardBg,
+                            ? AppColors.accent
+                            : c.card,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                             color: active
-                                ? _accent
-                                : _cardBorder),
+                                ? AppColors.accent
+                                : c.border),
                       ),
                       child: Text(
                         _filterLabels[i],
@@ -186,7 +180,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                 : FontWeight.w400,
                             color: active
                                 ? const Color(0xFF051929)
-                                : _text2),
+                                : c.text2),
                       ),
                     ),
                   );
@@ -195,8 +189,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             ),
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_calendarProvider(_monthKey)),
                 child: async.when(
@@ -297,12 +291,13 @@ class _ViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _cardBorder)),
+          border: Border.all(color: c.border)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -331,6 +326,7 @@ class _ToggleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -339,7 +335,7 @@ class _ToggleBtn extends StatelessWidget {
             horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: active
-              ? _accent.withValues(alpha: 0.15)
+              ? AppColors.accent.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(9),
         ),
@@ -349,7 +345,7 @@ class _ToggleBtn extends StatelessWidget {
                 fontWeight: active
                     ? FontWeight.w600
                     : FontWeight.w400,
-                color: active ? _accent : _text3)),
+                color: active ? AppColors.accent : c.text3)),
       ),
     );
   }
@@ -367,6 +363,7 @@ class _MonthNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Row(
@@ -376,10 +373,10 @@ class _MonthNav extends StatelessWidget {
               icon: Icons.chevron_left, onTap: onPrev),
           Text(
             AppFormatters.dateMonth(month),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: _text1),
+                color: c.text1),
           ),
           _NavCircleBtn(
               icon: Icons.chevron_right, onTap: onNext),
@@ -397,17 +394,18 @@ class _NavCircleBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
-        child: Icon(icon, size: 18, color: _text2),
+        child: Icon(icon, size: 18, color: c.text2),
       ),
     );
   }
@@ -427,6 +425,7 @@ class _CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final firstWeekday =
         DateTime(month.year, month.month, 1).weekday;
     final daysInMonth =
@@ -448,9 +447,9 @@ class _CalendarGrid extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           children: [
@@ -460,10 +459,10 @@ class _CalendarGrid extends StatelessWidget {
                   .map((d) => Expanded(
                         child: Text(d,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: _text3)),
+                                color: c.text3)),
                       ))
                   .toList(),
             ),
@@ -491,14 +490,14 @@ class _CalendarGrid extends StatelessWidget {
                           margin: const EdgeInsets.all(1),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? _accent
+                                ? AppColors.accent
                                 : isToday
-                                    ? _accent.withValues(alpha: 0.10)
+                                    ? AppColors.accent.withValues(alpha: 0.10)
                                     : Colors.transparent,
                             borderRadius:
                                 BorderRadius.circular(10),
                             border: isSelected
-                                ? Border.all(color: _accent)
+                                ? Border.all(color: AppColors.accent)
                                 : null,
                           ),
                           child: Column(
@@ -516,8 +515,8 @@ class _CalendarGrid extends StatelessWidget {
                                     color: isSelected
                                         ? const Color(0xFF051929)
                                         : isToday
-                                            ? _accent
-                                            : _text1),
+                                            ? AppColors.accent
+                                            : c.text1),
                               ),
                               if (dayEvents.isNotEmpty)
                                 Padding(
@@ -593,6 +592,7 @@ class _SelectedDayEvents extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     String dayLabel = '';
     if (date != null) {
       try {
@@ -614,16 +614,16 @@ class _SelectedDayEvents extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(dayLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: _text1)),
+                          color: c.text1)),
                 ),
-                const Text('Seçili Gün Etkinlikleri',
+                Text('Seçili Gün Etkinlikleri',
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: _text3)),
+                        color: c.text3)),
               ],
             ),
           ),
@@ -631,23 +631,23 @@ class _SelectedDayEvents extends StatelessWidget {
               ? Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: _cardBg,
+                    color: c.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: c.border),
                   ),
                   child: Center(
                     child: Text('Bu gün için olay yok',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: _text3)),
+                            color: c.text3)),
                   ),
                 )
               : Container(
                   decoration: BoxDecoration(
-                    color: _cardBg,
+                    color: c.card,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: c.border),
                   ),
                   child: Column(
                     children: events.asMap().entries.map((entry) {
@@ -671,6 +671,7 @@ class _EventRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final color = _eventColor(event);
     final title = event['title'] as String? ?? '';
     final amount = (event['amount'] as num?)?.toDouble() ?? 0;
@@ -680,7 +681,7 @@ class _EventRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         border: showBorder
-            ? Border(top: BorderSide(color: _cardBorder))
+            ? Border(top: BorderSide(color: c.border))
             : null,
       ),
       child: Row(
@@ -710,10 +711,10 @@ class _EventRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _text1)),
+                        color: c.text1)),
                 if (type.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.only(top: 3),
@@ -734,10 +735,10 @@ class _EventRow extends StatelessWidget {
           ),
           Text(
             '-${AppFormatters.currencyCompact(amount)}',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: _negative),
+                color: c.negative),
           ),
         ],
       ),
@@ -774,6 +775,7 @@ class _AgendaList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final sorted = eventsByDate.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
@@ -782,10 +784,10 @@ class _AgendaList extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text('Bu ay için etkinlik yok.',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: _text3)),
+                  color: c.text3)),
         ),
       );
     }
@@ -811,18 +813,18 @@ class _AgendaList extends StatelessWidget {
                         children: [
                           Text(
                             dt != null ? '${dt.day}' : entry.key,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: _text1),
+                                color: c.text1),
                           ),
                           if (dt != null)
                             Text(
                               _weekdayShort(dt.weekday),
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: _text3),
+                                  color: c.text3),
                             ),
                         ],
                       ),
@@ -832,9 +834,9 @@ class _AgendaList extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: _cardBg,
+                          color: c.card,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: _cardBorder),
+                          border: Border.all(color: c.border),
                         ),
                         child: Row(
                           children: [
@@ -855,10 +857,10 @@ class _AgendaList extends StatelessWidget {
                                 children: [
                                   Text(
                                       e['title'] as String? ?? '',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: _text1)),
+                                          color: c.text1)),
                                   if ((e['type'] as String?)
                                           ?.isNotEmpty ==
                                       true)
@@ -889,10 +891,10 @@ class _AgendaList extends StatelessWidget {
                             ),
                             Text(
                               '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: _negative),
+                                  color: c.negative),
                             ),
                           ],
                         ),
@@ -932,6 +934,7 @@ class _UpcomingEventsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final now = DateTime.now();
     // Show events from today forward (within this month or future months)
     final upcoming = eventsByDate.entries
@@ -953,22 +956,22 @@ class _UpcomingEventsList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 2, bottom: 10),
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 10),
             child: Text(
               'Yaklaşan Ödemeler',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: _text3,
+                  color: c.text3,
                   letterSpacing: 0.5),
             ),
           ),
           Container(
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: upcoming.take(5).expand((entry) {
@@ -984,8 +987,8 @@ class _UpcomingEventsList extends StatelessWidget {
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       border: !isFirst
-                          ? const Border(
-                              top: BorderSide(color: _cardBorder))
+                          ? Border(
+                              top: BorderSide(color: c.border))
                           : null,
                     ),
                     child: Row(
@@ -1026,10 +1029,10 @@ class _UpcomingEventsList extends StatelessWidget {
                             children: [
                               Text(
                                 e['title'] as String? ?? '',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: _text1),
+                                    color: c.text1),
                               ),
                               if (type.isNotEmpty)
                                 Text(
@@ -1044,10 +1047,10 @@ class _UpcomingEventsList extends StatelessWidget {
                         ),
                         Text(
                           '-${AppFormatters.currencyCompact((e['amount'] as num?)?.toDouble() ?? 0)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: _negative),
+                              color: c.negative),
                         ),
                       ],
                     ),
@@ -1089,6 +1092,7 @@ class _WeekSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final now = DateTime.now();
     final weekEnd = now.add(const Duration(days: 7));
 
@@ -1114,9 +1118,9 @@ class _WeekSummaryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _cardBorder),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -1124,26 +1128,26 @@ class _WeekSummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Önümüzdeki 7 gün',
+                  Text('Önümüzdeki 7 gün',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: _text3)),
+                          color: c.text3)),
                   const SizedBox(height: 6),
                   Text(
                     AppFormatters.currencyCompact(weekTotal),
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: _text1),
+                        color: c.text1),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '$weekCount ödeme${firstLabel != null ? ' · İlk: $firstLabel' : ''}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: _text3),
+                        color: c.text3),
                   ),
                 ],
               ),
@@ -1152,11 +1156,11 @@ class _WeekSummaryCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.12),
+                color: AppColors.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.calendar_today_outlined,
-                  size: 22, color: _accent),
+                  size: 22, color: AppColors.accent),
             ),
           ],
         ),

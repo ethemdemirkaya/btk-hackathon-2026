@@ -3,21 +3,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
-
-// ── Design tokens ─────────────────────────────────────────────────────
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
 
 // ── Page ──────────────────────────────────────────────────────────────
 class SimulatorPage extends StatefulWidget {
@@ -142,15 +132,16 @@ class _SimulatorPageState extends State<SimulatorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             Expanded(
               child: _loadingCurrent
-                  ? const Center(child: CircularProgressIndicator(color: _accent))
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
                   : _loadError != null
                       ? _RetryView(message: _loadError!, onRetry: _loadCurrentData)
                       : SingleChildScrollView(
@@ -191,6 +182,7 @@ class _SimulatorPageState extends State<SimulatorPage> {
   }
 
   Widget _buildHeader() {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -200,22 +192,22 @@ class _SimulatorPageState extends State<SimulatorPage> {
             child: Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 18, color: _text2),
+              child: Icon(Icons.menu, size: 18, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Finansal Simülatör',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _text1)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: c.text1)),
                 Text('Senaryoları karşılaştır',
-                    style: TextStyle(fontSize: 12, color: _text3)),
+                    style: TextStyle(fontSize: 12, color: c.text3)),
               ],
             ),
           ),
@@ -233,6 +225,7 @@ class _CurrentSnapshotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final income   = (data['monthly_income']      as num?)?.toDouble() ?? 0;
     final expense  = (data['avg_monthly_expense'] as num?)?.toDouble() ?? 0;
     final balance  = (data['total_balance']       as num?)?.toDouble() ?? 0;
@@ -241,22 +234,22 @@ class _CurrentSnapshotCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Mevcut Finansal Durum',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: _text3)),
+          Text('Mevcut Finansal Durum',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.text3)),
           const SizedBox(height: 12),
           Row(
             children: [
-              _SnapStat('Aylık Gelir',   AppFormatters.currencyCompact(income),  _positive),
-              _SnapStat('Aylık Gider',   AppFormatters.currencyCompact(expense),  _negative),
-              _SnapStat('Toplam Bakiye', AppFormatters.currencyCompact(balance),  _accent),
-              _SnapStat('Sağlık Skoru',  '$score/100',                            _warning),
+              _SnapStat('Aylık Gelir',   AppFormatters.currencyCompact(income),  c.positive),
+              _SnapStat('Aylık Gider',   AppFormatters.currencyCompact(expense),  c.negative),
+              _SnapStat('Toplam Bakiye', AppFormatters.currencyCompact(balance),  AppColors.accent),
+              _SnapStat('Sağlık Skoru',  '$score/100',                            c.warning),
             ],
           ),
         ],
@@ -273,6 +266,7 @@ class _SnapStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Expanded(
       child: Column(
         children: [
@@ -281,7 +275,7 @@ class _SnapStat extends StatelessWidget {
           const SizedBox(height: 3),
           Text(label,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: _text3)),
+              style: TextStyle(fontSize: 9, color: c.text3)),
         ],
       ),
     );
@@ -312,25 +306,26 @@ class _ParametersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Senaryo Parametreleri',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
+          Text('Senaryo Parametreleri',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1)),
           const SizedBox(height: 18),
           _SliderRow(
             label: 'Gelir Değişimi',
             value: incomeChangePct,
             min: -50, max: 200,
             suffix: '%',
-            color: incomeChangePct >= 0 ? _positive : _negative,
+            color: incomeChangePct >= 0 ? c.positive : c.negative,
             onChanged: onIncomeChanged,
           ),
           const SizedBox(height: 14),
@@ -339,7 +334,7 @@ class _ParametersCard extends StatelessWidget {
             value: expenseChangePct,
             min: -50, max: 100,
             suffix: '%',
-            color: expenseChangePct <= 0 ? _positive : _negative,
+            color: expenseChangePct <= 0 ? c.positive : c.negative,
             onChanged: onExpenseChanged,
           ),
           const SizedBox(height: 14),
@@ -348,7 +343,7 @@ class _ParametersCard extends StatelessWidget {
             value: inflationRate,
             min: 0, max: 100,
             suffix: '%',
-            color: _warning,
+            color: c.warning,
             onChanged: onInflationChanged,
           ),
           const SizedBox(height: 14),
@@ -357,7 +352,7 @@ class _ParametersCard extends StatelessWidget {
             value: monthsHorizon.toDouble(),
             min: 1, max: 60,
             suffix: ' ay',
-            color: _accent,
+            color: AppColors.accent,
             onChanged: (v) => onMonthsChanged(v.toInt()),
             divisions: 59,
             showSign: false,
@@ -394,6 +389,7 @@ class _SliderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final sign = (showSign && value >= 0) ? '+' : '';
     final displayDivisions = divisions ?? ((max - min) / 5).toInt().clamp(1, 200);
     return Column(
@@ -403,7 +399,7 @@ class _SliderRow extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: const TextStyle(fontSize: 13, color: _text2)),
+                style: TextStyle(fontSize: 13, color: c.text2)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
@@ -453,7 +449,7 @@ class _CalcButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: (loading || onTap == null) ? null : onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _accent,
+          backgroundColor: AppColors.accent,
           foregroundColor: const Color(0xFF051929),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
@@ -484,20 +480,21 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _negative.withValues(alpha: 0.08),
+        color: c.negative.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _negative.withValues(alpha: 0.2)),
+        border: Border.all(color: c.negative.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: _negative, size: 16),
+          Icon(Icons.error_outline, color: c.negative, size: 16),
           const SizedBox(width: 8),
           Expanded(
             child: Text(message,
-                style: const TextStyle(fontSize: 13, color: _negative)),
+                style: TextStyle(fontSize: 13, color: c.negative)),
           ),
         ],
       ),
@@ -513,30 +510,31 @@ class _RetryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: _text3),
+          Icon(Icons.cloud_off_outlined, size: 48, color: c.text3),
           const SizedBox(height: 12),
-          const Text('Veriler yüklenemedi',
-              style: TextStyle(fontSize: 14, color: _text2)),
+          Text('Veriler yüklenemedi',
+              style: TextStyle(fontSize: 14, color: c.text2)),
           const SizedBox(height: 6),
           Text(message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, color: _text3)),
+              style: TextStyle(fontSize: 11, color: c.text3)),
           const SizedBox(height: 20),
           GestureDetector(
             onTap: onRetry,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: _accent.withValues(alpha: 0.12),
+                color: AppColors.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _accent.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
               ),
               child: const Text('Tekrar dene',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _accent)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent)),
             ),
           ),
         ],
@@ -553,6 +551,7 @@ class _ResultSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final newIncome    = (result['new_income']         as num?)?.toDouble() ?? 0;
     final newExpense   = (result['new_expense']        as num?)?.toDouble() ?? 0;
     final newSavings   = (result['new_savings']        as num?)?.toDouble() ?? 0;
@@ -568,25 +567,25 @@ class _ResultSection extends StatelessWidget {
     final aiRisks      = (result['ai_risks']           as List?)?.map((e) => e.toString()).toList() ?? [];
     final aiRecs       = (result['ai_recommendations'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
-    final scoreColor = score >= 75 ? _positive : score >= 50 ? _warning : _negative;
+    final scoreColor = score >= 75 ? c.positive : score >= 50 ? c.warning : c.negative;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Summary stats ────────────────────────────────────────
         Text('Simülasyon Sonuçları ($months ay)',
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w700, color: _text1)),
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w700, color: c.text1)),
         const SizedBox(height: 14),
 
         // Row 1: income / expense / savings
         Row(
           children: [
             Expanded(child: _StatCard('Yeni Gelir',
-                AppFormatters.currencyCompact(newIncome), _positive)),
+                AppFormatters.currencyCompact(newIncome), c.positive)),
             const SizedBox(width: 8),
             Expanded(child: _StatCard('Yeni Gider',
-                AppFormatters.currencyCompact(newExpense), _negative)),
+                AppFormatters.currencyCompact(newExpense), c.negative)),
           ],
         ),
         const SizedBox(height: 8),
@@ -595,12 +594,12 @@ class _ResultSection extends StatelessWidget {
             Expanded(child: _StatCard(
                 'Aylık Tasarruf',
                 AppFormatters.currencyCompact(newSavings),
-                newSavings >= 0 ? _positive : _negative)),
+                newSavings >= 0 ? c.positive : c.negative)),
             const SizedBox(width: 8),
             Expanded(child: _StatCard(
                 'Tasarruf Oranı',
                 '%${savingsRate.toStringAsFixed(1)}',
-                savingsRate >= 20 ? _positive : savingsRate >= 10 ? _warning : _negative)),
+                savingsRate >= 20 ? c.positive : savingsRate >= 10 ? c.warning : c.negative)),
           ],
         ),
         const SizedBox(height: 8),
@@ -609,23 +608,23 @@ class _ResultSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _cardBg,
+            color: c.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _cardBorder),
+            border: Border.all(color: c.border),
           ),
           child: Column(
             children: [
               _DetailRow('$months Ay Sonra Bakiye',
-                  AppFormatters.currencyCompact(finalBalance), _text1),
-              const Divider(color: _cardBorder, height: 20),
+                  AppFormatters.currencyCompact(finalBalance), c.text1),
+              Divider(color: c.border, height: 20),
               _DetailRow('Reel Bakiye (enflasyon sonrası)',
-                  AppFormatters.currencyCompact(realFinal), _text2),
-              const Divider(color: _cardBorder, height: 20),
+                  AppFormatters.currencyCompact(realFinal), c.text2),
+              Divider(color: c.border, height: 20),
               _DetailRow('Enflasyon Kaybı',
-                  '−${AppFormatters.currencyCompact(inflLoss)}', _negative),
-              const Divider(color: _cardBorder, height: 20),
+                  '−${AppFormatters.currencyCompact(inflLoss)}', c.negative),
+              Divider(color: c.border, height: 20),
               _DetailRow('Acil Fon (ay)',
-                  '${emergency.toStringAsFixed(1)} ay', _accent),
+                  '${emergency.toStringAsFixed(1)} ay', AppColors.accent),
             ],
           ),
         ),
@@ -660,7 +659,7 @@ class _ResultSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Tahmini Finansal Sağlık Skoru',
-                        style: const TextStyle(fontSize: 12, color: _text3)),
+                        style: TextStyle(fontSize: 12, color: c.text3)),
                     const SizedBox(height: 4),
                     Text(
                       score >= 75 ? 'Sağlıklı senaryo' :
@@ -678,15 +677,15 @@ class _ResultSection extends StatelessWidget {
         // ── Projection chart ─────────────────────────────────────
         if (projections.isNotEmpty) ...[
           const SizedBox(height: 20),
-          const Text('Bakiye Projeksiyonu',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _text1)),
+          Text('Bakiye Projeksiyonu',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1)),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
             ),
             child: _ProjectionChart(projections: projections),
           ),
@@ -698,33 +697,33 @@ class _ResultSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.05),
+              color: AppColors.accent.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _accent.withValues(alpha: 0.15)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.15)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.auto_awesome, color: _accent, size: 14),
-                    const SizedBox(width: 6),
-                    const Text('AI Değerlendirmesi',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _accent)),
+                    Icon(Icons.auto_awesome, color: AppColors.accent, size: 14),
+                    SizedBox(width: 6),
+                    Text('AI Değerlendirmesi',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent)),
                   ],
                 ),
                 if (aiVerdict != null) ...[
                   const SizedBox(height: 8),
                   Text(aiVerdict,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14, fontWeight: FontWeight.w600,
-                          color: _text1, height: 1.4)),
+                          color: c.text1, height: 1.4)),
                 ],
                 if (aiCommentary != null) ...[
                   const SizedBox(height: 8),
                   Text(aiCommentary,
-                      style: const TextStyle(
-                          fontSize: 12, color: _text2, height: 1.5)),
+                      style: TextStyle(
+                          fontSize: 12, color: c.text2, height: 1.5)),
                 ],
               ],
             ),
@@ -737,7 +736,7 @@ class _ResultSection extends StatelessWidget {
           _AiListCard(
             title: 'Riskler',
             icon: Icons.warning_amber_rounded,
-            color: _warning,
+            color: c.warning,
             items: aiRisks,
           ),
         ],
@@ -748,7 +747,7 @@ class _ResultSection extends StatelessWidget {
           _AiListCard(
             title: 'Öneriler',
             icon: Icons.lightbulb_outline,
-            color: _positive,
+            color: c.positive,
             items: aiRecs,
           ),
         ],
@@ -765,17 +764,18 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: _text3)),
+          Text(label, style: TextStyle(fontSize: 10, color: c.text3)),
           const SizedBox(height: 6),
           Text(value,
               style: TextStyle(
@@ -794,10 +794,11 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: _text2)),
+        Text(label, style: TextStyle(fontSize: 12, color: c.text2)),
         Text(value,
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w600, color: color)),
@@ -820,6 +821,7 @@ class _AiListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -855,8 +857,8 @@ class _AiListCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(item,
-                          style: const TextStyle(
-                              fontSize: 12, color: _text2, height: 1.4)),
+                          style: TextStyle(
+                              fontSize: 12, color: c.text2, height: 1.4)),
                     ),
                   ],
                 ),
@@ -897,7 +899,7 @@ class _ProjectionChart extends StatelessWidget {
         children: List.generate(balances.length, (i) {
           final nomH  = 0.05 + norm(balances[i]) * 0.95;
           final realH = 0.05 + norm(realBals[i]) * 0.95;
-          final color = balances[i] >= 0 ? _positive : _negative;
+          final color = balances[i] >= 0 ? context.appColors.positive : context.appColors.negative;
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 1),
@@ -909,7 +911,7 @@ class _ProjectionChart extends StatelessWidget {
                     heightFactor: realH,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: _accent.withValues(alpha: 0.25),
+                        color: AppColors.accent.withValues(alpha: 0.25),
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                       ),
                     ),
@@ -997,15 +999,16 @@ class _SimulationLoadingModalState extends State<_SimulationLoadingModal>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: c.card,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-              color: _accent.withValues(alpha: 0.3), width: 1),
+              color: AppColors.accent.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1016,27 +1019,27 @@ class _SimulationLoadingModalState extends State<_SimulationLoadingModal>
                 alignment: Alignment.center,
                 children: [
                   CircularProgressIndicator(
-                    color: _accent.withValues(alpha: 0.2),
+                    color: AppColors.accent.withValues(alpha: 0.2),
                     strokeWidth: 3,
                     value: 1,
                   ),
                   const CircularProgressIndicator(
-                    color: _accent,
+                    color: AppColors.accent,
                     strokeWidth: 3,
                   ),
                   const Icon(Icons.auto_awesome,
-                      size: 20, color: _accent),
+                      size: 20, color: AppColors.accent),
                 ],
               ),
             ),
             const SizedBox(height: 22),
-            const Text(
+            Text(
               'AI Simülasyonu Çalışıyor',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: _text1,
+                color: c.text1,
               ),
             ),
             const SizedBox(height: 14),
@@ -1047,9 +1050,9 @@ class _SimulationLoadingModalState extends State<_SimulationLoadingModal>
                 child: Text(
                   _messages[_msgIndex],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: _text2,
+                    color: c.text2,
                     height: 1.4,
                   ),
                 ),

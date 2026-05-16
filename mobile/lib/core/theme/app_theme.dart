@@ -155,6 +155,9 @@ class AppTheme {
         textColor: textPrimary,
         subtitleTextStyle: AppTextStyles.bodySmall.copyWith(color: textSecondary),
       ),
+      extensions: <ThemeExtension<dynamic>>[
+        isDark ? AppColorTokens.dark : AppColorTokens.light,
+      ],
     );
   }
 }

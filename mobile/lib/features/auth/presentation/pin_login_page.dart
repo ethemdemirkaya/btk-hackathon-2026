@@ -4,18 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../../core/storage/auth_storage.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
-
-// ── Design tokens ─────────────────────────────────────────────────────
-const _bg      = Color(0xFF060D18);
-const _cardBg  = Color(0xFF0D1B2A);
-const _border  = Color(0xFF1A2940);
-const _accent  = Color(0xFF00D4FF);
-const _text1   = Color(0xFFE8F4FF);
-const _text2   = Color(0xFF8BA4BC);
-const _text3   = Color(0xFF4A6478);
-const _neg     = Color(0xFFFF4D6D);
 
 class PinLoginPage extends ConsumerStatefulWidget {
   const PinLoginPage({super.key});
@@ -137,8 +129,9 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -164,11 +157,11 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
             ),
             const SizedBox(height: 16),
             Text(_user?.name ?? 'Hoş geldiniz',
-                style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: _text1)),
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700, color: c.text1)),
             const SizedBox(height: 6),
-            const Text('PIN kodunuzu girin',
-                style: TextStyle(fontSize: 13, color: _text2)),
+            Text('PIN kodunuzu girin',
+                style: TextStyle(fontSize: 13, color: c.text2)),
             const SizedBox(height: 40),
 
             // PIN dots
@@ -182,7 +175,7 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(6, (i) {
                   final filled = i < _entered.length;
-                  final color  = _shaking ? _neg : _accent;
+                  final color  = _shaking ? c.negative : AppColors.accent;
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 9),
                     width: 14,
@@ -191,7 +184,7 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
                       shape: BoxShape.circle,
                       color: filled ? color : Colors.transparent,
                       border: Border.all(
-                          color: filled ? color : _border, width: 2),
+                          color: filled ? color : c.border, width: 2),
                     ),
                   );
                 }),
@@ -215,7 +208,7 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: row.map((k) => _buildKey(k)).toList(),
+                        children: row.map((k) => _buildKey(k, c)).toList(),
                       ),
                     ),
                 ],
@@ -229,8 +222,8 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
                 ref.read(authProvider.notifier).setUnauthenticated();
                 context.go('/login');
               },
-              child: const Text('Şifre ile giriş yap',
-                  style: TextStyle(fontSize: 13, color: _text3)),
+              child: Text('Şifre ile giriş yap',
+                  style: TextStyle(fontSize: 13, color: c.text3)),
             ),
             const SizedBox(height: 24),
           ],
@@ -239,26 +232,32 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
     );
   }
 
-  Widget _buildKey(String key) {
+  Widget _buildKey(String key, AppColorTokens c) {
     if (key == 'del') {
       return _KeyButton(
         onTap: _onBackspace,
-        child: const Icon(Icons.backspace_outlined, size: 22, color: _text2),
+        card: c.card,
+        border: c.border,
+        child: Icon(Icons.backspace_outlined, size: 22, color: c.text2),
       );
     }
     if (key == 'bio') {
       return _biometricAvailable
           ? _KeyButton(
               onTap: _authenticateBiometric,
-              child: const Icon(Icons.fingerprint, size: 26, color: _accent),
+              card: c.card,
+              border: c.border,
+              child: const Icon(Icons.fingerprint, size: 26, color: AppColors.accent),
             )
           : const SizedBox(width: 80, height: 64);
     }
     return _KeyButton(
       onTap: () => _onKey(key),
+      card: c.card,
+      border: c.border,
       child: Text(key,
-          style: const TextStyle(
-              fontSize: 24, fontWeight: FontWeight.w400, color: _text1)),
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.w400, color: c.text1)),
     );
   }
 }
@@ -266,7 +265,14 @@ class _PinLoginPageState extends ConsumerState<PinLoginPage>
 class _KeyButton extends StatelessWidget {
   final VoidCallback onTap;
   final Widget child;
-  const _KeyButton({required this.onTap, required this.child});
+  final Color card;
+  final Color border;
+  const _KeyButton({
+    required this.onTap,
+    required this.child,
+    required this.card,
+    required this.border,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -276,9 +282,9 @@ class _KeyButton extends StatelessWidget {
         width: 80,
         height: 64,
         decoration: BoxDecoration(
-          color: _cardBg,
+          color: card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
+          border: Border.all(color: border),
         ),
         child: Center(child: child),
       ),

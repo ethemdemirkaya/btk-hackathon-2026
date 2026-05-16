@@ -4,22 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
-
-// ── Design tokens ────────────────────────────────────────────────────
-const _scaffoldBg   = Color(0xFF060D18);
-const _cardBg       = Color(0xFF0D1B2A);
-const _cardBorder   = Color(0xFF1A2940);
-const _accent       = Color(0xFF00D4FF);
-const _text1        = Color(0xFFE8F4FF);
-const _text2        = Color(0xFF8BA4BC);
-const _text3        = Color(0xFF4A6478);
-const _positive     = Color(0xFF0DD9A0);
-const _negative     = Color(0xFFFF4D6D);
 
 // ── Provider ─────────────────────────────────────────────────────────
 final _bankConnectionsProvider =
@@ -64,13 +55,14 @@ class BankConnectionsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     final async = ref.watch(_bankConnectionsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddBankSheet(context, ref),
-        backgroundColor: _accent,
+        backgroundColor: AppColors.accent,
         foregroundColor: const Color(0xFF051929),
         elevation: 0,
         icon: const Icon(Icons.add, size: 20),
@@ -82,20 +74,19 @@ class BankConnectionsPage extends ConsumerWidget {
           children: [
             // ── Header ──────────────────────────────────────────────
             async.when(
-              loading: () => _buildHeader('…'),
-              error: (_, __) => _buildHeader(''),
+              loading: () => _buildHeader(context, '…'),
+              error: (_, __) => _buildHeader(context, ''),
               data: (data) {
                 final count =
                     (data['connections'] as List? ?? []).length;
-                return _buildHeader(
-                    '$count hesap bağlı');
+                return _buildHeader(context, '$count hesap bağlı');
               },
             ),
             // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
-                color: _accent,
-                backgroundColor: _cardBg,
+                color: AppColors.accent,
+                backgroundColor: c.card,
                 onRefresh: () async =>
                     ref.invalidate(_bankConnectionsProvider),
                 child: async.when(
@@ -152,7 +143,8 @@ class BankConnectionsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(String subtitle) {
+  Widget _buildHeader(BuildContext context, String subtitle) {
+    final c = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -163,11 +155,11 @@ class BankConnectionsPage extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _cardBg,
+                color: c.card,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _cardBorder),
+                border: Border.all(color: c.border),
               ),
-              child: const Icon(Icons.menu, size: 18, color: _text2),
+              child: Icon(Icons.menu, size: 18, color: c.text2),
             ),
           ),
           const SizedBox(width: 16),
@@ -175,13 +167,13 @@ class BankConnectionsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Banka Bağlantıları',
+                Text('Banka Bağlantıları',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _text1)),
+                        color: c.text1)),
                 Text(subtitle,
-                    style: const TextStyle(fontSize: 12, color: _text3)),
+                    style: TextStyle(fontSize: 12, color: c.text3)),
               ],
             ),
           ),
@@ -191,10 +183,11 @@ class BankConnectionsPage extends ConsumerWidget {
   }
 
   void _showAddBankSheet(BuildContext context, WidgetRef ref) {
+    final c = context.appColors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: _cardBg,
+      backgroundColor: c.card,
       shape: const RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(24))),
@@ -206,24 +199,24 @@ class BankConnectionsPage extends ConsumerWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, int id) async {
+    final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: _cardBg,
-        title: const Text('Bağlantıyı Sil',
-            style: TextStyle(color: _text1)),
-        content: const Text(
+        backgroundColor: c.card,
+        title: Text('Bağlantıyı Sil',
+            style: TextStyle(color: c.text1)),
+        content: Text(
             'Bu banka bağlantısını silmek istediğinize emin misiniz?',
-            style: TextStyle(color: _text2)),
+            style: TextStyle(color: c.text2)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child:
-                  const Text('İptal', style: TextStyle(color: _text2))),
+              child: Text('İptal', style: TextStyle(color: c.text2))),
           TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Sil',
-                  style: TextStyle(color: _negative))),
+              child: Text('Sil',
+                  style: TextStyle(color: c.negative))),
         ],
       ),
     );
@@ -246,6 +239,7 @@ class _ConnectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     // API returns connection.bank.{slug,name,...} and connection.accounts[...]
     final bankNode = conn['bank'];
     final String? bankSlug = bankNode is Map ? bankNode['slug']?.toString() : conn['bank_slug']?.toString();
@@ -260,7 +254,7 @@ class _ConnectionCard extends StatelessWidget {
         orElse: () => {
               'id': bankSlug ?? '',
               'name': apiBankName ?? 'Banka',
-              'color': _text3,
+              'color': const Color(0xFF4A6478),
               'type': 'credentials'
             });
     final bankName = bankInfo['name'] as String;
@@ -277,9 +271,9 @@ class _ConnectionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: c.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -308,8 +302,8 @@ class _ConnectionCard extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: bankColor == _text3
-                                ? _text2
+                            color: bankColor == const Color(0xFF4A6478)
+                                ? c.text2
                                 : Color.lerp(bankColor, Colors.white, 0.6)!),
                       ),
                     ),
@@ -321,18 +315,18 @@ class _ConnectionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(bankName,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: _text1)),
+                              color: c.text1)),
                       const SizedBox(height: 2),
                       Text(
                         accountType ??
                             (lastSynced != null
                                 ? 'Son sync: ${AppFormatters.dateFromIso(lastSynced)}'
                                 : 'Henüz senkronize edilmedi'),
-                        style: const TextStyle(
-                            fontSize: 12, color: _text3),
+                        style: TextStyle(
+                            fontSize: 12, color: c.text3),
                       ),
                     ],
                   ),
@@ -343,13 +337,13 @@ class _ConnectionCard extends StatelessWidget {
                       horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: isActive
-                        ? _positive.withValues(alpha: 0.12)
-                        : _negative.withValues(alpha: 0.12),
+                        ? c.positive.withValues(alpha: 0.12)
+                        : c.negative.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                         color: isActive
-                            ? _positive.withValues(alpha: 0.3)
-                            : _negative.withValues(alpha: 0.3)),
+                            ? c.positive.withValues(alpha: 0.3)
+                            : c.negative.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -359,7 +353,7 @@ class _ConnectionCard extends StatelessWidget {
                             ? Icons.check_circle_outline
                             : Icons.error_outline,
                         size: 12,
-                        color: isActive ? _positive : _negative,
+                        color: isActive ? c.positive : c.negative,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -367,7 +361,7 @@ class _ConnectionCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isActive ? _positive : _negative,
+                          color: isActive ? c.positive : c.negative,
                         ),
                       ),
                     ],
@@ -381,24 +375,24 @@ class _ConnectionCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _scaffoldBg,
+                  color: c.bg,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.account_balance_wallet_outlined,
-                        size: 14, color: _text3),
+                    Icon(Icons.account_balance_wallet_outlined,
+                        size: 14, color: c.text3),
                     const SizedBox(width: 6),
                     Text('Bakiye',
-                        style: const TextStyle(
-                            fontSize: 12, color: _text3)),
+                        style: TextStyle(
+                            fontSize: 12, color: c.text3)),
                     const Spacer(),
                     Text(
                       AppFormatters.currencyCompact(balance),
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: _text1),
+                          color: c.text1),
                     ),
                   ],
                 ),
@@ -413,21 +407,21 @@ class _ConnectionCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
-                        color: _accent.withValues(alpha: 0.08),
+                        color: AppColors.accent.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: _accent.withValues(alpha: 0.2)),
+                            color: AppColors.accent.withValues(alpha: 0.2)),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.sync, size: 14, color: _accent),
+                          Icon(Icons.sync, size: 14, color: AppColors.accent),
                           SizedBox(width: 6),
                           Text('Senkronize Et',
                               style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: _accent)),
+                                  color: AppColors.accent)),
                         ],
                       ),
                     ),
@@ -440,13 +434,13 @@ class _ConnectionCard extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: _negative.withValues(alpha: 0.08),
+                      color: c.negative.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: _negative.withValues(alpha: 0.2)),
+                          color: c.negative.withValues(alpha: 0.2)),
                     ),
-                    child: const Icon(Icons.delete_outline,
-                        size: 16, color: _negative),
+                    child: Icon(Icons.delete_outline,
+                        size: 16, color: c.negative),
                   ),
                 ),
               ],
@@ -521,29 +515,32 @@ class _AddBankSheetState extends State<_AddBankSheet> {
     }
   }
 
-  InputDecoration _inputDeco(String label, {IconData? icon}) =>
-      InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: _text3, fontSize: 13),
-        prefixIcon: icon != null
-            ? Icon(icon, size: 18, color: _text3)
-            : null,
-        filled: true,
-        fillColor: _scaffoldBg,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: _cardBorder)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: _accent, width: 1.5)),
-      );
+  InputDecoration _inputDeco(String label, {IconData? icon}) {
+    final c = context.appColors;
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon: icon != null
+          ? Icon(icon, size: 18, color: c.text3)
+          : null,
+      filled: true,
+      fillColor: c.bg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: AppColors.accent, width: 1.5)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
@@ -559,30 +556,30 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: _cardBorder,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text('Banka Ekle',
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: _text1)),
+                          color: c.text1)),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: _text2, size: 20),
+                  icon: Icon(Icons.close, color: c.text2, size: 20),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             if (_selectedBank == null) ...[
-              const Text('Bankanızı seçin',
-                  style: TextStyle(fontSize: 13, color: _text2)),
+              Text('Bankanızı seçin',
+                  style: TextStyle(fontSize: 13, color: c.text2)),
               const SizedBox(height: 12),
               ..._banks.map((b) {
                 final col = b['color'] as Color;
@@ -593,9 +590,9 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: _scaffoldBg,
+                      color: c.bg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: _cardBorder),
+                      border: Border.all(color: c.border),
                     ),
                     child: Row(
                       children: [
@@ -623,22 +620,22 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(b['name'] as String,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: _text1)),
+                                      color: c.text1)),
                               Text(
                                 b['type'] == 'oauth'
                                     ? 'OAuth ile bağlan'
                                     : 'Kullanıcı adı / şifre',
-                                style: const TextStyle(
-                                    fontSize: 11, color: _text3),
+                                style: TextStyle(
+                                    fontSize: 11, color: c.text3),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right,
-                            size: 18, color: _text3),
+                        Icon(Icons.chevron_right,
+                            size: 18, color: c.text3),
                       ],
                     ),
                   ),
@@ -671,16 +668,16 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(_selectedBank!['name'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: _text1)),
+                            color: c.text1)),
                   ),
                   TextButton(
                     onPressed: () =>
                         setState(() => _selectedBank = null),
                     child: const Text('Değiştir',
-                        style: TextStyle(color: _accent, fontSize: 13)),
+                        style: TextStyle(color: AppColors.accent, fontSize: 13)),
                   ),
                 ],
               ),
@@ -692,7 +689,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                 child: ElevatedButton(
                   onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: AppColors.accent,
                     foregroundColor: const Color(0xFF051929),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -717,13 +714,14 @@ class _AddBankSheetState extends State<_AddBankSheet> {
   }
 
   Widget _buildFields() {
+    final c = context.appColors;
     final type = _selectedBank!['type'] as String;
     if (type == 'credentials') {
       return Column(
         children: [
           TextFormField(
             controller: _usernameCtrl,
-            style: const TextStyle(color: _text1),
+            style: TextStyle(color: c.text1),
             decoration: _inputDeco('Kullanıcı Adı / TC Kimlik No',
                 icon: Icons.person_outline),
             validator: (v) =>
@@ -735,7 +733,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
           TextFormField(
             controller: _passwordCtrl,
             obscureText: _obscurePassword,
-            style: const TextStyle(color: _text1),
+            style: TextStyle(color: c.text1),
             decoration: _inputDeco(
                     'İnternet Bankacılığı Şifresi',
                     icon: Icons.lock_outline)
@@ -746,7 +744,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
                     size: 18,
-                    color: _text3),
+                    color: c.text3),
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
@@ -763,15 +761,15 @@ class _AddBankSheetState extends State<_AddBankSheet> {
               border: Border.all(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.shield_outlined,
+                const Icon(Icons.shield_outlined,
                     color: Color(0xFFF59E0B), size: 16),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Bilgileriniz şifreli saklanır ve yalnızca okuma için kullanılır.',
-                    style: TextStyle(fontSize: 12, color: _text2),
+                    style: TextStyle(fontSize: 12, color: c.text2),
                   ),
                 ),
               ],
@@ -784,7 +782,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
         children: [
           TextFormField(
             controller: _apiKeyCtrl,
-            style: const TextStyle(color: _text1),
+            style: TextStyle(color: c.text1),
             decoration:
                 _inputDeco('API Anahtarı', icon: Icons.key_outlined),
             validator: (v) =>
@@ -795,7 +793,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _clientIdCtrl,
-            style: const TextStyle(color: _text1),
+            style: TextStyle(color: c.text1),
             decoration:
                 _inputDeco('Client ID', icon: Icons.fingerprint),
             validator: (v) =>
@@ -811,7 +809,7 @@ class _AddBankSheetState extends State<_AddBankSheet> {
         children: [
           TextFormField(
             controller: _apiKeyCtrl,
-            style: const TextStyle(color: _text1),
+            style: TextStyle(color: c.text1),
             decoration:
                 _inputDeco('OAuth Token', icon: Icons.token_outlined),
             validator: (v) =>
@@ -821,14 +819,14 @@ class _AddBankSheetState extends State<_AddBankSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.06),
+              color: AppColors.accent.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: _accent.withValues(alpha: 0.15)),
+                  color: AppColors.accent.withValues(alpha: 0.15)),
             ),
-            child: const Text(
+            child: Text(
               'Garanti BBVA için developer.garantibbva.com.tr adresinden OAuth token almanız gerekmektedir.',
-              style: TextStyle(fontSize: 12, color: _text2),
+              style: TextStyle(fontSize: 12, color: c.text2),
             ),
           ),
         ],

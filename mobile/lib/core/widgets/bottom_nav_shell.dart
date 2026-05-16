@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'app_drawer.dart';
+import '../theme/colors.dart';
+import '../theme/context_extensions.dart';
 
 final shellScaffoldKey = GlobalKey<ScaffoldState>();
-
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _textMuted  = Color(0xFF8899AA);
 
 class BottomNavShell extends StatelessWidget {
   final Widget child;
@@ -70,9 +66,10 @@ class BottomNavShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Scaffold(
       key: shellScaffoldKey,
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       drawer: const AppDrawer(),
       body: child,
       bottomNavigationBar: _showBottomNav
@@ -99,8 +96,9 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return Container(
-      color: _scaffoldBg,
+      color: c.bg,
       child: SafeArea(
         top: false,
         child: Padding(
@@ -108,9 +106,9 @@ class _FloatingNavBar extends StatelessWidget {
           child: Container(
             height: 64,
             decoration: BoxDecoration(
-              color: _cardBg,
+              color: c.card,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: _cardBorder),
+              border: Border.all(color: c.border),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.4),
@@ -118,7 +116,7 @@ class _FloatingNavBar extends StatelessWidget {
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: _accent.withValues(alpha: 0.04),
+                  color: AppColors.accent.withValues(alpha: 0.04),
                   blurRadius: 40,
                   spreadRadius: -4,
                 ),
@@ -157,41 +155,46 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        height: 64,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? _accent.withValues(alpha: 0.15)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isActive ? tab.activeIcon : tab.icon,
-                size: 22,
-                color: isActive ? _accent : _textMuted,
-              ),
+      child: Builder(
+        builder: (context) {
+          final c = context.appColors;
+          return SizedBox(
+            width: 64,
+            height: 64,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isActive ? tab.activeIcon : tab.icon,
+                    size: 22,
+                    color: isActive ? AppColors.accent : c.text2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    color: isActive ? AppColors.accent : c.text2,
+                    letterSpacing: 0.2,
+                  ),
+                  child: Text(tab.label),
+                ),
+              ],
             ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? _accent : _textMuted,
-                letterSpacing: 0.2,
-              ),
-              child: Text(tab.label),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

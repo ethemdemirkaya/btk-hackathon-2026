@@ -5,37 +5,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
-const _scaffoldBg = Color(0xFF060D18);
-const _cardBg     = Color(0xFF0D1B2A);
-const _cardBorder = Color(0xFF1A2940);
-const _accent     = Color(0xFF00D4FF);
-const _text1      = Color(0xFFE8F4FF);
-const _text2      = Color(0xFF8BA4BC);
-const _text3      = Color(0xFF4A6478);
-const _positive   = Color(0xFF0DD9A0);
-const _negative   = Color(0xFFFF4D6D);
-const _warning    = Color(0xFFF59E0B);
-
 Color _colorFromHint(String hint) {
   switch (hint) {
     case 'danger':
-      return _negative;
+      return const Color(0xFFFF4D6D);
     case 'warning':
-      return _warning;
+      return const Color(0xFFF59E0B);
     case 'info':
       return const Color(0xFF6FB1FC);
     case 'success':
-      return _positive;
+      return const Color(0xFF0DD9A0);
     case 'primary':
-      return _accent;
+      return AppColors.accent;
     default:
-      return _text3;
+      return const Color(0xFF4A6478);
   }
 }
 
@@ -218,10 +209,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final async = ref.watch(_insightsProvider);
 
     return Scaffold(
-      backgroundColor: _scaffoldBg,
+      backgroundColor: c.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -238,12 +230,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+                        border: Border.all(color: c.border),
                       ),
-                      child: const Icon(Icons.menu,
-                          size: 18, color: _text2),
+                      child: Icon(Icons.menu,
+                          size: 18, color: c.text2),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -251,11 +243,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('AI Öngörüleri',
+                        Text('AI Öngörüleri',
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
-                                color: _text1)),
+                                color: c.text1)),
                         async.when(
                           data: (items) {
                             final visible = items
@@ -264,17 +256,17 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                                 .length;
                             return Text(
                                 '$visible aktif öngörü · $_lastUpdatedLabel',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _text3));
+                                    color: c.text3));
                           },
                           loading: () => Text(
                               'Yükleniyor...',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
-                                  color: _text3)),
+                                  color: c.text3)),
                           error: (_, __) => const SizedBox.shrink(),
                         ),
                       ],
@@ -286,12 +278,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _cardBg,
+                        color: c.card,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _cardBorder),
+                        border: Border.all(color: c.border),
                       ),
-                      child: const Icon(Icons.refresh,
-                          size: 17, color: _text2),
+                      child: Icon(Icons.refresh,
+                          size: 17, color: c.text2),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -311,11 +303,11 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                                   Color(0xFF0066FF)
                                 ],
                               ),
-                        color: _generating ? _cardBg : null,
+                        color: _generating ? c.card : null,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: _generating
-                              ? _cardBorder
+                              ? c.border
                               : Colors.transparent,
                         ),
                       ),
@@ -323,12 +315,12 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (_generating)
-                            const SizedBox(
+                            SizedBox(
                               width: 13,
                               height: 13,
                               child: CircularProgressIndicator(
                                   strokeWidth: 1.5,
-                                  color: _accent),
+                                  color: AppColors.accent),
                             )
                           else
                             const Icon(Icons.auto_awesome,
@@ -341,7 +333,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: _generating
-                                  ? _text3
+                                  ? c.text3
                                   : const Color(0xFF051929),
                             ),
                           ),
@@ -420,6 +412,7 @@ class _InsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     final typeColor = _colorFromHint(insight.type);
     final impColor =
         _importanceColors[insight.importance] ?? typeColor;
@@ -429,7 +422,7 @@ class _InsightCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: c.card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: impColor.withValues(alpha: 0.25)),
       ),
@@ -462,10 +455,10 @@ class _InsightCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   AppFormatters.dateShort(insight.createdAt),
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
-                      color: _text3),
+                      color: c.text3),
                 ),
                 const Spacer(),
                 GestureDetector(
@@ -474,12 +467,12 @@ class _InsightCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: _scaffoldBg,
+                      color: c.bg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _cardBorder),
+                      border: Border.all(color: c.border),
                     ),
-                    child: const Icon(Icons.close,
-                        size: 14, color: _text3),
+                    child: Icon(Icons.close,
+                        size: 14, color: c.text3),
                   ),
                 ),
               ],
@@ -507,16 +500,16 @@ class _InsightCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(insight.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _text1)),
+                              color: c.text1)),
                       const SizedBox(height: 6),
                       Text(insight.body,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: _text2,
+                              color: c.text2,
                               height: 1.5)),
                       if (insight.actionLink != null) ...[
                         const SizedBox(height: 10),
@@ -581,15 +574,16 @@ class _InsightDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.appColors;
     return DraggableScrollableSheet(
       initialChildSize: 0.62,
       minChildSize: 0.4,
       maxChildSize: 0.92,
       expand: false,
       builder: (_, controller) => Container(
-        decoration: const BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           children: [
@@ -599,7 +593,7 @@ class _InsightDetailSheet extends StatelessWidget {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _cardBorder,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -630,10 +624,10 @@ class _InsightDetailSheet extends StatelessWidget {
                       const SizedBox(width: 10),
                       Text(
                         AppFormatters.dateShort(insight.createdAt),
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: _text3),
+                            color: c.text3),
                       ),
                     ],
                   ),
@@ -655,10 +649,10 @@ class _InsightDetailSheet extends StatelessWidget {
                       Expanded(
                         child: Text(
                           insight.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: _text1,
+                              color: c.text1,
                               height: 1.3),
                         ),
                       ),
@@ -668,16 +662,16 @@ class _InsightDetailSheet extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: _scaffoldBg,
+                      color: c.bg,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: _cardBorder),
+                      border: Border.all(color: c.border),
                     ),
                     child: Text(
                       insight.body,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: _text1,
+                          color: c.text1,
                           height: 1.6),
                     ),
                   ),
