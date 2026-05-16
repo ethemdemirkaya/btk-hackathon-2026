@@ -21,12 +21,17 @@ final _searchQueryProvider = StateProvider<String>((ref) => '');
 final _selectedFilterProvider = StateProvider<String?>((ref) => null);
 final _periodProvider = StateProvider<int?>((ref) => 1);
 
-// Fetches all transactions without type filter — type filtering is done client-side
-// so the summary bar always has access to both income and expense data.
-final _transactionListProvider =
-    FutureProvider.autoDispose<TransactionPage>((ref) async {
+// Fetches income and expense transactions in parallel so the summary bar
+// always has complete data regardless of which type filter is active.
+// Client-side filtering handles type/period/search for the list view.
+final _summaryDataProvider =
+    FutureProvider.autoDispose<List<TransactionModel>>((ref) async {
   final api = ref.watch(_transactionsApiProvider);
-  return api.getTransactions(type: null, perPage: 50);
+  final results = await Future.wait([
+    api.getTransactions(type: 'income', perPage: 50),
+    api.getTransactions(type: 'expense', perPage: 50),
+  ]);
+  return [...results[0].data, ...results[1].data];
 });
 
 const _categoryIcons = <String, IconData>{
@@ -130,16 +135,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
-    final asyncData = ref.watch(_transactionListProvider);
+    final asyncData = ref.watch(_summaryDataProvider);
     final selectedType = ref.watch(_filterTypeProvider);
     final selectedFilter = ref.watch(_selectedFilterProvider);
     final selectedPeriod = ref.watch(_periodProvider);
     final query = ref.watch(_searchQueryProvider);
 
     final filteredCount = asyncData.whenOrNull(
-      data: (page) => _applyFilters(
-              page.data, query, selectedType, selectedFilter, selectedPeriod)
-          .length,
+      data: (items) =>
+          _applyFilters(items, query, selectedType, selectedFilter, selectedPeriod)
+              .length,
     );
 
     return Scaffold(
@@ -170,8 +175,8 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
             ),
             const SizedBox(height: 10),
             asyncData.when(
-              data: (page) => _SummaryBar(
-                items: _applyPeriodFilter(page.data, selectedPeriod),
+              data: (items) => _SummaryBar(
+                items: _applyPeriodFilter(items, selectedPeriod),
                 period: selectedPeriod,
               ),
               loading: () => const _SummaryBarSkeleton(),
@@ -205,16 +210,16 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                 color: AppColors.accent,
                 backgroundColor: c.card,
                 onRefresh: () async =>
-                    ref.invalidate(_transactionListProvider),
+                    ref.invalidate(_summaryDataProvider),
                 child: asyncData.when(
                   loading: () => const _TransactionSkeleton(),
                   error: (e, __) => ErrorState(
                     message: e.toString(),
-                    onRetry: () => ref.invalidate(_transactionListProvider),
+                    onRetry: () => ref.invalidate(_summaryDataProvider),
                   ),
-                  data: (page) {
+                  data: (items) {
                     final filtered = _applyFilters(
-                        page.data, query, selectedType, selectedFilter, selectedPeriod);
+                        items, query, selectedType, selectedFilter, selectedPeriod);
                     if (filtered.isEmpty) {
                       return _EmptyState(
                         onClear: () {
