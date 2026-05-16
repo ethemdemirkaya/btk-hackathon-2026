@@ -6,22 +6,20 @@ use Illuminate\Support\Facades\DB;
 
 class DebtDetectionService
 {
-    // İşlem açıklamasında borç varlığına işaret eden anahtar kelimeler
     private const DEBT_KEYWORDS = [
         'borç', 'borc', 'ödünç', 'odunc', 'borcum', 'borcun',
         'borç attım', 'borç verdim', 'borç verdi', 'borçlandım',
         'loan', 'lend', 'borrow', 'advance',
     ];
 
-    // Geri ödemeye işaret eden kelimeler
     private const REPAYMENT_KEYWORDS = [
         'geri ödeme', 'geri odeme', 'iade', 'geri verdi',
         'geri aldım', 'geri alındı', 'ödeme iade', 'repayment', 'geri dön',
     ];
 
     /**
-     * Son 90 günün işlemlerini tarayıp, daha önce borç olarak kayıt edilmemiş
-     * ve açıklamasında borç anahtar kelimesi geçen işlemleri döner.
+     * Son 90 günün işlemlerini tarayıp borç anahtar kelimesi geçenleri döner.
+     * transactions tablosunda user_id yoktur; accounts join ile erişilir.
      */
     public function detectUnconfirmedDebts(int $userId): array
     {
@@ -32,11 +30,22 @@ class DebtDetectionService
             ->all();
 
         $transactions = DB::table('transactions')
-            ->where('user_id', $userId)
-            ->whereDate('transaction_date', '>=', now()->subDays(90))
-            ->when($linkedTxIds, fn ($q) => $q->whereNotIn('id', $linkedTxIds))
-            ->orderByDesc('transaction_date')
-            ->get(['id', 'description', 'merchant_name', 'amount', 'transaction_date', 'currency']);
+            ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
+            ->where('accounts.user_id', $userId)
+            ->where('transactions.posted_at', '>=', now()->subDays(90))
+            ->when(
+                count($linkedTxIds) > 0,
+                fn ($q) => $q->whereNotIn('transactions.id', $linkedTxIds)
+            )
+            ->orderByDesc('transactions.posted_at')
+            ->get([
+                'transactions.id',
+                'transactions.description',
+                'transactions.merchant_name',
+                'transactions.amount',
+                'transactions.posted_at',
+                'transactions.currency',
+            ]);
 
         $suggestions = [];
 
@@ -47,13 +56,12 @@ class DebtDetectionService
                 continue;
             }
 
-            // Para çıkışı (negatif) = borç verdim, para girişi (pozitif) = borç aldım
-            $txAmount = (float) $tx->amount;
+            $txAmount  = (float) $tx->amount;
             $direction = $txAmount < 0 ? 'given' : 'received';
 
             $suggestions[] = [
                 'transaction_id'    => $tx->id,
-                'transaction_date'  => $tx->transaction_date,
+                'transaction_date'  => $tx->posted_at,
                 'description'       => $tx->description ?? $tx->merchant_name,
                 'amount'            => round(abs($txAmount), 2),
                 'currency'          => $tx->currency ?? 'TRY',
@@ -68,7 +76,6 @@ class DebtDetectionService
 
     /**
      * Mevcut açık borçlara karşılık gelebilecek işlemleri bulur.
-     * Yön (gelen/giden), tutar aralığı (%90 eşiği) ve geri ödeme anahtar kelimeleri kontrol edilir.
      */
     public function findRepaymentCandidates(int $userId): array
     {
@@ -88,20 +95,29 @@ class DebtDetectionService
             ->all();
 
         $transactions = DB::table('transactions')
-            ->where('user_id', $userId)
-            ->whereDate('transaction_date', '>=', now()->subDays(90))
-            ->when($linkedTxIds, fn ($q) => $q->whereNotIn('id', $linkedTxIds))
-            ->get(['id', 'description', 'merchant_name', 'amount', 'transaction_date', 'currency']);
+            ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
+            ->where('accounts.user_id', $userId)
+            ->where('transactions.posted_at', '>=', now()->subDays(90))
+            ->when(
+                count($linkedTxIds) > 0,
+                fn ($q) => $q->whereNotIn('transactions.id', $linkedTxIds)
+            )
+            ->get([
+                'transactions.id',
+                'transactions.description',
+                'transactions.merchant_name',
+                'transactions.amount',
+                'transactions.posted_at',
+                'transactions.currency',
+            ]);
 
         $candidates = [];
 
         foreach ($transactions as $tx) {
-            $txAmount = (float) $tx->amount;
+            $txAmount  = (float) $tx->amount;
             $absAmount = abs($txAmount);
 
             foreach ($openDebts as $debt) {
-                // Borç verdim (given) → geri ödeme gelir (pozitif işlem)
-                // Borç aldım (received) → geri ödeme gider (negatif işlem)
                 $isOppositeDir = ($debt->direction === 'given'    && $txAmount > 0)
                               || ($debt->direction === 'received' && $txAmount < 0);
 
@@ -109,7 +125,6 @@ class DebtDetectionService
                     continue;
                 }
 
-                // Tutar en az orijinal borcun %90'ı kadar olmalı
                 if ($absAmount < (float) $debt->amount * 0.9) {
                     continue;
                 }
@@ -122,7 +137,7 @@ class DebtDetectionService
                     'debt_amount'      => (float) $debt->amount,
                     'debt_direction'   => $debt->direction,
                     'transaction_id'   => $tx->id,
-                    'transaction_date' => $tx->transaction_date,
+                    'transaction_date' => $tx->posted_at,
                     'description'      => $tx->description ?? $tx->merchant_name,
                     'repayment_amount' => $absAmount,
                     'profit'           => $profit,
@@ -146,10 +161,6 @@ class DebtDetectionService
         return false;
     }
 
-    /**
-     * Açıklamadan kişi adı çıkarmaya çalışır.
-     * Türkçe isim kalıplarını tanır: "Ali'ye borç", "borç Mehmet", "Ahmet'ten borç"
-     */
     private function extractContactName(string $description): ?string
     {
         $desc = mb_strtolower($description);

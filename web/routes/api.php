@@ -118,7 +118,7 @@ Route::prefix('v1')->group(function () {
         Route::get   ('personal-debts',                              [PersonalDebtController::class, 'index']);
         Route::post  ('personal-debts',                              [PersonalDebtController::class, 'store']);
         Route::patch ('personal-debts/{id}',                         [PersonalDebtController::class, 'update']);
-        Route::patch ('personal-debts/{id}/settle',                  [PersonalDebtController::class, 'settle']);
+        Route::post  ('personal-debts/{id}/settle',                  [PersonalDebtController::class, 'settle']);
         Route::delete('personal-debts/{id}',                         [PersonalDebtController::class, 'destroy']);
         // AI borç tespiti
         Route::get   ('personal-debts/auto-detect',                  [PersonalDebtController::class, 'autoDetect']);
