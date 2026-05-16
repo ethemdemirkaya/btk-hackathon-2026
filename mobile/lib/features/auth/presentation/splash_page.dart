@@ -110,8 +110,11 @@ class _SplashPageState extends ConsumerState<SplashPage>
         final hasPin = await AuthStorage.hasPin();
         if (!mounted) return;
         if (hasPin) {
-          // Store user for PinLoginPage to confirm before authenticating
+          // Mark loading done (keeps authed=false) so router doesn't loop to /splash.
+          // The user model is held in pendingUserProvider until PIN is verified.
+          notifier.setUnauthenticated();
           ref.read(pendingUserProvider.notifier).state = user;
+          if (!mounted) return;
           context.go('/pin-login');
         } else {
           notifier.setAuthenticated(user);
