@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/storage/auth_storage.dart';
@@ -20,6 +21,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
+  final _localAuth = LocalAuthentication();
   final _incomeCtrl = TextEditingController();
   bool _savingIncome = false;
   bool _biometric = false;
@@ -38,6 +40,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final bio = await AuthStorage.isBiometricEnabled();
     final notifs = await AuthStorage.isNotificationsEnabled();
     if (mounted) setState(() { _biometric = bio; _notifs = notifs; });
+  }
+
+  Future<void> _toggleBiometric(bool enable) async {
+    if (!enable) {
+      setState(() => _biometric = false);
+      AuthStorage.setBiometricEnabled(false);
+      return;
+    }
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final devices = await _localAuth.getAvailableBiometrics();
+      if (!canCheck || devices.isEmpty) {
+        _snack('Cihazınızda biyometrik sensör bulunamadı.', isError: true);
+        return;
+      }
+      final ok = await _localAuth.authenticate(
+        localizedReason: 'Biyometrik girişi etkinleştirmek için doğrulayın',
+        options: const AuthenticationOptions(biometricOnly: false, stickyAuth: true),
+      );
+      if (ok && mounted) {
+        setState(() => _biometric = true);
+        AuthStorage.setBiometricEnabled(true);
+      }
+    } on PlatformException catch (e) {
+      if (mounted) _snack('Biyometrik kullanılamıyor: ${e.message ?? e.code}', isError: true);
+    }
   }
 
   @override
@@ -289,10 +317,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       icon: Icons.fingerprint,
                       label: 'Biyometrik giriş',
                       value: _biometric,
-                      onChanged: (v) {
-                        setState(() => _biometric = v);
-                        AuthStorage.setBiometricEnabled(v);
-                      },
+                      onChanged: _toggleBiometric,
                     ),
                     _TapRow(
                       icon: Icons.dialpad_outlined,
@@ -731,7 +756,7 @@ class _ToggleRow {
   final IconData icon;
   final String label;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final void Function(bool) onChanged;
   const _ToggleRow(
       {required this.icon,
       required this.label,
