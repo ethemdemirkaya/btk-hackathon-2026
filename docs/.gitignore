@@ -1,0 +1,23 @@
+# Admin/UI template dosyaları — kaynak kontrolünde tutulmaz
+html/
+tasarım/
+
+# Büyük medya dosyaları
+*.mp4
+*.mov
+*.avi
+*.zip
+*.psd
+*.fig
+*.sketch
+
+# Ekran görüntüleri (büyük PNG/JPG) — sadece .gitkeep tutulur
+screenshots/*.png
+screenshots/*.jpg
+screenshots/*.jpeg
+screenshots/*.gif
+!screenshots/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

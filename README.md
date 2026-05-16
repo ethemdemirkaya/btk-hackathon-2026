@@ -1,256 +1,271 @@
 <div align="center">
 
+<br/>
+
+<img src="docs/screenshots/logo.png" width="88" alt="Paranette Logo"/>
+
 # Paranette
 
 ### Yapay Zeka Destekli Kişisel Finans Asistanı
 
-[![Laravel](https://img.shields.io/badge/Laravel-13.7-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
-[![Gemini](https://img.shields.io/badge/Gemini_AI-2.5_Pro-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
+[![Flutter](https://img.shields.io/badge/Flutter-3.41-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Laravel](https://img.shields.io/badge/Laravel-13.7-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![Gemini](https://img.shields.io/badge/Gemini_2.5_Pro-AI-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://mysql.com)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 **BTK Akademi Hackathon 2026**
 
-Türk bankalarından veri çeken, harcamalarını analiz eden, bütçe/hedef/yatırım takibi yapan ve 11 uzman AI ajanıyla sohbet eden kişisel finans asistanı.
+Türk bankalarından otomatik veri çeken, harcamalarını analiz eden, bütçe · hedef · yatırım takibi yapan ve **11 uzman AI ajanıyla** sohbet eden mobil kişisel finans uygulaması.
+
+<br/>
+
+[Kurulum](#-kurulum) · [Özellikler](#-özellikler) · [Mimari](#-mimari) · [Ekran Görüntüleri](#-ekran-görüntüleri) · [Takım](#-takım)
 
 </div>
 
 ---
 
-## Mobil Uygulama Ekran Görüntüleri
+## 📸 Ekran Görüntüleri
 
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/01-dashboard.png" width="180"/><br/><sub><b>Dashboard</b></sub></td>
-    <td align="center"><img src="docs/screenshots/02-ai-chat.png" width="180"/><br/><sub><b>AI Finans Asistanı</b></sub></td>
-    <td align="center"><img src="docs/screenshots/03-transactions.png" width="180"/><br/><sub><b>İşlemler</b></sub></td>
-    <td align="center"><img src="docs/screenshots/04-budget.png" width="180"/><br/><sub><b>Bütçe & Hedefler</b></sub></td>
+    <td align="center"><img src="docs/screenshots/01-dashboard.png" width="170"/><br/><sub><b>Dashboard</b></sub></td>
+    <td align="center"><img src="docs/screenshots/02-ai-chat.png" width="170"/><br/><sub><b>AI Asistan</b></sub></td>
+    <td align="center"><img src="docs/screenshots/03-transactions.png" width="170"/><br/><sub><b>İşlemler & OCR</b></sub></td>
+    <td align="center"><img src="docs/screenshots/04-budget.png" width="170"/><br/><sub><b>Bütçe & Hedefler</b></sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/05-investments.png" width="180"/><br/><sub><b>Yatırım Portföyü</b></sub></td>
-    <td align="center"><img src="docs/screenshots/06-negotiation.png" width="180"/><br/><sub><b>Müzakere Ajanı</b></sub></td>
-    <td align="center"><img src="docs/screenshots/07-simulator.png" width="180"/><br/><sub><b>Karar Simülatörü</b></sub></td>
-    <td align="center"><img src="docs/screenshots/08-reports.png" width="180"/><br/><sub><b>Raporlar</b></sub></td>
+    <td align="center"><img src="docs/screenshots/05-investments.png" width="170"/><br/><sub><b>Yatırım Portföyü</b></sub></td>
+    <td align="center"><img src="docs/screenshots/06-negotiation.png" width="170"/><br/><sub><b>Müzakere Ajanı</b></sub></td>
+    <td align="center"><img src="docs/screenshots/07-simulator.png" width="170"/><br/><sub><b>Karar Simülatörü</b></sub></td>
+    <td align="center"><img src="docs/screenshots/08-reports.png" width="170"/><br/><sub><b>Aylık Rapor</b></sub></td>
   </tr>
 </table>
 </div>
 
 ---
 
-## Özellikler
+## ✨ Özellikler
 
-<div align="center">
+### 🏦 Bankacılık & Hesaplar
 
-| Modül | Açıklama |
-|:---|:---|
-| **Banka Bağlantıları** | 4 Türk bankası (Ziraat, Garanti, İşbank, Akbank) simülasyonu, otomatik senkronizasyon |
-| **Dashboard** | Bakiye özeti, harcama kategorileri, AI önerileri, finansal sağlık skoru |
-| **İşlemler & Fiş OCR** | Çok para birimli, anomali skoru, kamera ile fiş okuma, otomatik kategori |
-| **Bütçe & Hedefler** | AI destekli bütçe önerisi, tasarruf hedefi takibi |
-| **AI Finans Asistanı** | 11 uzman ajanla (BudgetAdvisor, AnomalyDetector, Negotiation vb.) doğal dil sohbet |
-| **Karar Simülatörü** | 3–12 aylık projeksiyon, reel/nominal bakiye karşılaştırması |
-| **Enflasyon Takibi** | Kişisel enflasyon endeksi vs. resmi TÜFE |
-| **Müzakere Ajanı** | Faiz indirimi ve borç yeniden yapılandırma için AI mektubu üretici |
-| **Yatırım Portföyü** | Altın, döviz, kripto, BIST, fon — canlı fiyatlarla |
-| **Kur & Altın Alarmları** | Eşik tabanlı anlık uyarılar |
-| **Faturalar & Abonelikler** | 8 fatura türü, otomatik abonelik tespiti |
-| **Raporlar** | Aylık özet JSON + PDF |
-| **Finansal Takvim** | Ödeme, taksit, kart ekstresi tek görünümde |
+| Özellik | Detay |
+|---|---|
+| **Banka Bağlantıları** | Ziraat, Garanti, İşbank, Akbank simülasyonu — otomatik işlem senkronizasyonu |
+| **Çoklu Hesap** | Vadesiz, tasarruf, döviz hesabı konsolidasyonu |
+| **Kartlar & Krediler** | Kart limiti takibi, kredi taksit takvimi |
+| **Faturalar & Abonelikler** | 8 fatura türü, Netflix/Spotify gibi abonelikleri otomatik tespit |
 
-</div>
+### 🤖 Yapay Zeka
+
+| Ajan | Görev |
+|---|---|
+| **BudgetAdvisor** | Gelir/gider analizi, bütçe önerileri |
+| **AnomalyDetector** | Olağandışı harcama tespiti, 0–10 risk skoru |
+| **NegotiationAgent** | Faiz indirimi ve borç yapılandırma için resmi AI mektubu |
+| **InvestmentAdvisor** | Portföy önerileri, risk analizi |
+| **InflationAdvisor** | Kişisel enflasyon vs. TÜFE karşılaştırması |
+| **SavingsCoach** | Tasarruf hedefi oluşturma ve takibi |
+| **DebtManager** | Kişisel borç yönetimi, otomatik tespit |
+| **CalendarAdvisor** | Ödeme takvimi, yaklaşan yükümlülükler |
+| **ReportGenerator** | Aylık finansal özet, PDF export |
+| **ReceiptAnalyzer** | Kamera ile fiş okuma (Gemini Vision OCR) |
+| **SimulatorAdvisor** | 3–12 aylık finansal projeksiyon |
+
+### 📊 Planlama & Takip
+
+- **Bütçe** — AI destekli bütçe önerisi, tek tıkla uygula
+- **Hedefler** — Tasarruf hedefi oluştur, ilerlemeyi takip et
+- **Yatırımlar** — Altın, döviz, kripto, BIST, fon canlı fiyatlarla
+- **Kur & Altın Alarmları** — Eşik tabanlı anlık uyarılar
+- **Karar Simülatörü** — "Bu parayı harcasam/yatırsam ne olur?" sorusunu yanıtla
+- **Kişisel Enflasyon** — Harcama sepetine özel enflasyon endeksi
+
+### 🔐 Güvenlik
+
+- **PIN Koruması** — Zorunlu 6 haneli PIN, her açılışta doğrulama
+- **Biyometrik Giriş** — Parmak izi / yüz tanıma (local_auth)
+- **Şifreli Depolama** — flutter_secure_storage + SharedPreferences fallback
 
 ---
 
-## Teknik Altyapı
+## 🏗 Mimari
 
-<div align="center">
+```
+┌─────────────────────────────────────────────────────┐
+│                   Flutter Mobil                      │
+│  Riverpod · GoRouter · Dio · local_auth · Gemini    │
+└──────────────────────┬──────────────────────────────┘
+                       │ HTTP/REST (Bearer Token)
+┌──────────────────────▼──────────────────────────────┐
+│              Laravel 13.7 API (PHP 8.3)              │
+│                                                      │
+│  ┌─────────────┐   ┌──────────────────────────────┐ │
+│  │ 19 Controller│   │   11 AI Agent Service         │ │
+│  │ REST Endpoints│  │   Gemini 2.5 Pro / Flash /    │ │
+│  └─────────────┘   │   Vision                      │ │
+│                    └──────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────┐│
+│  │  MySQL 8  ·  Laravel Sanctum  ·  Queue/Jobs    ││
+│  └─────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────┘
+         │
+┌────────▼────────┐
+│  Go Launcher    │  Windows · Linux · macOS
+│  (cross-platform│  Otomatik kurulum + başlatma
+│   binary)       │
+└─────────────────┘
+```
 
-| Katman | Teknoloji |
-|:---:|:---:|
-| Backend | Laravel 13.7 · PHP 8.3 |
-| Veritabanı | MySQL 8 |
-| Yapay Zeka | Google Gemini 1.5 Pro / Flash / Vision |
-| Mobil | Flutter 3.x · Riverpod · GoRouter · Dio |
-| Launcher | Go 1.22 (Windows / Linux / macOS) |
-| Kimlik Doğrulama | Laravel Sanctum Bearer Token |
+### Teknoloji Yığını
 
-</div>
+| Katman | Teknoloji | Versiyon |
+|---|---|---|
+| Mobil | Flutter · Dart | 3.41 · 3.11 |
+| State | Riverpod | 2.6 |
+| Routing | GoRouter | 14.6 |
+| HTTP | Dio | 5.x |
+| Backend | Laravel · PHP | 13.7 · 8.3 |
+| Veritabanı | MySQL | 8.0 |
+| Yapay Zeka | Google Gemini | 2.5 Pro |
+| Auth | Laravel Sanctum | Bearer Token |
+| Güvenlik | flutter_secure_storage | — |
+| Biometrik | local_auth | 2.3 |
+| Launcher | Go | 1.22 |
 
 ---
 
-## Kurulum
+## 🚀 Kurulum
 
 ### Gereksinimler
 
-| Araç | Versiyon | İndir |
-|:---|:---:|:---|
-| WAMP64 (Windows) / LAMP (Linux/macOS) | PHP 8.2+ · MySQL 8 | [wampserver.com](https://www.wampserver.com) |
-| Flutter SDK | 3.19+ | [flutter.dev](https://flutter.dev/docs/get-started/install) |
-| Android Studio + AVD | Ladybug+ | [developer.android.com](https://developer.android.com/studio) |
-| Go *(sadece launcher derlemek için)* | 1.22+ | [go.dev](https://go.dev/dl) |
+| Araç | Versiyon |
+|---|---|
+| Flutter SDK | 3.19+ |
+| PHP | 8.2+ |
+| MySQL | 8.0+ |
+| Android Studio + AVD | Ladybug+ |
 
----
+### ⚡ Otomatik Kurulum (Önerilen)
 
-### Otomatik Kurulum (Önerilen)
-
-`launcher/build/` dizininden platformunuza uygun binary'yi çalıştırın:
+`launcher/build/` dizininden platformunuza uygun dosyayı çalıştırın:
 
 | Platform | Dosya |
-|:---|:---|
+|---|---|
 | Windows 64-bit | `paranette-windows-amd64.exe` |
 | Linux x86-64 | `paranette-linux-amd64` |
 | Linux ARM64 | `paranette-linux-arm64` |
 | macOS Intel | `paranette-macos-intel` |
 | macOS Apple Silicon | `paranette-macos-arm64` |
 
-Launcher tek seferde şunları yapar:
+Launcher otomatik olarak şunları yapar:
+1. PHP · MySQL · Flutter · ADB yollarını tespit eder
+2. MySQL hazır değilse WAMP'ı başlatıp bekler
+3. `php artisan serve` ile Laravel'i `http://127.0.0.1:8000` adresinde başlatır
+4. Bağlantı modunu sorar → emülatör / fiziksel cihaz / manuel IP
+5. Mevcut AVD listesini gösterir, seçilen emülatörü başlatır
+6. `--dart-define=API_HOST=...` ile Flutter uygulamasını çalıştırır
 
-```
-1. PHP / MySQL / Flutter / ADB yollarını otomatik bulur
-2. MySQL hazır değilse WAMP'ı başlatır ve bekler
-3. php artisan serve ile Laravel'i http://127.0.0.1:8000 adresinde başlatır
-4. API bağlantı modunu sorar  →  emülatör / gerçek cihaz / manuel IP
-5. Mevcut AVD listesini gösterir, seçilen emülatörü başlatır ve boot'u bekler
-6. --dart-define=API_HOST ile Flutter uygulamasını çalıştırır
-```
-
----
-
-### Manuel Kurulum
+### 🔧 Manuel Kurulum
 
 <details>
-<summary><strong>1. Web (Laravel)</strong></summary>
+<summary><strong>1 — Laravel Backend</strong></summary>
 
 ```bash
 cd web
 cp .env.example .env
-# .env içinde DB_DATABASE, DB_USERNAME, DB_PASSWORD, GEMINI_API_KEY değerlerini doldurun
 composer install
 php artisan key:generate
 php artisan migrate --seed
-php artisan serve --host=127.0.0.1 --port=8000
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+**Zorunlu `.env` değerleri:**
+```env
+DB_DATABASE=paranette
+DB_USERNAME=root
+DB_PASSWORD=          # WAMP varsayılan: boş
+GEMINI_API_KEY=       # aistudio.google.com
 ```
 
 </details>
 
 <details>
-<summary><strong>2. Mobil (Flutter)</strong></summary>
+<summary><strong>2 — Flutter Mobil</strong></summary>
 
 ```bash
 cd mobile
 flutter pub get
 
-# Emülatör için (varsayılan):
+# Android emülatör (varsayılan):
 flutter run --dart-define=API_HOST=10.0.2.2
 
-# Gerçek cihaz için (PC'nin yerel IP'si):
+# Fiziksel cihaz (bilgisayarın LAN IP'si):
 flutter run --dart-define=API_HOST=192.168.x.x
 ```
 
-</details>
-
-<details>
-<summary><strong>3. .env Zorunlu Değerler</strong></summary>
-
-```env
-DB_DATABASE=paranette
-DB_USERNAME=root
-DB_PASSWORD=              # WAMP varsayılan: boş
-GEMINI_API_KEY=           # Google AI Studio'dan alın: aistudio.google.com
-# Birden fazla key için (round-robin):
-GEMINI_API_KEYS=key1,key2,key3
-```
+> **İpucu:** Uygulama içinde de değiştirilebilir — giriş ekranındaki **"API: …:8000"** çipine dokun.
 
 </details>
 
 ---
 
-## Test Rehberi
-
-<details>
-<summary><strong>Hızlı Test Akışı — adım adım aç</strong></summary>
-
-**1 · Kayıt & Giriş**
-- Uygulamayı aç → "Kayıt Ol" → ad, e-posta, şifre gir
-- Giriş yap → Dashboard'a yönlendirme kontrol et
-
-**2 · Banka Bağlantısı**
-- Sol menü → "Banka Bağlantıları" → "Banka Ekle"
-- Ziraat / Garanti / İşbank / Akbank seç (herhangi bir kimlik bilgisi — simülasyon)
-- "Senkronize Et" → işlemlerin listelendiğini gör
-
-**3 · Dashboard**
-- Bakiye kartları ve harcama grafiği görünüyor mu?
-- AI Önerisi kartları dolu mu? (boşsa 10–15 sn bekle, otomatik yüklenir)
-- Finansal Sağlık Skoru görünüyor mu?
-
-**4 · İşlemler + Fiş OCR**
-- Sol menü → "İşlemler" → liste yüklendi mi?
-- Sağ üst "+" → fotoğraf seç → OCR'ın kategori ve tutarı okuduğunu kontrol et
-
-**5 · AI Finans Asistanı**
-- Sol menü → "Finans Asistanı"
-- Yaz: *"Bu ay en çok nereye harcadım ve ne yapmalıyım?"*
-- 10–20 saniye içinde detaylı yanıt gelmeli
-
-**6 · Bütçe & Hedefler**
-- "Bütçe" → "AI Öner" butonuna bas → öneriyi kabul et
-- "Hedefler" → "Hedef Ekle" → ilerleme yüzdesi görünüyor mu?
-
-**7 · Müzakere Ajanı**
-- "Müzakere" → "Kredi Faizi İndirimi" seç → "Mektup Oluştur"
-- AI'nin oluşturduğu resmi mektubu gör
-
-**8 · Yatırımlar & Kur Alarmları**
-- "Yatırımlar" → portföy sayfası açılıyor mu?
-- "Kur Alarmları" → dolar için eşik değer gir, alarm kaydedildi mi?
-
-**9 · Raporlar**
-- "Raporlar" → aylık özet yüklendi mi?
-- "PDF İndir" → dosya geldi mi?
-
-**10 · Profil**
-- Sağ üst avatar → "Profil" → bilgi güncelle → kaydet
-- Geri çık, tekrar gir → değişiklik kaydedilmiş mi?
-
-</details>
-
----
-
-## Proje Yapısı
+## 📁 Proje Yapısı
 
 ```
 btk-hackathon-2026/
-├── web/                        # Laravel 13.7 backend
-│   ├── app/
-│   │   ├── Http/Controllers/Api/    # 19 REST API controller
-│   │   └── Services/Agents/         # 11 AI ajan servisi
-│   ├── database/migrations/
+├── web/                          # Laravel 13.7 backend
+│   ├── app/Http/Controllers/Api/ # 19 REST controller
+│   ├── app/Services/Agents/      # 11 AI ajan servisi
+│   ├── database/migrations/      # 24 migration
 │   └── routes/api.php
-├── mobile/                     # Flutter uygulaması
+│
+├── mobile/                       # Flutter uygulaması
 │   └── lib/
-│       ├── core/                    # API, router, tema, widget'lar
-│       └── features/                # 22 özellik modülü
-├── launcher/                   # Go cross-platform başlatıcı
+│       ├── core/                 # API · router · tema · widget
+│       │   ├── api/              # Dio client, interceptors, endpoints
+│       │   ├── routes/           # GoRouter (ShellRoute + auth guards)
+│       │   ├── storage/          # Secure storage + SharedPrefs
+│       │   └── theme/            # Dark / light token sistemi
+│       └── features/             # 22 özellik modülü (feature-first)
+│           ├── auth/             # Splash · Login · Register · PIN · Biometric
+│           ├── dashboard/
+│           ├── agent_chat/       # AI sohbet (11 ajan)
+│           ├── bank_connections/
+│           ├── transactions/
+│           ├── budgets/
+│           ├── goals/
+│           ├── investments/
+│           ├── negotiation/
+│           ├── simulator/
+│           ├── inflation/
+│           └── ...
+│
+├── launcher/                     # Go cross-platform başlatıcı
 │   ├── main.go
 │   ├── platform_windows.go
 │   ├── platform_unix.go
-│   └── build/                       # Derlenmiş binary'ler (5 platform)
+│   └── build/                    # 5 platform için derlenmiş binary
+│
 └── docs/
-    └── screenshots/                 # Uygulama ekran görüntüleri
+    ├── screenshots/              # Uygulama ekran görüntüleri
+    ├── PARANETTE_MOBIL.md        # Mobil geliştirici notları
+    ├── PARANETTE_WEB.md          # Backend geliştirici notları
+    └── VIDEO_SCRIPT.md           # 2 dakikalık tanıtım video senaryosu
 ```
 
 ---
 
-## Takım
+## 👥 Takım
 
 <div align="center">
 
-| | Kişi | Rol |
+| | İsim | Rol |
 |:---:|:---|:---|
-| | **Ethem Demirkaya** | Backend · Laravel · AI Ajanlar |
-| | **Sinem** | Mobil · Flutter |
+| 👨‍💻 | **Ethem Demirkaya** | Backend · Laravel · AI Ajanlar · Go Launcher |
+| 👩‍💻 | **Sinem Çağman** | Mobil · Flutter · UI/UX |
 
 </div>
 
@@ -258,8 +273,10 @@ btk-hackathon-2026/
 
 <div align="center">
 
-**BTK Akademi Hackathon 2026 — Paranette**
+**BTK Akademi Hackathon 2026**
 
 *Finansal özgürlüğün yapay zeka ile buluştuğu yer.*
+
+[![GitHub](https://img.shields.io/badge/GitHub-btk--hackathon--2026-181717?style=flat-square&logo=github)](https://github.com/ethemdemirkaya/btk-hackathon-2026)
 
 </div>
