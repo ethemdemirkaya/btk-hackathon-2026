@@ -7,6 +7,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/storage/auth_storage.dart';
 import '../../../shared/models/user_model.dart';
 import '../../../shared/providers/auth_provider.dart';
+import '../../../core/storage/auth_storage.dart';
 import '../domain/auth_repository.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
@@ -106,8 +107,16 @@ class _SplashPageState extends ConsumerState<SplashPage>
       }
       if (!mounted) return;
       if (user != null) {
-        notifier.setAuthenticated(user);
-        context.go('/dashboard');
+        final hasPin = await AuthStorage.hasPin();
+        if (!mounted) return;
+        if (hasPin) {
+          // Store user for PinLoginPage to confirm before authenticating
+          ref.read(pendingUserProvider.notifier).state = user;
+          context.go('/pin-login');
+        } else {
+          notifier.setAuthenticated(user);
+          context.go('/dashboard');
+        }
       } else {
         // Token expired/invalid — repo.me() already cleared storage
         notifier.setUnauthenticated();

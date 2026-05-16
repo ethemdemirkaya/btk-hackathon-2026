@@ -81,6 +81,40 @@ class AuthStorage {
     return token != null && token.isNotEmpty;
   }
 
+  // ── PIN ──────────────────────────────────────────────────────────────
+  static const _keyPin    = 'user_pin';
+  static const _prefKeyPin = 'pref_user_pin';
+
+  static Future<void> savePin(String pin) =>
+      _secureWrite(_keyPin, _prefKeyPin, pin);
+
+  static Future<String?> getPin() =>
+      _secureRead(_keyPin, _prefKeyPin);
+
+  static Future<bool> hasPin() async {
+    final pin = await getPin();
+    return pin != null && pin.isNotEmpty;
+  }
+
+  static Future<void> clearPin() async {
+    try {
+      await _secure.delete(key: _keyPin).timeout(_timeout);
+    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefKeyPin);
+  }
+
+  // ── Notifications pref (local only) ──────────────────────────────────
+  static Future<bool> isNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('notifications_enabled') ?? true;
+  }
+
+  static Future<void> setNotificationsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', enabled);
+  }
+
   static Future<void> clear() async {
     try {
       await _secure.deleteAll().timeout(_timeout);
@@ -88,5 +122,6 @@ class AuthStorage {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefKeyToken);
     await prefs.remove(_prefKeyUserId);
+    await prefs.remove(_prefKeyPin);
   }
 }

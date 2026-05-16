@@ -50,3 +50,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier();
 });
+
+// Holds the verified UserModel between splash auth-check and PIN confirmation.
+// Cleared after setAuthenticated() is called.
+final pendingUserProvider = StateProvider<UserModel?>((ref) => null);

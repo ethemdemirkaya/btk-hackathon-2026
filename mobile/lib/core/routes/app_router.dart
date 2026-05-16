@@ -6,6 +6,8 @@ import '../../features/auth/presentation/splash_page.dart';
 import '../../features/auth/presentation/onboarding_page.dart';
 import '../../features/auth/presentation/login_page.dart';
 import '../../features/auth/presentation/register_page.dart';
+import '../../features/auth/presentation/pin_login_page.dart';
+import '../../features/auth/presentation/pin_setup_page.dart';
 import '../../features/dashboard/presentation/dashboard_page.dart';
 import '../../features/transactions/presentation/transactions_page.dart';
 import '../../features/transactions/presentation/transaction_detail_page.dart';
@@ -58,7 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (loading) return '/splash';
 
-      const publicRoutes = ['/splash', '/onboarding', '/login', '/register'];
+      const publicRoutes = ['/splash', '/onboarding', '/login', '/register', '/pin-login', '/pin-setup'];
       final isPublic = publicRoutes.contains(loc);
 
       if (!authed && !isPublic) return '/login';
@@ -71,6 +73,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingPage()),
       GoRoute(path: '/login',      builder: (_, __) => const LoginPage()),
       GoRoute(path: '/register',   builder: (_, __) => const RegisterPage()),
+      GoRoute(path: '/pin-login',  builder: (_, __) => const PinLoginPage()),
+      GoRoute(path: '/pin-setup',  builder: (_, state) =>
+          PinSetupPage(isChange: state.extra == true)),
 
       // ── Shell (drawer always mounted) ────────────────────────────
       ShellRoute(

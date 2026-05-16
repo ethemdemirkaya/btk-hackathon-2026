@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/api/dio_client.dart';
+import '../../../core/storage/auth_storage.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/providers/auth_provider.dart';
 import '../domain/auth_repository.dart';
@@ -56,7 +57,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       if (!mounted) return;
       ref.read(authProvider.notifier).setAuthenticated(result.user);
-      context.go('/dashboard');
+      final hasPin = await AuthStorage.hasPin();
+      if (!mounted) return;
+      context.go(hasPin ? '/dashboard' : '/pin-setup');
     } on DioException catch (e) {
       if (!mounted) return;
       if (e.response?.statusCode == 422) {

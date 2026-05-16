@@ -85,16 +85,25 @@ class _SimulatorPageState extends State<SimulatorPage> {
   Future<void> _calculateWithModal() async {
     if (_current == null || !_canSimulate) return;
 
+    // useRootNavigator: false keeps the dialog on the ShellRoute navigator,
+    // so Navigator.pop(context) pops the right route after calculation.
     showDialog(
       context: context,
+      useRootNavigator: false,
       barrierDismissible: false,
       builder: (_) => const _SimulationLoadingModal(),
     );
 
-    await _calculate();
+    // Give the dialog one frame to mount before starting the async call.
+    await Future.delayed(Duration.zero);
 
-    if (mounted && Navigator.canPop(context)) {
-      Navigator.pop(context);
+    try {
+      await _calculate();
+    } finally {
+      if (mounted) {
+        final nav = Navigator.of(context, rootNavigator: false);
+        if (nav.canPop()) nav.pop();
+      }
     }
   }
 
