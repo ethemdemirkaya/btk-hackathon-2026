@@ -348,8 +348,8 @@
           </div>
         </div>
 
-        <div id="aiEmptyState" class="d-none text-center py-6">
-          <i class="icon-base ti tabler-mood-happy icon-64px text-muted mb-3 d-block"></i>
+        <div id="aiEmptyState" class="d-none py-6 text-center">
+          <i class="icon-base ti tabler-mood-happy icon-64px text-muted d-block mx-auto mb-3"></i>
           <h6 class="mb-2">Tespit edilecek borç bulunamadı</h6>
           <p class="text-muted small mb-0">Son 90 günde borç ile ilgili işlem tespit edilemedi.</p>
         </div>
