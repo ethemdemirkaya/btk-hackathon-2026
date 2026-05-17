@@ -127,13 +127,12 @@ class OrchestratorAgent
         $monthlyIncome = number_format((float) ($user->monthly_income ?? 0), 0, ',', '.');
 
         $systemPrompt = <<<'SYS'
-Sen Paranette'nin finansal asistanısın. Kullanıcının sorusuna Türkçe, kısa ve net cevap ver.
+Sen Paranette'nin finansal asistanısın. Kullanıcının sorusuna Türkçe, samimi ve somut cevap ver.
 
-KURALLAR (bunlara mutlaka uy):
-- ASLA yıldız (*), diyez (#), alt çizgi (_), tire listesi (-), kalın yazı veya herhangi bir markdown işareti kullanma
-- JSON, kod bloğu veya liste formatı kullanma
-- Düz, sade Türkçe metin yaz
-- Rakamları ver, somut konuş, gereksiz giriş ve kapanış cümlesi yazma
+KURALLAR (kesinlikle uy):
+- ASLA yıldız (*), diyez (#), alt çizgi (_), tire listesi (-) veya herhangi bir markdown işareti kullanma
+- JSON veya kod bloğu kullanma
+- Düz akıcı Türkçe paragraf yaz, rakamsal ver, somut konuş
 SYS;
 
         $ctxJson = json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -145,7 +144,7 @@ Finansal veri (son 30 gün):
 
 Kullanıcı sorusu: "{$userMessage}"
 
-Kısa ve net yanıt ver. Maksimum 4-5 cümle. Markdown kullanma.
+Yukarıdaki verilere dayanarak Türkçe, düz metin (markdown yok) ile yanıt ver.
 PROMPT;
 
         $contents = [['role' => 'user', 'parts' => [['text' => $prompt]]]];
@@ -157,7 +156,6 @@ PROMPT;
                 $systemPrompt,
                 [],
                 0.7,
-                350,
             );
             return $result['text'];
         } catch (\Throwable $e) {
