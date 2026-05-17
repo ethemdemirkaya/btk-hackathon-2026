@@ -11,7 +11,6 @@ import '../../../core/theme/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ai_insights_sheet.dart';
 import '../../../core/widgets/bottom_nav_shell.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 
@@ -100,17 +99,6 @@ class BudgetsPage extends ConsumerWidget {
                     final budgets = (data['budgets'] as List? ?? [])
                         .cast<Map<String, dynamic>>();
 
-                    if (budgets.isEmpty) {
-                      return EmptyState(
-                        icon: Icons.pie_chart_outline,
-                        title: 'Bütçe oluşturulmadı',
-                        subtitle:
-                            'AI önerisiyle veya kendiniz bütçe oluşturun.',
-                        ctaLabel: '+ Bütçe Ekle',
-                        onCta: () => _showBudgetForm(context, ref, null),
-                      );
-                    }
-
                     final totalLimit = budgets.fold<double>(
                         0,
                         (s, b) =>
@@ -128,30 +116,39 @@ class BudgetsPage extends ConsumerWidget {
                       padding:
                           const EdgeInsets.fromLTRB(20, 16, 20, 100),
                       children: [
-                        _HeroCard(
-                          totalSpent: totalSpent,
-                          totalLimit: totalLimit,
-                          pctTotal: pctTotal,
-                          overCount: overCount,
-                          budgetCount: budgets.length,
-                        ),
-                        const SizedBox(height: 12),
+                        if (budgets.isNotEmpty) ...[
+                          _HeroCard(
+                            totalSpent: totalSpent,
+                            totalLimit: totalLimit,
+                            pctTotal: pctTotal,
+                            overCount: overCount,
+                            budgetCount: budgets.length,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         _AiSuggestButton(
                           onTap: () => _showAiSuggest(context, ref),
                         ),
                         const SizedBox(height: 16),
-                        ...budgets.map((b) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: _BudgetCard(
-                                budget: b,
-                                onEdit: () =>
-                                    _showBudgetForm(context, ref, b),
-                              ),
-                            )),
-                        _DashedAddButton(
-                          label: 'Yeni bütçe ekle',
-                          onTap: () => _showBudgetForm(context, ref, null),
-                        ),
+                        if (budgets.isEmpty)
+                          _EmptyBudgetHint(
+                            onManualAdd: () =>
+                                _showBudgetForm(context, ref, null),
+                          )
+                        else ...[
+                          ...budgets.map((b) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _BudgetCard(
+                                  budget: b,
+                                  onEdit: () =>
+                                      _showBudgetForm(context, ref, b),
+                                ),
+                              )),
+                          _DashedAddButton(
+                            label: 'Yeni bütçe ekle',
+                            onTap: () => _showBudgetForm(context, ref, null),
+                          ),
+                        ],
                       ],
                     );
                   },
@@ -361,6 +358,61 @@ class _AiSuggestButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Empty Budget Hint ─────────────────────────────────────────────────
+class _EmptyBudgetHint extends StatelessWidget {
+  final VoidCallback onManualAdd;
+  const _EmptyBudgetHint({required this.onManualAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: c.border),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.pie_chart_outline, size: 40, color: c.text3),
+              const SizedBox(height: 12),
+              Text(
+                'Henüz bütçe oluşturulmadı',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: c.text1),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'AI önerisiyle otomatik oluştur veya kendin ekle.',
+                style: TextStyle(fontSize: 12, color: c.text3),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: onManualAdd,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Manuel ekle'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    side: BorderSide(color: AppColors.accent.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -804,13 +856,21 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600,
                                                 color: c.text1)),
-                                        if ((s['reason'] as String?)
+                                        const SizedBox(height: 2),
+                                        if ((s['rationale'] as String?)
                                                 ?.isNotEmpty ==
                                             true)
-                                          Text(s['reason'] as String,
+                                          Text(s['rationale'] as String,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                   fontSize: 11,
-                                                  color: c.text3)),
+                                                  color: c.text3))
+                                        else if ((s['monthly_avg'] as num?) != null)
+                                          Text(
+                                            'Ort. ${AppFormatters.currencyCompact((s['monthly_avg'] as num).toDouble())}/ay',
+                                            style: TextStyle(fontSize: 11, color: c.text3),
+                                          ),
                                       ],
                                     ),
                                   ),
