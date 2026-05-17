@@ -75,6 +75,28 @@ class BudgetController extends Controller
         return response()->json(['budget' => new BudgetResource($budget)], 201);
     }
 
+    public function update(Request $request, Budget $budget): JsonResponse
+    {
+        abort_if($budget->user_id !== $request->user()->id, 403);
+
+        $data = $request->validate([
+            'category_id'     => 'sometimes|integer|exists:categories,id',
+            'amount'          => 'required|numeric|min:0',
+            'alert_threshold' => 'nullable|numeric|min:0|max:100',
+            'period'          => 'nullable|string|regex:/^\d{4}-\d{2}$/',
+        ]);
+
+        $budget->update([
+            'amount'          => $data['amount'],
+            'alert_threshold' => $data['alert_threshold'] ?? $budget->alert_threshold,
+            'period'          => $data['period']          ?? $budget->period,
+        ]);
+
+        $budget->load('category');
+
+        return response()->json(['budget' => new BudgetResource($budget)]);
+    }
+
     public function destroy(Request $request, Budget $budget): JsonResponse
     {
         abort_if($budget->user_id !== $request->user()->id, 403);

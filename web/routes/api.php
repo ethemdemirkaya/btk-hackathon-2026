@@ -97,6 +97,7 @@ Route::prefix('v1')->group(function () {
         // Budgets
         Route::get   ('budgets',              [BudgetController::class, 'index']);
         Route::post  ('budgets',              [BudgetController::class, 'store']);
+        Route::put   ('budgets/{budget}',     [BudgetController::class, 'update']);
         Route::delete('budgets/{budget}',     [BudgetController::class, 'destroy']);
         Route::post  ('budgets/ai-suggest',   [BudgetController::class, 'aiSuggest']);
         Route::post  ('budgets/ai-apply',     [BudgetController::class, 'aiApply']);
@@ -104,6 +105,7 @@ Route::prefix('v1')->group(function () {
         // Goals
         Route::get   ('goals',                  [GoalController::class, 'index']);
         Route::post  ('goals',                  [GoalController::class, 'store']);
+        Route::put   ('goals/{goal}',           [GoalController::class, 'update']);
         Route::post  ('goals/{goal}/add-funds', [GoalController::class, 'addFunds']);
         Route::get   ('goals/{goal}/suggest',   [GoalController::class, 'suggest']);
         Route::delete('goals/{goal}',           [GoalController::class, 'destroy']);

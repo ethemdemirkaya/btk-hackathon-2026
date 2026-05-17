@@ -163,15 +163,16 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                           g['name'] as String? ?? '',
                                         )
                                     : null,
-                                onEdit: null,
+                                onEdit: () => _showGoalForm(context, g),
                               ),
                             )),
 
-                        // Dashed add button
-                        _DashedAddButton(
-                          label: 'Yeni hedef oluştur',
-                          onTap: () => _showGoalForm(context, null),
-                        ),
+                        // Dashed add button — only on active tab
+                        if (_filter != 'done')
+                          _DashedAddButton(
+                            label: 'Yeni hedef oluştur',
+                            onTap: () => _showGoalForm(context, null),
+                          ),
                       ],
                     );
                   },
@@ -833,6 +834,51 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
     }
   }
 
+  Future<void> _delete() async {
+    final c = context.appColors;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.card,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Hedefi Sil',
+            style: TextStyle(
+                color: c.text1, fontWeight: FontWeight.w700)),
+        content: Text(
+            'Bu hedefi silmek istediğinizden emin misiniz?',
+            style: TextStyle(color: c.text2)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text('İptal', style: TextStyle(color: c.text2))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('Sil',
+                  style: TextStyle(
+                      color: c.negative,
+                      fontWeight: FontWeight.w700))),
+        ],
+      ),
+    );
+    if (!mounted || confirm != true) return;
+    setState(() => _loading = true);
+    try {
+      final id = (widget.existing!['id'] as num).toInt();
+      await DioClient.instance.delete(ApiEndpoints.goal(id));
+      widget.onSaved();
+      if (mounted) Navigator.pop(context);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Silinemedi.';
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
@@ -846,8 +892,27 @@ class _GoalFormSheetState extends State<_GoalFormSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_isEdit ? 'Hedef Düzenle' : 'Hedef Ekle',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                        _isEdit ? 'Hedef Düzenle' : 'Hedef Ekle',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: c.text1)),
+                  ),
+                  if (_isEdit)
+                    IconButton(
+                      onPressed: _loading ? null : _delete,
+                      icon: Icon(Icons.delete_outline_rounded,
+                          color: c.negative),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameCtrl,

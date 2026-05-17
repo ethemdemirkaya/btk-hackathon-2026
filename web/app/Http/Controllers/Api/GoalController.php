@@ -65,6 +65,23 @@ class GoalController extends Controller
         return response()->json(['goal' => new GoalResource($goal)]);
     }
 
+    public function update(Request $request, Goal $goal): JsonResponse
+    {
+        abort_if($goal->user_id !== $request->user()->id, 403);
+
+        $data = $request->validate([
+            'name'                 => 'required|string|max:255',
+            'target_amount'        => 'required|numeric|min:1',
+            'current_amount'       => 'nullable|numeric|min:0',
+            'target_date'          => 'nullable|date',
+            'monthly_contribution' => 'nullable|numeric|min:0',
+        ]);
+
+        $goal->update($data);
+
+        return response()->json(['goal' => new GoalResource($goal)]);
+    }
+
     public function destroy(Request $request, Goal $goal): JsonResponse
     {
         abort_if($goal->user_id !== $request->user()->id, 403);
