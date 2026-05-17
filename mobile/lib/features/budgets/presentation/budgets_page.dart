@@ -758,14 +758,16 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
+                                // Sheet bg = c.card, so use c.bg for contrast
                                 color: isSelected
-                                    ? AppColors.accent.withValues(alpha: 0.06)
-                                    : c.card,
+                                    ? AppColors.accent.withValues(alpha: 0.10)
+                                    : c.bg,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isSelected
-                                      ? AppColors.accent.withValues(alpha: 0.5)
+                                      ? AppColors.accent
                                       : c.border,
+                                  width: isSelected ? 1.5 : 1,
                                 ),
                               ),
                               child: Row(
@@ -826,7 +828,7 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                     size: 20,
                                     color: isSelected
                                         ? AppColors.accent
-                                        : c.text3,
+                                        : c.text2,
                                   ),
                                 ],
                               ),
@@ -893,6 +895,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
   String _categoryName = '';
   List<Map<String, dynamic>> _apiCategories = [];
   bool _loading = false;
+  bool _loadingCats = true;
 
   bool get _isEdit => widget.existing != null;
   bool get _hasCategory => _categoryName.isNotEmpty;
@@ -922,17 +925,23 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
       if (mounted) {
         setState(() {
           _apiCategories = list.map((c) => c as Map<String, dynamic>).toList();
+          _loadingCats = false;
+          // Re-resolve ID if category was already selected (edit mode)
+          if (_categoryName.isNotEmpty && _categoryId == null) {
+            _categoryId = _resolveId(_categoryName);
+          }
         });
       }
     } catch (_) {
-      // API unavailable — predefined categories will be used as fallback
+      if (mounted) setState(() => _loadingCats = false);
     }
   }
 
-  // Returns the API-backed category_id if name matches, otherwise null
+  // Returns the API-backed category_id if name matches (case-insensitive)
   int? _resolveId(String name) {
+    final lower = name.toLowerCase();
     final match = _apiCategories.where(
-      (c) => (c['name'] as String?)?.toLowerCase() == name.toLowerCase(),
+      (c) => (c['name'] as String?)?.toLowerCase() == lower,
     ).firstOrNull;
     return match != null ? (match['id'] as num?)?.toInt() : null;
   }
@@ -970,6 +979,12 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
     if (!_hasCategory) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Kategori seçin')));
+      return;
+    }
+    if (_categoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Kategori ID\'si bulunamadı, lütfen geçerli bir kategori seçin')));
       return;
     }
     setState(() => _loading = true);
@@ -1019,66 +1034,49 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: c.text1)),
               const SizedBox(height: 20),
 
-              // Category selector button
+              // Category selector — identical appearance to TextFormField
               GestureDetector(
-                onTap: _openCategoryPicker,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _hasCategory
-                        ? _colorForName(_categoryName).withValues(alpha: 0.08)
-                        : c.bg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _hasCategory
-                          ? _colorForName(_categoryName).withValues(alpha: 0.5)
-                          : c.border,
-                    ),
+                onTap: _loadingCats ? null : _openCategoryPicker,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Kategori',
+                    prefixIcon: _loadingCats
+                        ? Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppColors.accent),
+                            ))
+                        : _hasCategory
+                            ? Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _colorForName(_categoryName)
+                                        .withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      _categoryName[0].toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: _colorForName(_categoryName),
+                                      ),
+                                    ),
+                                  ),
+                                ))
+                            : const Icon(Icons.category_outlined),
+                    suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
                   ),
-                  child: Row(
-                    children: [
-                      if (_hasCategory) ...[
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: _colorForName(_categoryName)
-                                .withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              _categoryName[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: _colorForName(_categoryName),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                      ] else ...[
-                        Icon(Icons.category_outlined, size: 18, color: c.text3),
-                        const SizedBox(width: 10),
-                      ],
-                      Expanded(
-                        child: Text(
-                          _hasCategory ? _categoryName : 'Kategori Seçin',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: _hasCategory
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: _hasCategory ? c.text1 : c.text3,
-                          ),
-                        ),
-                      ),
-                      Icon(Icons.keyboard_arrow_down_rounded,
-                          size: 20, color: c.text3),
-                    ],
-                  ),
+                  isEmpty: !_hasCategory,
+                  child: _hasCategory
+                      ? Text(_categoryName,
+                          style: TextStyle(fontSize: 14, color: c.text1))
+                      : const SizedBox.shrink(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1180,9 +1178,37 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
     return match != null ? (match['id'] as num?)?.toInt() : null;
   }
 
+  // Returns display list: API categories with real IDs when available,
+  // predefined local list as fallback. Always ends with "Diğer".
+  List<Map<String, dynamic>> _effectiveCats() {
+    if (widget.apiCategories.isNotEmpty) {
+      final result = widget.apiCategories.map((apiCat) {
+        final name = apiCat['name'] as String? ?? '';
+        final id = (apiCat['id'] as num?)?.toInt();
+        final predefined = _kPredefinedCats
+            .where((p) => p.name.toLowerCase() == name.toLowerCase())
+            .firstOrNull;
+        return {
+          'id': id,
+          'name': name,
+          'icon': predefined?.icon ?? Icons.category_outlined,
+        };
+      }).toList();
+      if (!result.any((c) => (c['name'] as String) == 'Diğer')) {
+        result.add(
+            {'id': null, 'name': 'Diğer', 'icon': Icons.category_outlined});
+      }
+      return result;
+    }
+    return _kPredefinedCats
+        .map((p) => {'id': null, 'name': p.name, 'icon': p.icon})
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
+    final cats = _effectiveCats();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1214,18 +1240,21 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
-            itemCount: _kPredefinedCats.length,
+            itemCount: cats.length,
             itemBuilder: (_, i) {
-              final cat = _kPredefinedCats[i];
-              final isSelected = widget.currentName == cat.name ||
-                  (_showCustomField && cat.name == 'Diğer');
-              final catColor = _colorForName(cat.name);
+              final cat = cats[i];
+              final catName = cat['name'] as String;
+              final catId = cat['id'] as int?;
+              final catIcon = cat['icon'] as IconData;
+              final isSelected = widget.currentName == catName ||
+                  (_showCustomField && catName == 'Diğer');
+              final catColor = _colorForName(catName);
               return GestureDetector(
                 onTap: () {
-                  if (cat.name == 'Diğer') {
+                  if (catName == 'Diğer') {
                     setState(() => _showCustomField = !_showCustomField);
                   } else {
-                    widget.onSelect(_idForName(cat.name), cat.name);
+                    widget.onSelect(catId, catName);
                     Navigator.of(context).pop();
                   }
                 },
@@ -1244,12 +1273,12 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(cat.icon,
+                      Icon(catIcon,
                           size: 26,
                           color: isSelected ? catColor : c.text2),
                       const SizedBox(height: 6),
                       Text(
-                        cat.name,
+                        catName,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: isSelected
@@ -1257,6 +1286,8 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
                               : FontWeight.w500,
                           color: isSelected ? catColor : c.text1,
                         ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
