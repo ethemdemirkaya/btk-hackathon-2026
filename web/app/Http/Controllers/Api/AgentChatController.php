@@ -83,29 +83,32 @@ class AgentChatController extends Controller
 
     public function history(Request $request): JsonResponse
     {
-        $user      = $request->user();
-        $sessionId = $request->input('session_id');
+        $user = $request->user();
 
-        $query = AgentMessage::where('user_id', $user->id)
-            ->orderBy('created_at');
+        $runs = AgentMessage::where('user_id', $user->id)
+            ->orderBy('created_at')
+            ->limit(500)
+            ->get()
+            ->groupBy('session_id')
+            ->map(function ($msgs, $sessionId) {
+                $first = $msgs->first();
+                return [
+                    'run_id'     => $first->id,
+                    'session_id' => $sessionId,
+                    'status'     => 'completed',
+                    'started_at' => $first->created_at?->toIso8601String(),
+                    'messages'   => $msgs->map(fn ($m) => [
+                        'role'    => $m->role,
+                        'content' => $m->content,
+                        'at'      => $m->created_at?->toIso8601String(),
+                    ])->values(),
+                ];
+            })
+            ->sortByDesc(fn ($r) => $r['started_at'])
+            ->take(20)
+            ->values();
 
-        if ($sessionId) {
-            $query->where('session_id', $sessionId);
-        }
-
-        $messages = $query->limit(200)->get()->map(fn ($m) => [
-            'role'    => $m->role,
-            'content' => $m->content,
-            'at'      => $m->created_at?->toIso8601String(),
-        ]);
-
-        return response()->json([
-            'runs' => [[
-                'session_id' => $sessionId,
-                'status'     => 'completed',
-                'messages'   => $messages,
-            ]],
-        ]);
+        return response()->json(['runs' => $runs]);
     }
 
     public function insights(Request $request): JsonResponse

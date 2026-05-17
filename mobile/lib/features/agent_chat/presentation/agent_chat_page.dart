@@ -125,7 +125,7 @@ class _HistoryRun {
             ))
         .toList();
     return _HistoryRun(
-      runId: (j['run_id'] as num).toInt(),
+      runId: (j['run_id'] as num?)?.toInt() ?? 0,
       sessionId: j['session_id'] as String? ?? '',
       status: j['status'] as String? ?? 'completed',
       startedAt:
