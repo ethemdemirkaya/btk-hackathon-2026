@@ -40,14 +40,18 @@ class GeminiClient
         ?string $systemPrompt = null,
         array $schema = [],
         float $temperature = 0.7,
+        ?int $maxOutputTokens = null,
     ): array {
+        $generationConfig = array_filter([
+            'temperature'      => $temperature,
+            'responseMimeType' => $schema ? 'application/json' : null,
+            'responseSchema'   => $schema ?: null,
+            'maxOutputTokens'  => $maxOutputTokens,
+        ]);
+
         $body = [
             'contents'         => $contents,
-            'generationConfig' => array_filter([
-                'temperature'      => $temperature,
-                'responseMimeType' => $schema ? 'application/json' : null,
-                'responseSchema'   => $schema ?: null,
-            ]),
+            'generationConfig' => $generationConfig,
         ];
 
         if ($systemPrompt) {

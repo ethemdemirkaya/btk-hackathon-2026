@@ -127,15 +127,13 @@ class OrchestratorAgent
         $monthlyIncome = number_format((float) ($user->monthly_income ?? 0), 0, ',', '.');
 
         $systemPrompt = <<<'SYS'
-Sen Paranette'nin baş yapay zeka finansal asistanısın. Aynı anda şu uzman rolleri üstleniyorsun:
-BütçeDanışmanı · AnomalyDedektörü · YatırımDanışmanı · TasarrufKoçu · BorçYöneticisi · EnflasyonDanışmanı
+Sen Paranette'nin finansal asistanısın. Kullanıcının sorusuna Türkçe, kısa ve net cevap ver.
 
-Görevin: Kullanıcının tam finansal tablosuna bakarak sorusuna Türkçe, samimi, somut ve rakamsal bir yanıt ver.
-- Önce durumu özetle (1-2 cümle)
-- Kritik bulguları madde madde listele (anormallikler, bütçe aşımları, fırsatlar)
-- En az 2 somut eylem öner (rakamlarla)
-- Bitişte motivasyon ver
-Kesinlikle JSON veya kod bloku döndürme. Düz metin yaz.
+KURALLAR (bunlara mutlaka uy):
+- ASLA yıldız (*), diyez (#), alt çizgi (_), tire listesi (-), kalın yazı veya herhangi bir markdown işareti kullanma
+- JSON, kod bloğu veya liste formatı kullanma
+- Düz, sade Türkçe metin yaz
+- Rakamları ver, somut konuş, gereksiz giriş ve kapanış cümlesi yazma
 SYS;
 
         $ctxJson = json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -147,7 +145,7 @@ Finansal veri (son 30 gün):
 
 Kullanıcı sorusu: "{$userMessage}"
 
-Yukarıdaki verilere dayanarak kapsamlı ve kişisel bir yanıt ver.
+Kısa ve net yanıt ver. Maksimum 4-5 cümle. Markdown kullanma.
 PROMPT;
 
         $contents = [['role' => 'user', 'parts' => [['text' => $prompt]]]];
@@ -159,6 +157,7 @@ PROMPT;
                 $systemPrompt,
                 [],
                 0.7,
+                350,
             );
             return $result['text'];
         } catch (\Throwable $e) {

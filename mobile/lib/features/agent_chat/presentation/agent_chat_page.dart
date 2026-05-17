@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/api/api_endpoints.dart';
@@ -216,7 +215,8 @@ class _AgentChatPageState extends State<AgentChatPage> {
       final reply = body['reply'] as String? ?? 'Yanıt alınamadı.';
       final agentsUsed =
           ((body['agents_used'] as List?) ?? []).cast<String>();
-      final runId = (body['run_id'] as num?)?.toInt();
+      final dynamic runIdRaw = body['run_id'];
+      final runId = runIdRaw is num ? runIdRaw.toInt() : int.tryParse(runIdRaw?.toString() ?? '');
 
       if (mounted) {
         _stopStageCycle();
@@ -911,25 +911,13 @@ class _MessageBubble extends StatelessWidget {
                         border: Border.all(
                             color: c.border),
                       ),
-                      child: MarkdownBody(
-                        data: msg.content,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: c.text1,
-                              height: 1.5),
-                          strong: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accent),
-                          code: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: AppColors.accent,
-                              backgroundColor: AppColors.accent
-                                  .withValues(alpha: 0.10)),
-                        ),
+                      child: SelectableText(
+                        msg.content,
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: c.text1,
+                            height: 1.5),
                       ),
                     ),
                   ),
