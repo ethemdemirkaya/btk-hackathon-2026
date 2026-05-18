@@ -22,7 +22,7 @@ class FetchExchangeRatesCommand extends Command
         'CHFTRY=X' => 'CHF',
         'JPYTRY=X' => 'JPY',
         'AUDTRY=X' => 'AUD',
-        'XAUTRY=X' => null, // special: divide by troy oz for gram; stored as XAU + GOLD
+        'GC=F'     => null, // Altın vadeli (USD/oz) → USDTRY ile TRY/gram'a çevrilir
         'BTC-USD'  => null, // special: multiply by USDTRY
         'ETH-USD'  => null, // special: multiply by USDTRY
     ];
@@ -73,12 +73,17 @@ class FetchExchangeRatesCommand extends Command
                     $this->info(sprintf('AUD/TRY: %.4f', $price));
                     break;
 
-                case 'XAUTRY=X':
-                    // XAUTRY gives XAU per troy ounce in TRY; convert to per gram
-                    $gramTry = $price / self::TROY_OZ_TO_GRAM;
-                    $rows['XAU']  = $this->makeRow('XAU',  round($gramTry, 4), $today);
-                    $rows['GOLD'] = $this->makeRow('GOLD', round($gramTry, 4), $today);
-                    $this->info(sprintf('XAU/TRY: %.2f/oz → %.4f/gram', $price, $gramTry));
+                case 'GC=F':
+                    // Altın vadeli (COMEX) USD/oz → USDTRY ile TRY/gram'a çevir
+                    $usdTryNow = isset($rows['USD']) ? (float) $rows['USD']['rate_to_try'] : null;
+                    if ($usdTryNow) {
+                        $gramTry      = ($price / self::TROY_OZ_TO_GRAM) * $usdTryNow;
+                        $rows['XAU']  = $this->makeRow('XAU',  round($gramTry, 4), $today);
+                        $rows['GOLD'] = $this->makeRow('GOLD', round($gramTry, 4), $today);
+                        $this->info(sprintf('GC=F: $%.2f/oz × %.4f = ₺%.4f/gram', $price, $usdTryNow, $gramTry));
+                    } else {
+                        $this->warn('GC=F skipped: USD/TRY rate unavailable.');
+                    }
                     break;
 
                 case 'BTC-USD':
