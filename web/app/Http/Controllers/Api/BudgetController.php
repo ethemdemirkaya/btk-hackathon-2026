@@ -50,18 +50,30 @@ class BudgetController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'category_id'     => 'required|integer|exists:categories,id',
+            'category_id'     => 'nullable|integer|exists:categories,id',
+            'category_name'   => 'nullable|string|max:100',
             'amount'          => 'required|numeric|min:0',
             'alert_threshold' => 'nullable|numeric|min:0|max:100',
             'period'          => 'nullable|string|regex:/^\d{4}-\d{2}$/',
         ]);
+
+        $categoryId = $data['category_id'] ?? null;
+
+        if (!$categoryId && !empty($data['category_name'])) {
+            $cat = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($data['category_name'])])->first();
+            $categoryId = $cat?->id;
+        }
+
+        if (!$categoryId) {
+            return response()->json(['message' => 'Geçerli bir kategori seçin.'], 422);
+        }
 
         $period = $data['period'] ?? now()->format('Y-m');
 
         $budget = Budget::updateOrCreate(
             [
                 'user_id'     => $request->user()->id,
-                'category_id' => $data['category_id'],
+                'category_id' => $categoryId,
                 'period'      => $period,
             ],
             [
@@ -109,47 +121,50 @@ class BudgetController extends Controller
     {
         $userId = $request->user()->id;
 
-        $spending = DB::table('transactions as t')
+        // Kullanıcının son 3 aylık harcamalarını kategori bazında topla
+        $spendingMap = DB::table('transactions as t')
             ->join('accounts as a', 't.account_id', '=', 'a.id')
-            ->join('categories as c', 't.category_id', '=', 'c.id')
             ->where('a.user_id', $userId)
             ->where('t.amount', '<', 0)
             ->where('t.posted_at', '>=', now()->subMonths(3))
-            ->groupBy('c.id', 'c.name', 'c.slug')
+            ->whereNotNull('t.category_id')
+            ->groupBy('t.category_id')
             ->select(
-                'c.id as category_id',
-                'c.name as category_name',
-                'c.slug',
+                't.category_id',
                 DB::raw('ABS(SUM(t.amount)) / 3 as monthly_avg')
             )
-            ->orderByDesc('monthly_avg')
-            ->get();
+            ->pluck('monthly_avg', 'category_id');
 
-        if ($spending->isEmpty()) {
-            return response()->json(['error' => 'Son 3 ayda harcama verisi bulunamadı.'], 422);
+        // Veritabanındaki tüm kategorileri getir
+        $allCategories = DB::table('categories')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
+
+        if ($allCategories->isEmpty()) {
+            return response()->json(['error' => 'Sistemde kategori bulunamadı.'], 422);
         }
 
-        $existingCategoryIds = DB::table('budgets')
-            ->where('user_id', $userId)
-            ->where('period', now()->format('Y-m'))
-            ->pluck('category_id')
-            ->toArray();
+        $suggestions = $allCategories->map(function ($cat) use ($spendingMap) {
+            $monthlyAvg  = (float) ($spendingMap[$cat->id] ?? 0);
+            $hasSpending = $monthlyAvg > 0;
+            $raw         = $hasSpending ? $monthlyAvg * 1.05 : 500;
+            $suggested   = round($raw / 50) * 50;
+            if ($suggested < 50) $suggested = 50;
 
-        $suggestions = $spending
-            ->filter(fn ($row) => ! in_array($row->category_id, $existingCategoryIds))
-            ->values()
-            ->map(function ($row) {
-                $raw       = (float) $row->monthly_avg * 1.05;
-                $suggested = round($raw / 50) * 50;
-                if ($suggested < 50) $suggested = 50;
-
-                return [
-                    'category_id'   => $row->category_id,
-                    'category_name' => $row->category_name,
-                    'monthly_avg'   => round($row->monthly_avg, 2),
-                    'suggested'     => (int) $suggested,
-                ];
-            });
+            return [
+                'category_id'   => $cat->id,
+                'category_name' => $cat->name,
+                'monthly_avg'   => round($monthlyAvg, 2),
+                'suggested'     => (int) $suggested,
+                'has_spending'  => $hasSpending,
+            ];
+        })
+        // Harcaması olanlar önce, sonra monthly_avg'e göre büyükten küçüğe
+        ->sortBy([
+            ['has_spending', 'desc'],
+            ['monthly_avg',  'desc'],
+        ])
+        ->values();
 
         // ── AI enrichment ──────────────────────────────────────────────────
         $aiSummary = null;

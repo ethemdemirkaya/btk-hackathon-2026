@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AgentChatController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PageAnalyzeController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BankConnectionController;
@@ -93,6 +94,9 @@ Route::prefix('v1')->group(function () {
         Route::get   ('subscriptions',                [SubscriptionController::class, 'index']);
         Route::post  ('subscriptions',                [SubscriptionController::class, 'store']);
         Route::delete('subscriptions/{subscription}', [SubscriptionController::class, 'destroy']);
+
+        // Categories
+        Route::get('categories', [CategoryController::class, 'index']);
 
         // Budgets
         Route::get   ('budgets',              [BudgetController::class, 'index']);

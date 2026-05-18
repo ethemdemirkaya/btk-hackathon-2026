@@ -866,9 +866,15 @@ class _AiSuggestSheetState extends State<_AiSuggestSheet> {
                                               style: TextStyle(
                                                   fontSize: 11,
                                                   color: c.text3))
-                                        else if ((s['monthly_avg'] as num?) != null)
+                                        else if (s['has_spending'] == true &&
+                                            (s['monthly_avg'] as num?) != null)
                                           Text(
                                             'Ort. ${AppFormatters.currencyCompact((s['monthly_avg'] as num).toDouble())}/ay',
+                                            style: TextStyle(fontSize: 11, color: c.text3),
+                                          )
+                                        else
+                                          Text(
+                                            'Geçmiş harcama yok',
                                             style: TextStyle(fontSize: 11, color: c.text3),
                                           ),
                                       ],
@@ -1050,11 +1056,7 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
           .showSnackBar(const SnackBar(content: Text('Kategori seçin')));
       return;
     }
-    if (_categoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Geçerli bir kategori seçin')));
-      return;
-    }
+    _categoryId ??= _resolveId(_categoryName);
     setState(() => _loading = true);
     final now = DateTime.now();
     final period = '${now.year}-${now.month.toString().padLeft(2, '0')}';
