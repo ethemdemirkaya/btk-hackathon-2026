@@ -230,8 +230,9 @@ Future<void> _showAddSubscriptionSheet(
                         ? null
                         : () async {
                             final name = nameCtrl.text.trim();
-                            final amount =
-                                double.tryParse(amountCtrl.text.trim()) ?? 0;
+                            final amount = double.tryParse(
+                                    amountCtrl.text.trim().replaceAll(',', '.')) ??
+                                0;
                             if (name.isEmpty || amount <= 0) return;
                             setState(() => saving = true);
                             try {
@@ -569,11 +570,10 @@ Future<void> _showEditSubscriptionSheet(
                                   'name': name,
                                   'amount': amount,
                                   'billing_cycle': billingCycle,
-                                  if (nextBillingDate != null)
-                                    'next_billing_date': nextBillingDate!
-                                        .toIso8601String()
-                                        .split('T')
-                                        .first,
+                                  'next_billing_date': nextBillingDate
+                                      ?.toIso8601String()
+                                      .split('T')
+                                      .first,
                                 },
                               );
                               if (ctx.mounted) Navigator.pop(ctx);

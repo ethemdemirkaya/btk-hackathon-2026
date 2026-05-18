@@ -30,25 +30,27 @@ class SubscriptionController extends Controller
             ->where('bank_connections.user_id', $user->id)
             ->pluck('accounts.id');
 
+        $existingNames = $subscriptions->pluck('name')->map(fn ($n) => strtolower($n));
+
         $candidates = Transaction::whereIn('account_id', $accountIds)
             ->where('is_recurring', true)
             ->where('amount', '<', 0)
-            ->whereDoesntHave('account', fn ($q) => $q) // placeholder
+            ->whereNotNull('merchant_name')
             ->select('merchant_name', DB::raw('AVG(ABS(amount)) as avg_amount'), DB::raw('COUNT(*) as occurrences'))
             ->groupBy('merchant_name')
             ->having('occurrences', '>=', 2)
-            ->whereNotNull('merchant_name')
             ->orderByDesc('occurrences')
             ->limit(10)
-            ->get();
+            ->get()
+            ->filter(fn ($c) => ! $existingNames->contains(strtolower($c->merchant_name)));
 
         return response()->json([
             'subscriptions'  => SubscriptionResource::collection($subscriptions),
             'total_monthly'  => round($totalMonthly, 2),
-            'candidates'     => $candidates->map(fn ($c) => [
-                'merchant_name' => $c->merchant_name,
-                'avg_amount'    => round((float) $c->avg_amount, 2),
-                'occurrences'   => $c->occurrences,
+            'candidates'     => $candidates->values()->map(fn ($c) => [
+                'name'       => $c->merchant_name,
+                'amount'     => round((float) $c->avg_amount, 2),
+                'confidence' => min(round($c->occurrences / 6, 2), 1.0),
             ]),
         ]);
     }
