@@ -76,7 +76,7 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
     final c = context.appColors;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         backgroundColor: c.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Borcu Kapat',
@@ -84,10 +84,10 @@ class _PersonalDebtsPageState extends ConsumerState<PersonalDebtsPage> {
         content: Text('$name ile olan borcu kapatmak istiyor musunuz?',
             style: TextStyle(color: c.text2, fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, false),
               child: Text('İptal', style: TextStyle(color: c.text2))),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogCtx, true),
             style: ElevatedButton.styleFrom(
                 backgroundColor: c.positive, foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
