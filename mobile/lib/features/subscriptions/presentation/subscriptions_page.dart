@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_endpoints.dart';
@@ -442,12 +443,20 @@ Future<void> _showSubscriptionActions(
 }
 
 // ── Abonelik Düzenle sheet ────────────────────────────────────────────
+String _cycleAmountLabel(String cycle) => switch (cycle) {
+      'weekly' => 'Haftalık Tutar (₺)',
+      'quarterly' => '3 Aylık Tutar (₺)',
+      'yearly' => 'Yıllık Tutar (₺)',
+      _ => 'Aylık Tutar (₺)',
+    };
+
 Future<void> _showEditSubscriptionSheet(
     BuildContext context, WidgetRef ref, Map<String, dynamic> sub) async {
   final c = context.appColors;
   final id = (sub['id'] as num).toInt();
   final nameCtrl =
       TextEditingController(text: sub['name'] as String? ?? '');
+  // amount: fatura döngüsüne göre gerçek tutar (aylık eşdeğer değil)
   final amountCtrl = TextEditingController(
       text: (sub['amount'] as num?)?.toStringAsFixed(2) ?? '');
   String billingCycle = sub['billing_cycle'] as String? ?? 'monthly';
@@ -508,16 +517,23 @@ Future<void> _showEditSubscriptionSheet(
                       icon: Icon(Icons.close, color: c.text2, size: 20)),
                 ]),
                 const SizedBox(height: 16),
+                _darkField(ctx, nameCtrl, 'Abonelik Adı',
+                    Icons.subscriptions_outlined),
+                const SizedBox(height: 12),
+                // Döngü seçimi ÖNCE — tutar label'ı güncellensin
+                _cycleDropdown(ctx, billingCycle, (v) {
+                  setState(() => billingCycle = v);
+                }),
+                const SizedBox(height: 12),
+                // Tutar label'ı billing cycle'a göre değişiyor
                 _darkField(
-                    ctx, nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
-                const SizedBox(height: 12),
-                _darkField(ctx, amountCtrl, 'Tutar (₺)', Icons.attach_money,
+                    ctx,
+                    amountCtrl,
+                    _cycleAmountLabel(billingCycle),
+                    Icons.attach_money,
                     prefix: '₺ ',
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true)),
-                const SizedBox(height: 12),
-                _cycleDropdown(
-                    ctx, billingCycle, (v) => setState(() => billingCycle = v)),
+                    keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true)),
                 const SizedBox(height: 12),
                 _datePicker(ctx,
                     value: nextBillingDate,
@@ -531,9 +547,20 @@ Future<void> _showEditSubscriptionSheet(
                         ? null
                         : () async {
                             final name = nameCtrl.text.trim();
+                            // Türkçe virgülü noktaya çevir
+                            final rawAmount = amountCtrl.text
+                                .trim()
+                                .replaceAll(',', '.');
                             final amount =
-                                double.tryParse(amountCtrl.text.trim()) ?? 0;
-                            if (name.isEmpty || amount <= 0) return;
+                                double.tryParse(rawAmount) ?? 0;
+                            if (name.isEmpty || amount <= 0) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Ad ve tutar alanları gereklidir.')),
+                              );
+                              return;
+                            }
                             setState(() => saving = true);
                             try {
                               await DioClient.instance.put(
@@ -551,8 +578,26 @@ Future<void> _showEditSubscriptionSheet(
                               );
                               if (ctx.mounted) Navigator.pop(ctx);
                               ref.invalidate(_subscriptionsProvider);
-                            } catch (_) {
+                            } on DioException catch (e) {
                               setState(() => saving = false);
+                              if (!ctx.mounted) return;
+                              final msg = e.response?.data?['message'] as String? ??
+                                  (e.response?.data?['errors'] != null
+                                      ? (e.response!.data['errors']
+                                              as Map)
+                                          .values
+                                          .first
+                                          .toString()
+                                      : 'Kaydedilemedi (${e.response?.statusCode})');
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text(msg)),
+                              );
+                            } catch (e) {
+                              setState(() => saving = false);
+                              if (!ctx.mounted) return;
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text('Hata: $e')),
+                              );
                             }
                           },
                     style: ElevatedButton.styleFrom(
