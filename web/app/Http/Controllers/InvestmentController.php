@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\PortfolioAsset;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
 class InvestmentController extends Controller
@@ -20,21 +22,15 @@ class InvestmentController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        // ── 2. Latest exchange rates (one row per currency) ──────────────────
-        $rates = DB::table('exchange_rates')
-            ->whereIn('currency', ['USD', 'EUR', 'GBP', 'XAU', 'GOLD', 'BTC'])
-            ->orderByDesc('date')
-            ->get()
-            ->unique('currency')
-            ->keyBy('currency');
+        // ── 2. Live rates (cache → Yahoo spark → DB fallback) ────────────────
+        $rates = $this->getLatestRates();
 
-        // ── 3 & 4. Enrich each asset with live pricing & P&L ────────────────
+        // ── 3. Enrich each asset with current pricing & P&L ─────────────────
         $assets = $assets->map(function (PortfolioAsset $asset) use ($rates) {
             $qty      = (float) $asset->quantity;
             $buyPrice = (float) $asset->buy_price_try;
             $buyValue = $qty * $buyPrice;
 
-            // Determine current price per unit in TRY
             $currentPrice = $this->resolveCurrentPrice($asset->asset_type, $rates, $buyPrice);
             $currentValue = $qty * $currentPrice;
 
@@ -55,7 +51,7 @@ class InvestmentController extends Controller
             return $asset;
         });
 
-        // ── 5. Portfolio totals ──────────────────────────────────────────────
+        // ── 4. Portfolio totals ──────────────────────────────────────────────
         $totalCurrentValue = $assets->sum('current_value_try');
         $totalBuyValue     = $assets->sum('buy_value_try');
         $totalGainLoss     = $totalCurrentValue - $totalBuyValue;
@@ -70,7 +66,7 @@ class InvestmentController extends Controller
             'gain_loss_pct' => $totalGainLossPct,
         ];
 
-        // ── 6. Chart data — grouped by asset_type ───────────────────────────
+        // ── 5. Chart data — grouped by asset_type ───────────────────────────
         $grouped   = $assets->groupBy('asset_type');
         $chartData = $grouped->map(function ($group, $type) {
             return [
@@ -79,7 +75,7 @@ class InvestmentController extends Controller
             ];
         })->values()->filter(fn ($d) => $d['value'] > 0)->values();
 
-        return view('investments.index', compact('assets', 'totals', 'chartData', 'rates'));
+        return view('investments.index', compact('assets', 'totals', 'chartData'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -116,24 +112,111 @@ class InvestmentController extends Controller
     // ── Private helpers ──────────────────────────────────────────────────────
 
     /**
-     * Resolve the current TRY price per unit for an asset type.
-     * Falls back to the original buy price if no live rate is available.
+     * Returns float rates keyed by currency code (e.g. ['USD' => 38.5, 'XAU' => 4200.0]).
+     * Priority: shared 55-second cache → live Yahoo spark → DB fallback.
      */
-    private function resolveCurrentPrice(string $type, $rates, float $buyPrice): float
+    private function getLatestRates(): array
     {
-        $xauRate  = isset($rates['XAU'])  ? (float) $rates['XAU']->rate_to_try  : null;
-        $goldRate = isset($rates['GOLD']) ? (float) $rates['GOLD']->rate_to_try : null;
-        $gramGold = $xauRate ?? $goldRate;
+        // Shared cache key with Api\InvestmentController
+        $cached = Cache::get('inv_live_rates_v3');
+        if ($cached && ! empty($cached['rates'])) {
+            return collect($cached['rates'])
+                ->map(fn ($r) => (float) ($r['rate'] ?? 0))
+                ->all();
+        }
+
+        try {
+            $live = $this->fetchSparkRates();
+            Cache::put('inv_live_rates_v3', $live, 55);
+            return collect($live['rates'])
+                ->map(fn ($r) => (float) ($r['rate'] ?? 0))
+                ->all();
+        } catch (\Throwable) {
+            return DB::table('exchange_rates')
+                ->whereIn('currency', ['USD', 'EUR', 'GBP', 'XAU', 'GOLD', 'BTC', 'ETH'])
+                ->orderByDesc('date')
+                ->get()
+                ->unique('currency')
+                ->pluck('rate_to_try', 'currency')
+                ->map(fn ($r) => (float) $r)
+                ->all();
+        }
+    }
+
+    /** Yahoo Finance spark API — same endpoint used by Api\InvestmentController. */
+    private function fetchSparkRates(): array
+    {
+        $resp = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept'     => 'application/json',
+        ])->withoutVerifying()->timeout(12)->get('https://query1.finance.yahoo.com/v7/finance/spark', [
+            'symbols'           => 'USDTRY=X,EURTRY=X,GBPTRY=X,GC=F,BTC-USD,ETH-USD',
+            'range'             => '1d',
+            'interval'          => '5m',
+            'indicators'        => 'close',
+            'includeTimestamps' => 'false',
+            'includePrePost'    => 'false',
+        ]);
+
+        if (! $resp->ok()) throw new \RuntimeException('Yahoo spark HTTP ' . $resp->status());
+
+        $by = collect($resp->json('spark.result') ?? [])
+            ->filter(fn ($r) => ! empty($r['response'][0]['meta']['regularMarketPrice']))
+            ->keyBy('symbol');
+
+        if ($by->isEmpty()) throw new \RuntimeException('Yahoo: empty result');
+
+        $usdMeta = $by->get('USDTRY=X')['response'][0]['meta'] ?? null;
+        if (! $usdMeta) throw new \RuntimeException('Yahoo: USDTRY missing');
+        $usdTry = (float) $usdMeta['regularMarketPrice'];
+        if (! $usdTry) throw new \RuntimeException('Yahoo: USDTRY zero');
+
+        $symbolMap = ['USD' => 'USDTRY=X', 'EUR' => 'EURTRY=X', 'GBP' => 'GBPTRY=X'];
+        $rates = [];
+
+        foreach ($symbolMap as $code => $sym) {
+            $meta = $by->get($sym)['response'][0]['meta'] ?? null;
+            if ($meta) {
+                $rates[$code] = ['rate' => round((float) $meta['regularMarketPrice'], 4), 'symbol' => $sym];
+            }
+        }
+
+        // Gold: GC=F USD/oz → TRY/gram
+        $gcMeta = $by->get('GC=F')['response'][0]['meta'] ?? null;
+        if ($gcMeta) {
+            $goldUsd      = (float) ($gcMeta['regularMarketPrice'] ?? 0);
+            $rates['XAU'] = ['rate' => round(($goldUsd / 31.1035) * $usdTry, 2), 'symbol' => 'GC=F'];
+        }
+
+        // Crypto: USD price × USDTRY
+        foreach (['BTC' => 'BTC-USD', 'ETH' => 'ETH-USD'] as $code => $sym) {
+            $meta = $by->get($sym)['response'][0]['meta'] ?? null;
+            if ($meta) {
+                $usdPrice     = (float) ($meta['regularMarketPrice'] ?? 0);
+                $rates[$code] = ['rate' => round($usdPrice * $usdTry, 2), 'symbol' => $sym];
+            }
+        }
+
+        return ['rates' => $rates, 'updated_at' => now()->toIso8601String(), 'source' => 'yahoo'];
+    }
+
+    /**
+     * Resolve the current TRY price per unit for an asset type.
+     * $rates is keyed by currency code => float TRY value.
+     */
+    private function resolveCurrentPrice(string $type, array $rates, float $buyPrice): float
+    {
+        $gramGold = $rates['XAU'] ?? $rates['GOLD'] ?? null;
 
         return match ($type) {
             'gold_gram'     => $gramGold ?? $buyPrice,
             'gold_quarter'  => $gramGold !== null ? $gramGold * 6.6 : $buyPrice,
             'gold_republic' => $gramGold !== null ? $gramGold * 7.2 : $buyPrice,
-            'usd'           => isset($rates['USD']) ? (float) $rates['USD']->rate_to_try : $buyPrice,
-            'eur'           => isset($rates['EUR']) ? (float) $rates['EUR']->rate_to_try : $buyPrice,
-            'gbp'           => isset($rates['GBP']) ? (float) $rates['GBP']->rate_to_try : $buyPrice,
-            'btc'           => isset($rates['BTC']) ? (float) $rates['BTC']->rate_to_try : $buyPrice,
-            // ETH, bist, fund, mevduat, other — no live feed, use buy price
+            'usd'           => $rates['USD'] ?? $buyPrice,
+            'eur'           => $rates['EUR'] ?? $buyPrice,
+            'gbp'           => $rates['GBP'] ?? $buyPrice,
+            'btc'           => $rates['BTC'] ?? $buyPrice,
+            'eth'           => $rates['ETH'] ?? $buyPrice,
             default         => $buyPrice,
         };
     }

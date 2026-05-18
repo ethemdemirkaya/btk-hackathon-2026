@@ -28,8 +28,32 @@ class FxAlertController extends Controller
 
     public function index(Request $request): View
     {
-        $user      = $request->user();
+        $user = $request->user();
+
+        // DB payload keeps 30-day history for sparklines
         $ratesData = $this->buildRatesPayload();
+
+        // Overlay live rates (cache → Yahoo → already in ratesData as fallback)
+        $cached = Cache::get('fx_live_v2');
+        if ($cached && ! empty($cached['rates'])) {
+            $liveRates = $cached['rates'];
+        } else {
+            try {
+                $liveRates = $this->fetchYahoo();
+                Cache::put('fx_live_v2', ['source' => 'yahoo', 'rates' => $liveRates], 55);
+            } catch (\Throwable) {
+                $liveRates = [];
+            }
+        }
+
+        // Merge: replace DB rate/change with live values, keep history/labels for charts
+        foreach ($liveRates as $code => $lr) {
+            if (isset($ratesData[$code])) {
+                $ratesData[$code]['rate']       = $lr['rate']       ?? $ratesData[$code]['rate'];
+                $ratesData[$code]['change']     = $lr['change']     ?? $ratesData[$code]['change'];
+                $ratesData[$code]['change_pct'] = $lr['change_pct'] ?? $ratesData[$code]['change_pct'];
+            }
+        }
 
         $alerts = FxAlert::where('user_id', $user->id)
             ->orderByDesc('created_at')
@@ -127,65 +151,63 @@ class FxAlertController extends Controller
         $symbols = implode(',', array_values($fxMap)) . ',GC=F';
 
         $resp = Http::withHeaders([
-            'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept'          => 'application/json',
-            'Accept-Language' => 'en-US,en;q=0.9',
-        ])->timeout(10)->get('https://query2.finance.yahoo.com/v7/finance/quote', [
-            'symbols' => $symbols,
-            'lang'    => 'en-US',
-            'region'  => 'US',
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept'     => 'application/json',
+        ])->withoutVerifying()->timeout(12)->get('https://query1.finance.yahoo.com/v7/finance/spark', [
+            'symbols'           => $symbols,
+            'range'             => '1d',
+            'interval'          => '5m',
+            'indicators'        => 'close',
+            'includeTimestamps' => 'false',
+            'includePrePost'    => 'false',
         ]);
 
-        if (! $resp->ok()) {
-            throw new \RuntimeException('Yahoo HTTP ' . $resp->status());
-        }
+        if (! $resp->ok()) throw new \RuntimeException('Yahoo spark HTTP ' . $resp->status());
 
-        $by = collect($resp->json('quoteResponse.result') ?? [])->keyBy('symbol');
+        $by = collect($resp->json('spark.result') ?? [])
+            ->filter(fn ($r) => ! empty($r['response'][0]['meta']['regularMarketPrice']))
+            ->keyBy('symbol');
 
-        if ($by->isEmpty()) {
-            throw new \RuntimeException('Yahoo: empty result');
-        }
+        if ($by->isEmpty()) throw new \RuntimeException('Yahoo: empty spark result');
 
-        $usdTry = (float) ($by->get('USDTRY=X')['regularMarketPrice'] ?? 0);
-        if (! $usdTry) {
-            throw new \RuntimeException('Yahoo: USDTRY missing');
-        }
+        $usdMeta = $by->get('USDTRY=X')['response'][0]['meta'] ?? null;
+        if (! $usdMeta) throw new \RuntimeException('Yahoo: USDTRY=X missing');
+        $usdTry = (float) $usdMeta['regularMarketPrice'];
+        if (! $usdTry) throw new \RuntimeException('Yahoo: USDTRY zero');
 
         $result = [];
 
         foreach ($fxMap as $code => $sym) {
-            $q = $by->get($sym);
-            if (! $q) {
-                continue;
-            }
+            $meta = $by->get($sym)['response'][0]['meta'] ?? null;
+            if (! $meta) continue;
 
-            $rate = (float) ($q['regularMarketPrice']        ?? 0);
-            $chg  = (float) ($q['regularMarketChange']       ?? 0);
-            $pct  = (float) ($q['regularMarketChangePercent'] ?? 0);
+            $rate      = (float) ($meta['regularMarketPrice'] ?? 0);
+            $prevClose = (float) ($meta['chartPreviousClose'] ?? $meta['previousClose'] ?? $rate);
+            $chg       = $rate - $prevClose;
+            $pct       = $prevClose > 0 ? round(($chg / $prevClose) * 100, 2) : 0.0;
 
-            // JPY is stored/returned per 1 JPY; multiply by 100 for display parity with TCMB
-            if ($code === 'JPY') {
-                $rate = round($rate * 100, 4);
-                $chg  = round($chg  * 100, 4);
-            }
+            if ($code === 'JPY') { $rate = round($rate * 100, 4); $chg = round($chg * 100, 4); }
 
             $result[$code] = [
                 'rate'       => round($rate, 4),
-                'change'     => round($chg,  4),
-                'change_pct' => round($pct,  2),
+                'change'     => round($chg, 4),
+                'change_pct' => $pct,
             ];
         }
 
-        // Gold: GC=F = USD / troy oz → TRY / gram
-        $gc = $by->get('GC=F');
-        if ($gc && $usdTry) {
-            $goldUsd = (float) ($gc['regularMarketPrice']         ?? 0);
-            $goldPct = (float) ($gc['regularMarketChangePercent'] ?? 0);
-            $goldChg = (float) ($gc['regularMarketChange']        ?? 0);
+        // Gold: GC=F USD/troy-oz → TRY/gram
+        $gcMeta = $by->get('GC=F')['response'][0]['meta'] ?? null;
+        if ($gcMeta && $usdTry) {
+            $goldUsd     = (float) ($gcMeta['regularMarketPrice'] ?? 0);
+            $goldPrev    = (float) ($gcMeta['chartPreviousClose'] ?? $gcMeta['previousClose'] ?? $goldUsd);
+            $goldTry     = ($goldUsd  / 31.1035) * $usdTry;
+            $goldPrevTry = ($goldPrev / 31.1035) * $usdTry;
+            $goldChg     = $goldTry - $goldPrevTry;
+            $goldPct     = $goldPrevTry > 0 ? round(($goldChg / $goldPrevTry) * 100, 2) : 0.0;
             $result['XAU'] = [
-                'rate'       => round(($goldUsd / 31.1035) * $usdTry, 2),
-                'change'     => round(($goldChg / 31.1035) * $usdTry, 2),
-                'change_pct' => round($goldPct, 2),
+                'rate'       => round($goldTry, 2),
+                'change'     => round($goldChg, 2),
+                'change_pct' => $goldPct,
             ];
         }
 
