@@ -59,106 +59,32 @@ const _kPredefinedCats = [
   _CatOption('Diğer', Icons.category_outlined),
 ];
 
-class BudgetsPage extends ConsumerWidget {
+class BudgetsPage extends ConsumerStatefulWidget {
   const BudgetsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final c = context.appColors;
-    final async = ref.watch(_budgetsProvider);
+  ConsumerState<BudgetsPage> createState() => _BudgetsPageState();
+}
 
-    return Scaffold(
-      backgroundColor: c.bg,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showBudgetForm(context, ref, null),
-        backgroundColor: AppColors.accent,
-        foregroundColor: const Color(0xFF051929),
-        elevation: 0,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 26),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _Header(
-              title: 'Bütçe',
-              subtitle: _monthLabel(),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                color: AppColors.accent,
-                backgroundColor: c.card,
-                onRefresh: () async => ref.invalidate(_budgetsProvider),
-                child: async.when(
-                  loading: () => const SkeletonListView(),
-                  error: (e, __) => ErrorState(
-                    message: e.toString(),
-                    onRetry: () => ref.invalidate(_budgetsProvider),
-                  ),
-                  data: (data) {
-                    final budgets = (data['budgets'] as List? ?? [])
-                        .cast<Map<String, dynamic>>();
+class _BudgetsPageState extends ConsumerState<BudgetsPage> {
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchCtrl = TextEditingController();
 
-                    final totalLimit = budgets.fold<double>(
-                        0,
-                        (s, b) =>
-                            s + ((b['amount'] as num?)?.toDouble() ?? 0));
-                    final totalSpent = budgets.fold<double>(
-                        0,
-                        (s, b) =>
-                            s + ((b['spent'] as num?)?.toDouble() ?? 0));
-                    final overCount =
-                        budgets.where((b) => b['over_budget'] == true).length;
-                    final pctTotal =
-                        totalLimit > 0 ? (totalSpent / totalLimit * 100) : 0.0;
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
-                    return ListView(
-                      padding:
-                          const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                      children: [
-                        if (budgets.isNotEmpty) ...[
-                          _HeroCard(
-                            totalSpent: totalSpent,
-                            totalLimit: totalLimit,
-                            pctTotal: pctTotal,
-                            overCount: overCount,
-                            budgetCount: budgets.length,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        _AiSuggestButton(
-                          onTap: () => _showAiSuggest(context, ref),
-                        ),
-                        const SizedBox(height: 16),
-                        if (budgets.isEmpty)
-                          _EmptyBudgetHint(
-                            onManualAdd: () =>
-                                _showBudgetForm(context, ref, null),
-                          )
-                        else ...[
-                          ...budgets.map((b) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: _BudgetCard(
-                                  budget: b,
-                                  onEdit: () =>
-                                      _showBudgetForm(context, ref, b),
-                                ),
-                              )),
-                          _DashedAddButton(
-                            label: 'Yeni bütçe ekle',
-                            onTap: () => _showBudgetForm(context, ref, null),
-                          ),
-                        ],
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchQuery = '';
+        _searchCtrl.clear();
+      }
+    });
   }
 
   String _monthLabel() {
@@ -170,8 +96,7 @@ class BudgetsPage extends ConsumerWidget {
     return '${months[now.month]} ${now.year}';
   }
 
-  void _showBudgetForm(
-      BuildContext context, WidgetRef ref, Map<String, dynamic>? existing) {
+  void _showBudgetForm(Map<String, dynamic>? existing) {
     final c = context.appColors;
     showModalBottomSheet(
       context: context,
@@ -186,7 +111,7 @@ class BudgetsPage extends ConsumerWidget {
     );
   }
 
-  void _showAiSuggest(BuildContext context, WidgetRef ref) {
+  void _showAiSuggest() {
     final c = context.appColors;
     showModalBottomSheet(
       context: context,
@@ -199,13 +124,192 @@ class BudgetsPage extends ConsumerWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    final async = ref.watch(_budgetsProvider);
+
+    return Scaffold(
+      backgroundColor: c.bg,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showBudgetForm(null),
+        backgroundColor: AppColors.accent,
+        foregroundColor: const Color(0xFF051929),
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, size: 26),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _Header(
+              title: 'Bütçe',
+              subtitle: _monthLabel(),
+              isSearching: _isSearching,
+              onSearchTap: _toggleSearch,
+            ),
+            // Arama çubuğu
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              child: _isSearching
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        autofocus: true,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        style: TextStyle(fontSize: 14, color: c.text1),
+                        decoration: InputDecoration(
+                          hintText: 'Kategori ara…',
+                          hintStyle: TextStyle(color: c.text3),
+                          prefixIcon: Icon(Icons.search, size: 20, color: c.text3),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: () => setState(() {
+                                    _searchQuery = '';
+                                    _searchCtrl.clear();
+                                  }),
+                                  child: Icon(Icons.close, size: 18, color: c.text3),
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: c.card,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: c.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: c.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                                color: AppColors.accent, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.accent,
+                backgroundColor: c.card,
+                onRefresh: () async => ref.invalidate(_budgetsProvider),
+                child: async.when(
+                  loading: () => const SkeletonListView(),
+                  error: (e, __) => ErrorState(
+                    message: e.toString(),
+                    onRetry: () => ref.invalidate(_budgetsProvider),
+                  ),
+                  data: (data) {
+                    // Alfabetik sırala
+                    final budgets = ((data['budgets'] as List? ?? [])
+                        .cast<Map<String, dynamic>>()
+                      ..sort((a, b) {
+                        final nameA = ((a['category'] as Map<String, dynamic>?)?['name']
+                                as String? ?? '')
+                            .toLowerCase();
+                        final nameB = ((b['category'] as Map<String, dynamic>?)?['name']
+                                as String? ?? '')
+                            .toLowerCase();
+                        return nameA.compareTo(nameB);
+                      }));
+
+                    final totalLimit = budgets.fold<double>(
+                        0, (s, b) => s + ((b['amount'] as num?)?.toDouble() ?? 0));
+                    final totalSpent = budgets.fold<double>(
+                        0, (s, b) => s + ((b['spent'] as num?)?.toDouble() ?? 0));
+                    final overCount =
+                        budgets.where((b) => b['over_budget'] == true).length;
+                    final pctTotal =
+                        totalLimit > 0 ? (totalSpent / totalLimit * 100) : 0.0;
+
+                    // Arama filtreleme
+                    final filtered = _searchQuery.isEmpty
+                        ? budgets
+                        : budgets.where((b) {
+                            final name = ((b['category'] as Map<String, dynamic>?)?['name']
+                                    as String? ?? '')
+                                .toLowerCase();
+                            return name.contains(_searchQuery.toLowerCase());
+                          }).toList();
+
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                      children: [
+                        if (budgets.isNotEmpty) ...[
+                          _HeroCard(
+                            totalSpent: totalSpent,
+                            totalLimit: totalLimit,
+                            pctTotal: pctTotal,
+                            overCount: overCount,
+                            budgetCount: budgets.length,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        _AiSuggestButton(onTap: _showAiSuggest),
+                        const SizedBox(height: 16),
+                        if (budgets.isEmpty)
+                          _EmptyBudgetHint(
+                            onManualAdd: () => _showBudgetForm(null),
+                          )
+                        else if (filtered.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Text(
+                              '"$_searchQuery" için bütçe bulunamadı.',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: c.text3),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        else ...[
+                          ...filtered.map((b) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _BudgetCard(
+                                  budget: b,
+                                  onEdit: () => _showBudgetForm(b),
+                                ),
+                              )),
+                          if (_searchQuery.isEmpty)
+                            _DashedAddButton(
+                              label: 'Yeni bütçe ekle',
+                              onTap: () => _showBudgetForm(null),
+                            ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ── Standard Header ──────────────────────────────────────────────────
 class _Header extends StatelessWidget {
   final String title;
   final String subtitle;
-  const _Header({required this.title, required this.subtitle});
+  final bool isSearching;
+  final VoidCallback onSearchTap;
+  const _Header({
+    required this.title,
+    required this.subtitle,
+    required this.isSearching,
+    required this.onSearchTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +342,30 @@ class _Header extends StatelessWidget {
             ],
           ),
           const Spacer(),
+          GestureDetector(
+            onTap: onSearchTap,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSearching
+                    ? AppColors.accent.withValues(alpha: 0.15)
+                    : c.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSearching
+                      ? AppColors.accent.withValues(alpha: 0.4)
+                      : c.border,
+                ),
+              ),
+              child: Icon(
+                isSearching ? Icons.search_off : Icons.search,
+                size: 20,
+                color: isSearching ? AppColors.accent : c.text2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           AiInsightsButton(page: 'budgets'),
         ],
       ),
