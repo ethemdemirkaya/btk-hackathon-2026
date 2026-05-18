@@ -47,6 +47,25 @@ class GoalsPage extends ConsumerStatefulWidget {
 
 class _GoalsPageState extends ConsumerState<GoalsPage> {
   String _filter = 'active';
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchQuery = '';
+        _searchCtrl.clear();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +85,59 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(title: 'Hedefler', subtitle: 'Tasarruf hedeflerin'),
+            _Header(
+              title: 'Hedefler',
+              subtitle: 'Tasarruf hedeflerin',
+              isSearching: _isSearching,
+              onSearchTap: _toggleSearch,
+            ),
+            // Arama çubuğu
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              child: _isSearching
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: TextField(
+                        controller: _searchCtrl,
+                        autofocus: true,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        style: TextStyle(fontSize: 14, color: c.text1),
+                        decoration: InputDecoration(
+                          hintText: 'Hedef ara…',
+                          hintStyle: TextStyle(color: c.text3),
+                          prefixIcon: Icon(Icons.search, size: 20, color: c.text3),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? GestureDetector(
+                                  onTap: () => setState(() {
+                                    _searchQuery = '';
+                                    _searchCtrl.clear();
+                                  }),
+                                  child: Icon(Icons.close, size: 18, color: c.text3),
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: c.card,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: c.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: c.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                                color: AppColors.accent, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.accent,
@@ -112,8 +183,18 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                         ?.toDouble() ??
                                     0));
 
-                    final filtered =
+                    final tabList =
                         _filter == 'done' ? completed : active;
+
+                    // Arama sorgusuna göre filtrele (aktif sekme içinde)
+                    final filtered = _searchQuery.isEmpty
+                        ? tabList
+                        : tabList
+                            .where((g) =>
+                                (g['name'] as String? ?? '')
+                                    .toLowerCase()
+                                    .contains(_searchQuery.toLowerCase()))
+                            .toList();
 
                     return ListView(
                       padding:
@@ -135,8 +216,11 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                                 'Tamamlanan · ${completed.length}'),
                           ],
                           value: _filter,
-                          onChange: (v) =>
-                              setState(() => _filter = v),
+                          onChange: (v) => setState(() {
+                            _filter = v;
+                            _searchQuery = '';
+                            _searchCtrl.clear();
+                          }),
                         ),
                         const SizedBox(height: 16),
 
@@ -146,7 +230,9 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 32),
                             child: Text(
-                              'Bu kategoride hedef yok.',
+                              _searchQuery.isNotEmpty
+                                  ? '"$_searchQuery" için sonuç bulunamadı.'
+                                  : 'Bu kategoride hedef yok.',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: c.text3),
                               textAlign: TextAlign.center,
                             ),
@@ -168,7 +254,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                             )),
 
                         // Dashed add button — only on active tab
-                        if (_filter != 'done')
+                        if (_filter != 'done' && _searchQuery.isEmpty)
                           _DashedAddButton(
                             label: 'Yeni hedef oluştur',
                             onTap: () => _showGoalForm(context, null),
@@ -225,7 +311,14 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
 class _Header extends StatelessWidget {
   final String title;
   final String subtitle;
-  const _Header({required this.title, required this.subtitle});
+  final bool isSearching;
+  final VoidCallback onSearchTap;
+  const _Header({
+    required this.title,
+    required this.subtitle,
+    required this.isSearching,
+    required this.onSearchTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -258,6 +351,28 @@ class _Header extends StatelessWidget {
             ],
           ),
           const Spacer(),
+          GestureDetector(
+            onTap: onSearchTap,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSearching
+                    ? AppColors.accent.withValues(alpha: 0.15)
+                    : c.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSearching ? AppColors.accent.withValues(alpha: 0.4) : c.border,
+                ),
+              ),
+              child: Icon(
+                isSearching ? Icons.search_off : Icons.search,
+                size: 20,
+                color: isSearching ? AppColors.accent : c.text2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           AiInsightsButton(page: 'goals'),
         ],
       ),
