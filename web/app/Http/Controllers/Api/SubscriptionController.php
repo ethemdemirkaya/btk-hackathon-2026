@@ -77,6 +77,24 @@ class SubscriptionController extends Controller
         return response()->json(['subscription' => new SubscriptionResource($sub)], 201);
     }
 
+    public function update(Request $request, Subscription $subscription): JsonResponse
+    {
+        abort_if($subscription->user_id !== $request->user()->id, 403);
+
+        $data = $request->validate([
+            'name'              => 'sometimes|required|string|max:255',
+            'amount'            => 'sometimes|required|numeric|min:0',
+            'billing_cycle'     => 'sometimes|required|in:weekly,monthly,quarterly,yearly',
+            'next_billing_date' => 'nullable|date',
+            'category_id'       => 'nullable|integer|exists:categories,id',
+        ]);
+
+        $subscription->update($data);
+        $subscription->load('category');
+
+        return response()->json(['subscription' => new SubscriptionResource($subscription)]);
+    }
+
     public function destroy(Request $request, Subscription $subscription): JsonResponse
     {
         abort_if($subscription->user_id !== $request->user()->id, 403);

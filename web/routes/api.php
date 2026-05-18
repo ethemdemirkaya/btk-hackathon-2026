@@ -93,6 +93,7 @@ Route::prefix('v1')->group(function () {
         // Subscriptions
         Route::get   ('subscriptions',                [SubscriptionController::class, 'index']);
         Route::post  ('subscriptions',                [SubscriptionController::class, 'store']);
+        Route::put   ('subscriptions/{subscription}', [SubscriptionController::class, 'update']);
         Route::delete('subscriptions/{subscription}', [SubscriptionController::class, 'destroy']);
 
         // Categories

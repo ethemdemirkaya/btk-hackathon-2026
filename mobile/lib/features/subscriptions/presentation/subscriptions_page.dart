@@ -37,141 +37,7 @@ const _subColors = [
   Color(0xFFFFC857),
 ];
 
-Future<void> _showAddSubscriptionSheet(
-    BuildContext context, WidgetRef ref) async {
-  final c = context.appColors;
-  final nameCtrl = TextEditingController();
-  final amountCtrl = TextEditingController();
-  String billingCycle = 'monthly';
-  bool saving = false;
-
-  await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: c.card,
-    shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) => Padding(
-        padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                    color: c.border,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            Row(children: [
-              Expanded(
-                  child: Text('Abonelik Ekle',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: c.text1))),
-              IconButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  icon: Icon(Icons.close, color: c.text2, size: 20)),
-            ]),
-            const SizedBox(height: 16),
-            _darkField(ctx, nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
-            const SizedBox(height: 12),
-            _darkField(ctx, amountCtrl, 'Tutar (₺/ay)', Icons.attach_money,
-                prefix: '₺ ',
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true)),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: billingCycle,
-              dropdownColor: c.card,
-              style: TextStyle(color: c.text1, fontSize: 14),
-              decoration: InputDecoration(
-                labelText: 'Fatura Döngüsü',
-                labelStyle: TextStyle(color: c.text3, fontSize: 13),
-                filled: true,
-                fillColor: c.bg,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: c.border)),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: c.border)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: AppColors.accent, width: 1.5)),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'weekly', child: Text('Haftalık')),
-                DropdownMenuItem(value: 'monthly', child: Text('Aylık')),
-                DropdownMenuItem(
-                    value: 'quarterly', child: Text('3 Aylık')),
-                DropdownMenuItem(value: 'yearly', child: Text('Yıllık')),
-              ],
-              onChanged: (v) => setState(() => billingCycle = v!),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: saving
-                    ? null
-                    : () async {
-                        final name = nameCtrl.text.trim();
-                        final amount =
-                            double.tryParse(amountCtrl.text.trim()) ??
-                                0;
-                        if (name.isEmpty || amount <= 0) return;
-                        setState(() => saving = true);
-                        try {
-                          await DioClient.instance.post(
-                            ApiEndpoints.subscriptions,
-                            data: {
-                              'name': name,
-                              'amount': amount,
-                              'billing_cycle': billingCycle,
-                            },
-                          );
-                          if (ctx.mounted) Navigator.pop(ctx);
-                          ref.invalidate(_subscriptionsProvider);
-                        } catch (_) {
-                          setState(() => saving = false);
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: const Color(0xFF051929),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Kaydet',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
+// ── Shared form field ─────────────────────────────────────────────────
 Widget _darkField(
     BuildContext context,
     TextEditingController ctrl,
@@ -204,6 +70,517 @@ Widget _darkField(
   );
 }
 
+Widget _datePicker(BuildContext context,
+    {required DateTime? value,
+    required VoidCallback onTap,
+    required VoidCallback onClear}) {
+  final c = context.appColors;
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.border),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_today_outlined, size: 18, color: c.text3),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value != null
+                  ? AppFormatters.dateShort(value)
+                  : 'Sonraki Ödeme Tarihi',
+              style: TextStyle(
+                  fontSize: 14, color: value != null ? c.text1 : c.text3),
+            ),
+          ),
+          if (value != null)
+            GestureDetector(
+              onTap: onClear,
+              child: Icon(Icons.close, size: 16, color: c.text3),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _cycleDropdown(
+    BuildContext context, String value, ValueChanged<String> onChange) {
+  final c = context.appColors;
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    decoration: BoxDecoration(
+      color: c.bg,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: c.border),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.repeat_outlined, size: 18, color: c.text3),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              dropdownColor: c.card,
+              style: TextStyle(color: c.text1, fontSize: 14),
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: 'weekly', child: Text('Haftalık')),
+                DropdownMenuItem(value: 'monthly', child: Text('Aylık')),
+                DropdownMenuItem(value: 'quarterly', child: Text('3 Aylık')),
+                DropdownMenuItem(value: 'yearly', child: Text('Yıllık')),
+              ],
+              onChanged: (v) => onChange(v!),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ── Abonelik Ekle sheet ───────────────────────────────────────────────
+Future<void> _showAddSubscriptionSheet(
+    BuildContext context, WidgetRef ref) async {
+  final c = context.appColors;
+  final nameCtrl = TextEditingController();
+  final amountCtrl = TextEditingController();
+  String billingCycle = 'monthly';
+  DateTime? nextBillingDate;
+  bool saving = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: c.card,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) {
+        Future<void> pickDate() async {
+          final now = DateTime.now();
+          final picked = await showDatePicker(
+            context: ctx,
+            initialDate: nextBillingDate ?? now,
+            firstDate: now.subtract(const Duration(days: 365)),
+            lastDate: DateTime(now.year + 5),
+          );
+          if (picked != null) setState(() => nextBillingDate = picked);
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                        color: c.border,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                Row(children: [
+                  Expanded(
+                      child: Text('Abonelik Ekle',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: c.text1))),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close, color: c.text2, size: 20)),
+                ]),
+                const SizedBox(height: 16),
+                _darkField(
+                    ctx, nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
+                const SizedBox(height: 12),
+                _darkField(ctx, amountCtrl, 'Tutar (₺)', Icons.attach_money,
+                    prefix: '₺ ',
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true)),
+                const SizedBox(height: 12),
+                _cycleDropdown(
+                    ctx, billingCycle, (v) => setState(() => billingCycle = v)),
+                const SizedBox(height: 12),
+                _datePicker(ctx,
+                    value: nextBillingDate,
+                    onTap: pickDate,
+                    onClear: () => setState(() => nextBillingDate = null)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            final name = nameCtrl.text.trim();
+                            final amount =
+                                double.tryParse(amountCtrl.text.trim()) ?? 0;
+                            if (name.isEmpty || amount <= 0) return;
+                            setState(() => saving = true);
+                            try {
+                              await DioClient.instance.post(
+                                ApiEndpoints.subscriptions,
+                                data: {
+                                  'name': name,
+                                  'amount': amount,
+                                  'billing_cycle': billingCycle,
+                                  if (nextBillingDate != null)
+                                    'next_billing_date': nextBillingDate!
+                                        .toIso8601String()
+                                        .split('T')
+                                        .first,
+                                },
+                              );
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              ref.invalidate(_subscriptionsProvider);
+                            } catch (_) {
+                              setState(() => saving = false);
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: const Color(0xFF051929),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Kaydet',
+                            style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+// ── Karta tıklayınca açılan actions sheet ─────────────────────────────
+Future<void> _showSubscriptionActions(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> sub,
+    Color color) async {
+  final c = context.appColors;
+  final name = sub['name'] as String? ?? '';
+  final id = (sub['id'] as num).toInt();
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: c.card,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                  color: c.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          // Abonelik başlığı
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    name
+                        .split(' ')
+                        .take(2)
+                        .map((w) => w.isNotEmpty ? w[0].toUpperCase() : '')
+                        .join(),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: color),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name,
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: c.text1)),
+                    Text(
+                      _cycleLabels[sub['billing_cycle'] as String? ?? 'monthly'] ?? '',
+                      style: TextStyle(fontSize: 12, color: c.text3),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                AppFormatters.currencyCompact(
+                    (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: c.text1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Düzenle butonu
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showEditSubscriptionSheet(context, ref, sub);
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Düzenle',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: const Color(0xFF051929),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Sil butonu
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogCtx) => AlertDialog(
+                    backgroundColor: c.card,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    title: Text('Aboneliği Sil',
+                        style: TextStyle(
+                            color: c.text1, fontWeight: FontWeight.w700)),
+                    content: Text(
+                        '"$name" aboneliğini listeden kaldırmak istiyor musun?',
+                        style: TextStyle(color: c.text2)),
+                    actions: [
+                      TextButton(
+                          onPressed: () => Navigator.pop(dialogCtx, false),
+                          child:
+                              Text('İptal', style: TextStyle(color: c.text2))),
+                      TextButton(
+                          onPressed: () => Navigator.pop(dialogCtx, true),
+                          child: Text('Sil',
+                              style: TextStyle(
+                                  color: c.negative,
+                                  fontWeight: FontWeight.w700))),
+                    ],
+                  ),
+                );
+                if (ok == true) {
+                  try {
+                    await DioClient.instance
+                        .delete(ApiEndpoints.subscription(id));
+                    ref.invalidate(_subscriptionsProvider);
+                  } catch (_) {}
+                }
+              },
+              icon: Icon(Icons.delete_outline_rounded, size: 18, color: c.negative),
+              label: Text('Sil',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, color: c.negative)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: BorderSide(color: c.negative.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// ── Abonelik Düzenle sheet ────────────────────────────────────────────
+Future<void> _showEditSubscriptionSheet(
+    BuildContext context, WidgetRef ref, Map<String, dynamic> sub) async {
+  final c = context.appColors;
+  final id = (sub['id'] as num).toInt();
+  final nameCtrl =
+      TextEditingController(text: sub['name'] as String? ?? '');
+  final amountCtrl = TextEditingController(
+      text: (sub['amount'] as num?)?.toStringAsFixed(2) ?? '');
+  String billingCycle = sub['billing_cycle'] as String? ?? 'monthly';
+  final nbRaw = sub['next_billing_date'] as String?;
+  DateTime? nextBillingDate =
+      nbRaw != null ? DateTime.tryParse(nbRaw) : null;
+  bool saving = false;
+
+  await showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: c.card,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) {
+        Future<void> pickDate() async {
+          final now = DateTime.now();
+          final picked = await showDatePicker(
+            context: ctx,
+            initialDate: nextBillingDate ?? now,
+            firstDate: now.subtract(const Duration(days: 365)),
+            lastDate: DateTime(now.year + 5),
+          );
+          if (picked != null) setState(() => nextBillingDate = picked);
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                        color: c.border,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                Row(children: [
+                  Expanded(
+                      child: Text('Aboneliği Düzenle',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: c.text1))),
+                  IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: Icon(Icons.close, color: c.text2, size: 20)),
+                ]),
+                const SizedBox(height: 16),
+                _darkField(
+                    ctx, nameCtrl, 'Abonelik Adı', Icons.subscriptions_outlined),
+                const SizedBox(height: 12),
+                _darkField(ctx, amountCtrl, 'Tutar (₺)', Icons.attach_money,
+                    prefix: '₺ ',
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true)),
+                const SizedBox(height: 12),
+                _cycleDropdown(
+                    ctx, billingCycle, (v) => setState(() => billingCycle = v)),
+                const SizedBox(height: 12),
+                _datePicker(ctx,
+                    value: nextBillingDate,
+                    onTap: pickDate,
+                    onClear: () => setState(() => nextBillingDate = null)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            final name = nameCtrl.text.trim();
+                            final amount =
+                                double.tryParse(amountCtrl.text.trim()) ?? 0;
+                            if (name.isEmpty || amount <= 0) return;
+                            setState(() => saving = true);
+                            try {
+                              await DioClient.instance.put(
+                                ApiEndpoints.subscription(id),
+                                data: {
+                                  'name': name,
+                                  'amount': amount,
+                                  'billing_cycle': billingCycle,
+                                  if (nextBillingDate != null)
+                                    'next_billing_date': nextBillingDate!
+                                        .toIso8601String()
+                                        .split('T')
+                                        .first,
+                                },
+                              );
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              ref.invalidate(_subscriptionsProvider);
+                            } catch (_) {
+                              setState(() => saving = false);
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: const Color(0xFF051929),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Kaydet',
+                            style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────
 class SubscriptionsPage extends ConsumerWidget {
   const SubscriptionsPage({super.key});
@@ -226,40 +603,34 @@ class SubscriptionsPage extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──────────────────────────────────────────────
             async.when(
               loading: () => _buildHeader(context, 'Yükleniyor…'),
               error: (_, __) => _buildHeader(context, ''),
               data: (data) {
                 final total =
                     (data['total_monthly'] as num?)?.toDouble() ?? 0;
-                return _buildHeader(context,
-                    'Aylık ${AppFormatters.currencyCompact(total)}');
+                return _buildHeader(
+                    context, 'Aylık ${AppFormatters.currencyCompact(total)}');
               },
             ),
-            // ── Body ────────────────────────────────────────────────
             Expanded(
               child: RefreshIndicator(
                 color: AppColors.accent,
                 backgroundColor: c.card,
-                onRefresh: () async =>
-                    ref.invalidate(_subscriptionsProvider),
+                onRefresh: () async => ref.invalidate(_subscriptionsProvider),
                 child: async.when(
                   loading: () => const SkeletonListView(),
                   error: (e, __) => ErrorState(
                     message: e.toString(),
-                    onRetry: () =>
-                        ref.invalidate(_subscriptionsProvider),
+                    onRetry: () => ref.invalidate(_subscriptionsProvider),
                   ),
                   data: (data) {
                     final subs = (data['subscriptions'] as List? ?? [])
                         .cast<Map<String, dynamic>>();
-                    final candidates =
-                        (data['candidates'] as List? ?? [])
-                            .cast<Map<String, dynamic>>();
+                    final candidates = (data['candidates'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
                     final totalMonthly =
-                        (data['total_monthly'] as num?)?.toDouble() ??
-                            0;
+                        (data['total_monthly'] as num?)?.toDouble() ?? 0;
 
                     if (subs.isEmpty && candidates.isEmpty) {
                       return const EmptyState(
@@ -275,19 +646,16 @@ class SubscriptionsPage extends ConsumerWidget {
                       children: [
                         // ── Hero card ────────────────────────────
                         Padding(
-                          padding:
-                              const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: c.card,
                               borderRadius: BorderRadius.circular(20),
-                              border:
-                                  Border.all(color: c.border),
+                              border: Border.all(color: c.border),
                             ),
                             child: Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Expanded(
                                   child: Column(
@@ -304,7 +672,8 @@ class SubscriptionsPage extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
-                                        AppFormatters.currencyCompact(totalMonthly),
+                                        AppFormatters.currencyCompact(
+                                            totalMonthly),
                                         style: TextStyle(
                                             fontSize: 32,
                                             fontWeight: FontWeight.w800,
@@ -315,8 +684,7 @@ class SubscriptionsPage extends ConsumerWidget {
                                       Text(
                                         'Yıllık ${AppFormatters.currencyCompact(totalMonthly * 12)} · ${subs.length} aktif',
                                         style: TextStyle(
-                                            fontSize: 12,
-                                            color: c.text3),
+                                            fontSize: 12, color: c.text3),
                                       ),
                                     ],
                                   ),
@@ -325,11 +693,12 @@ class SubscriptionsPage extends ConsumerWidget {
                                   width: 48,
                                   height: 48,
                                   decoration: BoxDecoration(
-                                    color: AppColors.accent.withValues(alpha: 0.1),
-                                    borderRadius:
-                                        BorderRadius.circular(14),
+                                    color:
+                                        AppColors.accent.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
-                                        color: AppColors.accent.withValues(alpha: 0.2)),
+                                        color: AppColors.accent
+                                            .withValues(alpha: 0.2)),
                                   ),
                                   child: const Icon(
                                       Icons.subscriptions_outlined,
@@ -353,19 +722,26 @@ class SubscriptionsPage extends ConsumerWidget {
                                     letterSpacing: 0.6)),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: subs
                                   .asMap()
                                   .entries
                                   .map((e) => Padding(
                                         padding:
-                                            const EdgeInsets.only(
-                                                bottom: 8),
+                                            const EdgeInsets.only(bottom: 8),
                                         child: _SubCard(
-                                            sub: e.value,
-                                            colorIndex: e.key),
+                                          sub: e.value,
+                                          colorIndex: e.key,
+                                          onTap: () => _showSubscriptionActions(
+                                            context,
+                                            ref,
+                                            e.value,
+                                            _subColors[e.key %
+                                                _subColors.length],
+                                          ),
+                                        ),
                                       ))
                                   .toList(),
                             ),
@@ -384,16 +760,15 @@ class SubscriptionsPage extends ConsumerWidget {
                                     letterSpacing: 0.6)),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: candidates
                                   .map((cand) => Padding(
                                         padding:
-                                            const EdgeInsets.only(
-                                                bottom: 8),
-                                        child:
-                                            _CandidateCard(candidate: cand),
+                                            const EdgeInsets.only(bottom: 8),
+                                        child: _CandidateCard(
+                                            candidate: cand),
                                       ))
                                   .toList(),
                             ),
@@ -456,14 +831,15 @@ class SubscriptionsPage extends ConsumerWidget {
 class _SubCard extends StatelessWidget {
   final Map<String, dynamic> sub;
   final int colorIndex;
-  const _SubCard({required this.sub, required this.colorIndex});
+  final VoidCallback onTap;
+  const _SubCard(
+      {required this.sub, required this.colorIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
     final name = sub['name'] as String? ?? 'S';
-    final amount =
-        (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0;
+    final amount = (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0;
     final cycle = sub['billing_cycle'] as String? ?? 'monthly';
     final aiDetected = sub['auto_detected'] as bool? ?? false;
     final nextBilling = sub['next_billing_date'] as String?;
@@ -476,98 +852,101 @@ class _SubCard extends StatelessWidget {
         .join();
     final color = _subColors[colorIndex % _subColors.length];
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: c.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                initials,
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: color),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: c.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: color),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(name,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: c.text1)),
-                    ),
-                    if (aiDetected)
-                      const Icon(Icons.auto_awesome,
-                          size: 12, color: AppColors.accent),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      '${_cycleLabels[cycle] ?? cycle}${nextBilling != null ? ' · ${AppFormatters.dateShort(DateTime.parse(nextBilling))}' : ''}',
-                      style:
-                          TextStyle(fontSize: 11, color: c.text3),
-                    ),
-                    if (isCancel) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: c.warning.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: c.warning.withValues(alpha: 0.3)),
-                        ),
-                        child: Text('İptal Adayı',
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(name,
                             style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: c.warning)),
+                                color: c.text1)),
                       ),
+                      if (aiDetected)
+                        const Icon(Icons.auto_awesome,
+                            size: 12, color: AppColors.accent),
                     ],
-                  ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(
+                        '${_cycleLabels[cycle] ?? cycle}${nextBilling != null ? ' · ${AppFormatters.dateShort(DateTime.parse(nextBilling))}' : ''}',
+                        style: TextStyle(fontSize: 11, color: c.text3),
+                      ),
+                      if (isCancel) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: c.warning.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: c.warning.withValues(alpha: 0.3)),
+                          ),
+                          child: Text('İptal Adayı',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: c.warning)),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  AppFormatters.currencyCompact(amount),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: c.text1),
                 ),
+                Text('/ay', style: TextStyle(fontSize: 11, color: c.text3)),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                AppFormatters.currencyCompact(amount),
-                style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: c.text1),
-              ),
-              Text('/ay',
-                  style: TextStyle(fontSize: 11, color: c.text3)),
-            ],
-          ),
-        ],
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right, size: 18, color: c.text3),
+          ],
+        ),
       ),
     );
   }
@@ -583,8 +962,7 @@ class _CandidateCard extends StatelessWidget {
     final c = context.appColors;
     final name = candidate['name'] as String? ?? '';
     final amount = (candidate['amount'] as num?)?.toDouble() ?? 0;
-    final confidence =
-        (candidate['confidence'] as num?)?.toDouble() ?? 0;
+    final confidence = (candidate['confidence'] as num?)?.toDouble() ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -625,9 +1003,7 @@ class _CandidateCard extends StatelessWidget {
           Text(
             AppFormatters.currencyCompact(amount),
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: c.text1),
+                fontSize: 14, fontWeight: FontWeight.w700, color: c.text1),
           ),
         ],
       ),
