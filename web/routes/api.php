@@ -135,6 +135,7 @@ Route::prefix('v1')->group(function () {
         Route::get   ('investments/live-rates', [InvestmentController::class, 'liveRates']);
         Route::get   ('investments',            [InvestmentController::class, 'index']);
         Route::post  ('investments',            [InvestmentController::class, 'store']);
+        Route::put   ('investments/{id}',       [InvestmentController::class, 'update']);
         Route::delete('investments/{id}',       [InvestmentController::class, 'destroy']);
 
         // FX / Gold Alerts

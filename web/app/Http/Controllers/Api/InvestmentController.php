@@ -131,6 +131,25 @@ class InvestmentController extends Controller
         ]);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $asset = PortfolioAsset::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'quantity'      => 'sometimes|numeric|min:0.0001',
+            'buy_price_try' => 'sometimes|numeric|min:0.01',
+            'buy_date'      => 'sometimes|date',
+            'name'          => 'sometimes|string|max:120',
+            'notes'         => 'nullable|string|max:1000',
+        ]);
+
+        $asset->update($data);
+
+        return response()->json(['asset' => $asset]);
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         $asset = PortfolioAsset::where('id', $id)
