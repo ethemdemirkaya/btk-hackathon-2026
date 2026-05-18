@@ -20,6 +20,7 @@ final _filterTypeProvider = StateProvider<String?>((ref) => null);
 final _searchQueryProvider = StateProvider<String>((ref) => '');
 final _selectedFilterProvider = StateProvider<String?>((ref) => null);
 final _periodProvider = StateProvider<int?>((ref) => 1);
+final _descriptionQueryProvider = StateProvider<String>((ref) => '');
 
 // Fetches income and expense transactions in parallel so the summary bar
 // always has complete data regardless of which type filter is active.
@@ -141,9 +142,11 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final selectedPeriod = ref.watch(_periodProvider);
     final query = ref.watch(_searchQueryProvider);
 
+    final descQuery = ref.watch(_descriptionQueryProvider);
+
     final filteredCount = asyncData.whenOrNull(
       data: (items) =>
-          _applyFilters(items, query, selectedType, selectedFilter, selectedPeriod)
+          _applyFilters(items, query, descQuery, selectedType, selectedFilter, selectedPeriod)
               .length,
     );
 
@@ -219,12 +222,13 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
                   ),
                   data: (items) {
                     final filtered = _applyFilters(
-                        items, query, selectedType, selectedFilter, selectedPeriod);
+                        items, query, descQuery, selectedType, selectedFilter, selectedPeriod);
                     if (filtered.isEmpty) {
                       return _EmptyState(
                         onClear: () {
                           _searchCtrl.clear();
                           ref.read(_searchQueryProvider.notifier).state = '';
+                          ref.read(_descriptionQueryProvider.notifier).state = '';
                           ref.read(_filterTypeProvider.notifier).state = null;
                           ref
                               .read(_selectedFilterProvider.notifier)
@@ -261,6 +265,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
   List<TransactionModel> _applyFilters(
     List<TransactionModel> items,
     String query,
+    String descQuery,
     String? selectedType,
     String? extFilter,
     int? period,
@@ -278,6 +283,12 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
         return merchant.contains(q) ||
             t.category.name.toLowerCase().contains(q);
       }).toList();
+    }
+    if (descQuery.isNotEmpty) {
+      final dq = descQuery.toLowerCase();
+      result = result
+          .where((t) => t.description.toLowerCase().contains(dq))
+          .toList();
     }
     if (extFilter == 'installment') {
       result = result.where((t) => t.isInstallment).toList();
