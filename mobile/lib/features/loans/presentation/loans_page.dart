@@ -125,8 +125,7 @@ class LoansPage extends ConsumerWidget {
                               child: _LoanCard(loan: l),
                             )),
 
-                        // Dashed add button
-                        _DashedAddButton(),
+
                       ],
                     );
                   },
@@ -535,40 +534,6 @@ class _ActionBtn extends StatelessWidget {
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: ghost ? c.text3 : c.text2)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Dashed Add Button ────────────────────────────────────────────────
-class _DashedAddButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final c = context.appColors;
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          border: Border.all(
-              color: c.border,
-              width: 1.5,
-              style: BorderStyle.solid),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, size: 18, color: c.text3),
-            const SizedBox(width: 8),
-            Text('Yeni kredi ekle',
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: c.text3)),
           ],
         ),
       ),

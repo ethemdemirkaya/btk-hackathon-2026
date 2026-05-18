@@ -167,11 +167,17 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                     final active = goals
                         .where((g) =>
                             (g['status'] as String?) == 'active')
-                        .toList();
+                        .toList()
+                      ..sort((a, b) =>
+                          (a['name'] as String? ?? '').toLowerCase().compareTo(
+                              (b['name'] as String? ?? '').toLowerCase()));
                     final completed = goals
                         .where((g) =>
                             (g['status'] as String?) == 'completed')
-                        .toList();
+                        .toList()
+                      ..sort((a, b) =>
+                          (a['name'] as String? ?? '').toLowerCase().compareTo(
+                              (b['name'] as String? ?? '').toLowerCase()));
 
                     final totalProgress =
                         (data['total_saved'] as num?)?.toDouble() ??
