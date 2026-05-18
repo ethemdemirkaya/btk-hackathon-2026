@@ -1257,11 +1257,14 @@ class _DetailPageState extends State<_DetailPage> {
                   ]),
                 ),
                 if (_recipient.isNotEmpty) ...[
-                  const Spacer(),
-                  Text(
-                    _recipient,
-                    style: TextStyle(fontSize: 11, color: c.text3),
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _recipient,
+                      style: TextStyle(fontSize: 11, color: c.text3),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   ),
                 ],
               ]),
@@ -1289,31 +1292,42 @@ class _DetailPageState extends State<_DetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(children: [
-                              const Icon(Icons.auto_awesome,
-                                  size: 15, color: AppColors.accent),
-                              const SizedBox(width: 6),
-                              Text('AI Analizi',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: c.text1)),
-                              if (_chance != null) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: c.positive.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text('$_chance% başarı şansı',
+                              Expanded(
+                                child: Row(children: [
+                                  const Icon(Icons.auto_awesome,
+                                      size: 15, color: AppColors.accent),
+                                  const SizedBox(width: 6),
+                                  Text('AI Analizi',
                                       style: TextStyle(
-                                          fontSize: 10,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w600,
-                                          color: c.positive)),
-                                ),
-                              ],
-                              const Spacer(),
+                                          color: c.text1)),
+                                  if (_chance != null) ...[
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: c.positive.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          _chance is num
+                                              ? '${(_chance as num).round()}% başarı'
+                                              : _chance.toString(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: c.positive)),
+                                      ),
+                                    ),
+                                  ],
+                                ]),
+                              ),
+                              const SizedBox(width: 8),
                               Icon(
                                 _insightsExpanded
                                     ? Icons.expand_less
