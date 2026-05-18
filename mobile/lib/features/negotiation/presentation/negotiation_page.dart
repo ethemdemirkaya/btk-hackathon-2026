@@ -912,6 +912,19 @@ class _DetailPageState extends State<_DetailPage> {
 
   Map<String, dynamic> get _draft => widget.draft;
   String get _body => _draft['body'] as String? ?? '';
+
+  // Pre-process body so single \n becomes a Markdown hard line break (two
+  // trailing spaces + \n). AI output uses single newlines; standard Markdown
+  // ignores them, causing lines to run together.
+  String get _formattedBody {
+    final raw = _body.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+    // Replace every single newline (not part of a blank-line paragraph break)
+    // with two trailing spaces + newline — the Markdown hard-break syntax.
+    return raw.replaceAllMapped(
+      RegExp(r'(?<!\n)\n(?!\n)'),
+      (_) => '  \n',
+    );
+  }
   String get _subject => _draft['subject'] as String? ?? 'Müzakere Mektubu';
   String get _recipient => _draft['recipient_name'] as String? ?? '';
   int? get _draftId => _draft['id'] as int?;
@@ -1377,7 +1390,7 @@ class _DetailPageState extends State<_DetailPage> {
                       border: Border.all(color: c.border),
                     ),
                     child: MarkdownBody(
-                      data: _body,
+                      data: _formattedBody,
                       shrinkWrap: true,
                       softLineBreak: true,
                       styleSheet: MarkdownStyleSheet(

@@ -1,4 +1,9 @@
 <div align="center">
+
+<p align="center">
+  <img src="docs/Logo.jpeg" alt="Paranette Logo" width="160"/>
+</p>
+
 # Paranette
 
 ### Yapay Zeka Destekli Kişisel Finans Asistanı
@@ -51,7 +56,8 @@ Türk bankalarından otomatik veri çeken, harcamalarını analiz eden, bütçe 
 | **Banka Bağlantıları** | Ziraat, Garanti, İşbank, Akbank simülasyonu — otomatik işlem senkronizasyonu |
 | **Çoklu Hesap** | Vadesiz, tasarruf, döviz hesabı konsolidasyonu |
 | **Kartlar & Krediler** | Kart limiti takibi, kredi taksit takvimi |
-| **Faturalar & Abonelikler** | 8 fatura türü, Netflix/Spotify gibi abonelikleri otomatik tespit |
+| **Faturalar & Abonelikler** | 8 fatura türü, Netflix/Spotify gibi abonelikleri otomatik tespit; düzenleme & iptal |
+| **Kişisel Borçlar** | Arkadaş/aile borç takibi, kapatma akışı |
 
 ### 🤖 Yapay Zeka
 
@@ -59,7 +65,7 @@ Türk bankalarından otomatik veri çeken, harcamalarını analiz eden, bütçe 
 |---|---|
 | **BudgetAdvisor** | Gelir/gider analizi, bütçe önerileri |
 | **AnomalyDetector** | Olağandışı harcama tespiti, 0–10 risk skoru |
-| **NegotiationAgent** | Faiz indirimi ve borç yapılandırma için resmi AI mektubu |
+| **NegotiationAgent** | Faiz indirimi ve borç yapılandırma için resmi AI mektubu; PDF oluşturma |
 | **InvestmentAdvisor** | Portföy önerileri, risk analizi |
 | **InflationAdvisor** | Kişisel enflasyon vs. TÜFE karşılaştırması |
 | **SavingsCoach** | Tasarruf hedefi oluşturma ve takibi |
@@ -71,12 +77,22 @@ Türk bankalarından otomatik veri çeken, harcamalarını analiz eden, bütçe 
 
 ### 📊 Planlama & Takip
 
-- **Bütçe** — AI destekli bütçe önerisi, tek tıkla uygula
-- **Hedefler** — Tasarruf hedefi oluştur, ilerlemeyi takip et
-- **Yatırımlar** — Altın, döviz, kripto, BIST, fon canlı fiyatlarla
-- **Kur & Altın Alarmları** — Eşik tabanlı anlık uyarılar
+- **Bütçe** — AI destekli bütçe önerisi, tek tıkla uygula, alfabetik arama/filtreleme
+- **Hedefler** — Tasarruf hedefi oluştur, ilerlemeyi takip et (aktif/tamamlanmış)
+- **Yatırımlar** — Altın, döviz, kripto, BIST, fon — **Yahoo Finance spark API** ile anlık TRY canlı fiyatlar
+- **Kur & Altın Alarmları** — Eşik tabanlı alarmlar; canlı kur değerleriyle tutarlı gösterim
 - **Karar Simülatörü** — "Bu parayı harcasam/yatırsam ne olur?" sorusunu yanıtla
 - **Kişisel Enflasyon** — Harcama sepetine özel enflasyon endeksi
+- **Faturalar** — Tarihe göre otomatik sıralama (en yakın vadeye göre)
+
+### 📄 Müzakere Ajanı — Yeni Özellikler
+
+- Tam ekran mektup görüntüleyici (tam kaydırılabilir Markdown)
+- **PDF oluşturma** — Paranette markalı A4 şablonu, Türkçe karakter desteği (NotoSans)
+- **Sistem paylaşım arayüzü** — PDF'yi kaydet, e-posta ile gönder, yazdır
+- Çökülebilir **AI Analizi paneli** — temel argümanlar, başarı ipuçları, şans tahmini
+- Durum takibi: Taslak → Gönderildi → Kabul / Reddedildi (anlık güncelleme)
+- Silme onayı, liste istatistikleri (toplam / gönderildi / kabul)
 
 ### 🔐 Güvenlik
 
@@ -122,9 +138,13 @@ Türk bankalarından otomatik veri çeken, harcamalarını analiz eden, bütçe 
 | State | Riverpod | 2.6 |
 | Routing | GoRouter | 14.6 |
 | HTTP | Dio | 5.x |
+| Markdown | flutter_markdown | 0.7 |
+| PDF | pdf · printing | 3.11 · 5.13 |
+| Paylaşım | share_plus | 10.x |
 | Backend | Laravel · PHP | 13.7 · 8.3 |
 | Veritabanı | MySQL | 8.0 |
 | Yapay Zeka | Google Gemini | 2.5 Pro |
+| Döviz Verisi | Yahoo Finance Spark API | v7 |
 | Auth | Laravel Sanctum | Bearer Token |
 | Güvenlik | flutter_secure_storage | — |
 | Biometrik | local_auth | 2.3 |
@@ -245,6 +265,7 @@ btk-hackathon-2026/
 │   └── build/                    # 5 platform için derlenmiş binary
 │
 └── docs/
+    ├── Logo.jpeg                 # Uygulama logosu
     ├── screenshots/              # Uygulama ekran görüntüleri
     ├── PARANETTE_MOBIL.md        # Mobil geliştirici notları
     ├── PARANETTE_WEB.md          # Backend geliştirici notları
