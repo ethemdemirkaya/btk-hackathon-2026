@@ -134,6 +134,21 @@ class BillsPage extends ConsumerWidget {
                                     ?.toDouble() ??
                                 0));
 
+                    // Tarihe en yakın fatura önce görünsün
+                    final today = DateTime.now().day;
+                    final now = DateTime.now();
+                    final daysInMonth =
+                        DateTime(now.year, now.month + 1, 0).day;
+                    int daysUntil(int? dueDay) {
+                      if (dueDay == null) return 999;
+                      if (dueDay >= today) return dueDay - today;
+                      return daysInMonth - today + dueDay;
+                    }
+
+                    final sortedBills = [...bills]
+                      ..sort((a, b) => daysUntil(a['due_day'] as int?)
+                          .compareTo(daysUntil(b['due_day'] as int?)));
+
                     return ListView(
                       padding: const EdgeInsets.only(bottom: 100),
                       children: [
@@ -172,7 +187,7 @@ class BillsPage extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 20),
                           child: Column(
-                            children: bills
+                            children: sortedBills
                                 .map((b) => Padding(
                                       padding:
                                           const EdgeInsets.only(
