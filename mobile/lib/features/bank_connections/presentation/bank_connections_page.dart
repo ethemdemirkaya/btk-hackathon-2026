@@ -124,10 +124,30 @@ class BankConnectionsPage extends ConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content:
-                                        Text('Senkronizasyon başlatıldı')),
+                                        Text('Senkronizasyon tamamlandı')),
                               );
                             }
-                          } catch (_) {}
+                          } on DioException catch (e) {
+                            if (context.mounted) {
+                              final msg = e.response?.data?['message']
+                                  ?? 'Senkronizasyon başarısız.';
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(msg),
+                                  backgroundColor: Colors.red.shade700,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Hata: ${e.toString()}'),
+                                  backgroundColor: Colors.red.shade700,
+                                ),
+                              );
+                            }
+                          }
                         },
                         onDelete: () => _confirmDelete(context, ref,
                             connections[i]['id'] as int),
@@ -486,15 +506,21 @@ class _AddBankSheetState extends State<_AddBankSheet> {
     setState(() => _loading = true);
     try {
       final type = _selectedBank!['type'] as String;
+      final bankId = _selectedBank!['id'] as String;
       final Map<String, dynamic> credentials = {};
       if (type == 'credentials') {
-        credentials['username'] = _usernameCtrl.text.trim();
-        credentials['password'] = _passwordCtrl.text;
+        credentials['tckn'] = _usernameCtrl.text.trim();
+        if (bankId == 'isbank') {
+          credentials['hmac_secret'] = _passwordCtrl.text;
+        } else {
+          credentials['password'] = _passwordCtrl.text;
+        }
       } else if (type == 'api_key') {
         credentials['api_key'] = _apiKeyCtrl.text.trim();
-        credentials['client_id'] = _clientIdCtrl.text.trim();
       } else if (type == 'oauth') {
-        credentials['oauth_token'] = _apiKeyCtrl.text.trim();
+        // Garanti: client_id (TCKN) + client_secret
+        credentials['client_id'] = _usernameCtrl.text.trim();
+        credentials['client_secret'] = _passwordCtrl.text;
       }
       final payload = <String, dynamic>{
         'bank_slug': _selectedBank!['id'],
@@ -716,121 +742,111 @@ class _AddBankSheetState extends State<_AddBankSheet> {
   Widget _buildFields() {
     final c = context.appColors;
     final type = _selectedBank!['type'] as String;
-    if (type == 'credentials') {
-      return Column(
-        children: [
-          TextFormField(
-            controller: _usernameCtrl,
-            style: TextStyle(color: c.text1),
-            decoration: _inputDeco('Kullanıcı Adı / TC Kimlik No',
-                icon: Icons.person_outline),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty)
-                    ? 'Kullanıcı adı gerekli'
-                    : null,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _passwordCtrl,
-            obscureText: _obscurePassword,
-            style: TextStyle(color: c.text1),
-            decoration: _inputDeco(
-                    'İnternet Bankacılığı Şifresi',
-                    icon: Icons.lock_outline)
-                .copyWith(
-              suffixIcon: IconButton(
-                icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    size: 18,
-                    color: c.text3),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-              ),
-            ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Şifre gerekli' : null,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.shield_outlined,
-                    color: Color(0xFFF59E0B), size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Bilgileriniz şifreli saklanır ve yalnızca okuma için kullanılır.',
-                    style: TextStyle(fontSize: 12, color: c.text2),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    } else if (type == 'api_key') {
-      return Column(
-        children: [
-          TextFormField(
-            controller: _apiKeyCtrl,
-            style: TextStyle(color: c.text1),
-            decoration:
-                _inputDeco('API Anahtarı', icon: Icons.key_outlined),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty)
-                    ? 'API anahtarı gerekli'
-                    : null,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _clientIdCtrl,
-            style: TextStyle(color: c.text1),
-            decoration:
-                _inputDeco('Client ID', icon: Icons.fingerprint),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty)
-                    ? 'Client ID gerekli'
-                    : null,
-          ),
-        ],
-      );
-    } else {
-      // oauth
-      return Column(
-        children: [
-          TextFormField(
-            controller: _apiKeyCtrl,
-            style: TextStyle(color: c.text1),
-            decoration:
-                _inputDeco('OAuth Token', icon: Icons.token_outlined),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Token gerekli' : null,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.15)),
-            ),
-            child: Text(
-              'Garanti BBVA için developer.garantibbva.com.tr adresinden OAuth token almanız gerekmektedir.',
-              style: TextStyle(fontSize: 12, color: c.text2),
-            ),
-          ),
-        ],
+    final bankId = _selectedBank!['id'] as String;
+
+    // Shared security notice
+    Widget securityNote(String text) => Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border:
+            Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+      ),
+      child: Row(children: [
+        const Icon(Icons.shield_outlined, color: Color(0xFFF59E0B), size: 16),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 12, color: c.text2))),
+      ]),
+    );
+
+    if (type == 'api_key') {
+      // Akbank — only API key needed
+      return TextFormField(
+        controller: _apiKeyCtrl,
+        style: TextStyle(color: c.text1),
+        decoration: _inputDeco('API Anahtarı', icon: Icons.key_outlined),
+        validator: (v) =>
+            (v == null || v.trim().isEmpty) ? 'API anahtarı gerekli' : null,
       );
     }
+
+    if (type == 'oauth') {
+      // Garanti BBVA — client_id (TCKN) + client_secret
+      return Column(children: [
+        TextFormField(
+          controller: _usernameCtrl,
+          style: TextStyle(color: c.text1),
+          decoration: _inputDeco('TCKN / Client ID', icon: Icons.person_outline),
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Client ID gerekli' : null,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _passwordCtrl,
+          obscureText: _obscurePassword,
+          style: TextStyle(color: c.text1),
+          decoration: _inputDeco('Client Secret', icon: Icons.vpn_key_outlined)
+              .copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 18,
+                  color: c.text3),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+          validator: (v) =>
+              (v == null || v.isEmpty) ? 'Client secret gerekli' : null,
+        ),
+        const SizedBox(height: 12),
+        securityNote(
+            'Bilgileriniz şifreli saklanır ve yalnızca okuma için kullanılır.'),
+      ]);
+    }
+
+    // credentials type — Ziraat, İşbank, diğerleri
+    final secondLabel = bankId == 'isbank'
+        ? 'HMAC Secret Anahtarı'
+        : 'İnternet Bankacılığı Şifresi';
+
+    return Column(children: [
+      TextFormField(
+        controller: _usernameCtrl,
+        style: TextStyle(color: c.text1),
+        decoration:
+            _inputDeco('TCKN / TC Kimlik No', icon: Icons.person_outline),
+        keyboardType: TextInputType.number,
+        validator: (v) =>
+            (v == null || v.trim().isEmpty) ? 'TCKN gerekli' : null,
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        controller: _passwordCtrl,
+        obscureText: _obscurePassword,
+        style: TextStyle(color: c.text1),
+        decoration:
+            _inputDeco(secondLabel, icon: Icons.lock_outline).copyWith(
+          suffixIcon: IconButton(
+            icon: Icon(
+                _obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 18,
+                color: c.text3),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
+          ),
+        ),
+        validator: (v) =>
+            (v == null || v.isEmpty) ? 'Bu alan zorunlu' : null,
+      ),
+      const SizedBox(height: 12),
+      securityNote(
+          'Bilgileriniz şifreli saklanır ve yalnızca okuma için kullanılır.'),
+    ]);
   }
 }

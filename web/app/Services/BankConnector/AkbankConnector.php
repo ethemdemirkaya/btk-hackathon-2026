@@ -2,132 +2,131 @@
 
 namespace App\Services\BankConnector;
 
+use App\Models\FakeBank\FakeBankAccount;
+use App\Models\FakeBank\FakeBankCard;
+use App\Models\FakeBank\FakeBankCustomer;
+use App\Models\FakeBank\FakeBankLoan;
+use App\Models\FakeBank\FakeBankTransaction;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
 
 /**
- * Akbank — JSON-RPC 2.0
+ * Akbank — Doğrudan model sorgusu (HTTP self-call olmadan)
  * Credentials: { api_key }
  */
 class AkbankConnector extends AbstractBankConnector
 {
-    private int $rpcId = 1;
+    private const SLUG = 'akbank';
+    private ?FakeBankCustomer $customer = null;
 
     public function fetchAccounts(): array
     {
-        $result = $this->rpc('accounts.list');
+        $customer = $this->resolveCustomer();
 
-        return collect($result['accounts'] ?? [])->map(fn ($a) => [
-            'external_id'       => $a['accountId'],
-            'account_type'      => $a['accountType'],
-            'iban'              => null, // Akbank RPC doesn't expose IBAN
-            'currency'          => $a['currency'],
-            'balance'           => (float) $a['balance'],
-            'available_balance' => (float) $a['availableBalance'],
-        ])->all();
+        return FakeBankAccount::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($a) => [
+                'external_id'       => $a->external_id,
+                'account_type'      => $a->account_type,
+                'iban'              => null,
+                'currency'          => $a->currency,
+                'balance'           => (float) $a->balance,
+                'available_balance' => (float) $a->available_balance,
+            ])->all();
     }
 
     public function fetchTransactions(string $externalAccountId, Carbon $from): array
     {
-        $transactions = [];
-        $offset       = 0;
-        $limit        = 100;
+        $customer = $this->resolveCustomer();
 
-        do {
-            $result = $this->rpc('transactions.list', [
-                'accountId' => $externalAccountId,
-                'from'      => $from->format('Y-m-d'),
-                'limit'     => $limit,
-                'offset'    => $offset,
-            ]);
+        $account = FakeBankAccount::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->where('external_id', $externalAccountId)
+            ->first();
 
-            $items   = $result['transactions'] ?? [];
-            $hasMore = $result['pagination']['hasMore'] ?? false;
+        if (! $account) {
+            return [];
+        }
 
-            foreach ($items as $t) {
-                $transactions[] = $this->normalizeTransaction($t);
-            }
-
-            $offset += $limit;
-        } while ($hasMore);
-
-        return $transactions;
+        return FakeBankTransaction::where('bank_slug', self::SLUG)
+            ->where('fake_account_id', $account->id)
+            ->where('posted_at', '>=', $from->toDateTimeString())
+            ->orderByDesc('posted_at')
+            ->get()
+            ->map(fn ($t) => [
+                'external_id'       => $t->external_id,
+                'posted_at'         => $t->posted_at,
+                'amount'            => (float) $t->amount,
+                'currency'          => $t->currency,
+                'description'       => $t->description,
+                'merchant_name'     => $t->merchant_name,
+                'channel'           => $t->channel,
+                'installment_no'    => null,
+                'installment_total' => null,
+            ])->all();
     }
 
     public function fetchCards(): array
     {
-        $result = $this->rpc('cards.list');
+        $customer = $this->resolveCustomer();
 
-        return collect($result['cards'] ?? [])->map(fn ($c) => [
-            'type'           => $c['type'],
-            'masked_number'  => $c['maskedNumber'],
-            'expiry_month'   => (int) explode('/', $c['expiry'])[0],
-            'expiry_year'    => (int) explode('/', $c['expiry'])[1],
-            'holder_name'    => $c['holderName'],
-            'credit_limit'   => isset($c['creditLimit']) ? (float) $c['creditLimit'] : null,
-            'current_debt'   => (float) ($c['currentDebt'] ?? 0),
-            'available_limit'=> isset($c['creditLimit'], $c['currentDebt'])
-                ? (float) $c['creditLimit'] - (float) $c['currentDebt']
-                : null,
-            'statement_day'  => $c['statementDay'] ?? null,
-            'due_day'        => $c['dueDay'] ?? null,
-        ])->all();
+        return FakeBankCard::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($c) => [
+                'type'            => $c->type,
+                'masked_number'   => $c->masked_number,
+                'expiry_month'    => (int) explode('/', $c->expiry)[0],
+                'expiry_year'     => (int) explode('/', $c->expiry)[1],
+                'holder_name'     => $c->holder_name,
+                'credit_limit'    => $c->credit_limit !== null ? (float) $c->credit_limit : null,
+                'current_debt'    => (float) ($c->current_debt ?? 0),
+                'available_limit' => $c->credit_limit !== null
+                    ? (float) $c->credit_limit - (float) ($c->current_debt ?? 0)
+                    : null,
+                'statement_day'   => $c->statement_day,
+                'due_day'         => $c->due_day,
+            ])->all();
     }
 
     public function fetchLoans(): array
     {
-        $result = $this->rpc('loans.list');
+        $customer = $this->resolveCustomer();
 
-        return collect($result['loans'] ?? [])->map(fn ($l) => [
-            'external_id'          => $l['loanId'],
-            'type'                 => $l['type'],
-            'principal'            => (float) $l['principal'],
-            'current_balance'      => (float) $l['currentBalance'],
-            'interest_rate'        => (float) $l['interestRate'],
-            'total_installments'   => (int) $l['totalInstallments'],
-            'paid_installments'    => (int) $l['paidInstallments'],
-            'next_payment_date'    => $l['nextPaymentDate'] ?? null,
-            'next_payment_amount'  => isset($l['nextPaymentAmount']) ? (float) $l['nextPaymentAmount'] : null,
-        ])->all();
+        return FakeBankLoan::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($l) => [
+                'external_id'         => $l->external_id,
+                'type'                => $l->type,
+                'principal'           => (float) $l->principal,
+                'current_balance'     => (float) $l->current_balance,
+                'interest_rate'       => (float) $l->interest_rate,
+                'total_installments'  => (int) $l->total_installments,
+                'paid_installments'   => (int) $l->paid_installments,
+                'next_payment_date'   => $l->next_payment_date,
+                'next_payment_amount' => $l->next_payment_amount !== null
+                    ? (float) $l->next_payment_amount : null,
+            ])->all();
     }
 
-    private function rpc(string $method, array $params = []): array
+    private function resolveCustomer(): FakeBankCustomer
     {
-        $response = Http::withHeaders(['X-Api-Key' => $this->credentials['api_key']])
-            ->timeout(15)
-            ->retry(2, 200)
-            ->post($this->apiUrl('jsonrpc'), [
-                'jsonrpc' => '2.0',
-                'method'  => $method,
-                'params'  => $params,
-                'id'      => $this->rpcId++,
-            ]);
-
-        $response->throw();
-
-        $body = $response->json();
-
-        if (isset($body['error'])) {
-            throw new \RuntimeException(
-                "JSON-RPC error [{$body['error']['code']}]: {$body['error']['message']}"
-            );
+        if ($this->customer) {
+            return $this->customer;
         }
 
-        return $body['result'] ?? [];
-    }
+        $apiKey    = $this->credentials['api_key'] ?? null;
+        $customers = FakeBankCustomer::where('bank_slug', self::SLUG)->get();
 
-    private function normalizeTransaction(array $t): array
-    {
-        return [
-            'external_id'       => $t['id'],
-            'posted_at'         => $t['postedAt'],
-            'amount'            => (float) $t['amount'],
-            'currency'          => $t['currency'],
-            'description'       => $t['description'],
-            'merchant_name'     => $t['merchant'] ?? null,
-            'channel'           => $t['channel'] ?? null,
-            'installment_no'    => null,
-            'installment_total' => null,
-        ];
+        $customer = $customers->first(
+            fn ($c) => ($c->api_credentials['api_key'] ?? null) === $apiKey
+        );
+
+        if (! $customer) {
+            throw new \RuntimeException('Akbank: kimlik doğrulama başarısız.');
+        }
+
+        return $this->customer = $customer;
     }
 }

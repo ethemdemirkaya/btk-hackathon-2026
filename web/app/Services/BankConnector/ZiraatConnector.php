@@ -2,140 +2,138 @@
 
 namespace App\Services\BankConnector;
 
+use App\Models\FakeBank\FakeBankAccount;
+use App\Models\FakeBank\FakeBankCard;
+use App\Models\FakeBank\FakeBankCustomer;
+use App\Models\FakeBank\FakeBankLoan;
+use App\Models\FakeBank\FakeBankTransaction;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 
 /**
- * Ziraat Bankası — REST + Bearer Token
+ * Ziraat Bankası — Doğrudan model sorgusu (HTTP self-call olmadan)
  * Credentials: { tckn, password }
  */
 class ZiraatConnector extends AbstractBankConnector
 {
-    private ?string $token = null;
+    private const SLUG = 'ziraat';
+    private ?FakeBankCustomer $customer = null;
 
     public function fetchAccounts(): array
     {
-        $token    = $this->authenticate();
-        $response = $this->http()->withToken($token)
-            ->get($this->apiUrl('accounts'));
+        $customer = $this->resolveCustomer();
 
-        $response->throw();
-
-        return collect($response->json('accounts', []))->map(fn ($a) => [
-            'external_id'       => $a['id'],
-            'account_type'      => $a['account_type'],
-            'iban'              => $a['iban'] ?? null,
-            'currency'          => $a['currency'],
-            'balance'           => (float) $a['balance'],
-            'available_balance' => (float) $a['available_balance'],
-        ])->all();
+        return FakeBankAccount::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($a) => [
+                'external_id'       => $a->external_id,
+                'account_type'      => $a->account_type,
+                'iban'              => $a->iban,
+                'currency'          => $a->currency,
+                'balance'           => (float) $a->balance,
+                'available_balance' => (float) $a->available_balance,
+            ])->all();
     }
 
     public function fetchTransactions(string $externalAccountId, Carbon $from): array
     {
-        $token       = $this->authenticate();
-        $transactions = [];
-        $page        = 1;
+        $customer = $this->resolveCustomer();
 
-        do {
-            $response = $this->http()->withToken($token)
-                ->get($this->apiUrl("accounts/{$externalAccountId}/transactions"), [
-                    'page'     => $page,
-                    'per_page' => 100,
-                    'from'     => $from->format('Y-m-d'),
-                ]);
+        $account = FakeBankAccount::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->where('external_id', $externalAccountId)
+            ->first();
 
-            $response->throw();
+        if (! $account) {
+            return [];
+        }
 
-            $data      = $response->json();
-            $items     = $data['transactions'] ?? [];
-            $lastPage  = $data['pagination']['last_page'] ?? 1;
-
-            foreach ($items as $t) {
-                $transactions[] = $this->normalizeTransaction($t);
-            }
-
-            $page++;
-        } while ($page <= $lastPage);
-
-        return $transactions;
+        return FakeBankTransaction::where('bank_slug', self::SLUG)
+            ->where('fake_account_id', $account->id)
+            ->where('posted_at', '>=', $from->toDateTimeString())
+            ->orderByDesc('posted_at')
+            ->get()
+            ->map(fn ($t) => $this->normalizeTx($t))
+            ->all();
     }
 
     public function fetchCards(): array
     {
-        $token    = $this->authenticate();
-        $response = $this->http()->withToken($token)
-            ->get($this->apiUrl('cards'));
+        $customer = $this->resolveCustomer();
 
-        $response->throw();
-
-        return collect($response->json('cards', []))->map(fn ($c) => [
-            'type'           => $c['type'],
-            'masked_number'  => $c['masked_number'],
-            'expiry_month'   => (int) explode('/', $c['expiry'])[0],
-            'expiry_year'    => (int) explode('/', $c['expiry'])[1],
-            'holder_name'    => $c['holder_name'],
-            'credit_limit'   => isset($c['credit_limit']) ? (float) $c['credit_limit'] : null,
-            'current_debt'   => (float) ($c['current_debt'] ?? 0),
-            'available_limit'=> isset($c['credit_limit'], $c['current_debt'])
-                ? (float) $c['credit_limit'] - (float) $c['current_debt']
-                : null,
-            'statement_day'  => $c['statement_day'] ?? null,
-            'due_day'        => $c['due_day'] ?? null,
-        ])->all();
+        return FakeBankCard::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($c) => [
+                'type'            => $c->type,
+                'masked_number'   => $c->masked_number,
+                'expiry_month'    => (int) explode('/', $c->expiry)[0],
+                'expiry_year'     => (int) explode('/', $c->expiry)[1],
+                'holder_name'     => $c->holder_name,
+                'credit_limit'    => $c->credit_limit !== null ? (float) $c->credit_limit : null,
+                'current_debt'    => (float) ($c->current_debt ?? 0),
+                'available_limit' => $c->credit_limit !== null
+                    ? (float) $c->credit_limit - (float) ($c->current_debt ?? 0)
+                    : null,
+                'statement_day'   => $c->statement_day,
+                'due_day'         => $c->due_day,
+            ])->all();
     }
 
     public function fetchLoans(): array
     {
-        $token    = $this->authenticate();
-        $response = $this->http()->withToken($token)
-            ->get($this->apiUrl('loans'));
+        $customer = $this->resolveCustomer();
 
-        $response->throw();
-
-        return collect($response->json('loans', []))->map(fn ($l) => [
-            'external_id'          => $l['id'],
-            'type'                 => $l['type'],
-            'principal'            => (float) $l['principal'],
-            'current_balance'      => (float) $l['current_balance'],
-            'interest_rate'        => (float) $l['interest_rate'],
-            'total_installments'   => (int) $l['total_installments'],
-            'paid_installments'    => (int) $l['paid_installments'],
-            'next_payment_date'    => $l['next_payment_date'] ?? null,
-            'next_payment_amount'  => isset($l['next_payment_amount']) ? (float) $l['next_payment_amount'] : null,
-        ])->all();
+        return FakeBankLoan::where('bank_slug', self::SLUG)
+            ->where('fake_customer_id', $customer->id)
+            ->get()
+            ->map(fn ($l) => [
+                'external_id'         => $l->external_id,
+                'type'                => $l->type,
+                'principal'           => (float) $l->principal,
+                'current_balance'     => (float) $l->current_balance,
+                'interest_rate'       => (float) $l->interest_rate,
+                'total_installments'  => (int) $l->total_installments,
+                'paid_installments'   => (int) $l->paid_installments,
+                'next_payment_date'   => $l->next_payment_date,
+                'next_payment_amount' => $l->next_payment_amount !== null
+                    ? (float) $l->next_payment_amount : null,
+            ])->all();
     }
 
-    private function authenticate(): string
+    private function resolveCustomer(): FakeBankCustomer
     {
-        if ($this->token) {
-            return $this->token;
+        if ($this->customer) {
+            return $this->customer;
         }
 
-        $response = Http::post($this->apiUrl('auth/login'), [
-            'tckn'     => $this->credentials['tckn'],
-            'password' => $this->credentials['password'],
-        ]);
+        $tckn     = $this->credentials['tckn'] ?? $this->credentials['username'] ?? null;
+        $password = $this->credentials['password'] ?? null;
 
-        $response->throw();
+        $customer = FakeBankCustomer::where('bank_slug', self::SLUG)
+            ->where('tckn', $tckn)
+            ->first();
 
-        $this->token = $response->json('token');
+        if (! $customer || ! Hash::check((string) $password, $customer->password_hash)) {
+            throw new \RuntimeException('Ziraat: kimlik doğrulama başarısız.');
+        }
 
-        return $this->token;
+        return $this->customer = $customer;
     }
 
-    private function normalizeTransaction(array $t): array
+    private function normalizeTx(FakeBankTransaction $t): array
     {
         return [
-            'external_id'       => $t['id'],
-            'posted_at'         => $t['posted_at'],
-            'amount'            => (float) $t['amount'],
-            'currency'          => $t['currency'],
-            'description'       => $t['description'],
-            'merchant_name'     => $t['merchant_name'] ?? null,
-            'channel'           => $t['channel'] ?? null,
-            'installment_no'    => $t['installment_no'] ?? null,
-            'installment_total' => $t['installment_total'] ?? null,
+            'external_id'       => $t->external_id,
+            'posted_at'         => $t->posted_at,
+            'amount'            => (float) $t->amount,
+            'currency'          => $t->currency,
+            'description'       => $t->description,
+            'merchant_name'     => $t->merchant_name,
+            'channel'           => $t->channel,
+            'installment_no'    => $t->installment_no,
+            'installment_total' => $t->installment_total,
         ];
     }
 }
