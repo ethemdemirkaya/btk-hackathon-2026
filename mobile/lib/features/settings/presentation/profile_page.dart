@@ -369,15 +369,117 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     _TapRow(
                         icon: Icons.help_outline,
                         label: 'Yardım & Destek',
-                        onTap: () {}),
+                        onTap: () => _showInfoSheet(
+                              context,
+                              title: 'Yardım & Destek',
+                              icon: Icons.help_outline,
+                              iconColor: AppColors.accent,
+                              sections: const [
+                                _InfoBlock(
+                                  heading: 'SIKÇA SORULAN SORULAR',
+                                  body: 'Banka hesabımı nasıl bağlarım?\n'
+                                      'Banka Bağlantıları sayfasından bankanızı seçip demo bağlantı kurabilirsiniz.\n\n'
+                                      'AI ajanları nasıl çalışır?\n'
+                                      'Gemini 2.5 Pro modeli finansal verilerinizi analiz ederek kişiselleştirilmiş öneriler sunar.\n\n'
+                                      'Verilerim güvende mi?\n'
+                                      'Hassas veriler flutter_secure_storage ile şifrelenir; hiçbir veri üçüncü taraflarla paylaşılmaz.\n\n'
+                                      'Bildirimler gelmiyor?\n'
+                                      'Profil › Bildirimler ayarını ve telefon bildirim izinlerini kontrol edin.',
+                                ),
+                                _InfoBlock(heading: 'İLETİŞİM', body: ''),
+                                _InfoContact(
+                                  icon: Icons.email_outlined,
+                                  label: 'E-posta',
+                                  value: 'support@paranette.app',
+                                ),
+                                _InfoContact(
+                                  icon: Icons.code_outlined,
+                                  label: 'GitHub',
+                                  value: 'github.com/ethemdemirkaya/btk-hackathon-2026',
+                                ),
+                              ],
+                            )),
                     _TapRow(
                         icon: Icons.privacy_tip_outlined,
-                        label: 'Gizlilik politikası',
-                        onTap: () {}),
+                        label: 'Gizlilik Politikası',
+                        onTap: () => _showInfoSheet(
+                              context,
+                              title: 'Gizlilik Politikası',
+                              icon: Icons.privacy_tip_outlined,
+                              iconColor: const Color(0xFF28C76F),
+                              sections: const [
+                                _InfoBlock(
+                                  heading: 'SON GÜNCELLEME',
+                                  body: 'Mayıs 2026',
+                                ),
+                                _InfoBlock(
+                                  heading: '1. TOPLANAN VERİLER',
+                                  body: 'Finansal işlemleriniz, bütçe hedefleriniz ve uygulama tercihleri yerel cihazınızda saklanır. '
+                                      'API sunucumuz yalnızca kimlik doğrulama ve senkronizasyon için gerekli yapılandırılmış verileri işler.',
+                                ),
+                                _InfoBlock(
+                                  heading: '2. VERİ KULLANIMI',
+                                  body: 'Verileriniz AI ajan analizleri ve kişisel finans önerileri üretmek amacıyla kullanılır. '
+                                      'Verileriniz hiçbir üçüncü tarafa satılmaz veya ticari amaçla paylaşılmaz.',
+                                ),
+                                _InfoBlock(
+                                  heading: '3. GÜVENLİK',
+                                  body: 'Hassas veriler flutter_secure_storage ile AES şifreleme kullanılarak korunur. '
+                                      'Sunucu ile tüm iletişim HTTPS/TLS üzerinden gerçekleştirilir. PIN ve biyometrik doğrulama zorunludur.',
+                                ),
+                                _InfoBlock(
+                                  heading: '4. ÜÇÜNCÜ TARAF HİZMETLER',
+                                  body: '• Google Gemini API — AI analizleri (Google Gizlilik Politikası geçerlidir)\n'
+                                      '• Yahoo Finance — Döviz kuru ve piyasa verileri\n'
+                                      'Bu hizmetlerin kendi gizlilik politikaları mevcuttur.',
+                                ),
+                                _InfoBlock(
+                                  heading: '5. İLETİŞİM',
+                                  body: 'Gizlilikle ilgili sorularınız için: privacy@paranette.app',
+                                ),
+                              ],
+                            )),
                     _TapRow(
                         icon: Icons.description_outlined,
-                        label: 'Kullanım koşulları',
-                        onTap: () {}),
+                        label: 'Kullanım Koşulları',
+                        onTap: () => _showInfoSheet(
+                              context,
+                              title: 'Kullanım Koşulları',
+                              icon: Icons.description_outlined,
+                              iconColor: const Color(0xFFFF9F43),
+                              sections: const [
+                                _InfoBlock(
+                                  heading: 'SON GÜNCELLEME',
+                                  body: 'Mayıs 2026',
+                                ),
+                                _InfoBlock(
+                                  heading: '1. KABUL EDİLEN KULLANIM',
+                                  body: 'Paranette yalnızca kişisel finans yönetimi amacıyla kullanılabilir. '
+                                      'Uygulamayı ticari, yasadışı veya zararlı amaçlarla kullanamazsınız.',
+                                ),
+                                _InfoBlock(
+                                  heading: '2. HESAP GÜVENLİĞİ',
+                                  body: 'PIN kodunuzu ve biyometrik kimlik doğrulama ayarlarınızı güvende tutmak tamamen sizin sorumluluğunuzdadır. '
+                                      'Şüpheli bir erişim fark ederseniz derhal şifrenizi değiştirin.',
+                                ),
+                                _InfoBlock(
+                                  heading: '3. SORUMLULUK REDDİ',
+                                  body: 'Paranette finansal tavsiye vermez. Uygulama içindeki AI önerileri bilgi amaçlıdır; '
+                                      'tüm yatırım ve finansal kararlar kullanıcının kendi sorumluluğundadır.',
+                                ),
+                                _InfoBlock(
+                                  heading: '4. FİKRİ MÜLKİYET',
+                                  body: 'Uygulama, tasarım ve içerikler BTK Akademi Hackathon 2026 projesi kapsamında geliştirilmiş olup '
+                                      'tüm hakları Paranette ekibine aittir.',
+                                ),
+                                _InfoBlock(
+                                  heading: '5. DEĞİŞİKLİKLER',
+                                  body: 'Bu koşullar önceden bildirim yapılmaksızın güncellenebilir. '
+                                      'Uygulamayı kullanmaya devam etmeniz güncel koşulları kabul ettiğiniz anlamına gelir.\n\n'
+                                      'İletişim: legal@paranette.app',
+                                ),
+                              ],
+                            )),
                   ]),
                   const SizedBox(height: 24),
 
@@ -617,7 +719,7 @@ class _IncomeCard extends StatelessWidget {
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: c.bg,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: c.border),
                 ),
@@ -1247,6 +1349,175 @@ class _PwField extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Info bottom sheet ─────────────────────────────────────────────────
+
+void _showInfoSheet(
+  BuildContext context, {
+  required String title,
+  required IconData icon,
+  required Color iconColor,
+  required List<Widget> sections,
+}) {
+  final c = context.appColors;
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetCtx) => DraggableScrollableSheet(
+      initialChildSize: 0.78,
+      maxChildSize: 0.93,
+      minChildSize: 0.35,
+      expand: false,
+      builder: (_, scrollCtrl) => Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border(top: BorderSide(color: c.border)),
+        ),
+        child: Column(
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: c.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 8, 10),
+              child: Row(children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: c.text1,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(sheetCtx),
+                  icon: Icon(Icons.close_rounded, size: 20, color: c.text3),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                ),
+              ]),
+            ),
+            Divider(height: 1, color: c.border),
+            Expanded(
+              child: ListView(
+                controller: scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                children: sections,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _InfoBlock extends StatelessWidget {
+  final String? heading;
+  final String body;
+  const _InfoBlock({this.heading, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (heading != null) ...[
+            Text(
+              heading!,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accent,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (body.isNotEmpty)
+            Text(
+              body,
+              style: TextStyle(
+                fontSize: 13,
+                color: c.text2,
+                height: 1.65,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoContact extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _InfoContact(
+      {required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: c.bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.border),
+      ),
+      child: Row(children: [
+        Icon(icon, size: 16, color: AppColors.accent),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: c.text3,
+                      letterSpacing: 0.3)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: c.text1,
+                      fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+      ]),
     );
   }
 }

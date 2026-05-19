@@ -564,11 +564,14 @@ class _CalendarGrid extends StatelessWidget {
                                 : isToday
                                     ? AppColors.accent.withValues(alpha: 0.10)
                                     : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(10),
+                            shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: AppColors.accent)
-                                : null,
+                                ? Border.all(color: AppColors.accent, width: 2)
+                                : isToday
+                                    ? Border.all(
+                                        color: AppColors.accent.withValues(alpha: 0.5),
+                                        width: 1.5)
+                                    : null,
                           ),
                           child: Column(
                             mainAxisAlignment:
