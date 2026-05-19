@@ -306,9 +306,8 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
                         return _AlertCard(
                           alert: a,
                           currentRate: currentRate,
-                          onDelete: () => _deleteAlert(
-                              context,
-                              (a['id'] as num).toInt()),
+                          onTap: () => _showAlertActions(
+                              context, a),
                         );
                       },
                     );
@@ -381,11 +380,135 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
     );
   }
 
-  Future<void> _deleteAlert(BuildContext context, int id) async {
-    try {
-      await DioClient.instance.delete(ApiEndpoints.fxAlert(id));
-      ref.invalidate(_fxAlertsProvider);
-    } catch (_) {}
+  void _showAlertActions(BuildContext context, Map<String, dynamic> alert) {
+    final c = context.appColors;
+    final id = (alert['id'] as num).toInt();
+    final currency = alert['currency'] as String? ?? '';
+    final condition = alert['condition'] as String? ?? 'above';
+    final threshold = (alert['threshold'] as num?)?.toDouble() ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: c.card,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                    color: c.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            // Alarm özeti
+            Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: (condition == 'above' ? c.negative : c.positive)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    condition == 'above'
+                        ? Icons.arrow_upward_rounded
+                        : Icons.arrow_downward_rounded,
+                    color: condition == 'above' ? c.negative : c.positive,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(currency,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: c.text1)),
+                      Text(
+                        '₺${threshold.toStringAsFixed(2)} ${condition == 'above' ? 'üzerine çıkarsa' : 'altına inerse'}',
+                        style: TextStyle(fontSize: 12, color: c.text3),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _showEditAlarm(context, alert);
+                },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Düzenle',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: const Color(0xFF051929),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  try {
+                    await DioClient.instance
+                        .delete(ApiEndpoints.fxAlert(id));
+                    ref.invalidate(_fxAlertsProvider);
+                  } catch (_) {}
+                },
+                icon: Icon(Icons.delete_outline_rounded,
+                    size: 18, color: c.negative),
+                label: Text('Sil',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, color: c.negative)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: c.negative.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditAlarm(BuildContext context, Map<String, dynamic> alert) {
+    final c = context.appColors;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: c.card,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _EditAlertSheet(
+        alert: alert,
+        onSaved: () => ref.invalidate(_fxAlertsProvider),
+      ),
+    );
   }
 }
 
@@ -393,11 +516,11 @@ class _FxAlertsPageState extends ConsumerState<FxAlertsPage> {
 class _AlertCard extends StatelessWidget {
   final Map<String, dynamic> alert;
   final double? currentRate;
-  final VoidCallback onDelete;
+  final VoidCallback onTap;
   const _AlertCard(
       {required this.alert,
       this.currentRate,
-      required this.onDelete});
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +542,9 @@ class _AlertCard extends StatelessWidget {
     final dirLabel =
         isAbove ? 'üzerine çıkarsa' : 'altına inerse';
 
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -521,16 +646,11 @@ class _AlertCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: AppColors.accent)),
                 ),
-              GestureDetector(
-                onTap: onDelete,
-                child: Icon(
-                    Icons.delete_outline,
-                    size: 18,
-                    color: c.negative),
-              ),
+              Icon(Icons.chevron_right, size: 18, color: c.text3),
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -649,7 +769,7 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _currency,
+            initialValue: _currency,
             dropdownColor: c.card,
             style: TextStyle(
                 color: c.text1, fontSize: 14),
@@ -729,6 +849,197 @@ class _AddAlertSheetState extends State<_AddAlertSheet> {
               label: const Text('Alarm Oluştur',
                   style: TextStyle(
                       fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Edit alert sheet ──────────────────────────────────────────────────
+class _EditAlertSheet extends StatefulWidget {
+  final Map<String, dynamic> alert;
+  final VoidCallback onSaved;
+  const _EditAlertSheet({required this.alert, required this.onSaved});
+
+  @override
+  State<_EditAlertSheet> createState() => _EditAlertSheetState();
+}
+
+class _EditAlertSheetState extends State<_EditAlertSheet> {
+  late String _currency;
+  late String _condition;
+  late final TextEditingController _rateCtrl;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currency = widget.alert['currency'] as String? ?? 'USD';
+    _condition = widget.alert['condition'] as String? ?? 'above';
+    final threshold = (widget.alert['threshold'] as num?)?.toDouble() ?? 0;
+    _rateCtrl = TextEditingController(
+        text: threshold == threshold.truncateToDouble()
+            ? threshold.toStringAsFixed(0)
+            : threshold.toStringAsFixed(2));
+  }
+
+  @override
+  void dispose() {
+    _rateCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final rate = double.tryParse(_rateCtrl.text.replaceAll(',', '.'));
+    if (rate == null || rate <= 0) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Geçerli kur girin')));
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      final id = (widget.alert['id'] as num).toInt();
+      await DioClient.instance.patch(ApiEndpoints.fxAlert(id), data: {
+        'currency': _currency,
+        'condition': _condition,
+        'threshold': rate,
+      });
+      widget.onSaved();
+      if (mounted) Navigator.pop(context);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Alarm güncellenemedi.';
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(msg)));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  InputDecoration _deco(String label, {IconData? icon}) {
+    final c = context.appColors;
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: c.text3, fontSize: 13),
+      prefixIcon: icon != null ? Icon(icon, size: 18, color: c.text3) : null,
+      filled: true,
+      fillColor: c.bg,
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.border)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.5)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                  color: c.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text('Kur Alarmını Düzenle',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: c.text1)),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: c.text2, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: _currency,
+            dropdownColor: c.card,
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: _deco('Döviz / Varlık'),
+            items: _currencies
+                .map((cur) => DropdownMenuItem(
+                      value: cur,
+                      child: Text('$cur — ${_currencyLabels[cur] ?? cur}'),
+                    ))
+                .toList(),
+            onChanged: (v) => setState(() => _currency = v!),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _DirBtn(
+                label: 'Üzerine çıkarsa',
+                selected: _condition == 'above',
+                color: c.negative,
+                icon: Icons.arrow_upward,
+                onTap: () => setState(() => _condition = 'above'),
+              ),
+              const SizedBox(width: 8),
+              _DirBtn(
+                label: 'Altına inerse',
+                selected: _condition == 'below',
+                color: c.positive,
+                icon: Icons.arrow_downward,
+                onTap: () => setState(() => _condition = 'below'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _rateCtrl,
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: _deco('Hedef Kur (₺)', icon: Icons.attach_money),
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))
+            ],
+            autofocus: true,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _loading ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: const Color(0xFF051929),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.save_outlined, size: 18),
+              label: const Text('Güncelle',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ),
         ],

@@ -82,6 +82,23 @@ class FxAlertController extends Controller
         return response()->json(['alert' => $alert], 201);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $alert = FxAlert::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $data = $request->validate([
+            'currency'  => 'sometimes|string|max:10',
+            'condition' => 'sometimes|in:above,below',
+            'threshold' => 'sometimes|numeric|min:0.01',
+        ]);
+
+        $alert->update($data + ['triggered_at' => null]);
+
+        return response()->json(['alert' => $alert]);
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         $alert = FxAlert::where('id', $id)

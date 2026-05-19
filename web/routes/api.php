@@ -142,6 +142,7 @@ Route::prefix('v1')->group(function () {
         // FX / Gold Alerts
         Route::get   ('fx-alerts',          [FxAlertController::class, 'index']);
         Route::post  ('fx-alerts',          [FxAlertController::class, 'store']);
+        Route::patch ('fx-alerts/{id}',     [FxAlertController::class, 'update']);
         Route::delete('fx-alerts/{id}',     [FxAlertController::class, 'destroy']);
         Route::get   ('fx-alerts/rates',    [FxAlertController::class, 'rates']);
 
