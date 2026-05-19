@@ -1017,6 +1017,7 @@
             legend: {
               position: 'top', horizontalAlign: 'right', fontFamily: fontFam,
               markers: { radius: 50, width: 10, height: 10 },
+              labels: { colors: textColor },
             },
             grid: { borderColor: gridColor, strokeDashArray: 4, padding: { top: -10 } },
             dataLabels: { enabled: false },
@@ -1088,7 +1089,8 @@
 
       if (document.getElementById('inflationBarChart') && infData.length > 0) {
         new ApexCharts(document.getElementById('inflationBarChart'), {
-          chart: { type: 'bar', height: 230, toolbar: { show: false }, fontFamily: fontFam },
+          chart: { type: 'bar', height: 230, toolbar: { show: false }, fontFamily: fontFam, background: 'transparent' },
+          theme: { mode: isDark ? 'dark' : 'light' },
           series: [
             { name: 'Kişisel Enflasyon', data: infData.map(r => r.personal) },
             { name: 'TÜFE',              data: infData.map(r => r.tufe) },
@@ -1105,7 +1107,7 @@
           },
           grid: { borderColor: gridColor, strokeDashArray: 4 },
           dataLabels: { enabled: false },
-          legend: { position: 'top', horizontalAlign: 'right', fontFamily: fontFam },
+          legend: { position: 'top', horizontalAlign: 'right', fontFamily: fontFam, labels: { colors: textColor } },
           tooltip: { y: { formatter: v => '%' + v }, theme: isDark ? 'dark' : 'light' },
           plotOptions: { bar: { columnWidth: '55%', borderRadius: 4, borderRadiusApplication: 'end' } },
         }).render();
