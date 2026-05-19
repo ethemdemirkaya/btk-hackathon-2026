@@ -556,7 +556,7 @@ class _BillFormSheetState extends State<_BillFormSheet> {
       if (_isEdit) {
         final id = (widget.existing!['id'] as num).toInt();
         await DioClient.instance
-            .put(ApiEndpoints.bill(id), data: payload);
+            .patch(ApiEndpoints.bill(id), data: payload);
       } else {
         await DioClient.instance
             .post(ApiEndpoints.bills, data: payload);
