@@ -199,7 +199,7 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     _DrawerItem(
                       icon: Icons.calculate_outlined,
-                      label: 'Kadar Simülatörü',
+                      label: 'Karar Simülatörü',
                       route: '/simulator',
                       current: loc,
                     ),
