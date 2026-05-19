@@ -5,29 +5,6 @@
   <x-slot name="pageCss">
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}">
     <style>
-      /* ── Stat cards ────────────────────────────────────────────────────────── */
-      .stat-card { transition: transform .18s ease, box-shadow .18s ease; }
-      .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(115,103,240,.15) !important; }
-      .stat-card .accent-bar {
-        height: 3px;
-        border-radius: 3px 3px 0 0;
-        position: absolute;
-        top: 0; left: 0; right: 0;
-      }
-
-      /* ── Stat icon gradient wrappers ───────────────────────────────────────── */
-      .stat-icon-wrap {
-        width: 46px; height: 46px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-      }
-      .stat-icon-wrap.gradient-danger  { background: linear-gradient(135deg, #EA5455, #f0797a); }
-      .stat-icon-wrap.gradient-warning { background: linear-gradient(135deg, #FF9F43, #ffb470); }
-      .stat-icon-wrap.gradient-primary { background: linear-gradient(135deg, #7367F0, #9e95f5); }
-      .stat-icon-wrap.gradient-info    { background: linear-gradient(135deg, #00CFE8, #33d9f4); }
-      .stat-icon-wrap.gradient-success { background: linear-gradient(135deg, #28C76F, #55d98d); }
-
       /* ── Loan card accent system ────────────────────────────────────────────── */
       .loan-card {
         transition: transform .18s ease, box-shadow .18s ease;
@@ -170,33 +147,6 @@
         border: 2px dashed rgba(115,103,240,.3);
       }
 
-      /* ── Summary hero banner ──────────────────────────────────────────────────── */
-      .loans-hero-banner {
-        background: linear-gradient(135deg, #7367F0 0%, #9e95f5 60%, #CE9FFC 100%);
-        border-radius: .75rem;
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-      }
-      .loans-hero-banner::before {
-        content: '';
-        position: absolute; top: -50px; right: -50px;
-        width: 200px; height: 200px;
-        background: rgba(255,255,255,.07); border-radius: 50%;
-        pointer-events: none;
-      }
-      .loans-hero-banner::after {
-        content: '';
-        position: absolute; bottom: -70px; left: 30%;
-        width: 240px; height: 240px;
-        background: rgba(255,255,255,.04); border-radius: 50%;
-        pointer-events: none;
-      }
-      .loans-hero-banner .hero-divider {
-        width: 1px; background: rgba(255,255,255,.25);
-        align-self: stretch;
-      }
-
       /* ── Installment dot strip ────────────────────────────────────────────────── */
       .dot-strip { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
       .inst-dot {
@@ -226,95 +176,34 @@
 
   @if($loans->isNotEmpty())
 
-  {{-- ══ Hero summary banner ════════════════════════════════════════════════════ --}}
+  {{-- ══ Stat cards ═══════════════════════════════════════════════════════════ --}}
   @php
     $avgRate = $loans->count() > 0 ? round($loans->avg('interest_rate'), 2) : 0;
     $totalCount = $loans->count();
+    $totalRemainingInstallments = $loans->sum('remaining_installments');
     $daysLeft = $nextDue
       ? (int) round(now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($nextDue->next_payment_date)->startOfDay(), false))
       : null;
   @endphp
-  <div class="loans-hero-banner p-4 p-md-5 mb-6">
-    <div class="row g-4 align-items-center">
-      {{-- Toplam Kalan Borç --}}
-      <div class="col-6 col-md-3 text-center text-md-start">
-        <div class="small opacity-75 mb-1">
-          <i class="icon-base ti tabler-file-invoice icon-14px me-1"></i>Toplam Kalan Borç
-        </div>
-        <div class="h3 fw-bold mb-0">₺{{ number_format($totalBalance, 0, ',', '.') }}</div>
-        <div class="small opacity-75 mt-1">{{ $totalCount }} aktif kredi</div>
-      </div>
-
-      <div class="hero-divider d-none d-md-flex"></div>
-
-      {{-- Bu Ay Ödenecek --}}
-      <div class="col-6 col-md-3 text-center">
-        <div class="small opacity-75 mb-1">
-          <i class="icon-base ti tabler-calendar-due icon-14px me-1"></i>Bu Ay Ödenecek
-        </div>
-        <div class="h3 fw-bold mb-0">₺{{ number_format($totalNextPayment, 0, ',', '.') }}</div>
-        <div class="small opacity-75 mt-1">toplam taksit</div>
-      </div>
-
-      <div class="hero-divider d-none d-md-flex"></div>
-
-      {{-- En Yakın Vade --}}
-      <div class="col-6 col-md-3 text-center">
-        <div class="small opacity-75 mb-1">
-          <i class="icon-base ti tabler-clock-hour-4 icon-14px me-1"></i>En Yakın Vade
-        </div>
-        @if($nextDue && $nextDue->next_payment_date)
-          <div class="h3 fw-bold mb-0">{{ \Carbon\Carbon::parse($nextDue->next_payment_date)->format('d.m.Y') }}</div>
-          <div class="mt-1">
-            @if($daysLeft === 0)
-              <span class="badge" style="background:rgba(255,255,255,.25);font-size:.72rem;">Bugün!</span>
-            @elseif($daysLeft <= 3)
-              <span class="badge" style="background:rgba(234,84,85,.4);font-size:.72rem;">{{ $daysLeft }} gün kaldı</span>
-            @elseif($daysLeft <= 7)
-              <span class="badge" style="background:rgba(255,159,67,.35);font-size:.72rem;">{{ $daysLeft }} gün kaldı</span>
-            @else
-              <span class="small opacity-75">{{ $daysLeft }} gün kaldı</span>
-            @endif
-          </div>
-        @else
-          <div class="h3 fw-bold mb-0">—</div>
-          <div class="small opacity-75 mt-1">vade yok</div>
-        @endif
-      </div>
-
-      <div class="hero-divider d-none d-md-flex"></div>
-
-      {{-- Ortalama Faiz --}}
-      <div class="col-6 col-md-3 text-center text-md-end">
-        <div class="small opacity-75 mb-1">
-          <i class="icon-base ti tabler-percentage icon-14px me-1"></i>Ortalama Faiz (yıllık)
-        </div>
-        <div class="h3 fw-bold mb-0">%{{ $avgRate }}</div>
-        <div class="small opacity-75 mt-1">tüm krediler</div>
-      </div>
-    </div>
-  </div>
-
-  {{-- ══ Stat cards row ═════════════════════════════════════════════════════════ --}}
-  @php $totalRemainingInstallments = $loans->sum('remaining_installments'); @endphp
   <div class="row g-4 mb-6">
 
     {{-- Toplam Kalan Borç --}}
     <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card position-relative overflow-hidden h-100">
-        <div class="accent-bar bg-danger"></div>
-        <div class="card-body pt-4">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="text-muted small">Toplam Kalan Borç</span>
-              <div class="h5 fw-bold mt-1 mb-1 text-danger">₺{{ number_format($totalBalance, 0, ',', '.') }}</div>
-              <div class="d-flex align-items-center gap-1">
-                <i class="icon-base ti tabler-credit-card icon-14px text-muted"></i>
-                <span class="small text-muted">{{ $totalCount }} kredi</span>
+      <div class="card h-100 border-start border-3 border-danger">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="flex-grow-1 min-width-0">
+              <p class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Toplam Kalan Borç</p>
+              <h3 class="fw-bold text-danger mb-0 lh-1">₺{{ number_format($totalBalance, 0, ',', '.') }}</h3>
+              <div class="d-flex align-items-center gap-1 text-muted mt-2">
+                <i class="icon-base ti tabler-credit-card icon-14px"></i>
+                <span style="font-size:.78rem;">{{ $totalCount }} aktif kredi</span>
               </div>
             </div>
-            <div class="stat-icon-wrap gradient-danger">
-              <i class="icon-base ti tabler-file-invoice icon-22px text-white"></i>
+            <div class="avatar avatar-md flex-shrink-0">
+              <span class="avatar-initial rounded-3 bg-label-danger">
+                <i class="icon-base ti tabler-file-invoice icon-24px"></i>
+              </span>
             </div>
           </div>
         </div>
@@ -323,42 +212,57 @@
 
     {{-- Bu Ay Ödenecek --}}
     <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card position-relative overflow-hidden h-100">
-        <div class="accent-bar bg-warning"></div>
-        <div class="card-body pt-4">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="text-muted small">Bu Ay Ödenecek</span>
-              <div class="h5 fw-bold mt-1 mb-1 text-warning">₺{{ number_format($totalNextPayment, 0, ',', '.') }}</div>
-              <div class="d-flex align-items-center gap-1">
-                <i class="icon-base ti tabler-calendar-due icon-14px text-muted"></i>
-                <span class="small text-muted">aylık toplam taksit</span>
-              </div>
+      <div class="card h-100 border-start border-3 border-warning">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="flex-grow-1 min-width-0">
+              <p class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Bu Ay Ödenecek</p>
+              <h3 class="fw-bold text-warning mb-0 lh-1">₺{{ number_format($totalNextPayment, 0, ',', '.') }}</h3>
+              @if($nextDue && $nextDue->next_payment_date)
+                <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                  <span style="font-size:.78rem;" class="text-muted">
+                    <i class="icon-base ti tabler-calendar-due icon-13px me-1"></i>{{ \Carbon\Carbon::parse($nextDue->next_payment_date)->format('d.m.Y') }}
+                  </span>
+                  @if($daysLeft !== null)
+                    <span class="badge bg-label-{{ $daysLeft === 0 ? 'danger' : ($daysLeft <= 3 ? 'danger' : ($daysLeft <= 7 ? 'warning' : 'secondary')) }}" style="font-size:.65rem;">
+                      {{ $daysLeft === 0 ? 'Bugün!' : $daysLeft.' gün' }}
+                    </span>
+                  @endif
+                </div>
+              @else
+                <div class="d-flex align-items-center gap-1 text-muted mt-2">
+                  <i class="icon-base ti tabler-calendar-due icon-14px"></i>
+                  <span style="font-size:.78rem;">aylık toplam taksit</span>
+                </div>
+              @endif
             </div>
-            <div class="stat-icon-wrap gradient-warning">
-              <i class="icon-base ti tabler-calendar-due icon-22px text-white"></i>
+            <div class="avatar avatar-md flex-shrink-0">
+              <span class="avatar-initial rounded-3 bg-label-warning">
+                <i class="icon-base ti tabler-calendar-due icon-24px"></i>
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    {{-- Toplam Kalan Taksit --}}
+    {{-- Kalan Taksit Sayısı --}}
     <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card position-relative overflow-hidden h-100">
-        <div class="accent-bar bg-primary"></div>
-        <div class="card-body pt-4">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="text-muted small">Kalan Taksit Sayısı</span>
-              <div class="h5 fw-bold mt-1 mb-1 text-heading">{{ number_format($totalRemainingInstallments, 0, ',', '.') }}</div>
-              <div class="d-flex align-items-center gap-1">
-                <i class="icon-base ti tabler-list-numbers icon-14px text-muted"></i>
-                <span class="small text-muted">tüm krediler toplamı</span>
+      <div class="card h-100 border-start border-3 border-primary">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="flex-grow-1 min-width-0">
+              <p class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Kalan Taksit</p>
+              <h3 class="fw-bold text-heading mb-0 lh-1">{{ number_format($totalRemainingInstallments, 0, ',', '.') }}</h3>
+              <div class="d-flex align-items-center gap-1 text-muted mt-2">
+                <i class="icon-base ti tabler-list-numbers icon-14px"></i>
+                <span style="font-size:.78rem;">tüm krediler toplamı</span>
               </div>
             </div>
-            <div class="stat-icon-wrap gradient-primary">
-              <i class="icon-base ti tabler-list-numbers icon-22px text-white"></i>
+            <div class="avatar avatar-md flex-shrink-0">
+              <span class="avatar-initial rounded-3 bg-label-primary">
+                <i class="icon-base ti tabler-list-numbers icon-24px"></i>
+              </span>
             </div>
           </div>
         </div>
@@ -367,20 +271,21 @@
 
     {{-- Ortalama Faiz Oranı --}}
     <div class="col-sm-6 col-xl-3">
-      <div class="card stat-card position-relative overflow-hidden h-100">
-        <div class="accent-bar bg-info"></div>
-        <div class="card-body pt-4">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="text-muted small">Ortalama Faiz Oranı</span>
-              <div class="h5 fw-bold mt-1 mb-1 text-heading">%{{ $avgRate }}</div>
-              <div class="d-flex align-items-center gap-1">
-                <i class="icon-base ti tabler-percentage icon-14px text-muted"></i>
-                <span class="small text-muted">yıllık ağırlıklı ort.</span>
+      <div class="card h-100 border-start border-3 border-info">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="flex-grow-1 min-width-0">
+              <p class="text-muted mb-1" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Ortalama Faiz</p>
+              <h3 class="fw-bold text-heading mb-0 lh-1">%{{ $avgRate }}</h3>
+              <div class="d-flex align-items-center gap-1 text-muted mt-2">
+                <i class="icon-base ti tabler-percentage icon-14px"></i>
+                <span style="font-size:.78rem;">yıllık ağırlıklı ort.</span>
               </div>
             </div>
-            <div class="stat-icon-wrap gradient-info">
-              <i class="icon-base ti tabler-percentage icon-22px text-white"></i>
+            <div class="avatar avatar-md flex-shrink-0">
+              <span class="avatar-initial rounded-3 bg-label-info">
+                <i class="icon-base ti tabler-percentage icon-24px"></i>
+              </span>
             </div>
           </div>
         </div>

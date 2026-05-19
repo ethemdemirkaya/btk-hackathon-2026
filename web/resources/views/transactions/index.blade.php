@@ -69,7 +69,7 @@
       cursor: default;
     }
     .tx-row:last-child { border-bottom: none; }
-    .tx-row:hover { background: var(--bs-secondary-bg); }
+    .tx-row:hover { background: rgba(115,103,240,.07); }
 
     .tx-avatar { flex-shrink: 0; }
 

@@ -859,7 +859,7 @@
           @if($macroIndicators->has($type))
           @php $ind = $macroIndicators->get($type); @endphp
           <div class="col-6 col-md-4 col-xl-2">
-            <div class="p-3 rounded border h-100" style="background:var(--bs-secondary-bg);">
+            <div class="p-3 rounded border h-100" style="background:var(--bs-body-bg);">
               <div class="d-flex align-items-center gap-2 mb-2">
                 <div class="avatar avatar-sm flex-shrink-0">
                   <span class="avatar-initial rounded bg-label-{{ $ind->trend === 'up' ? 'success' : ($ind->trend === 'down' ? 'danger' : 'secondary') }}">
@@ -1040,7 +1040,7 @@
           series: catData.map(r => r.total),
           labels: catData.map(r => r.category),
           colors: [primary, success, warning, danger, info, '#38B2AC', '#ED64A6', '#9F7AEA'],
-          legend: { position: 'bottom', fontFamily: fontFam, fontSize: '12px', itemMargin: { horizontal: 6, vertical: 4 } },
+          legend: { position: 'bottom', fontFamily: fontFam, fontSize: '12px', itemMargin: { horizontal: 6, vertical: 4 }, labels: { colors: textColor } },
           dataLabels: { enabled: false },
           stroke: { width: 2 },
           plotOptions: {
