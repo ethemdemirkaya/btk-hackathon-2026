@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/api/api_endpoints.dart';
 import '../../../core/api/dio_client.dart';
 import '../../../core/theme/colors.dart';
@@ -15,6 +17,41 @@ final _calendarProvider = FutureProvider.autoDispose
       .get(ApiEndpoints.calendar, queryParameters: {'month': month});
   return res.data as Map<String, dynamic>;
 });
+
+// ── Notes (local, SharedPreferences) ─────────────────────────────────
+class _NotesNotifier extends StateNotifier<Map<String, String>> {
+  static const _prefKey = 'calendar_notes_v1';
+
+  _NotesNotifier() : super({}) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_prefKey);
+    if (raw != null) {
+      try {
+        state = Map<String, String>.from(json.decode(raw) as Map);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> setNote(String date, String text) async {
+    final next = Map<String, String>.from(state);
+    if (text.trim().isEmpty) {
+      next.remove(date);
+    } else {
+      next[date] = text.trim();
+    }
+    state = next;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefKey, json.encode(next));
+  }
+}
+
+final _notesProvider =
+    StateNotifierProvider<_NotesNotifier, Map<String, String>>(
+        (_) => _NotesNotifier());
 
 // API returns: 'bill', 'subscription', 'loan' — map them to display types
 String _normalizeType(String? raw) {
@@ -86,10 +123,28 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   void _nextMonth() =>
       setState(() => _month = DateTime(_month.year, _month.month + 1));
 
+  void _showNoteSheet(BuildContext context, String date, String? current) {
+    final c = context.appColors;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: c.card,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _NoteSheet(
+        date: date,
+        initialNote: current,
+        onSave: (text) async =>
+            ref.read(_notesProvider.notifier).setNote(date, text),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
     final async = ref.watch(_calendarProvider(_monthKey));
+    final notes = ref.watch(_notesProvider);
 
     return Scaffold(
       backgroundColor: c.bg,
@@ -249,6 +304,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                             month: _month,
                             eventsByDate: eventsByDate,
                             selectedDate: _selectedDate,
+                            notedDates: notes.keys.toSet(),
                             onSelect: (d) =>
                                 setState(() => _selectedDate = d),
                           ),
@@ -258,6 +314,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                 ? (eventsByDate[_selectedDate!] ??
                                     [])
                                 : [],
+                            note: _selectedDate != null
+                                ? notes[_selectedDate!]
+                                : null,
+                            onAddNote: _selectedDate == null
+                                ? null
+                                : () => _showNoteSheet(
+                                    context,
+                                    _selectedDate!,
+                                    notes[_selectedDate!]),
                           ),
                           _UpcomingEventsList(
                             eventsByDate: eventsByDate,
@@ -416,11 +481,13 @@ class _CalendarGrid extends StatelessWidget {
   final DateTime month;
   final Map<String, List<Map<String, dynamic>>> eventsByDate;
   final String? selectedDate;
+  final Set<String> notedDates;
   final ValueChanged<String> onSelect;
   const _CalendarGrid(
       {required this.month,
       required this.eventsByDate,
       required this.selectedDate,
+      required this.notedDates,
       required this.onSelect});
 
   @override
@@ -481,12 +548,15 @@ class _CalendarGrid extends StatelessWidget {
                       eventsByDate[dateStr] ?? [];
                   final isToday = dateStr == todayStr;
                   final isSelected = dateStr == selectedDate;
+                  final hasNote = notedDates.contains(dateStr);
                   return Expanded(
                     child: GestureDetector(
                       onTap: () => onSelect(dateStr),
                       child: AspectRatio(
                         aspectRatio: 1,
-                        child: Container(
+                        child: Stack(
+                          children: [
+                          Container(
                           margin: const EdgeInsets.all(1),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -571,9 +641,24 @@ class _CalendarGrid extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (hasNote)
+                          Positioned(
+                            top: 3,
+                            right: 3,
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFF59E0B),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
+                  ),
+                );
                 }),
               ),
           ],
@@ -587,8 +672,13 @@ class _CalendarGrid extends StatelessWidget {
 class _SelectedDayEvents extends StatelessWidget {
   final String? date;
   final List<Map<String, dynamic>> events;
+  final String? note;
+  final VoidCallback? onAddNote;
   const _SelectedDayEvents(
-      {required this.date, required this.events});
+      {required this.date,
+      required this.events,
+      this.note,
+      this.onAddNote});
 
   @override
   Widget build(BuildContext context) {
@@ -619,14 +709,70 @@ class _SelectedDayEvents extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: c.text1)),
                 ),
-                Text('Seçili Gün Etkinlikleri',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: c.text3)),
+                GestureDetector(
+                  onTap: onAddNote,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          note != null
+                              ? Icons.edit_note
+                              : Icons.note_add_outlined,
+                          size: 13,
+                          color: const Color(0xFFF59E0B),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          note != null ? 'Notu Düzenle' : 'Not Ekle',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
+          if (note != null && note!.isNotEmpty) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.sticky_note_2_outlined,
+                      size: 16, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      note!,
+                      style: TextStyle(
+                          fontSize: 13, color: c.text2, height: 1.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           events.isEmpty
               ? Container(
                   padding: const EdgeInsets.all(20),
@@ -1164,6 +1310,137 @@ class _WeekSummaryCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Note Sheet ───────────────────────────────────────────────────────
+class _NoteSheet extends StatefulWidget {
+  final String date;
+  final String? initialNote;
+  final Future<void> Function(String) onSave;
+  const _NoteSheet(
+      {required this.date, this.initialNote, required this.onSave});
+
+  @override
+  State<_NoteSheet> createState() => _NoteSheetState();
+}
+
+class _NoteSheetState extends State<_NoteSheet> {
+  late final TextEditingController _ctrl;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initialNote ?? '');
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    await widget.onSave(_ctrl.text);
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _delete() async {
+    setState(() => _saving = true);
+    await widget.onSave('');
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                  color: c.border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.initialNote != null ? 'Notu Düzenle' : 'Not Ekle',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: c.text1),
+                ),
+              ),
+              if (widget.initialNote != null)
+                IconButton(
+                  onPressed: _saving ? null : _delete,
+                  icon: Icon(Icons.delete_outline,
+                      color: c.negative, size: 20),
+                  tooltip: 'Notu Sil',
+                ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.close, color: c.text2, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _ctrl,
+            maxLines: 4,
+            autofocus: true,
+            style: TextStyle(color: c.text1, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Bu tarihe not ekle...',
+              hintStyle: TextStyle(color: c.text3, fontSize: 13),
+              filled: true,
+              fillColor: c.bg,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: c.border)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: c.border)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: AppColors.accent, width: 1.5)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: const Color(0xFF051929),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: Text(
+                _saving ? 'Kaydediliyor...' : 'Kaydet',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
