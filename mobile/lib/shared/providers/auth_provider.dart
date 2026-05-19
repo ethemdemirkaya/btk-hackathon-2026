@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
+import '../../core/api/api_endpoints.dart';
+import '../../core/api/dio_client.dart';
 import '../../core/storage/auth_storage.dart';
 
 class AuthState {
@@ -42,6 +45,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Attempt to revoke all tokens on the server. If the request fails
+    // (network error, expired token, etc.) we still clear local storage so
+    // the user is never left stuck on the authenticated screen.
+    try {
+      await DioClient.instance.delete(ApiEndpoints.authLogoutAll);
+    } on DioException {
+      // Ignore — proceed with local cleanup regardless.
+    } catch (_) {
+      // Ignore any other error as well.
+    }
     await AuthStorage.clear();
     state = const AuthState(isAuthenticated: false, isLoading: false);
   }

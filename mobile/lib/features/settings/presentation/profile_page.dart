@@ -747,6 +747,8 @@ class _IncomeCard extends StatelessWidget {
                             color: c.text1),
                         decoration: InputDecoration(
                           border: InputBorder.none,
+                          filled: true,
+                          fillColor: Colors.transparent,
                           hintText: '0',
                           hintStyle: TextStyle(color: c.text3),
                           isDense: true,

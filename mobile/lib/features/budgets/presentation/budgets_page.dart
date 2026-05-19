@@ -47,15 +47,90 @@ class _CatOption {
 }
 
 const _kPredefinedCats = [
+  // ── Alışveriş & Giyim ──────────────────────────────────────
   _CatOption('Giyim', Icons.checkroom_outlined),
+  _CatOption('Giyim & Aksesuar', Icons.checkroom_outlined),
+  _CatOption('Ayakkabı', Icons.shopping_bag_outlined),
+  _CatOption('Çanta & Aksesuar', Icons.shopping_bag_outlined),
+  _CatOption('Alışveriş', Icons.shopping_cart_outlined),
   _CatOption('Market', Icons.local_grocery_store_outlined),
-  _CatOption('Sağlık', Icons.health_and_safety_outlined),
-  _CatOption('Teknoloji', Icons.computer_outlined),
-  _CatOption('Hobi', Icons.sports_esports_outlined),
-  _CatOption('Eğlence', Icons.movie_outlined),
-  _CatOption('Ulaşım', Icons.directions_car_outlined),
+  _CatOption('Süpermarket', Icons.local_grocery_store_outlined),
+  // ── Yiyecek & İçecek ───────────────────────────────────────
   _CatOption('Yemek', Icons.restaurant_outlined),
+  _CatOption('Restoran', Icons.restaurant_outlined),
+  _CatOption('Kafe & Restoran', Icons.local_cafe_outlined),
+  _CatOption('Kafe', Icons.local_cafe_outlined),
+  _CatOption('Fast Food', Icons.fastfood_outlined),
+  _CatOption('Alkol & Sigara', Icons.local_bar_outlined),
+  // ── Ev & Yaşam ─────────────────────────────────────────────
+  _CatOption('Ev & Yaşam', Icons.home_outlined),
+  _CatOption('Kira', Icons.house_outlined),
+  _CatOption('Mobilya & Dekorasyon', Icons.chair_outlined),
+  _CatOption('Beyaz Eşya', Icons.kitchen_outlined),
+  _CatOption('Temizlik & Bakım', Icons.cleaning_services_outlined),
+  _CatOption('Evcil Hayvan', Icons.pets_outlined),
+  // ── Faturalar & Abonelikler ────────────────────────────────
   _CatOption('Fatura', Icons.receipt_outlined),
+  _CatOption('Faturalar', Icons.receipt_long_outlined),
+  _CatOption('Elektrik', Icons.bolt_outlined),
+  _CatOption('Doğalgaz', Icons.local_fire_department_outlined),
+  _CatOption('Su', Icons.water_drop_outlined),
+  _CatOption('İnternet', Icons.wifi_outlined),
+  _CatOption('Telefon', Icons.phone_android_outlined),
+  _CatOption('Dijital Abonelik', Icons.subscriptions_outlined),
+  _CatOption('Abonelik', Icons.subscriptions_outlined),
+  _CatOption('Streaming', Icons.play_circle_outline),
+  // ── Ulaşım ─────────────────────────────────────────────────
+  _CatOption('Ulaşım', Icons.directions_car_outlined),
+  _CatOption('Yakıt', Icons.local_gas_station_outlined),
+  _CatOption('Toplu Taşıma', Icons.directions_bus_outlined),
+  _CatOption('Taksi & Servis', Icons.local_taxi_outlined),
+  _CatOption('Araç Bakım', Icons.car_repair_outlined),
+  _CatOption('Park & Otopark', Icons.local_parking_outlined),
+  _CatOption('Uçak & Seyahat', Icons.flight_outlined),
+  // ── Sağlık ─────────────────────────────────────────────────
+  _CatOption('Sağlık', Icons.health_and_safety_outlined),
+  _CatOption('Doktor & Hastane', Icons.local_hospital_outlined),
+  _CatOption('Eczane', Icons.local_pharmacy_outlined),
+  _CatOption('Spor & Fitness', Icons.fitness_center_outlined),
+  _CatOption('Spor', Icons.sports_soccer_outlined),
+  _CatOption('Diş Hekimi', Icons.medical_services_outlined),
+  _CatOption('Optik', Icons.visibility_outlined),
+  // ── Eğitim & Kişisel Gelişim ───────────────────────────────
+  _CatOption('Eğitim', Icons.school_outlined),
+  _CatOption('Kitap & Dergi', Icons.menu_book_outlined),
+  _CatOption('Kurs & Sertifika', Icons.workspace_premium_outlined),
+  // ── Eğlence & Hobi ─────────────────────────────────────────
+  _CatOption('Eğlence', Icons.movie_outlined),
+  _CatOption('Sinema & Tiyatro', Icons.theaters_outlined),
+  _CatOption('Hobi', Icons.sports_esports_outlined),
+  _CatOption('Oyun & Elektronik Eğlence', Icons.sports_esports_outlined),
+  _CatOption('Müzik', Icons.music_note_outlined),
+  _CatOption('Seyahat', Icons.travel_explore_outlined),
+  _CatOption('Otel', Icons.hotel_outlined),
+  // ── Finans & Bankacılık ────────────────────────────────────
+  _CatOption('Banka & Finans', Icons.account_balance_outlined),
+  _CatOption('Banka Ücreti', Icons.account_balance_wallet_outlined),
+  _CatOption('Faiz & Komisyon', Icons.percent_outlined),
+  _CatOption('Sigorta', Icons.security_outlined),
+  _CatOption('Kredi', Icons.credit_score_outlined),
+  _CatOption('Yatırım', Icons.trending_up_outlined),
+  _CatOption('Vergi & Devlet', Icons.gavel_outlined),
+  _CatOption('Borç Ödemesi', Icons.payment_outlined),
+  // ── Teknoloji ──────────────────────────────────────────────
+  _CatOption('Teknoloji', Icons.computer_outlined),
+  _CatOption('Elektronik', Icons.devices_outlined),
+  _CatOption('Yazılım & Uygulama', Icons.app_shortcut_outlined),
+  // ── Kişisel Bakım ──────────────────────────────────────────
+  _CatOption('Kişisel Bakım', Icons.face_retouching_natural_outlined),
+  _CatOption('Kuaför & Güzellik', Icons.content_cut_outlined),
+  _CatOption('Kozmetik', Icons.brush_outlined),
+  // ── Çocuk & Aile ───────────────────────────────────────────
+  _CatOption('Çocuk & Bebek', Icons.child_care_outlined),
+  _CatOption('Oyuncak', Icons.toys_outlined),
+  // ── Bağış & Diğer ─────────────────────────────────────────
+  _CatOption('Bağış & Yardım', Icons.volunteer_activism_outlined),
+  _CatOption('Hediye', Icons.card_giftcard_outlined),
   _CatOption('Diğer', Icons.category_outlined),
 ];
 

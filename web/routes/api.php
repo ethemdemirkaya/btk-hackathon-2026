@@ -99,13 +99,13 @@ Route::prefix('v1')->group(function () {
         // Categories
         Route::get('categories', [CategoryController::class, 'index']);
 
-        // Budgets
+        // Budgets — literal routes before parameterized {budget}
         Route::get   ('budgets',              [BudgetController::class, 'index']);
         Route::post  ('budgets',              [BudgetController::class, 'store']);
-        Route::put   ('budgets/{budget}',     [BudgetController::class, 'update']);
-        Route::delete('budgets/{budget}',     [BudgetController::class, 'destroy']);
         Route::post  ('budgets/ai-suggest',   [BudgetController::class, 'aiSuggest']);
         Route::post  ('budgets/ai-apply',     [BudgetController::class, 'aiApply']);
+        Route::put   ('budgets/{budget}',     [BudgetController::class, 'update']);
+        Route::delete('budgets/{budget}',     [BudgetController::class, 'destroy']);
 
         // Goals
         Route::get   ('goals',                  [GoalController::class, 'index']);
@@ -121,15 +121,14 @@ Route::prefix('v1')->group(function () {
         // Financial Health Score (live)
         Route::get('health-score', [HealthScoreController::class, 'show']);
 
-        // Personal Debts
+        // Personal Debts — literal routes before parameterized {id}
         Route::get   ('personal-debts',                              [PersonalDebtController::class, 'index']);
         Route::post  ('personal-debts',                              [PersonalDebtController::class, 'store']);
+        Route::get   ('personal-debts/auto-detect',                  [PersonalDebtController::class, 'autoDetect']);
+        Route::post  ('personal-debts/confirm-detected',             [PersonalDebtController::class, 'confirmDetected']);
         Route::patch ('personal-debts/{id}',                         [PersonalDebtController::class, 'update']);
         Route::post  ('personal-debts/{id}/settle',                  [PersonalDebtController::class, 'settle']);
         Route::delete('personal-debts/{id}',                         [PersonalDebtController::class, 'destroy']);
-        // AI borç tespiti
-        Route::get   ('personal-debts/auto-detect',                  [PersonalDebtController::class, 'autoDetect']);
-        Route::post  ('personal-debts/confirm-detected',             [PersonalDebtController::class, 'confirmDetected']);
         Route::post  ('personal-debts/{id}/mark-repayment',          [PersonalDebtController::class, 'markRepayment']);
 
         // Investments / Portfolio
@@ -139,12 +138,12 @@ Route::prefix('v1')->group(function () {
         Route::put   ('investments/{id}',       [InvestmentController::class, 'update']);
         Route::delete('investments/{id}',       [InvestmentController::class, 'destroy']);
 
-        // FX / Gold Alerts
+        // FX / Gold Alerts — literal routes before parameterized {id}
         Route::get   ('fx-alerts',          [FxAlertController::class, 'index']);
         Route::post  ('fx-alerts',          [FxAlertController::class, 'store']);
+        Route::get   ('fx-alerts/rates',    [FxAlertController::class, 'rates']);
         Route::patch ('fx-alerts/{id}',     [FxAlertController::class, 'update']);
         Route::delete('fx-alerts/{id}',     [FxAlertController::class, 'destroy']);
-        Route::get   ('fx-alerts/rates',    [FxAlertController::class, 'rates']);
 
         // Negotiation Agent
         Route::get   ('negotiation',                    [NegotiationController::class, 'index']);

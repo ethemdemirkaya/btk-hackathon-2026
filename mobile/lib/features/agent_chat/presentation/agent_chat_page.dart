@@ -1243,7 +1243,13 @@ class _InputAreaState extends State<_InputArea>
                       : _ChatIconButton(
                           key: const ValueKey('mic'),
                           icon: Icons.mic_none_rounded,
-                          onTap: () {},
+                          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Ses girişi yakında kullanılabilecek'),
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                            ),
+                          ),
                         ),
             ),
           ],
@@ -1434,6 +1440,7 @@ class _HistorySheetState extends State<_HistorySheet> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {},
             child: Container(
               constraints: BoxConstraints(
