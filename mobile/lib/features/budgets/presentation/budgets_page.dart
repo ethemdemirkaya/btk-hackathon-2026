@@ -1608,6 +1608,29 @@ class _BudgetFormSheetState extends State<_BudgetFormSheet> {
                             ),
                     ),
                   ),
+                  if (_isEdit) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: OutlinedButton.icon(
+                        onPressed: _loading ? null : _delete,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: c.negative,
+                          side: BorderSide(
+                              color: c.negative.withValues(alpha: 0.5)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                        label: const Text(
+                          'Bütçeyi Sil',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
