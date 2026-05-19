@@ -389,41 +389,37 @@ Future<void> _showSubscriptionActions(
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () async {
+              onPressed: () {
                 Navigator.pop(ctx);
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogCtx) => AlertDialog(
-                    backgroundColor: c.card,
+                // _handleDelete ile aynı undo akışını kullan
+                // sub referansı _showSubscriptionActions kapsamında mevcut
+                bool undone = false;
+                // Optimistik kaldır
+                ref.invalidate(_subscriptionsProvider);
+                final snackResult =
+                    ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Abonelik silindi'),
+                    duration: const Duration(seconds: 5),
+                    behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    title: Text('Aboneliği Sil',
-                        style: TextStyle(
-                            color: c.text1, fontWeight: FontWeight.w700)),
-                    content: Text(
-                        '"$name" aboneliğini listeden kaldırmak istiyor musun?',
-                        style: TextStyle(color: c.text2)),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(dialogCtx, false),
-                          child:
-                              Text('İptal', style: TextStyle(color: c.text2))),
-                      TextButton(
-                          onPressed: () => Navigator.pop(dialogCtx, true),
-                          child: Text('Sil',
-                              style: TextStyle(
-                                  color: c.negative,
-                                  fontWeight: FontWeight.w700))),
-                    ],
+                        borderRadius: BorderRadius.circular(12)),
+                    action: SnackBarAction(
+                      label: 'Geri al',
+                      textColor: AppColors.accent,
+                      onPressed: () => undone = true,
+                    ),
                   ),
                 );
-                if (ok == true) {
-                  try {
-                    await DioClient.instance
-                        .delete(ApiEndpoints.subscription(id));
-                    ref.invalidate(_subscriptionsProvider);
-                  } catch (_) {}
-                }
+                snackResult.closed.then((_) {
+                  if (!undone) {
+                    DioClient.instance
+                        .delete(ApiEndpoints.subscription(id))
+                        .then((_) => ref.invalidate(_subscriptionsProvider))
+                        .catchError((_) =>
+                            ref.invalidate(_subscriptionsProvider));
+                  }
+                });
               },
               icon: Icon(Icons.delete_outline_rounded, size: 18, color: c.negative),
               label: Text('Sil',
@@ -640,36 +636,6 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
 
   Future<void> _handleDelete(Map<String, dynamic> sub) async {
     final id = (sub['id'] as num).toInt();
-    final name = sub['name'] as String? ?? '';
-    final c = context.appColors;
-
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: c.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Aboneliği Kaldır',
-            style: TextStyle(color: c.text1, fontWeight: FontWeight.w700)),
-        content: Text(
-          '"$name" aboneliğinizi iptal ettirdiğiniz varsayılarak işleme devam edilsin mi?',
-          style: TextStyle(color: c.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Hayır', style: TextStyle(color: c.text2)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Evet',
-                style: TextStyle(
-                    color: c.negative, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-
-    if (ok != true || !mounted) return;
 
     final currentData = ref.read(_subscriptionsProvider).value;
     final currentSubs = _localSubs ??
@@ -686,7 +652,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     final snackResult = ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Abonelik silindi'),
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: SnackBarAction(
