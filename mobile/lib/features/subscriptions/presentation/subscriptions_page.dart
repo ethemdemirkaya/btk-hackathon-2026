@@ -27,6 +27,13 @@ const _cycleLabels = {
   'yearly': 'Yıllık',
 };
 
+const _cycleSuffix = {
+  'weekly': '/hf',
+  'monthly': '/ay',
+  'quarterly': '/3ay',
+  'yearly': '/yıl',
+};
+
 const _subColors = [
   Color(0xFFE50914),
   Color(0xFF1DB954),
@@ -353,13 +360,22 @@ Future<void> _showSubscriptionActions(
                   ],
                 ),
               ),
-              Text(
-                AppFormatters.currencyCompact(
-                    (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0),
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: c.text1),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    AppFormatters.currencyAuto(
+                        (sub['amount'] as num?)?.toDouble() ?? 0),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: c.text1),
+                  ),
+                  Text(
+                    _cycleSuffix[sub['billing_cycle'] as String? ?? 'monthly'] ?? '/ay',
+                    style: TextStyle(fontSize: 11, color: c.text3),
+                  ),
+                ],
               ),
             ],
           ),
@@ -684,12 +700,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
     final c = context.appColors;
     final async = ref.watch(_subscriptionsProvider);
 
-    return GestureDetector(
-      onTap: () {
-        if (_selectedId != null) setState(() => _selectedId = null);
-      },
-      behavior: HitTestBehavior.translucent,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: c.bg,
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddSubscriptionSheet(context, ref),
@@ -903,8 +914,7 @@ class _SubscriptionsPageState extends ConsumerState<SubscriptionsPage> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildHeader(BuildContext context, String subtitle) {
@@ -970,7 +980,7 @@ class _SubCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.appColors;
     final name = sub['name'] as String? ?? 'S';
-    final amount = (sub['monthly_equivalent'] as num?)?.toDouble() ?? 0;
+    final amount = (sub['amount'] as num?)?.toDouble() ?? 0;
     final cycle = sub['billing_cycle'] as String? ?? 'monthly';
     final aiDetected = sub['auto_detected'] as bool? ?? false;
     final nextBilling = sub['next_billing_date'] as String?;
@@ -1070,13 +1080,14 @@ class _SubCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  AppFormatters.currencyCompact(amount),
+                  AppFormatters.currencyAuto(amount),
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: c.text1),
                 ),
-                Text('/ay', style: TextStyle(fontSize: 11, color: c.text3)),
+                Text(_cycleSuffix[cycle] ?? '/ay',
+                    style: TextStyle(fontSize: 11, color: c.text3)),
               ],
             ),
             const SizedBox(width: 6),
@@ -1162,7 +1173,7 @@ class _CandidateCard extends StatelessWidget {
             ),
           ),
           Text(
-            AppFormatters.currencyCompact(amount),
+            AppFormatters.currencyAuto(amount),
             style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w700, color: c.text1),
           ),

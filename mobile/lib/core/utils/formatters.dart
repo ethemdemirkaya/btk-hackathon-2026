@@ -26,6 +26,14 @@ class AppFormatters {
   static String currencyCompact(double amount) =>
       _currencyCompact.format(amount);
 
+  /// Tam sayıysa ondalık göstermez (₺290), değilse 2 basamak gösterir (₺72,99)
+  static String currencyAuto(double amount) {
+    if (amount == amount.truncateToDouble()) {
+      return _currencyCompact.format(amount);
+    }
+    return _currency.format(amount);
+  }
+
   static String currencyAbs(double amount) => _currency.format(amount.abs());
 
   static String dateShort(DateTime date) => _dateShort.format(date);
