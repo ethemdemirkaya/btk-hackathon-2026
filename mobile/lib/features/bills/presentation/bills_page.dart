@@ -130,7 +130,7 @@ class BillsPage extends ConsumerWidget {
                         0.0,
                         (s, b) =>
                             s +
-                            ((b['last_amount'] as num?)
+                            ((b['average_amount'] as num?)
                                     ?.toDouble() ??
                                 0));
 
@@ -382,7 +382,7 @@ class _BillCard extends StatelessWidget {
     final icon = _billTypeIcons[type] ?? Icons.receipt;
     final iconColor =
         _billTypeColors[type] ?? const Color(0xFF8FA5C2);
-    final amount = (bill['last_amount'] as num?)?.toDouble() ?? 0;
+    final amount = (bill['average_amount'] as num?)?.toDouble() ?? 0;
     final dueDay = bill['due_day'] as int?;
     final isAutopay = bill['is_autopay'] as bool? ?? false;
     final status = bill['status'] as String? ?? 'upcoming';
@@ -523,7 +523,7 @@ class _BillFormSheetState extends State<_BillFormSheet> {
       _nameCtrl.text = e['name'] as String? ?? '';
       _providerCtrl.text = e['provider'] as String? ?? '';
       _amountCtrl.text =
-          (e['last_amount'] as num?)?.toStringAsFixed(2) ?? '';
+          (e['average_amount'] as num?)?.toStringAsFixed(2) ?? '';
       _dueDayCtrl.text =
           (e['due_day'] as int?)?.toString() ?? '';
       _type = e['type'] as String? ?? 'electricity';
@@ -548,7 +548,7 @@ class _BillFormSheetState extends State<_BillFormSheet> {
         'name': _nameCtrl.text.trim(),
         'type': _type,
         'provider': _providerCtrl.text.trim(),
-        'last_amount':
+        'average_amount':
             double.parse(_amountCtrl.text.replaceAll(',', '.')),
         'due_day': int.tryParse(_dueDayCtrl.text) ?? 1,
         'is_autopay': _autopay,
