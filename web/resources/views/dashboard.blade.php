@@ -742,11 +742,11 @@
     </div>
 
     {{-- AI Öngörüler --}}
-    <div class="col-xl-4">
+    <div class="col-xl-4 d-flex flex-column">
       {{-- ── Agentic Real-Time Insights (auto-loads on page open) ── --}}
       <x-ai-insight-panel page="dashboard" :autoload="true" title="Canlı AI Analizi" />
 
-      <div class="card h-100 shadow-sm">
+      <div class="card flex-grow-1 shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div>
             <h5 class="card-title mb-0">
@@ -1036,19 +1036,32 @@
 
       if (document.getElementById('categoryDonutChart') && catData.length > 0) {
         new ApexCharts(document.getElementById('categoryDonutChart'), {
-          chart: { type: 'donut', height: 290, fontFamily: fontFam },
+          chart: { type: 'donut', height: 290, fontFamily: fontFam, background: 'transparent' },
+          theme: { mode: isDark ? 'dark' : 'light' },
           series: catData.map(r => r.total),
           labels: catData.map(r => r.category),
           colors: [primary, success, warning, danger, info, '#38B2AC', '#ED64A6', '#9F7AEA'],
-          legend: { position: 'bottom', fontFamily: fontFam, fontSize: '12px', itemMargin: { horizontal: 6, vertical: 4 }, labels: { colors: textColor } },
+          legend: {
+            position: 'bottom',
+            fontFamily: fontFam,
+            fontSize: '12px',
+            itemMargin: { horizontal: 6, vertical: 4 },
+            labels: { colors: textColor },
+          },
           dataLabels: { enabled: false },
-          stroke: { width: 2 },
+          stroke: { width: 2, colors: [isDark ? '#2f3349' : '#fff'] },
           plotOptions: {
             pie: {
               donut: {
                 size: '68%',
                 labels: {
                   show: true,
+                  value: {
+                    show: true,
+                    fontFamily: fontFam,
+                    color: textColor,
+                    formatter: v => '₺' + parseFloat(v).toLocaleString('tr-TR', { maximumFractionDigits: 0 }),
+                  },
                   total: {
                     show: true,
                     label: 'Toplam',
