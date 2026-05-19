@@ -88,8 +88,6 @@ class CardsPage extends ConsumerWidget {
                                   ),
                                 )),
 
-                        // Add card button
-                        _AddCardButton(),
                       ],
                     );
                   },
@@ -517,37 +515,3 @@ class _CardStat extends StatelessWidget {
 }
 
 // ── Add Card Button ──────────────────────────────────────────────────
-class _AddCardButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final c = context.appColors;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: c.border,
-            style: BorderStyle.solid,
-            width: 1.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: c.border, width: 1.5),
-            ),
-            child: Icon(Icons.add,
-                size: 20, color: c.text3),
-          ),
-          const SizedBox(width: 12),
-          Text('Kart ekle',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.text3)),
-        ],
-      ),
-    );
-  }
-}

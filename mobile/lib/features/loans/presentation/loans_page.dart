@@ -99,8 +99,6 @@ class LoansPage extends ConsumerWidget {
                             title: 'Kredi bulunamadı',
                             subtitle:
                                 'Konut, taşıt veya ihtiyaç kredilerinizi buradan takip edin.',
-                            ctaLabel: '+ Kredi Ekle',
-                            onCta: () {},
                           ),
                         ],
                       );
